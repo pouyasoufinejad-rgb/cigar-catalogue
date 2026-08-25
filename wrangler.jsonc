@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cigar-catalogue",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-08-21",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CATALOGUE_STATE"
+    }
+  ]
+}
