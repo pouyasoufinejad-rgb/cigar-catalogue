@@ -6,14 +6,12 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": [
-      "/api/*"
-    ]
+    "run_worker_first": ["/api/*", "/", "/index.html"]
   },
   "kv_namespaces": [
     {
       "binding": "CATALOGUE_STATE",
-      "id": "8fd271c12ef3422d8aeecfa929fe212d"
+      "id": "e7a1c5222f594ebbaee4a80eb68817d6"
     }
   ]
 }
