@@ -1695,9 +1695,9 @@ document.querySelectorAll('.card').forEach(card=>{
     medals.insertAdjacentHTML('beforebegin',`<div class="gem-award ${isGem?'gem-tier':'crown-tier'}" role="img" aria-label="${aria}"><img src="${art}" alt=""><span><small>${small}</small><b>${title}</b></span></div>`);
   }
 });
-const cards=[...document.querySelectorAll('.card')];
-const mainCards=cards.filter(card=>card.dataset.taster!=='1');
-const tasterCards=cards.filter(card=>card.dataset.taster==='1');
+const cards=window.__CATALOGUE_CARDS__||(window.__CATALOGUE_CARDS__=[...document.querySelectorAll('article.card[data-key]')]);
+const mainCards=window.__CATALOGUE_MAIN_CARDS__||(window.__CATALOGUE_MAIN_CARDS__=cards.filter(card=>card.dataset.taster!=='1'));
+const tasterCards=window.__CATALOGUE_TASTER_CARDS__||(window.__CATALOGUE_TASTER_CARDS__=cards.filter(card=>card.dataset.taster==='1'));
 const sort=document.getElementById('sort');
 const sortSecondary=document.getElementById('sort-secondary');
 const flatMain=document.getElementById('flat-main');
@@ -1981,7 +1981,7 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
 (() => {
   'use strict';
   const API = '/api/catalogue-overrides';
-  const cards = Array.from(document.querySelectorAll('article.card[data-key]'));
+  const cards=window.__CATALOGUE_CARDS__||(window.__CATALOGUE_CARDS__=[...document.querySelectorAll('article.card[data-key]')]);
   const byKey = new Map(cards.map(card => [card.dataset.key, card]));
   const state = { version: 2, cards: {}, sections: {} };
   let serverAvailable = false;
@@ -2567,7 +2567,7 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
   const summary = document.getElementById('live-stock-summary');
   const detail = document.getElementById('live-stock-detail');
   const restockButton = document.getElementById('live-stock-now');
-  const cards = Array.from(document.querySelectorAll('article.card'));
+  const cards=window.__CATALOGUE_CARDS__||(window.__CATALOGUE_CARDS__=[...document.querySelectorAll('article.card[data-key]')]);
   const sort = document.getElementById('sort');
   const sortSecondary = document.getElementById('sort-secondary');
   let running = false;
@@ -3441,4 +3441,6 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
 })();
 </script>
 
+<!-- CATALOGUE_V137_DYNAMIC_ADMIN -->
+<script type="module" src="/catalogue-admin-v137.mjs"></script>
 </body></html>

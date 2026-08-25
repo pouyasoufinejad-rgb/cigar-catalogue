@@ -12,7 +12,8 @@
   },
   "kv_namespaces": [
     {
-      "binding": "CATALOGUE_STATE"
+      "binding": "CATALOGUE_STATE",
+      "id": "8fd271c12ef3422d8aeecfa929fe212d"
     }
   ]
 }
