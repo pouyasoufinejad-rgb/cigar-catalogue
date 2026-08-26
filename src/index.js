@@ -506,6 +506,119 @@ export function renderEntryCard(rawEntry) {
 <div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3><div class="country-above"><div class="country-row">${countryFlag}<span class="country-name">${esc(entry.country)}</span></div></div><div class="facts"><div><b>${aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div><div class="value-calc ${tierName(entry.value)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${medalRating('Value', entry.value)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
 }
 
+
+function setHtmlAttribute(tag, name, value) {
+  const escaped = esc(value);
+  const rx = new RegExp(`\\s${name}=(?:\"[^\"]*\"|'[^']*')`, 'i');
+  if (rx.test(tag)) return tag.replace(rx, ` ${name}=\"${escaped}\"`);
+  return tag.replace(/>$/, ` ${name}=\"${escaped}\">`);
+}
+
+function removeHtmlAttribute(tag, name) {
+  const rx = new RegExp(`\\s${name}=(?:\"[^\"]*\"|'[^']*')`, 'ig');
+  return tag.replace(rx, '');
+}
+
+function structuralRetailerLinks(urls) {
+  return normaliseLinks(urls).map((url, index) => `<a class=\"shop\" href=\"${esc(url)}\" rel=\"noopener\"${index ? ' style=\"margin-top:8px\"' : ''} target=\"_blank\">View at ${esc(retailerLabel(url))} <span>↗</span></a>`).join('');
+}
+
+function formatSizeNumber(value) {
+  const number = finite(value);
+  if (!Number.isFinite(number)) return '0';
+  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
+}
+
+export function applyStructuralOverridesToHtml(html, cards) {
+  let output = String(html || '');
+  for (const [rawKey, rawOverride] of Object.entries(record(cards))) {
+    const key = sanitiseKey(rawKey);
+    const override = record(rawOverride);
+    if (!key || !Object.keys(override).some(name => [
+      'brand','title','packagePrice','packageLabel','price','country','length','ring','risk','taster','retailerLinks','imageUrl','smokeTime'
+    ].includes(name))) continue;
+
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cardRx = new RegExp(`<article\\b(?=[^>]*\\bdata-key=[\"']${escapedKey}[\"'])[^>]*>[\\s\\S]*?<\\/article>`, 'i');
+    const match = output.match(cardRx);
+    if (!match) continue;
+    let card = match[0];
+
+    card = card.replace(/^<article\b[^>]*>/i, tag => {
+      let next = tag;
+      if (Object.prototype.hasOwnProperty.call(override, 'price')) next = setHtmlAttribute(next, 'data-price', Math.max(0, finite(override.price)).toFixed(2));
+      if (Object.prototype.hasOwnProperty.call(override, 'risk')) next = setHtmlAttribute(next, 'data-risk', integer(override.risk, 1, 1, 3));
+      if (Object.prototype.hasOwnProperty.call(override, 'taster')) {
+        next = removeHtmlAttribute(next, 'data-taster');
+        if (override.taster) next = next.replace(/>$/, ' data-taster=\"1\">');
+      }
+      return next;
+    });
+
+    if (Object.prototype.hasOwnProperty.call(override, 'brand') || Object.prototype.hasOwnProperty.call(override, 'title')) {
+      const currentH3 = card.match(/<h3>\s*<span>([\s\S]*?)<\/span>([\s\S]*?)<\/h3>/i);
+      const brand = Object.prototype.hasOwnProperty.call(override, 'brand') ? text(override.brand).trim() : (currentH3?.[1] || '');
+      const title = Object.prototype.hasOwnProperty.call(override, 'title') ? text(override.title).trim() : (currentH3?.[2] || '');
+      if (currentH3) card = card.replace(currentH3[0], `<h3><span>${esc(brand)}</span>${esc(title)}</h3>`);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'country')) {
+      card = card.replace(/<(span|div)\b([^>]*\bclass=[\"'][^\"']*\bcountry-name\b[^\"']*[\"'][^>]*)>[\s\S]*?<\/\1>/i,
+        (_all, tagName, attrs) => `<${tagName}${attrs}>${esc(text(override.country).trim())}</${tagName}>`);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'length') || Object.prototype.hasOwnProperty.call(override, 'ring')) {
+      card = card.replace(/<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>/i, tag => {
+        let next = tag;
+        if (Object.prototype.hasOwnProperty.call(override, 'length')) next = setHtmlAttribute(next, 'data-visual-length', formatSizeNumber(override.length));
+        if (Object.prototype.hasOwnProperty.call(override, 'ring')) next = setHtmlAttribute(next, 'data-visual-ring', Math.max(0, integer(override.ring, 0, 0, 100)));
+        return next;
+      });
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'imageUrl') && text(override.imageUrl).startsWith('/')) {
+      const imageUrl = text(override.imageUrl);
+      const artImageRx = /(<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>[\s\S]*?<img\b[^>]*\bsrc=[\"'])[^\"']*([\"'][^>]*>)/i;
+      if (artImageRx.test(card)) card = card.replace(artImageRx, `$1${esc(imageUrl)}$2`);
+    }
+
+    if (["packagePrice","packageLabel","price","length","ring"].some(name => Object.prototype.hasOwnProperty.call(override, name))) {
+      const factsRx = /<div class=[\"']facts[\"']>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<\/div>/i;
+      const oldFacts = card.match(factsRx)?.[0] || '';
+      const oldValues = [...oldFacts.matchAll(/<div[^>]*><b>([\s\S]*?)<\/b><small>([\s\S]*?)<\/small><\/div>/gi)];
+      const packagePrice = Object.prototype.hasOwnProperty.call(override, 'packagePrice') ? aud(override.packagePrice) : (oldValues[0]?.[1] || aud(0));
+      const packageLabel = Object.prototype.hasOwnProperty.call(override, 'packageLabel') ? esc(text(override.packageLabel).trim()) : (oldValues[0]?.[2] || 'single cigar');
+      const price = Object.prototype.hasOwnProperty.call(override, 'price') ? aud(override.price) : (oldValues[1]?.[1] || aud(0));
+      const oldSize = (oldValues[2]?.[1] || '').match(/([\d.]+)″\s*[×x]\s*(\d+)/i);
+      const length = Object.prototype.hasOwnProperty.call(override, 'length') ? formatSizeNumber(override.length) : (oldSize?.[1] || '0');
+      const ring = Object.prototype.hasOwnProperty.call(override, 'ring') ? Math.max(0, integer(override.ring, 0, 0, 100)) : (oldSize?.[2] || '0');
+      if (oldFacts) card = card.replace(factsRx, `<div class=\"facts\"><div><b>${packagePrice}</b><small>${packageLabel}</small></div><div><b>${price}</b><small>per stick</small></div><div class=\"size-only\"><b>${length}″ × ${ring}</b><small>length x ring gauge</small></div></div>`);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'smokeTime')) {
+      const smoke = esc(text(override.smokeTime).trim());
+      const smokeRx = /<div\b[^>]*\bclass=[\"'][^\"']*\bartmeta-bottom\b[^\"']*[\"'][^>]*>[\s\S]*?<\/div>/i;
+      if (smokeRx.test(card)) card = card.replace(smokeRx, smoke ? `<div class=\"artmeta artmeta-bottom\">${smoke}</div>` : '');
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'retailerLinks')) {
+      const newLinks = structuralRetailerLinks(override.retailerLinks);
+      const shopRx = /<a\b(?=[^>]*\bclass=[\"'][^\"']*\bshop\b[^\"']*[\"'])[^>]*>[\s\S]*?<\/a>/gi;
+      const hadShop = shopRx.test(card);
+      shopRx.lastIndex = 0;
+      card = card.replace(shopRx, '');
+      if (newLinks) {
+        card = card.replace(/<\/div>\s*<\/article>\s*$/i, `${newLinks}</div></article>`);
+      } else if (!hadShop) {
+        // Nothing to remove or insert.
+      }
+    }
+
+    output = output.replace(cardRx, card);
+  }
+  return output;
+}
+
 export function injectEntriesIntoHtml(html, entries) {
   const cards = Object.values(record(entries)).map(renderEntryCard).filter(Boolean).join('\n');
   if (!cards) return html;
@@ -524,11 +637,11 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   if (!contentType.toLowerCase().includes('text/html')) return response;
   const state = await readState(env);
   const html = await response.text();
-  const transformed = injectEntriesIntoHtml(html, state.entries);
+  const transformed = applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards);
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.set('cache-control', 'no-cache, must-revalidate');
-  headers.set('x-cigar-catalogue-version', '138');
+  headers.set('x-cigar-catalogue-version', '139');
   return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
 }
 
