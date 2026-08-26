@@ -1007,7 +1007,7 @@ export function initUnifiedAdmin() {
   for (const id of ['catalogue-v139-length','catalogue-v139-ring']) q(id)?.addEventListener('change', () => {
     if (modeForBrowser !== 'edit') setField('catalogue-admin-size', deriveSize(q('catalogue-v139-length').value, q('catalogue-v139-ring').value));
   });
-  q('catalogue-admin-toggle')?.addEventListener('click', () => setTimeout(() => { if (modeForBrowser === 'edit') populateStructuralFields(); }, 0));
+  q('catalogue-admin-toggle')?.addEventListener('click', () => setTimeout(() => { /* V140C_REBUILD_SELECT_ON_OPEN */ rebuildCardSelectFromDom(); if (modeForBrowser === 'edit') populateStructuralFields(); }, 0));
   loadStateForBrowser(false).then(() => { if (modeForBrowser === 'edit') populateStructuralFields(); });
 }
 
