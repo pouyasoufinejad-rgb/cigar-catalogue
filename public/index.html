@@ -2420,7 +2420,7 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
     benchmarksInput.value = benchmarksNode?.innerHTML || baseSections.benchmarksHtml;
   }
   function populateForm() {
-    const card = byKey.get(cardSelect.value) || sortedCards()[0];
+    const card = Array.from(document.querySelectorAll('article.card[data-key]')).find(card => card.dataset.key === cardSelect.value) || byKey.get(cardSelect.value) || sortedCards()[0]; /* V140F_DYNAMIC_SELECTION */
     if (!card) return;
     const archived = card.dataset.archived === '1';
     const saved = state.cards?.[card.dataset.key] || {};
