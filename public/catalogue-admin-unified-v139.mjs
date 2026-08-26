@@ -488,6 +488,224 @@ function applyStructuralOverrideToCard(card, override) {
   updateValueDisplay(card, card.dataset.price, quality, value);
 }
 
+
+/* V140_DYNAMIC_ENTRY_HYDRATION */
+function dynamicRatingNode(card, label) {
+  return Array.from(card.querySelectorAll('.rating')).find(node => {
+    const span = node.querySelector(':scope > span');
+    return span && span.textContent.trim().toLowerCase() === String(label).toLowerCase();
+  }) || null;
+}
+function applyDynamicSizeVisual(card, size) {
+  const tier = ['gold','silver','bronze'].includes(String(size || '').toLowerCase()) ? String(size).toLowerCase() : 'bronze';
+  const node = dynamicRatingNode(card, 'Size');
+  if (node) {
+    node.classList.remove('gold','silver','bronze','score-low','score-mid','score-high');
+    node.classList.add(tier);
+    const medal = node.querySelector('.medal');
+    if (medal) { medal.classList.remove('gold','silver','bronze'); medal.classList.add(tier); }
+    const label = node.querySelector('b');
+    if (label) label.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+    node.querySelector('.subscore')?.remove();
+  }
+  card.dataset.format = String(tier === 'gold' ? 3 : tier === 'silver' ? 2 : 1);
+}
+function applyDynamicCountryFlag(card, countryValue) {
+  const name = String(countryValue || 'Unknown').trim() || 'Unknown';
+  const row = card.querySelector('.country-row');
+  if (!row) return;
+  row.querySelectorAll('.country-flag').forEach(node => node.remove());
+  const countryName = row.querySelector('.country-name');
+  if (countryName) countryName.textContent = name;
+  const key = name.toLowerCase();
+  const map = {
+    'nicaragua':'nicaragua', 'cuba':'cuba', 'honduras':'honduras', 'mexico':'mexico',
+    'brazil':'brazil', 'bra':'brazil', 'dominican republic':'dominican', 'dr':'dominican',
+    'usa':'usa', 'united states':'usa', 'united states of america':'usa'
+  };
+  const slug = map[key] || key.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  if (!slug || name === 'Unknown') return;
+  const flag = document.createElement('span');
+  flag.className = 'country-flag flag-' + slug;
+  flag.setAttribute('aria-hidden','true');
+  row.insertBefore(flag, countryName || row.firstChild);
+}
+function replaceDynamicArtmeta(card, selector, title, html) {
+  const art = card.querySelector('.artframe');
+  if (!art) return;
+  let node = card.querySelector(selector);
+  if (!node) {
+    node = document.createElement('div');
+    node.className = 'artmeta ' + selector.replace(/^\./,'');
+    art.appendChild(node);
+  }
+  const safe = sanitiseMarkup(html || '');
+  node.hidden = !safe.trim();
+  node.innerHTML = '<span class="artmeta-title">' + escapeHtml(title) + '</span>' + safe;
+}
+function replaceDynamicExperience(card, tags) {
+  let groups = card.querySelector('.tag-groups');
+  const body = card.querySelector('.cardbody');
+  if (!body) return;
+  if (!groups) {
+    groups = document.createElement('div');
+    groups.className = 'tag-groups';
+    const summary = card.querySelector('.summary');
+    body.insertBefore(groups, summary || null);
+  }
+  groups.innerHTML = '';
+  const clean = Array.isArray(tags) ? tags.map(v => String(v || '').trim()).filter(Boolean) : [];
+  if (!clean.length) { groups.hidden = true; return; }
+  groups.hidden = false;
+  const group = document.createElement('div'); group.className = 'tag-group';
+  const label = document.createElement('span'); label.className = 'tag-label'; label.textContent = 'Experience'; group.appendChild(label);
+  const items = document.createElement('div'); items.className = 'tag-items';
+  clean.forEach(value => { const chip = document.createElement('span'); chip.className = 'tag-chip'; chip.textContent = value; items.appendChild(chip); });
+  group.appendChild(items); groups.appendChild(group);
+}
+function applyDynamicLaurel(card, saved) {
+  card.querySelectorAll('.gem-award').forEach(node => node.remove());
+  const medals = card.querySelector('.medals');
+  if (!medals) return;
+  let kind = String(saved.laurel || 'auto').toLowerCase();
+  if (kind === 'none') return;
+  if (kind === 'auto') {
+    let golds = 0;
+    if (finiteNumber(saved.strength, 0) >= 7) golds++;
+    if (finiteNumber(saved.quality, 0) >= 7) golds++;
+    if (String(saved.size || '').toLowerCase() === 'gold') golds++;
+    if (finiteNumber(saved.value, 0) >= 7) golds++;
+    kind = golds >= 4 ? 'gem' : golds >= 3 ? 'crown' : 'none';
+  }
+  if (!['gem','crown'].includes(kind)) return;
+  const template = document.querySelector('.gem-award.' + (kind === 'gem' ? 'gem-tier' : 'crown-tier'));
+  if (!template) return;
+  medals.insertAdjacentElement('beforebegin', template.cloneNode(true));
+}
+function resetDynamicFreshness(card, saved) {
+  if (card.dataset.dynamicEntry !== '1') return;
+  const pin = String(saved.stockPin || 'auto').toLowerCase();
+  if (pin === 'in' || pin === 'out') card.dataset.stock = pin;
+  else card.dataset.stock = 'unknown';
+  card.dataset.stockPin = pin;
+  delete card.dataset.priceChecked;
+  delete card.dataset.stockChecked;
+  let row = card.querySelector('.freshness');
+  const body = card.querySelector('.cardbody');
+  if (!row && body) {
+    row = document.createElement('div'); row.className = 'freshness';
+    const medals = card.querySelector('.medals'); body.insertBefore(row, medals || null);
+  }
+  if (!row) return;
+  row.className = 'freshness live-stock-' + (card.dataset.stock === 'in' ? 'in' : card.dataset.stock === 'out' ? 'out' : 'unknown');
+  row.removeAttribute('data-checked');
+  const text = card.dataset.stock === 'in' ? 'Available (manual)' : card.dataset.stock === 'out' ? 'Unavailable (manual)' : 'Stock check pending';
+  row.innerHTML = '<span class="stock-state">' + escapeHtml(text) + '</span><span class="checked-state">Dynamic catalogue entry</span>';
+  row.setAttribute('aria-label', text + '; Dynamic catalogue entry');
+}
+function applyDynamicEditorialToCard(card, saved = {}) {
+  if (!card) return;
+  const rank = Math.max(1, Math.round(finiteNumber(saved.rank, card.dataset.rank || 1)));
+  card.dataset.rank = String(rank);
+  if (saved.taster) card.dataset.taster = '1'; else delete card.dataset.taster;
+  if (saved.archived) card.dataset.archived = '1'; else delete card.dataset.archived;
+  if (saved.archivedAt) card.dataset.archivedAt = String(saved.archivedAt); else delete card.dataset.archivedAt;
+  const rankflag = card.querySelector('.rankflag');
+  if (rankflag) {
+    const small = rankflag.querySelector('span'); const big = rankflag.querySelector('b');
+    if (small) small.textContent = saved.archived ? 'Archived' : saved.taster ? 'T' : 'No.';
+    if (big) big.textContent = String(rank);
+  }
+  if (saved.strength != null) setRatingVisual(card, 'Strength', saved.strength);
+  if (saved.quality != null) setRatingVisual(card, 'Quality', saved.quality);
+  applyDynamicSizeVisual(card, saved.size || deriveSize(saved.length, saved.ring));
+  const quality = saved.quality != null ? saved.quality : scoreFromCard(card, 'Quality', 5);
+  const explicitValue = saved.value != null ? saved.value : deriveValue(card.dataset.price, quality).score;
+  updateValueDisplay(card, card.dataset.price, quality, explicitValue);
+  const isDynamic = card.dataset.dynamicEntry === '1';
+  const eyebrow = card.querySelector('.eyebrow'); if (eyebrow && (isDynamic || saved.eyebrow != null)) eyebrow.textContent = String(saved.eyebrow || '');
+  const summary = card.querySelector('.summary'); if (summary && (isDynamic || saved.summaryHtml != null)) summary.innerHTML = sanitiseMarkup(saved.summaryHtml || '');
+  let note = card.querySelector('.mog-note');
+  const noteHtml = sanitiseMarkup(saved.noteHtml || '');
+  if (noteHtml) {
+    if (!note) { note = document.createElement('p'); note.className = 'mog-note'; (summary || card.querySelector('.cardbody'))?.insertAdjacentElement('afterend', note); }
+    note.innerHTML = noteHtml;
+  } else note?.remove();
+  replaceDynamicExperience(card, saved.experienceTags);
+  replaceDynamicArtmeta(card, '.artmeta-left', 'Production', saved.productionHtml || '');
+  replaceDynamicArtmeta(card, '.artmeta-right', 'Practical', saved.practicalHtml || '');
+  applyDynamicCountryFlag(card, saved.country || card.querySelector('.country-name')?.textContent || 'Unknown');
+  applyDynamicLaurel(card, saved);
+  resetDynamicFreshness(card, saved);
+}
+function dynamicCardHost(saved = {}) {
+  if (saved.archived) return document.getElementById('archived-cards') || document.getElementById('flat-main');
+  if (saved.taster) return document.getElementById('taster-cards') || document.getElementById('flat-main');
+  return document.getElementById('flat-main') || document.getElementById('tier-neither') || document.querySelector('.grid');
+}
+function createDynamicCard(key, entry, state) {
+  const template = document.querySelector('article.card[data-key="curivari-fuerte-chicos"]') ||
+    document.querySelector('article.card[data-key]:not([data-taster="1"])') ||
+    document.querySelector('article.card[data-key]');
+  if (!template) throw new Error('Cannot hydrate dynamic catalogue entries because no card template exists.');
+  const card = template.cloneNode(true);
+  card.classList.remove('hidden','live-restocked');
+  card.dataset.key = key;
+  card.dataset.dynamicEntry = '1';
+  delete card.dataset.archived;
+  delete card.dataset.archivedAt;
+  delete card.dataset.priceChecked;
+  delete card.dataset.stockChecked;
+  delete card.dataset.expected;
+  delete card.dataset.ratio;
+  card.querySelectorAll('.tier-badge,.parent-tier-badge,.gem-award').forEach(node => node.remove());
+  const img = card.querySelector('.artframe img');
+  if (img) { img.removeAttribute('data-image-source-key'); img.alt = ((entry.brand || '') + ' ' + (entry.title || key)).trim(); if (!entry.imageUrl) img.removeAttribute('src'); }
+  const host = dynamicCardHost(entry);
+  if (!host) throw new Error('Cannot hydrate dynamic catalogue entries because no catalogue card container exists.');
+  host.appendChild(card);
+  const merged = { ...entry, ...(state.cards?.[key] || {}) };
+  applyStructuralOverrideToCard(card, merged);
+  applyDynamicEditorialToCard(card, merged);
+  return card;
+}
+function hydrateDynamicEntries(state) {
+  let created = 0;
+  for (const [key, entry] of Object.entries(state.entries || {})) {
+    let card = document.querySelector('article.card[data-key="' + CSS.escape(key) + '"]');
+    if (!card) { card = createDynamicCard(key, entry, state); created++; }
+    else if (card.dataset.dynamicEntry === '1') applyDynamicEditorialToCard(card, { ...entry, ...(state.cards?.[key] || {}) });
+  }
+  return created;
+}
+function rebuildCardSelectFromDom(preferredValue = '') {
+  const select = q('catalogue-admin-card');
+  if (!select) return;
+  const current = preferredValue || select.value;
+  const draft = select.querySelector('option[data-v139-draft="1"]')?.cloneNode(true) || null;
+  const cards = Array.from(document.querySelectorAll('article.card[data-key]')).sort((a,b) => {
+    const aa = a.dataset.archived === '1' ? 2 : a.dataset.taster === '1' ? 1 : 0;
+    const bb = b.dataset.archived === '1' ? 2 : b.dataset.taster === '1' ? 1 : 0;
+    if (aa !== bb) return aa - bb;
+    return finiteNumber(a.dataset.rank, 9999) - finiteNumber(b.dataset.rank, 9999);
+  });
+  select.innerHTML = '';
+  if (draft) select.appendChild(draft);
+  cards.forEach(card => {
+    const option = document.createElement('option');
+    option.value = card.dataset.key;
+    const rank = Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1)));
+    const prefix = card.dataset.archived === '1' ? 'Archived' : card.dataset.taster === '1' ? 'T' + rank : '#' + rank;
+    const brand = card.querySelector('h3 span')?.textContent.trim() || '';
+    const title = titleFromCard(card);
+    option.textContent = prefix + ' · ' + brand + (brand && title ? ' ' : '') + title;
+    select.appendChild(option);
+  });
+  if (Array.from(select.options).some(option => option.value === current)) select.value = current;
+  else if (draft) select.value = draft.value;
+  else if (select.options.length) select.selectedIndex = 0;
+}
+
 let stateForBrowser = { version: 3, cards: {}, sections: {}, entries: {} };
 let modeForBrowser = 'edit';
 let draftSourceEditorial = null;
@@ -506,8 +724,15 @@ async function loadStateForBrowser(showMessage = false) {
       entries: payload?.entries && typeof payload.entries === 'object' ? payload.entries : {}
     };
     serverAvailableForBrowser = true;
-    for (const card of document.querySelectorAll('article.card[data-key]')) applyStructuralOverrideToCard(card, stateForBrowser.cards[card.dataset.key]);
-    if (typeof window.reorder === 'function') window.reorder();
+    hydrateDynamicEntries(stateForBrowser);
+    for (const card of document.querySelectorAll('article.card[data-key]')) {
+      const key = card.dataset.key;
+      applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
+      if (card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key]) applyDynamicEditorialToCard(card, { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) });
+    }
+    if (typeof window.catalogueRefreshCardCollections === 'function') window.catalogueRefreshCardCollections();
+    else if (typeof window.reorder === 'function') window.reorder();
+    rebuildCardSelectFromDom();
     if (showMessage) setStatus(`Reloaded ${Object.keys(stateForBrowser.cards).length} saved card overrides and ${Object.keys(stateForBrowser.entries).length} dynamic entries from Cloudflare KV.`);
     return stateForBrowser;
   } catch (error) {

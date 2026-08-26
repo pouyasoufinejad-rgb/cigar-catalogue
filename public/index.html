@@ -1695,9 +1695,9 @@ document.querySelectorAll('.card').forEach(card=>{
     medals.insertAdjacentHTML('beforebegin',`<div class="gem-award ${isGem?'gem-tier':'crown-tier'}" role="img" aria-label="${aria}"><img src="${art}" alt=""><span><small>${small}</small><b>${title}</b></span></div>`);
   }
 });
-const cards=[...document.querySelectorAll('.card')];
-const mainCards=cards.filter(card=>card.dataset.taster!=='1');
-const tasterCards=cards.filter(card=>card.dataset.taster==='1');
+let cards=[...document.querySelectorAll('.card')];
+let mainCards=cards.filter(card=>card.dataset.taster!=='1');
+let tasterCards=cards.filter(card=>card.dataset.taster==='1');
 const sort=document.getElementById('sort');
 const sortSecondary=document.getElementById('sort-secondary');
 const flatMain=document.getElementById('flat-main');
@@ -1876,6 +1876,20 @@ function applyCatalogueFilter(mode=activeFilter){
   refreshGroupVisibility();
 }
 window.applyCatalogueFilter=applyCatalogueFilter;
+/* V140_REFRESH_CARD_COLLECTIONS */
+function refreshCatalogueCardCollections(){
+  cards=[...document.querySelectorAll('article.card[data-key]')];
+  mainCards=cards.filter(card=>card.dataset.taster!=='1');
+  tasterCards=cards.filter(card=>card.dataset.taster==='1');
+  mainCards.filter(card=>card.dataset.archived!=='1').forEach(assignTier);
+  tasterCards.filter(card=>card.dataset.archived!=='1').forEach(ensureTasterParentTier);
+  applyCatalogueFilter(activeFilter);
+  reorder();
+  document.dispatchEvent(new CustomEvent('catalogue:cards-refreshed',{detail:{count:cards.length}}));
+}
+window.catalogueRefreshCardCollections=refreshCatalogueCardCollections;
+window.reorder=reorder;
+
 window.reorder=reorder;
 window.refreshGroupVisibility=refreshGroupVisibility;
 document.querySelectorAll('.toggle button').forEach(btn=>btn.addEventListener('click',()=>{
@@ -2567,12 +2581,17 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
   const summary = document.getElementById('live-stock-summary');
   const detail = document.getElementById('live-stock-detail');
   const restockButton = document.getElementById('live-stock-now');
-  const cards = Array.from(document.querySelectorAll('article.card'));
+  let cards = Array.from(document.querySelectorAll('article.card'));
   const sort = document.getElementById('sort');
   const sortSecondary = document.getElementById('sort-secondary');
   let running = false;
   let timer = null;
   let liveActiveFilter = 'instock';
+
+  /* V140_LIVE_STOCK_CARD_REFRESH */
+  document.addEventListener('catalogue:cards-refreshed', () => {
+    cards = Array.from(document.querySelectorAll('article.card'));
+  });
 
   const getCard = key => document.querySelector(`article.card[data-key="${key}"]`);
   const isoDate = date => date.toISOString().slice(0, 10);
@@ -3440,5 +3459,5 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
   initialiseAfterOverrides();
 })();
 </script>
-<script type="module" src="/catalogue-admin-unified-v139.mjs"></script><!-- CATALOGUE_V139_UNIFIED_ADMIN -->
+<script type="module" src="/catalogue-admin-unified-v139.mjs?v=140"></script><!-- CATALOGUE_V139_UNIFIED_ADMIN -->
 </body></html>
