@@ -553,25 +553,34 @@ function applyDynamicSizeVisual(card, size) {
   }
   card.dataset.format = String(tier === 'gold' ? 3 : tier === 'silver' ? 2 : 1);
 }
-function applyDynamicCountryFlag(card, countryValue) {
+export function countryFlagSlugs(countryValue) {
   const name = String(countryValue || 'Unknown').trim() || 'Unknown';
-  const row = card.querySelector('.country-row');
-  if (!row) return;
-  row.querySelectorAll('.country-flag').forEach(node => node.remove());
-  const countryName = row.querySelector('.country-name');
-  if (countryName) countryName.textContent = name;
   const key = name.toLowerCase();
   const map = {
     'nicaragua':'nicaragua', 'cuba':'cuba', 'honduras':'honduras', 'mexico':'mexico',
     'brazil':'brazil', 'bra':'brazil', 'dominican republic':'dominican', 'dr':'dominican',
     'usa':'usa', 'united states':'usa', 'united states of america':'usa'
   };
-  const slug = map[key] || key.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  if (!slug || name === 'Unknown') return;
-  const flag = document.createElement('span');
-  flag.className = 'country-flag flag-' + slug;
-  flag.setAttribute('aria-hidden','true');
-  row.insertBefore(flag, countryName || row.firstChild);
+  if (name === 'Unknown') return [];
+  const parts = key.split(/\s*\/\s*/).filter(Boolean);
+  const slugs = parts.map(part => map[part] || part.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')).filter(Boolean);
+  return [...new Set(slugs)];
+}
+export function applyDynamicCountryFlag(card, countryValue) {
+  const name = String(countryValue || 'Unknown').trim() || 'Unknown';
+  const row = card.querySelector('.country-row');
+  if (!row) return;
+  row.querySelectorAll('.country-flag').forEach(node => node.remove());
+  const countryName = row.querySelector('.country-name');
+  if (countryName) countryName.textContent = name;
+  const slugs = countryFlagSlugs(name);
+  row.classList.toggle('country-row-dual', slugs.length > 1);
+  for (const slug of slugs) {
+    const flag = document.createElement('span');
+    flag.className = 'country-flag flag-' + slug;
+    flag.setAttribute('aria-hidden','true');
+    row.insertBefore(flag, countryName || row.firstChild);
+  }
 }
 function replaceDynamicArtmeta(card, selector, title, html) {
   const art = card.querySelector('.artframe');
