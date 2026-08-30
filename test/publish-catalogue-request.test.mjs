@@ -117,7 +117,7 @@ test('existing static card update writes the complete cards map and does not cre
   assert.equal(calls.some(call => call.href.includes('/api/catalogue-entry/')), false);
 });
 
-test('archive renumbers the active cohort and records archived rank', async () => {
+test('archive removes active rank, stores archivedRank, and compacts the active cohort', async () => {
   const calls = [];
   const state = baseState({ cards: {
     a: { rank: 1, archived: false, taster: false },
@@ -140,7 +140,66 @@ test('archive renumbers the active cohort and records archived rank', async () =
 
   assert.equal(writtenState.cards.b.archived, true);
   assert.equal(writtenState.cards.b.archivedRank, 2);
+  assert.equal('rank' in writtenState.cards.b, false);
+  assert.equal(writtenState.cards.a.rank, 1);
   assert.equal(writtenState.cards.c.rank, 2);
+});
+
+test('any catalogue write normalises legacy archived ranks and active cohort gaps', async () => {
+  const calls = [];
+  const state = baseState({ cards: {
+    a: { rank: 1, archived: false, taster: false, quality: 7 },
+    old: { rank: 2, archived: true, archivedRank: 2, taster: false },
+    c: { rank: 4, archived: false, taster: false },
+    t1: { rank: 2, archived: false, taster: true },
+    tOld: { rank: 1, archived: true, archivedRank: 1, taster: true },
+    t2: { rank: 5, archived: false, taster: true }
+  }});
+  let writtenState;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
+      writtenState = JSON.parse(options.body); return jsonResponse({ ok: true });
+    } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=a`, response: new Response('<article data-key="a"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  await publishRequestDocument({ operation: 'upsert-entry', key: 'a', entry: { quality: 8 } }, {
+    fetchImpl: createFetchRouter(routes, calls), baseUrl: BASE, token: TOKEN, now: () => new Date('2026-08-31T00:00:00Z')
+  });
+
+  assert.equal('rank' in writtenState.cards.old, false);
+  assert.equal('rank' in writtenState.cards.tOld, false);
+  assert.deepEqual([writtenState.cards.a.rank, writtenState.cards.c.rank], [1, 2]);
+  assert.deepEqual([writtenState.cards.t1.rank, writtenState.cards.t2.rank], [1, 2]);
+});
+
+test('unarchive restores the saved archived rank and shifts active entries around it', async () => {
+  const calls = [];
+  const state = baseState({ cards: {
+    a: { rank: 1, archived: false, taster: false },
+    b: { archived: true, archivedRank: 2, archivedAt: '2026-08-30T00:00:00Z', taster: false },
+    c: { rank: 2, archived: false, taster: false }
+  }});
+  let writtenState;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
+      writtenState = JSON.parse(options.body); return jsonResponse({ ok: true });
+    } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=b`, response: new Response('<article data-key="b"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  await publishRequestDocument({ operation: 'unarchive-entry', key: 'b' }, {
+    fetchImpl: createFetchRouter(routes, calls), baseUrl: BASE, token: TOKEN, now: () => new Date('2026-08-31T00:00:00Z')
+  });
+
+  assert.equal(writtenState.cards.b.archived, false);
+  assert.equal(writtenState.cards.b.rank, 2);
+  assert.equal(writtenState.cards.a.rank, 1);
+  assert.equal(writtenState.cards.c.rank, 3);
 });
 
 test('image upload validates bytes, verifies download, and associates imageUrl', async () => {
