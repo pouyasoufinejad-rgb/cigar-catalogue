@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-isla-del-sol-maduro-coronets",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-coronets",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés maduro",
+      "Binder: Indonesian",
+      "Filler: Indonesian and Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/isla-del-sol/isla-del-sol-maduro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

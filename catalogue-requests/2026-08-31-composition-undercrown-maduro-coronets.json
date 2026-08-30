@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-undercrown-maduro-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-maduro-coronets",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Connecticut River Valley stalk-cut Habano",
+      "Filler: Brazilian Mata Fina and Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/undercrown/undercrown-maduro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-oliva-serie-g-maduro-special-g",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés maduro",
+      "Binder: Indonesian",
+      "Filler: Nicaraguan Habano"
+    ]
+  },
+  "note": "Composition researched from https://atlanticcigar.com/oliva-serie-g-maduro-special-g/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

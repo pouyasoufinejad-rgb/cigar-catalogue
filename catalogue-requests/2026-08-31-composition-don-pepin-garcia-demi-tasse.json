@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-don-pepin-garcia-demi-tasse",
+  "operation": "upsert-entry",
+  "key": "don-pepin-garcia-demi-tasse",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Nicaraguan Habano Rosado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://myfathercigars.com/cigar/don-pepin-garcia-original/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

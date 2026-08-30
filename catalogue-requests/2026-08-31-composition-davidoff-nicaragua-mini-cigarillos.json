@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-davidoff-nicaragua-mini-cigarillos",
+  "operation": "upsert-entry",
+  "key": "davidoff-nicaragua-mini-cigarillos",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Machine-made",
+      "Wrapper: Nicaraguan Habano Jalapa",
+      "Binder: Sumatran",
+      "Filler: Nicaraguan and Dominican"
+    ]
+  },
+  "note": "Composition researched from https://cigar-coop.com/2015/07/cigar-news-davidoff-nicaragua-mini-cigarillos.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

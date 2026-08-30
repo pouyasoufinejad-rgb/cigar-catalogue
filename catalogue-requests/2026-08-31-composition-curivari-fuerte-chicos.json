@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-curivari-fuerte-chicos",
+  "operation": "upsert-entry",
+  "key": "curivari-fuerte-chicos",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Nicaraguan",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://www.curivari.com/cigars-elgranrey.htm on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-kfc-ponies-sweets",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies-sweets",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Ecuadorian Connecticut Shade",
+      "Filler: Nicaraguan and Kentucky fire-cured American"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/kentucky-fire-cured/kentucky-fire-cured-sweet/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-oliva-serie-o-petit-corona",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-o-petit-corona",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Ecuadorian sun-grown Habano",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan Estelí, Condega and Jalapa"
+    ]
+  },
+  "note": "Composition researched from https://olivacigar.com/cigars/serie-o/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

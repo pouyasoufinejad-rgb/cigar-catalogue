@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-alonso-menendez-axe-charutos",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-axe-charutos",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Machine-made",
+      "Wrapper: Sumatra",
+      "Binder: Reconstituted tobacco",
+      "Filler: Brazilian Mata Fina short filler"
+    ]
+  },
+  "note": "Composition researched from https://www.cigarhut.com.au/alonso-menendez-axe-charutos/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}
