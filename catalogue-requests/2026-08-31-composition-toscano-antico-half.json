@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-toscano-antico-half",
+  "operation": "upsert-entry",
+  "key": "toscano-antico-half",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Fire-cured Kentucky tobacco",
+      "Wrapper: North American Kentucky",
+      "Binder: None (two-layer Toscano construction)",
+      "Filler: Italian and North American Kentucky"
+    ]
+  },
+  "note": "Composition researched from https://www.toscanocigars.com/cigars/toscano-antico/ on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}

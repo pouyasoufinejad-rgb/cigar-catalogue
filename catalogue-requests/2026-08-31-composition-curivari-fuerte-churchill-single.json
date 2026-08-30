@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-curivari-fuerte-churchill-single",
+  "operation": "upsert-entry",
+  "key": "curivari-fuerte-churchill-single",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Nicaraguan Cuban-seed tobacco",
+      "Binder: Nicaraguan Cuban-seed tobacco",
+      "Filler: Nicaraguan Cuban-seed tobacco"
+    ]
+  },
+  "note": "Composition researched from https://curivari.com/Main.htm on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}

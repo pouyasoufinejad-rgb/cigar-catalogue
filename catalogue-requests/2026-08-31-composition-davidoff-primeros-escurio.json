@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-davidoff-primeros-escurio",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-escurio",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Ecuadorian Habano",
+      "Binder: Brazilian Cubra",
+      "Filler: Brazilian Mata Fina and Cubra; Dominican San Vicente, Piloto and Olor"
+    ]
+  },
+  "note": "Composition researched from https://www.davidofflondon.com/collections/escurio/products/davidoff-escurio-robusto on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}

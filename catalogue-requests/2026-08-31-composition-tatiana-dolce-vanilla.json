@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-tatiana-dolce-vanilla",
+  "operation": "upsert-entry",
+  "key": "tatiana-dolce-vanilla",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Machine-made",
+      "Wrapper: Indonesian Sumatra",
+      "Binder: Dominican",
+      "Filler: Dominican Cuban-seed tobacco"
+    ]
+  },
+  "note": "Composition researched from https://www.cigars.com/item/tatiana-dolce/vanilla/TATDV.html on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}
