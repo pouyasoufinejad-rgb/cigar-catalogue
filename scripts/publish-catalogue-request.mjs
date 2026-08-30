@@ -89,6 +89,66 @@ function normaliseStateShape(value) {
   };
 }
 
+function htmlAttribute(tag, name) {
+  const pattern = new RegExp(`\\b${escapeRegex(name)}\\s*=\\s*(["'])(.*?)\\1`, 'i');
+  return tag.match(pattern)?.[2] ?? '';
+}
+
+function parseStaticRankingCards(html) {
+  const cards = {};
+  for (const match of String(html || '').matchAll(/<article\b[^>]*>/gi)) {
+    const tag = match[0];
+    const className = htmlAttribute(tag, 'class');
+    if (!/(?:^|\s)card(?:\s|$)/i.test(className)) continue;
+    const key = safeKey(htmlAttribute(tag, 'data-key'));
+    if (!key) continue;
+
+    const card = {
+      taster: htmlAttribute(tag, 'data-taster') === '1',
+      archived: htmlAttribute(tag, 'data-archived') === '1'
+    };
+    const rank = Number(htmlAttribute(tag, 'data-rank'));
+    if (Number.isFinite(rank) && rank >= 1) card.rank = Math.round(rank);
+    const archivedRank = Number(htmlAttribute(tag, 'data-archived-rank'));
+    if (Number.isFinite(archivedRank) && archivedRank >= 1) card.archivedRank = Math.round(archivedRank);
+    cards[key] = card;
+  }
+  return cards;
+}
+
+function rankingCardFromEntry(entry) {
+  const card = {
+    taster: Boolean(entry?.taster),
+    archived: Boolean(entry?.archived)
+  };
+  const rank = Number(entry?.rank);
+  if (Number.isFinite(rank) && rank >= 1) card.rank = Math.round(rank);
+  if (typeof entry?.archivedAt === 'string') card.archivedAt = entry.archivedAt;
+  return card;
+}
+
+async function completeRankingCards(repoRoot, state, includeStaticCatalogue) {
+  const cards = {};
+
+  if (includeStaticCatalogue) {
+    let html = '';
+    try {
+      html = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8');
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    Object.assign(cards, parseStaticRankingCards(html));
+  }
+
+  for (const [key, entry] of Object.entries(state.entries || {})) {
+    cards[key] = { ...(cards[key] || {}), ...rankingCardFromEntry(entry) };
+  }
+  for (const [key, override] of Object.entries(state.cards || {})) {
+    cards[key] = { ...(cards[key] || {}), ...stripDerivedCardValue(override) };
+  }
+  return cards;
+}
+
 function linesToMarkup(lines) {
   if (!Array.isArray(lines)) return undefined;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -170,6 +230,24 @@ function normaliseRankings(cardsInput) {
   }
 
   return cards;
+}
+
+function assertRankingInvariant(cardsInput, label) {
+  const cards = cardsInput || {};
+  for (const [key, card] of Object.entries(cards)) {
+    if (card?.archived && Object.prototype.hasOwnProperty.call(card, 'rank')) {
+      throw new Error(`${label} contains active rank on archived card "${key}".`);
+    }
+  }
+  for (const taster of [false, true]) {
+    const ranks = Object.values(cards)
+      .filter(card => !card?.archived && Boolean(card?.taster) === taster)
+      .map(card => rankNumber(card))
+      .sort((a, b) => a - b);
+    ranks.forEach((rank, index) => {
+      if (rank !== index + 1) throw new Error(`${label} has a gap or duplicate in the ${taster ? 'taster' : 'active'} rankings.`);
+    });
+  }
 }
 
 function reorderForTarget(cardsInput, key, targetCard, nowString) {
@@ -339,7 +417,8 @@ export async function publishRequestDocument(input, options = {}) {
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
-  state.cards = normaliseRankings(state.cards);
+  const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
+  state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue));
   const existingDynamic = isRecord(state.entries[request.key]) ? clone(state.entries[request.key]) : null;
   const existingCard = isRecord(state.cards[request.key]) ? clone(state.cards[request.key]) : null;
   const exists = Boolean(existingDynamic || existingCard);
@@ -405,6 +484,7 @@ export async function publishRequestDocument(input, options = {}) {
     state.cards[request.key] = nextCard;
   }
 
+  assertRankingInvariant(state.cards, 'Catalogue write');
   if (target === 'dynamic') await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry);
   await putState(fetchImpl, baseUrl, token, state);
 
@@ -413,16 +493,17 @@ export async function publishRequestDocument(input, options = {}) {
     savedEntry = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-entry/${encodeURIComponent(request.key)}`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Entry read-back');
     savedEntry = isRecord(savedEntry?.entry) ? savedEntry.entry : savedEntry;
     const expectedKeys = new Set([...intendedKeys(request)].filter(key => key !== 'archivedRank' && key !== 'laurel' && key !== 'productionHtml' && key !== 'practicalHtml'));
-    if (request.operation === 'archive-entry' || request.operation === 'unarchive-entry') expectedKeys.add('rank');
+    if (request.operation === 'unarchive-entry') expectedKeys.add('rank');
     assertSubset(savedEntry, nextEntry, expectedKeys, 'Entry read-back');
   }
 
   const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
   const verifiedState = normaliseStateShape(verifiedStateRaw);
+  assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back');
   const savedCard = verifiedState.cards[request.key];
   if (!isRecord(savedCard)) throw new Error(`Catalogue state read-back is missing card "${request.key}".`);
   const cardKeys = new Set([...intendedKeys(request)].filter(key => !DYNAMIC_ONLY_FIELDS.has(key) && key !== 'productionLines' && key !== 'practicalLines'));
-  if (request.operation === 'archive-entry' || request.operation === 'unarchive-entry') cardKeys.add('rank');
+  if (request.operation === 'unarchive-entry') cardKeys.add('rank');
   assertSubset(savedCard, nextCard, cardKeys, 'Catalogue state read-back');
 
   const htmlResponse = await fetchImpl(`${baseUrl}/?catalogue_verify=${encodeURIComponent(request.key)}`, { method: 'GET', headers: { accept: 'text/html' }, cache: 'no-store' });
