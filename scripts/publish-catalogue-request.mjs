@@ -145,9 +145,35 @@ function rankNumber(card) {
   return Number.isFinite(value) && value >= 1 ? Math.round(value) : Number.MAX_SAFE_INTEGER;
 }
 
-function reorderForTarget(cardsInput, key, targetCard, nowString) {
+function normaliseRankings(cardsInput) {
   const cards = {};
-  for (const [cardKey, value] of Object.entries(cardsInput || {})) cards[cardKey] = stripDerivedCardValue(value);
+  for (const [key, value] of Object.entries(cardsInput || {})) {
+    const card = stripDerivedCardValue(value);
+    if (card.archived) {
+      const archivedRank = Number(card.archivedRank);
+      const activeRank = rankNumber(card);
+      if ((!Number.isFinite(archivedRank) || archivedRank < 1) && activeRank !== Number.MAX_SAFE_INTEGER) {
+        card.archivedRank = activeRank;
+      }
+      delete card.rank;
+    }
+    cards[key] = card;
+  }
+
+  for (const taster of [false, true]) {
+    const cohort = Object.entries(cards)
+      .filter(([, card]) => !card.archived && Boolean(card.taster) === taster)
+      .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
+    cohort.forEach(([key], index) => {
+      cards[key] = { ...cards[key], rank: index + 1 };
+    });
+  }
+
+  return cards;
+}
+
+function reorderForTarget(cardsInput, key, targetCard, nowString) {
+  const cards = normaliseRankings(cardsInput);
   const existing = cards[key] || {};
   const oldArchived = Boolean(existing.archived);
   const oldTaster = Boolean(existing.taster);
@@ -166,13 +192,15 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
   }
 
   if (targetArchived) {
-    cards[key] = {
+    const archivedCard = {
       ...targetCard,
       archived: true,
       archivedAt: targetCard.archivedAt || existing.archivedAt || nowString,
       archivedRank: targetCard.archivedRank || existing.archivedRank || (Number.isFinite(oldRank) ? oldRank : requestedRank)
     };
-    return cards;
+    delete archivedCard.rank;
+    cards[key] = archivedCard;
+    return normaliseRankings(cards);
   }
 
   const cohort = Object.entries(cards)
@@ -183,7 +211,7 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
   cohort.forEach(([otherKey, card], cohortIndex) => {
     cards[otherKey] = { ...cards[otherKey], ...card, rank: cohortIndex + 1 };
   });
-  return cards;
+  return normaliseRankings(cards);
 }
 
 function validateImage(image, required) {
@@ -311,6 +339,7 @@ export async function publishRequestDocument(input, options = {}) {
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
+  state.cards = normaliseRankings(state.cards);
   const existingDynamic = isRecord(state.entries[request.key]) ? clone(state.entries[request.key]) : null;
   const existingCard = isRecord(state.cards[request.key]) ? clone(state.cards[request.key]) : null;
   const exists = Boolean(existingDynamic || existingCard);
@@ -366,7 +395,8 @@ export async function publishRequestDocument(input, options = {}) {
     state.cards = reorderForTarget(state.cards, request.key, nextCard, timestamp);
     nextCard = state.cards[request.key];
     if (target === 'dynamic') {
-      nextEntry.rank = nextCard.rank;
+      if (nextCard.archived) delete nextEntry.rank;
+      else nextEntry.rank = nextCard.rank;
       nextEntry.taster = Boolean(nextCard.taster);
       nextEntry.archived = Boolean(nextCard.archived);
       nextEntry.archivedAt = String(nextCard.archivedAt || '');
