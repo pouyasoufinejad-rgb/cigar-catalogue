@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-rocky-patel-disciple-half-corona",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade at TAVICUSA, Estelí",
+      "Wrapper: Mexican San Andrés maduro",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://www.rockypatel.com/cigar/disciple/ on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}

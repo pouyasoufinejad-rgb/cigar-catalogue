@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-tatiana-mini-vanilla",
+  "operation": "upsert-entry",
+  "key": "tatiana-mini-vanilla",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Machine-made",
+      "Wrapper: Indonesian",
+      "Binder: Dominican",
+      "Filler: Dominican Cuban-seed tobacco"
+    ]
+  },
+  "note": "Composition researched from https://www.smokingpipes.com/cigars/tatiana/moreinfo.cfm?product_id=660494 on 2026-08-31 after reconciling the active set against live production; wrapper, binder and filler are shown as separate Production lines. Safe to replay because the update is idempotent."
+}

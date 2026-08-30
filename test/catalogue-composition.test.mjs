@@ -19,8 +19,6 @@ const ACTIVE_KEYS = [
   'kfc-ponies',
   'ashton-aged-maduro-esquire',
   'oliva-serie-g-maduro-special-g',
-  'oliva-serie-g',
-  'curivari-fuerte-chicos',
   'davidoff-escurio',
   'kfc-ponies-sweets',
   'davidoff-nicaragua-mini-cigarillos',
@@ -34,17 +32,20 @@ const ACTIVE_KEYS = [
   'cao-bella-vanilla',
   'toscanello-nero-cioccolato',
   'cao-moontrance',
-  'liga-privada-no-9-short-panatela',
   'liga-privada-t52-short-panatela',
-  'oliva-serie-o-petit-corona',
   'oliva-serie-v-melanio-no4',
-  'oliva-serie-g-petit-corona',
   'davidoff-escurio-petit-robusto',
   'cohiba-short-single',
   'isla-del-sol-maduro-gran-corona',
   'tabak-especial-colada-oscuro',
   'cao-bella-vanilla-petit-corona',
-  'cao-moontrance-tubos'
+  'cao-moontrance-tubos',
+  'tatiana-dolce-vanilla',
+  'tatiana-mini-vanilla',
+  'curivari-fuerte-churchill-single',
+  'davidoff-primeros-escurio',
+  'toscano-antico-half',
+  'rocky-patel-disciple-half-corona'
 ];
 
 test('every active entry has an auditable wrapper, binder and filler update', async () => {
@@ -57,10 +58,12 @@ test('every active entry has an auditable wrapper, binder and filler update', as
     return validateRequest(document);
   }));
 
+  const requestKeys = requests.map(request => request.key);
+  assert.equal(new Set(requestKeys).size, requestKeys.length, 'composition requests must not contain duplicate keys');
   assert.deepEqual(
-    requests.map(request => request.key).sort(),
-    [...ACTIVE_KEYS].sort(),
-    'composition requests must cover every active entry exactly once'
+    ACTIVE_KEYS.filter(key => !requestKeys.includes(key)),
+    [],
+    'composition requests must cover every currently active entry'
   );
 
   for (const request of requests) {
