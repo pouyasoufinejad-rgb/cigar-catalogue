@@ -1,0 +1,110 @@
+name: Publish catalogue request
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/publish-catalogue.yml'
+      - 'catalogue-requests/**'
+      - 'scripts/publish-catalogue-request.mjs'
+      - 'test/**'
+      - 'src/**'
+      - 'wrangler.jsonc'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-catalogue.yml'
+      - 'catalogue-requests/**'
+      - 'scripts/publish-catalogue-request.mjs'
+      - 'test/**'
+      - 'src/**'
+      - 'wrangler.jsonc'
+      - 'package.json'
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: 'Repository-relative catalogue request JSON to retry'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-production-publisher
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Test publisher and Worker rendering
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run tests
+        run: npm test
+
+  publish:
+    name: Publish changed catalogue requests
+    needs: verify
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+      REQUEST_PATH: ${{ inputs.request_path }}
+      BEFORE_SHA: ${{ github.event.before }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Publish requests sequentially
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files=()
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ ! "${REQUEST_PATH}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
+              echo "::error::request_path must be a JSON file directly under catalogue-requests/."
+              exit 1
+            fi
+            if [[ ! -f "${REQUEST_PATH}" ]]; then
+              echo "::error::Request file does not exist: ${REQUEST_PATH}"
+              exit 1
+            fi
+            files=("${REQUEST_PATH}")
+          else
+            if [[ -n "${BEFORE_SHA}" && ! "${BEFORE_SHA}" =~ ^0+$ ]]; then
+              mapfile -t files < <(git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
+            else
+              mapfile -t files < <(git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
+            fi
+          fi
+
+          if (( ${#files[@]} == 0 )); then
+            echo "No catalogue request JSON files changed; nothing to publish."
+            exit 0
+          fi
+
+          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
+            echo "::error::CATALOGUE_ADMIN_TOKEN repository Actions secret is not configured."
+            exit 1
+          fi
+
+          for request in "${files[@]}"; do
+            if [[ ! "${request}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
+              echo "::error::Refusing unexpected request path: ${request}"
+              exit 1
+            fi
+            echo "Publishing ${request}"
+            node scripts/publish-catalogue-request.mjs "${request}"
+          done
