@@ -3,6 +3,8 @@
   "private": true,
   "version": "136.0.0",
   "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "publish:catalogue": "node scripts/publish-catalogue-request.mjs",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"
   },
