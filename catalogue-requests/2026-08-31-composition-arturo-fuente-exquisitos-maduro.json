@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-arturo-fuente-exquisitos-maduro",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Connecticut Broadleaf maduro",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ]
+  },
+  "note": "Composition researched from https://arturofuente.com/_download/AF_Catalog_2020.pdf on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

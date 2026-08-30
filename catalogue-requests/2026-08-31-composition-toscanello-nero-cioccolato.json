@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-toscanello-nero-cioccolato",
+  "operation": "upsert-entry",
+  "key": "toscanello-nero-cioccolato",
+  "entry": {
+    "productionLines": [
+      "Chocolate flavoured",
+      "Machine-made",
+      "Wrapper: North American fire-cured Kentucky",
+      "Binder: None (two-layer Toscano construction)",
+      "Filler: Italian and North American fire-cured Kentucky short filler"
+    ]
+  },
+  "note": "Composition researched from https://www.toscanocigars.com/smokersguide/pills/the-production-process-of-the-toscano-cigar-wrapper/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

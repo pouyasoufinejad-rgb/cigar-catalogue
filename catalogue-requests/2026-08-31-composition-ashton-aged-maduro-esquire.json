@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-ashton-aged-maduro-esquire",
+  "operation": "upsert-entry",
+  "key": "ashton-aged-maduro-esquire",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Connecticut Broadleaf maduro",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ]
+  },
+  "note": "Composition researched from https://kohlhase-soehne.com/en/brands/ashton/aged-maduro on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

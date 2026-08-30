@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-tabak-especial-cafecita-negra",
+  "operation": "upsert-entry",
+  "key": "tabak-especial-cafecita-negra",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés maduro",
+      "Binder: Sumatran",
+      "Filler: Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/tabak-especial/tabak-especial-negra/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

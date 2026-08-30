@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-liga-privada-no-9-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-coronets",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Connecticut River Valley Broadleaf Oscuro",
+      "Binder: Brazilian Mata Fina",
+      "Filler: Nicaraguan and Honduran"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/liga-privada/liga-privada-no-9/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

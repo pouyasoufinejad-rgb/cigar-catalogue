@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-cao-bella-vanilla-petit-corona",
+  "operation": "upsert-entry",
+  "key": "cao-bella-vanilla-petit-corona",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Cameroon",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Dominican"
+    ]
+  },
+  "note": "Composition researched from https://www.caocigars.com/cigars/bella-vanilla/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

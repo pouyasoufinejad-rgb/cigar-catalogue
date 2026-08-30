@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-kfc-ponies",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan and Kentucky fire-cured American"
+    ]
+  },
+  "note": "Composition researched from https://drewestate.com/products/kentucky-fire-cured/kentucky-fire-cured-original/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

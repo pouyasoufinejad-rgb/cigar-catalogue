@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Ecuadorian Sumatra",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan, including Jalapa ligero"
+    ]
+  },
+  "note": "Composition researched from https://olivacigar.com/cigars/serie-v-melanio/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

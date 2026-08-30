@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-cao-moontrance",
+  "operation": "upsert-entry",
+  "key": "cao-moontrance",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Machine-made",
+      "Wrapper: Cameroon",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Dominican"
+    ]
+  },
+  "note": "Composition researched from https://www.caocigars.com/cigars/moontrance/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

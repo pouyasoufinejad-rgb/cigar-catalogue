@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-alonso-menendez-gold-cigarillo",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-gold-cigarillo",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Machine-made",
+      "Wrapper: Natural Sumatra",
+      "Binder: Reconstituted tobacco",
+      "Filler: Brazilian Mata Fina, Mata Norte and Virginia short filler"
+    ]
+  },
+  "note": "Composition researched from https://www.tabacariadamata.com.br/cigarrilha-alonso-menendez-gold-c-piteira-5un.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-rocky-patel-sun-grown-juniors",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Ecuadorian Sumatra",
+      "Binder: Nicaraguan",
+      "Filler: Dominican and Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://www.rockypatel.com/cigar/sun-grown/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

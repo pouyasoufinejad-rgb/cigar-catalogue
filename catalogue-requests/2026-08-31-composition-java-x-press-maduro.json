@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-java-x-press-maduro",
+  "operation": "upsert-entry",
+  "key": "java-x-press-maduro",
+  "entry": {
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Brazilian Mata Fina maduro",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ]
+  },
+  "note": "Composition researched from https://www.cigarplace.biz/rocky-patel-java-maduro-x-press.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

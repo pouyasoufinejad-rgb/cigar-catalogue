@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-oliva-serie-v-club-20",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-club-20",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Machine-made",
+      "Wrapper: Ecuadorian sun-grown Habano",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan, including Jalapa ligero"
+    ]
+  },
+  "note": "Composition researched from https://olivacigar.com/cigars/serie-v/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

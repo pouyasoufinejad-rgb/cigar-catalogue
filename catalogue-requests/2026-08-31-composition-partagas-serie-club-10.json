@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-partagas-serie-club-10",
+  "operation": "upsert-entry",
+  "key": "partagas-serie-club-10",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Machine-made",
+      "Wrapper: Cuban tobacco (variety undisclosed)",
+      "Binder: Cuban tobacco (variety undisclosed)",
+      "Filler: Cuban short filler (blend undisclosed)"
+    ]
+  },
+  "note": "Composition researched from https://www.habanos.com/en/the-anatomy-of-a-habano/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}

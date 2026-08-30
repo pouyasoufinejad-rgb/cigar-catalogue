@@ -1,0 +1,15 @@
+{
+  "id": "2026-08-31-composition-aj-fernandez-new-world-oscuro",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-oscuro",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Dark Nicaraguan",
+      "Binder: Nicaraguan Jalapa",
+      "Filler: Nicaraguan Ometepe, Condega and Estelí"
+    ]
+  },
+  "note": "Composition researched from https://ajfcigars.com/cigars/new-world/oscuro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+}
