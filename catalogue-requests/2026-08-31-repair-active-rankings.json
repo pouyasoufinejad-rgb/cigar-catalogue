@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "id": "2026-08-31-repair-active-rankings",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-coronets",
+  "entry": {},
+  "note": "One-time no-op publication to rebuild active and taster rankings from the complete static catalogue plus dynamic entries and KV overrides after fixing archive ranking normalization."
+}
