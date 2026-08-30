@@ -1,0 +1,9 @@
+{
+  "id": "2026-08-31-rocky-patel-disciple-half-corona-taster",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "taster": true
+  },
+  "note": "Correct Rocky Patel Disciple Half Corona from main catalogue entry to taster cohort. Preserve all other fields and let publisher keep ranks contiguous."
+}
