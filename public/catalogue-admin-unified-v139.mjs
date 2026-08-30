@@ -1,7 +1,4 @@
-const QUALITY_BENCHMARKS = Object.freeze({
-  1: 1.75, 2: 2.50, 3: 3.50, 4: 5, 5: 7,
-  6: 10, 7: 14, 8: 18, 9: 22, 10: 26
-});
+import { deriveValue } from './catalogue-value.mjs';
 
 export function sanitiseKey(value) {
   return String(value || '')
@@ -36,30 +33,25 @@ function finiteNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
-export function deriveValue(price, quality) {
-  const q = clampScore(quality);
-  const benchmark = QUALITY_BENCHMARKS[q];
-  const p = Math.max(0, finiteNumber(price));
-  const ratio = p > 0 ? p / benchmark : NaN;
-  const raw = Number.isFinite(ratio) && ratio > 0 ? 6 - 3.5 * Math.log2(ratio) : 1;
-  return {
-    benchmark,
-    ratio,
-    score: Math.max(1, Math.min(10, Math.round(raw)))
-  };
-}
-
 export function mergeCardOverride(existing, patch) {
   const output = { ...(existing && typeof existing === 'object' ? existing : {}) };
+  delete output.value;
   for (const [key, value] of Object.entries(patch && typeof patch === 'object' ? patch : {})) {
-    if (value !== undefined) output[key] = value;
+    if (key !== 'value' && value !== undefined) output[key] = value;
+  }
+  return output;
+}
+
+function stripDerivedValuesFromCards(cards) {
+  const output = {};
+  for (const [key, value] of Object.entries(cards && typeof cards === 'object' ? cards : {})) {
+    output[key] = mergeCardOverride(value, {});
   }
   return output;
 }
 
 export function buildEditorialOverride(input) {
   const quality = clampScore(input.quality);
-  const price = Math.max(0, finiteNumber(input.price));
   const archivedRank = input.archivedRank ? Math.max(1, Math.round(finiteNumber(input.archivedRank, 1))) : null;
   return {
     archived: Boolean(input.archived),
@@ -69,7 +61,6 @@ export function buildEditorialOverride(input) {
     rank: Math.max(1, Math.round(finiteNumber(input.rank, 1))),
     strength: clampScore(input.strength),
     quality,
-    value: deriveValue(price, quality).score,
     size: ['gold', 'silver', 'bronze'].includes(input.size) ? input.size : 'bronze',
     laurel: ['auto', 'none', 'crown', 'gem'].includes(input.laurel) ? input.laurel : 'auto',
     experienceTags: String(input.experience || '').split(/\r?\n/).map(value => value.trim()).filter(Boolean),
@@ -113,7 +104,7 @@ function textLinesFromMarkup(html) {
 
 export function buildSavePlan({ state, key, dynamic, structural, editorial, sections }) {
   const current = state && typeof state === 'object' ? state : {};
-  const cards = { ...(current.cards && typeof current.cards === 'object' ? current.cards : {}) };
+  const cards = stripDerivedValuesFromCards(current.cards);
   cards[key] = mergeCardOverride(cards[key], { ...structural, ...editorial });
   const statePayload = {
     version: 3,
@@ -137,7 +128,6 @@ export function buildSavePlan({ state, key, dynamic, structural, editorial, sect
       country: structural.country || 'Unknown',
       strength: clampScore(editorial.strength),
       quality: clampScore(editorial.quality),
-      value: deriveValue(structural.price, editorial.quality).score,
       size: ['gold', 'silver', 'bronze'].includes(editorial.size) ? editorial.size : 'bronze',
       risk: Math.max(1, Math.min(3, Math.round(finiteNumber(structural.risk, 1)))),
       stock: prior.stock || 'unknown',
@@ -159,6 +149,7 @@ export function buildSavePlan({ state, key, dynamic, structural, editorial, sect
       priceChecked: prior.priceChecked || '',
       stockChecked: prior.stockChecked || ''
     };
+    delete entryPayload.value;
   }
   return { statePayload, entryPayload };
 }
@@ -221,6 +212,46 @@ const ENTRY_API = '/api/catalogue-entry/';
 const IMAGE_API = '/api/catalogue-image/';
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
+let adminTokenMemory = '';
+
+export function buildAdminAuthHeaders(token, initialHeaders = {}) {
+  const headers = new Headers(initialHeaders);
+  headers.set('authorization', `Bearer ${String(token || '')}`);
+  return headers;
+}
+
+function readAdminToken() {
+  if (adminTokenMemory) return adminTokenMemory;
+  try { adminTokenMemory = sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY) || ''; }
+  catch (_) { adminTokenMemory = ''; }
+  return adminTokenMemory;
+}
+
+function storeAdminToken(token) {
+  adminTokenMemory = String(token || '').trim();
+  try {
+    if (adminTokenMemory) sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, adminTokenMemory);
+    else sessionStorage.removeItem(ADMIN_TOKEN_SESSION_KEY);
+  } catch (_) {}
+}
+
+function requireAdminToken() {
+  const existing = readAdminToken();
+  if (existing) return existing;
+  const entered = globalThis.prompt?.('Admin token required to change the catalogue.') || '';
+  const token = entered.trim();
+  if (!token) throw new Error('Admin token is required to save catalogue changes.');
+  storeAdminToken(token);
+  return token;
+}
+
+export async function adminWriteFetch(url, options = {}) {
+  const token = requireAdminToken();
+  const response = await fetch(url, { ...options, headers: buildAdminAuthHeaders(token, options.headers) });
+  if (response.status === 401) storeAdminToken('');
+  return response;
+}
 
 function q(id) { return document.getElementById(id); }
 function own(object, key) { return Object.prototype.hasOwnProperty.call(object || {}, key); }
@@ -332,13 +363,6 @@ function ensureUnifiedUi() {
     document.head.appendChild(style);
   }
 }
-function replaceOwnedButton(id) {
-  const original = q(id);
-  if (!original) return null;
-  const replacement = original.cloneNode(true);
-  original.replaceWith(replacement);
-  return replacement;
-}
 function setStatus(message, error = false) {
   const node = q('catalogue-admin-status');
   if (!node) return;
@@ -412,8 +436,11 @@ function setRatingVisual(card, label, score) {
   const medal = node.querySelector('.medal');
   if (medal) { medal.classList.remove('gold','silver','bronze'); medal.classList.add(tier); }
   const bold = node.querySelector('b'); if (bold) bold.textContent = tier[0].toUpperCase() + tier.slice(1);
-  const small = node.querySelector('.subscore'); if (small) small.textContent = `${value}/10`;
-  if (label.toLowerCase() === 'value') card.dataset.value = String(value >= 7 ? 3 : value >= 5 ? 2 : 1);
+  let small = node.querySelector('.subscore');
+  if (!small) { small = document.createElement('small'); small.className = 'subscore'; node.appendChild(small); }
+  small.textContent = `${value}/10`;
+  const key = label.toLowerCase();
+  if (['strength','quality','value'].includes(key)) card.dataset[key] = String(value >= 7 ? 3 : value >= 5 ? 2 : 1);
 }
 function updateValueDisplay(card, price, quality, explicitScore = null) {
   const result = deriveValue(price, quality);
@@ -426,6 +453,23 @@ function updateValueDisplay(card, price, quality, explicitScore = null) {
     row.innerHTML = `<span>Q${clampScore(quality)} benchmark <b>${formatAUD(result.benchmark)}</b></span><span>Actual <b>${formatAUD(price)}</b></span><span>Ratio <b>${Number.isFinite(result.ratio) ? result.ratio.toFixed(2) : '—'}×</b></span>`;
   }
 }
+export function refreshValueDisplayForCard(card) {
+  if (!card) return null;
+  const quality = scoreFromCard(card, 'Quality', 5);
+  const price = Math.max(0, finiteNumber(card.dataset.price));
+  const result = deriveValue(price, quality);
+  updateValueDisplay(card, price, quality);
+  card.dataset.expected = String(result.benchmark);
+  card.dataset.ratio = Number.isFinite(result.ratio) ? result.ratio.toFixed(2) : '';
+  return result;
+}
+
+export function refreshAllValueDisplays(root = document) {
+  const cards = Array.from(root?.querySelectorAll?.('article.card[data-key]') || []);
+  cards.forEach(refreshValueDisplayForCard);
+  return cards.length;
+}
+
 function replaceShopLinks(card, links) {
   card.querySelectorAll('a.shop').forEach(node => node.remove());
   const body = card.querySelector('.cardbody');
@@ -484,8 +528,7 @@ function applyStructuralOverrideToCard(card, override) {
     } else bottom?.remove();
   }
   const quality = stateForBrowser.cards?.[card.dataset.key]?.quality ?? scoreFromCard(card, 'Quality', 5);
-  const value = stateForBrowser.cards?.[card.dataset.key]?.value ?? deriveValue(card.dataset.price, quality).score;
-  updateValueDisplay(card, card.dataset.price, quality, value);
+  updateValueDisplay(card, card.dataset.price, quality);
 }
 
 
@@ -563,27 +606,96 @@ function replaceDynamicExperience(card, tags) {
   clean.forEach(value => { const chip = document.createElement('span'); chip.className = 'tag-chip'; chip.textContent = value; items.appendChild(chip); });
   group.appendChild(items); groups.appendChild(group);
 }
-function applyDynamicLaurel(card, saved) {
+function refreshLaurel(card, saved = {}) {
+  card.classList.remove('crown-laurel','gem-laurel');
   card.querySelectorAll('.gem-award').forEach(node => node.remove());
   const medals = card.querySelector('.medals');
   if (!medals) return;
   let kind = String(saved.laurel || 'auto').toLowerCase();
   if (kind === 'none') return;
   if (kind === 'auto') {
+    const strength = saved.strength != null ? finiteNumber(saved.strength, 0) : scoreFromCard(card, 'Strength', 0);
+    const quality = saved.quality != null ? finiteNumber(saved.quality, 0) : scoreFromCard(card, 'Quality', 0);
+    const size = saved.size || tierFromCard(card, 'Size', 'bronze');
+    const value = deriveValue(card.dataset.price, quality).score;
     let golds = 0;
-    if (finiteNumber(saved.strength, 0) >= 7) golds++;
-    if (finiteNumber(saved.quality, 0) >= 7) golds++;
-    if (String(saved.size || '').toLowerCase() === 'gold') golds++;
-    if (finiteNumber(saved.value, 0) >= 7) golds++;
-    kind = golds >= 4 ? 'gem' : golds >= 3 ? 'crown' : 'none';
+    if (strength >= 7) golds++;
+    if (quality >= 7) golds++;
+    if (String(size).toLowerCase() === 'gold') golds++;
+    if (value >= 7) golds++;
+    kind = strength >= 5 && golds >= 4 ? 'gem' : strength >= 5 && golds >= 3 ? 'crown' : 'none';
   }
   if (!['gem','crown'].includes(kind)) return;
+  card.classList.add(kind === 'gem' ? 'gem-laurel' : 'crown-laurel');
   const template = document.querySelector('.gem-award.' + (kind === 'gem' ? 'gem-tier' : 'crown-tier'));
   if (!template) return;
   medals.insertAdjacentElement('beforebegin', template.cloneNode(true));
 }
-function resetDynamicFreshness(card, saved) {
-  if (card.dataset.dynamicEntry !== '1') return;
+
+function renderManualStock(card, mode) {
+  let row = card.querySelector('.freshness');
+  const body = card.querySelector('.cardbody');
+  if (!row && body) {
+    row = document.createElement('div');
+    row.className = 'freshness';
+    const medals = card.querySelector('.medals');
+    body.insertBefore(row, medals || null);
+  }
+  if (!row) return;
+  let stateNode = row.querySelector('.stock-state');
+  let checkedNode = row.querySelector('.checked-state');
+  if (!stateNode || !checkedNode) {
+    row.innerHTML = '<span class="stock-state"></span><span class="checked-state"></span>';
+    stateNode = row.querySelector('.stock-state');
+    checkedNode = row.querySelector('.checked-state');
+  }
+  const label = mode === 'in' ? 'Manually marked available' : mode === 'out' ? 'Manually marked unavailable' : 'Stock unconfirmed · manual hold';
+  stateNode.textContent = label;
+  checkedNode.textContent = 'Manual stock override saved to Cloudflare KV';
+  row.classList.remove('live-stock-in','live-stock-out','live-stock-unknown','live-stock-delisted');
+  row.classList.add(mode === 'in' ? 'live-stock-in' : mode === 'out' ? 'live-stock-out' : 'live-stock-unknown');
+  row.setAttribute('aria-label', `${label}; automatic stock checks disabled for this card`);
+}
+
+function applyStockPinToCard(card, rawPin) {
+  const pin = String(rawPin || 'auto').toLowerCase();
+  if (!['in','out','hold'].includes(pin)) {
+    delete card.dataset.stockPin;
+    return;
+  }
+  card.dataset.stockPin = pin;
+  card.dataset.stock = pin === 'hold' ? 'unknown' : pin;
+  renderManualStock(card, pin);
+}
+
+function refreshRankVisual(card, explicitEyebrow = null) {
+  const rank = String(card.dataset.rank || '');
+  const isTaster = card.dataset.taster === '1';
+  const archived = card.dataset.archived === '1';
+  const rankflag = card.querySelector('.rankflag');
+  const flagLabel = rankflag?.querySelector('span');
+  const flag = rankflag?.querySelector('b');
+  const eyebrow = card.querySelector('.eyebrow');
+  const existing = eyebrow ? eyebrow.textContent.replace(/^(?:T\d+|Taster|No\.\s*\d+|Archived)\s*[—–-]\s*/, '').trim() : '';
+  const cleanLabel = explicitEyebrow == null ? existing : String(explicitEyebrow).trim();
+  if (archived) {
+    if (flagLabel) flagLabel.textContent = 'Archived';
+    if (flag) flag.textContent = '';
+    if (eyebrow) eyebrow.textContent = `Archived — ${cleanLabel}`;
+    return;
+  }
+  const shown = isTaster ? `T${rank}` : rank;
+  if (flagLabel) flagLabel.textContent = isTaster ? 'Taster' : 'No.';
+  if (flag) flag.textContent = shown;
+  if (eyebrow) eyebrow.textContent = isTaster ? `${shown} — ${cleanLabel}` : `No. ${rank} — ${cleanLabel}`;
+}
+
+function linesToMarkup(lines) {
+  return Array.isArray(lines) ? lines.map(line => `<span class="artmeta-line">${escapeHtml(line)}</span>`).join('') : '';
+}
+
+export function resetDynamicFreshness(card, saved = {}) {
+  if (!card || card.dataset?.dynamicEntry !== '1') return;
   const pin = String(saved.stockPin || 'auto').toLowerCase();
   if (pin === 'in' || pin === 'out') card.dataset.stock = pin;
   else card.dataset.stock = 'unknown';
@@ -593,51 +705,75 @@ function resetDynamicFreshness(card, saved) {
   let row = card.querySelector('.freshness');
   const body = card.querySelector('.cardbody');
   if (!row && body) {
-    row = document.createElement('div'); row.className = 'freshness';
-    const medals = card.querySelector('.medals'); body.insertBefore(row, medals || null);
+    row = document.createElement('div');
+    row.className = 'freshness';
+    const medals = card.querySelector('.medals');
+    body.insertBefore(row, medals || null);
   }
   if (!row) return;
   row.className = 'freshness live-stock-' + (card.dataset.stock === 'in' ? 'in' : card.dataset.stock === 'out' ? 'out' : 'unknown');
   row.removeAttribute('data-checked');
-  const text = card.dataset.stock === 'in' ? 'Available (manual)' : card.dataset.stock === 'out' ? 'Unavailable (manual)' : 'Stock check pending';
-  row.innerHTML = '<span class="stock-state">' + escapeHtml(text) + '</span><span class="checked-state">Dynamic catalogue entry</span>';
-  row.setAttribute('aria-label', text + '; Dynamic catalogue entry');
+  const label = card.dataset.stock === 'in' ? 'Available (manual)' : card.dataset.stock === 'out' ? 'Unavailable (manual)' : 'Stock check pending';
+  row.innerHTML = '<span class="stock-state">' + escapeHtml(label) + '</span><span class="checked-state">Dynamic catalogue entry</span>';
+  row.setAttribute('aria-label', label + '; Dynamic catalogue entry');
 }
-function applyDynamicEditorialToCard(card, saved = {}) {
+
+function applyEditorialToCard(card, saved = {}) {
   if (!card) return;
-  const rank = Math.max(1, Math.round(finiteNumber(saved.rank, card.dataset.rank || 1)));
-  card.dataset.rank = String(rank);
-  if (saved.taster) card.dataset.taster = '1'; else delete card.dataset.taster;
-  if (saved.archived) card.dataset.archived = '1'; else delete card.dataset.archived;
-  if (saved.archivedAt) card.dataset.archivedAt = String(saved.archivedAt); else delete card.dataset.archivedAt;
-  const rankflag = card.querySelector('.rankflag');
-  if (rankflag) {
-    const small = rankflag.querySelector('span'); const big = rankflag.querySelector('b');
-    if (small) small.textContent = saved.archived ? 'Archived' : saved.taster ? 'T' : 'No.';
-    if (big) big.textContent = String(rank);
-  }
-  if (saved.strength != null) setRatingVisual(card, 'Strength', saved.strength);
-  if (saved.quality != null) setRatingVisual(card, 'Quality', saved.quality);
-  applyDynamicSizeVisual(card, saved.size || deriveSize(saved.length, saved.ring));
-  const quality = saved.quality != null ? saved.quality : scoreFromCard(card, 'Quality', 5);
-  const explicitValue = saved.value != null ? saved.value : deriveValue(card.dataset.price, quality).score;
-  updateValueDisplay(card, card.dataset.price, quality, explicitValue);
   const isDynamic = card.dataset.dynamicEntry === '1';
-  const eyebrow = card.querySelector('.eyebrow'); if (eyebrow && (isDynamic || saved.eyebrow != null)) eyebrow.textContent = String(saved.eyebrow || '');
-  const summary = card.querySelector('.summary'); if (summary && (isDynamic || saved.summaryHtml != null)) summary.innerHTML = sanitiseMarkup(saved.summaryHtml || '');
-  let note = card.querySelector('.mog-note');
-  const noteHtml = sanitiseMarkup(saved.noteHtml || '');
-  if (noteHtml) {
-    if (!note) { note = document.createElement('p'); note.className = 'mog-note'; (summary || card.querySelector('.cardbody'))?.insertAdjacentElement('afterend', note); }
-    note.innerHTML = noteHtml;
-  } else note?.remove();
-  replaceDynamicExperience(card, saved.experienceTags);
-  replaceDynamicArtmeta(card, '.artmeta-left', 'Production', saved.productionHtml || '');
-  replaceDynamicArtmeta(card, '.artmeta-right', 'Practical', saved.practicalHtml || '');
-  applyDynamicCountryFlag(card, saved.country || card.querySelector('.country-name')?.textContent || 'Unknown');
-  applyDynamicLaurel(card, saved);
+
+  if (isDynamic || own(saved, 'rank')) card.dataset.rank = String(Math.max(1, Math.round(finiteNumber(saved.rank, card.dataset.rank || 1))));
+  if (isDynamic || own(saved, 'taster')) {
+    if (saved.taster) card.dataset.taster = '1'; else delete card.dataset.taster;
+  }
+  if (isDynamic || own(saved, 'archived')) {
+    if (saved.archived) card.dataset.archived = '1'; else delete card.dataset.archived;
+    card.classList.toggle('archived-card', Boolean(saved.archived));
+  }
+  if (isDynamic || own(saved, 'archivedAt')) {
+    if (saved.archivedAt) card.dataset.archivedAt = String(saved.archivedAt); else delete card.dataset.archivedAt;
+  }
+  if (isDynamic || own(saved, 'stockPin')) applyStockPinToCard(card, saved.stockPin);
+
+  if (isDynamic || own(saved, 'strength')) setRatingVisual(card, 'Strength', saved.strength ?? 5);
+  if (isDynamic || own(saved, 'quality')) setRatingVisual(card, 'Quality', saved.quality ?? 5);
+  if (isDynamic || own(saved, 'size')) applyDynamicSizeVisual(card, saved.size || deriveSize(saved.length, saved.ring));
+
+  const quality = own(saved, 'quality') ? saved.quality : scoreFromCard(card, 'Quality', 5);
+  updateValueDisplay(card, card.dataset.price, quality);
+
+  if (isDynamic || own(saved, 'summaryHtml')) {
+    const summary = card.querySelector('.summary');
+    if (summary) summary.innerHTML = sanitiseMarkup(saved.summaryHtml || '');
+  }
+  if (isDynamic || own(saved, 'noteHtml')) {
+    let note = card.querySelector('.mog-note');
+    const noteHtml = sanitiseMarkup(saved.noteHtml || '');
+    if (noteHtml) {
+      if (!note) {
+        note = document.createElement('p');
+        note.className = 'mog-note';
+        const shop = card.querySelector('a.shop');
+        if (shop) shop.insertAdjacentElement('beforebegin', note);
+        else card.querySelector('.cardbody')?.appendChild(note);
+      }
+      note.innerHTML = noteHtml;
+    } else note?.remove();
+  }
+  if (isDynamic || own(saved, 'experienceTags')) replaceDynamicExperience(card, saved.experienceTags || []);
+  if (isDynamic || own(saved, 'productionHtml') || own(saved, 'productionLines')) {
+    replaceDynamicArtmeta(card, '.artmeta-left', 'Production', own(saved, 'productionHtml') ? saved.productionHtml : linesToMarkup(saved.productionLines));
+  }
+  if (isDynamic || own(saved, 'practicalHtml') || own(saved, 'practicalLines')) {
+    replaceDynamicArtmeta(card, '.artmeta-right', 'Practical', own(saved, 'practicalHtml') ? saved.practicalHtml : linesToMarkup(saved.practicalLines));
+  }
+  if (isDynamic || own(saved, 'country')) applyDynamicCountryFlag(card, saved.country || card.querySelector('.country-name')?.textContent || 'Unknown');
+
+  refreshLaurel(card, saved);
+  refreshRankVisual(card, own(saved, 'eyebrow') || isDynamic ? (saved.eyebrow || '') : null);
   resetDynamicFreshness(card, saved);
 }
+
 function dynamicCardHost(saved = {}) {
   if (saved.archived) return document.getElementById('archived-cards') || document.getElementById('flat-main');
   if (saved.taster) return document.getElementById('taster-cards') || document.getElementById('flat-main');
@@ -666,7 +802,7 @@ function createDynamicCard(key, entry, state) {
   host.appendChild(card);
   const merged = { ...entry, ...(state.cards?.[key] || {}) };
   applyStructuralOverrideToCard(card, merged);
-  applyDynamicEditorialToCard(card, merged);
+  applyEditorialToCard(card, merged);
   return card;
 }
 function hydrateDynamicEntries(state) {
@@ -674,7 +810,7 @@ function hydrateDynamicEntries(state) {
   for (const [key, entry] of Object.entries(state.entries || {})) {
     let card = document.querySelector('article.card[data-key="' + CSS.escape(key) + '"]');
     if (!card) { card = createDynamicCard(key, entry, state); created++; }
-    else if (card.dataset.dynamicEntry === '1') applyDynamicEditorialToCard(card, { ...entry, ...(state.cards?.[key] || {}) });
+    else if (card.dataset.dynamicEntry === '1') applyEditorialToCard(card, { ...entry, ...(state.cards?.[key] || {}) });
   }
   return created;
 }
@@ -724,15 +860,19 @@ async function loadStateForBrowser(showMessage = false) {
       entries: payload?.entries && typeof payload.entries === 'object' ? payload.entries : {}
     };
     serverAvailableForBrowser = true;
+    applySectionsToDom(stateForBrowser.sections);
     hydrateDynamicEntries(stateForBrowser);
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const key = card.dataset.key;
       applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
-      if (card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key]) applyDynamicEditorialToCard(card, { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) });
+      const editorial = card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key] ? { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) } : (stateForBrowser.cards?.[key] || {});
+      applyEditorialToCard(card, editorial);
     }
+    refreshAllValueDisplays();
     if (typeof window.catalogueRefreshCardCollections === 'function') window.catalogueRefreshCardCollections();
     else if (typeof window.reorder === 'function') window.reorder();
     rebuildCardSelectFromDom();
+    populateGlobalFields();
     if (showMessage) setStatus(`Reloaded ${Object.keys(stateForBrowser.cards).length} saved card overrides and ${Object.keys(stateForBrowser.entries).length} dynamic entries from Cloudflare KV.`);
     return stateForBrowser;
   } catch (error) {
@@ -741,6 +881,43 @@ async function loadStateForBrowser(showMessage = false) {
     return stateForBrowser;
   }
 }
+function applySectionsToDom(sections = {}) {
+  const legend = document.querySelector('.legend-dropdown .legend');
+  const benchmarks = document.querySelector('#test-impact-map .test-impact-panel');
+  if (typeof sections.legendHtml === 'string' && legend) legend.innerHTML = sanitiseMarkup(sections.legendHtml);
+  if (typeof sections.benchmarksHtml === 'string' && benchmarks) benchmarks.innerHTML = sanitiseMarkup(sections.benchmarksHtml);
+}
+
+function populateGlobalFields() {
+  const legend = document.querySelector('.legend-dropdown .legend');
+  const benchmarks = document.querySelector('#test-impact-map .test-impact-panel');
+  setField('catalogue-admin-legend', stateForBrowser.sections.legendHtml ?? legend?.innerHTML ?? '');
+  setField('catalogue-admin-benchmarks', stateForBrowser.sections.benchmarksHtml ?? benchmarks?.innerHTML ?? '');
+}
+
+function updateRankMax() {
+  const card = selectedCard();
+  const rankInput = q('catalogue-admin-rank');
+  if (!card || !rankInput) return;
+  const activeCount = currentCardRows().filter(row => !row.archived && row.taster === (card.dataset.taster === '1')).length;
+  const archived = q('catalogue-admin-section')?.value === 'archived';
+  rankInput.max = String(activeCount + (archived ? 0 : (card.dataset.archived === '1' ? 1 : 0)));
+}
+
+function populateEditorialFields(card = selectedCard()) {
+  if (!card || modeForBrowser !== 'edit') return;
+  const values = currentEditorialFromDom(card);
+  populateEditorialDraft({ ...values, rank: values.archived ? (values.archivedRank || values.rank) : values.rank });
+  populateGlobalFields();
+  updateRankMax();
+}
+
+function populateSelectedFields() {
+  populateStructuralFields();
+  populateEditorialFields();
+  refreshValueDisplayForCard(selectedCard());
+}
+
 function populateStructuralFields() {
   if (modeForBrowser !== 'edit') return;
   const card = selectedCard();
@@ -791,7 +968,6 @@ function currentEditorialFromDom(card = selectedCard()) {
     rank: Number(card.dataset.rank) || 1,
     strength: saved.strength ?? scoreFromCard(card, 'Strength', 5),
     quality: saved.quality ?? scoreFromCard(card, 'Quality', 5),
-    value: saved.value ?? scoreFromCard(card, 'Value', 5),
     size: saved.size ?? tierFromCard(card, 'Size', 'bronze'),
     laurel: saved.laurel || 'auto',
     experienceTags: Array.isArray(saved.experienceTags) ? saved.experienceTags : experienceFromCard(card),
@@ -896,19 +1072,19 @@ async function uploadImage(key, file) {
   if (!file) return null;
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) throw new Error('Image must be PNG, JPEG or WebP.');
   if (file.size > MAX_IMAGE_BYTES) throw new Error('Image exceeds the 12 MiB upload limit.');
-  const response = await fetch(`${IMAGE_API}${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':file.type}, body:file });
+  const response = await adminWriteFetch(`${IMAGE_API}${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':file.type}, body:file });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || `Image upload failed with HTTP ${response.status}`);
   return payload;
 }
 async function putEntry(key, entry) {
-  const response = await fetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(entry) });
+  const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(entry) });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || `Entry save failed with HTTP ${response.status}`);
   return payload.entry || entry;
 }
 async function putState(payload) {
-  const response = await fetch(STATE_API, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
+  const response = await adminWriteFetch(STATE_API, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Catalogue save failed with HTTP ${response.status}`);
   return data;
@@ -971,7 +1147,7 @@ async function deleteDynamic() {
   if (!confirm(`Delete ${entry.brand || ''} ${entry.title || key}? This also deletes its uploaded KV image.`)) return;
   const button = q('catalogue-admin')?.querySelector('[data-catalogue-v139-action="delete"]'); if (button) button.disabled = true;
   try {
-    const response = await fetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'DELETE' });
+    const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'DELETE' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Delete failed with HTTP ${response.status}`);
     location.reload();
@@ -988,27 +1164,65 @@ function onCardSelectionChanged() {
   const select = q('catalogue-admin-card');
   if (!select || select.value.startsWith('__v139_')) return;
   modeForBrowser = 'edit'; draftSourceEditorial = null; draftSourceStructural = null; removeDraftOption();
-  setTimeout(populateStructuralFields, 0);
+  setTimeout(populateSelectedFields, 0);
 }
 function onTypeChanged() {
   if (modeForBrowser === 'new' || modeForBrowser === 'duplicate') setField('catalogue-admin-rank', nextRankFor(q('catalogue-v139-type').value === 'taster'));
 }
+function openEditor() {
+  const modal = q('catalogue-admin');
+  if (!modal) return;
+  rebuildCardSelectFromDom();
+  if (modeForBrowser === 'edit') populateSelectedFields();
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  setStatus(serverAvailableForBrowser
+    ? `Connected to Cloudflare KV. ${Object.keys(stateForBrowser.cards).length} saved card overrides and ${Object.keys(stateForBrowser.entries).length} dynamic entries loaded.`
+    : 'Cloudflare KV has not loaded yet.', !serverAvailableForBrowser);
+}
+
+function closeEditor() {
+  const modal = q('catalogue-admin');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+async function reloadEditorState() {
+  await loadStateForBrowser(true);
+  rebuildCardSelectFromDom();
+  if (modeForBrowser === 'edit') populateSelectedFields();
+}
+
 export function initUnifiedAdmin() {
   ensureUnifiedUi();
-  const save = replaceOwnedButton('catalogue-admin-save');
-  const reload = replaceOwnedButton('catalogue-admin-reload');
-  save?.addEventListener('click', saveUnified);
-  reload?.addEventListener('click', () => location.reload());
-  q('catalogue-admin')?.addEventListener('click', onAdminAction);
+  q('catalogue-admin-save')?.addEventListener('click', saveUnified);
+  q('catalogue-admin-reload')?.addEventListener('click', reloadEditorState);
+  q('catalogue-admin-close')?.addEventListener('click', closeEditor);
+  q('catalogue-admin')?.addEventListener('click', event => {
+    onAdminAction(event);
+    const modal = q('catalogue-admin');
+    if (event.target === modal) closeEditor();
+  });
   q('catalogue-admin-card')?.addEventListener('change', onCardSelectionChanged);
   q('catalogue-v139-price')?.addEventListener('input', previewValueFromUnifiedFields);
   q('catalogue-admin-quality')?.addEventListener('input', () => setTimeout(previewValueFromUnifiedFields, 0));
+  q('catalogue-admin-section')?.addEventListener('change', updateRankMax);
   q('catalogue-v139-type')?.addEventListener('change', onTypeChanged);
   for (const id of ['catalogue-v139-length','catalogue-v139-ring']) q(id)?.addEventListener('change', () => {
     if (modeForBrowser !== 'edit') setField('catalogue-admin-size', deriveSize(q('catalogue-v139-length').value, q('catalogue-v139-ring').value));
   });
-  q('catalogue-admin-toggle')?.addEventListener('click', () => setTimeout(() => { /* V140C_REBUILD_SELECT_ON_OPEN */ rebuildCardSelectFromDom(); if (modeForBrowser === 'edit') populateStructuralFields(); }, 0));
-  loadStateForBrowser(false).then(() => { if (modeForBrowser === 'edit') populateStructuralFields(); });
+  q('catalogue-admin-toggle')?.addEventListener('click', openEditor);
+  document.addEventListener('keydown', event => {
+    const modal = q('catalogue-admin');
+    if (event.key === 'Escape' && modal && !modal.hidden) closeEditor();
+  });
+
+  refreshAllValueDisplays();
+  window.catalogueOverridesReady = loadStateForBrowser(false).then(() => {
+    if (modeForBrowser === 'edit') populateSelectedFields();
+    return stateForBrowser;
+  });
 }
 
 if (typeof document !== 'undefined') {

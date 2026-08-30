@@ -13,5 +13,8 @@
       "binding": "CATALOGUE_STATE",
       "id": "e7a1c5222f594ebbaee4a80eb68817d6"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["15 2 * * *", "45 2 * * SUN"]
+  }
 }
