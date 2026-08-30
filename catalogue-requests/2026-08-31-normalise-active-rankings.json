@@ -1,0 +1,7 @@
+{
+  "id": "2026-08-31-normalise-active-rankings",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-coronets",
+  "entry": {},
+  "note": "One-time normalization after archived-ranking semantics change: remove active rank from archived cards and compact active main/taster cohorts without changing catalogue content."
+}
