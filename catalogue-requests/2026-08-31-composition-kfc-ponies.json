@@ -11,5 +11,5 @@
       "Filler: Nicaraguan and Kentucky fire-cured American"
     ]
   },
-  "note": "Composition researched from https://drewestate.com/products/kentucky-fire-cured/kentucky-fire-cured-original/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://drewestate.com/products/kentucky-fire-cured/kentucky-fire-cured-original/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

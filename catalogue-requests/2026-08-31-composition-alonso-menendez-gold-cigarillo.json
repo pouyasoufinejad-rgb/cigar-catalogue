@@ -11,5 +11,5 @@
       "Filler: Brazilian Mata Fina, Mata Norte and Virginia short filler"
     ]
   },
-  "note": "Composition researched from https://www.tabacariadamata.com.br/cigarrilha-alonso-menendez-gold-c-piteira-5un.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://www.tabacariadamata.com.br/cigarrilha-alonso-menendez-gold-c-piteira-5un.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

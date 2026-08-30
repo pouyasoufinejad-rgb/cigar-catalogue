@@ -11,5 +11,5 @@
       "Filler: Nicaraguan"
     ]
   },
-  "note": "Composition researched from https://www.cigarplace.biz/rocky-patel-java-maduro-x-press.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://www.cigarplace.biz/rocky-patel-java-maduro-x-press.html on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

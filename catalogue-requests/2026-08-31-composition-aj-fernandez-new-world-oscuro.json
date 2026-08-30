@@ -11,5 +11,5 @@
       "Filler: Nicaraguan Ometepe, Condega and Estelí"
     ]
   },
-  "note": "Composition researched from https://ajfcigars.com/cigars/new-world/oscuro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://ajfcigars.com/cigars/new-world/oscuro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

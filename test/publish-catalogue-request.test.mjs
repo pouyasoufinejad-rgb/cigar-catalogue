@@ -275,6 +275,39 @@ test('live render absence is a hard failure and does not leak the token', async 
   );
 });
 
+test('production verification retries a transient Worker resource-limit response', async () => {
+  const calls = [];
+  const delays = [];
+  const state = baseState({ cards: { x: { rank: 1, quality: 5 } } });
+  let writtenState;
+  let renderAttempts = 0;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => { writtenState = JSON.parse(options.body); return jsonResponse({ ok: true }); } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=x`, response: () => {
+      renderAttempts += 1;
+      if (renderAttempts === 1) return new Response('Worker exceeded resource limits', { status: 503 });
+      return new Response('<article data-key="x"></article>', { status: 200, headers: { 'content-type': 'text/html' } });
+    } }
+  ];
+
+  const result = await publishRequestDocument(
+    { operation: 'upsert-entry', key: 'x', entry: { quality: 6 } },
+    {
+      fetchImpl: createFetchRouter(routes, calls),
+      baseUrl: BASE,
+      token: TOKEN,
+      now: () => new Date('2026-08-31T00:00:00Z'),
+      sleep: async milliseconds => delays.push(milliseconds)
+    }
+  );
+
+  assert.equal(result.verified, true);
+  assert.equal(renderAttempts, 2);
+  assert.deepEqual(delays, [2000]);
+});
+
 test('API failure text redacts the admin token', async () => {
   const calls = [];
   const state = baseState({ cards: { x: { rank: 1, quality: 5 } } });

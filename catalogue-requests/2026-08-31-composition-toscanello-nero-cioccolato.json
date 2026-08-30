@@ -11,5 +11,5 @@
       "Filler: Italian and North American fire-cured Kentucky short filler"
     ]
   },
-  "note": "Composition researched from https://www.toscanocigars.com/smokersguide/pills/the-production-process-of-the-toscano-cigar-wrapper/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://www.toscanocigars.com/smokersguide/pills/the-production-process-of-the-toscano-cigar-wrapper/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }
