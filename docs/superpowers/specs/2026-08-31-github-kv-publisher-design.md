@@ -13,11 +13,13 @@ Enable routine Cigar Catalogue edits from ChatGPT/Codex without local commands o
 ## Architecture
 
 1. ChatGPT/Codex creates a publication request in `catalogue-requests/` and, when needed, an accompanying image asset in `catalogue-requests/assets/`.
-2. A GitHub Actions workflow triggers on changes to publication requests on `main` and may also support manual dispatch for recovery/retry.
+2. A GitHub Actions workflow triggers on changes to publication requests on `main` and also supports manual dispatch for recovery/retry.
 3. The workflow supplies `CATALOGUE_ADMIN_TOKEN` from GitHub Actions Secrets only to the publisher process.
-4. `scripts/publish-catalogue-request.mjs` validates the request, reads current live KV, merges a single entry safely, uploads any image through the existing image endpoint, writes the entry through the existing entry endpoint, then reads the result back.
-5. The publisher verifies that the production site responds successfully and that the saved entry is represented by the production rendering path. A missing rendered dynamic entry is a hard failure rather than a silent success.
-6. Publication request files remain in Git as an audit trail. Secrets and generated live-state snapshots are never committed.
+4. `scripts/publish-catalogue-request.mjs` validates the request and reads current live KV before mutation. Existing static catalogue items are updated through the complete `cards` override map so unrelated card overrides are preserved; existing/new dynamic entries are also written through `/api/catalogue-entry/<key>`. New keys become dynamic entries.
+5. Rank/archive operations re-number the affected active cohort instead of introducing duplicate or gapped ranks.
+6. Optional images are uploaded through the existing image endpoint, downloaded again for byte/MIME verification, and associated through the same cache-busted `/api/catalogue-image/<key>?v=...` `imageUrl` pattern used by the current admin UI.
+7. The publisher verifies API/KV read-back and then verifies that production HTML contains the catalogue key. A missing rendered dynamic entry is a hard failure rather than a silent success.
+8. Publication request files remain in Git as an audit trail. Secrets and generated live-state snapshots are never committed.
 
 ## Request format
 
@@ -36,11 +38,13 @@ For an entry upsert, the request contains:
 - optional `image` object with repository-relative asset path and MIME type
 - optional human-readable `note`
 
-The publisher fetches an existing entry before applying partial updates so omitted fields are preserved.
+The publisher fetches the full current KV state before applying partial updates so omitted fields and unrelated cards are preserved. It auto-detects whether an existing key is a static card or dynamic entry.
 
 ## Image handling
 
-Images supplied by the user are stored as repository assets for the publication request. The publisher accepts only PNG, JPEG, and WebP, enforces the Worker size limit before upload, sends the binary to `/api/catalogue-image/<key>`, verifies download availability, then associates the entry using the repository's actual current image fields such as `imageSourceKey`/`imageVersion` as required by the Worker implementation.
+Images supplied by the user are stored as repository assets for the publication request. The publisher accepts only PNG, JPEG, and WebP, enforces the Worker 12 MiB limit before upload, sends the binary to `/api/catalogue-image/<key>`, then downloads the image again and requires byte-for-byte equality plus the expected MIME type.
+
+The current admin UI associates uploaded images by storing a cache-busted `imageUrl` such as `/api/catalogue-image/<key>?v=<timestamp>`. The publisher mirrors that existing behavior for both static card overrides and dynamic entries rather than inventing another image association mechanism.
 
 No base64 image blobs are embedded inside JSON request files.
 
@@ -48,7 +52,7 @@ No base64 image blobs are embedded inside JSON request files.
 
 - `CATALOGUE_ADMIN_TOKEN` exists only as a GitHub Actions repository secret.
 - The workflow passes it to the publisher process as an environment variable.
-- The publisher never prints, logs, serializes, or commits the token.
+- The publisher never prints, logs, serializes, or commits the token and redacts it if an upstream error body unexpectedly echoes it.
 - No Cloudflare account credential is required for ordinary catalogue entry/image operations.
 - The publisher does not wipe KV, bulk-delete entries, alter authentication, rotate credentials, or deploy Worker code as part of a normal catalogue publication.
 - Individual deletion is not part of the initial publisher workflow; archive is preferred.
@@ -57,44 +61,47 @@ No base64 image blobs are embedded inside JSON request files.
 
 Create `.github/workflows/publish-catalogue.yml` with:
 
-- trigger on pushes to `main` affecting `catalogue-requests/**`, publisher script/tests, and optionally manual `workflow_dispatch`;
+- pull-request runs that execute tests only;
+- push-to-`main` runs for relevant publisher/request/config changes;
+- optional `workflow_dispatch` with one explicit request path;
 - Node setup using the repository-supported runtime;
-- install dependencies only as required by the existing project;
-- run publisher tests before any production write;
-- locate request files changed by the triggering commit, or accept an explicit request path on manual dispatch;
-- publish requests sequentially;
-- fail immediately on validation, authentication, API, image, read-back, or live-render verification errors;
-- never echo secret values.
+- publisher and Worker-rendering tests before any production write;
+- changed request discovery for push events;
+- sequential request publication;
+- immediate failure on validation, authentication, API, image, read-back, or live-render verification errors;
+- no secret echoing.
 
-Concurrency should serialize catalogue publications so two simultaneous writes cannot race on rank/state assumptions.
+Concurrency serializes catalogue publications so two simultaneous writes cannot race on rank/state assumptions.
 
 ## Dynamic-entry rendering defect
 
-Codex reported that an entry retrievable through `/api/catalogue-entry/<key>` was not represented in production HTML. The current Worker already contains server-side catalogue HTML injection logic, so implementation must first reproduce and inspect that rendering path rather than invent a second rendering system.
+Codex reported that an entry retrievable through `/api/catalogue-entry/<key>` was not represented in production HTML. Inspection showed the Worker already contains working server-side injection (`injectEntriesIntoHtml` / `maybeInjectCatalogueHtml`), but `wrangler.jsonc` configured `assets.run_worker_first` for `/api/*` only. As a result, `/` and `/index.html` could be served directly by Workers Assets without executing the injection code.
 
-Acceptance rule: a request is not considered successfully published merely because KV contains the entry. The production `/` or `/index.html` response must contain the dynamic entry in the expected catalogue representation. If the existing injection logic is defective, fix that Worker code and cover the defect with tests before enabling the publisher workflow.
+The repair is to route `/` and `/index.html` through the Worker before static assets while preserving `/api/*`. Regression tests cover both the routing configuration and the HTML injection of a KV-only entry.
 
-A Worker deployment may be required once for that rendering-code fix. Routine catalogue publications afterward must not require deployment.
+Acceptance rule: a request is not considered successfully published merely because KV contains the entry. The production response must contain the catalogue key. The routing repair requires one Worker deployment; routine catalogue publications afterward do not require deployment.
 
 ## Testing
 
 Publisher tests use mocked HTTP and temporary files; they never mutate production.
 
-Required coverage:
+Required coverage includes:
 
 - request schema validation;
 - stable/safe entry key handling;
-- current-entry fetch before partial merge;
-- preservation of unrelated fields;
+- current KV read before mutation;
+- partial dynamic-entry merge/preservation;
+- complete static-card-map preservation;
+- rank/archive cohort maintenance;
 - Authorization header construction without secret leakage;
-- entry write/read-back verification;
+- entry/state write and read-back verification;
 - image MIME/size validation;
 - image upload/download verification;
 - archive/unarchive behavior;
 - API/auth failure handling;
-- live-render verification failure when an entry exists in API/KV but is absent from production HTML.
+- live-render verification failure when KV contains a key absent from production HTML.
 
-Worker tests must reproduce the dynamic-entry rendering issue and prove the repaired injection path renders a KV-only dynamic entry.
+Worker tests prove the restored routing configuration includes `/` and `/index.html` and that the existing injection path can render a KV-only dynamic entry.
 
 ## Operational workflow after setup
 
@@ -122,7 +129,7 @@ After implementation, the user must add one repository Actions secret:
 
 Path in GitHub UI: repository Settings → Secrets and variables → Actions → New repository secret.
 
-If the dynamic rendering repair requires a Worker deployment and no existing deployment automation is available, that deployment is handled as a separate one-time code deployment step; it is not coupled to routine catalogue publications.
+The routing repair also requires one deployment of the updated Worker configuration. That deployment is a one-time code deployment step and is not coupled to routine catalogue publications.
 
 ## Acceptance criteria
 
@@ -130,7 +137,8 @@ The feature is complete when:
 
 - the publisher script and tests are committed;
 - the GitHub Actions workflow is committed;
-- a KV-only dynamic entry is covered by a passing Worker rendering test;
-- the production rendering defect is fixed in code;
+- static and dynamic catalogue targets are both handled without overwriting unrelated data;
+- a KV-only dynamic entry is covered by a passing rendering test;
+- the Worker route configuration is repaired in code;
 - no production secret appears in Git history or logs;
-- after the user adds `CATALOGUE_ADMIN_TOKEN` to GitHub Actions Secrets, a real catalogue request can publish an entry/image and verify the live result without any local user action.
+- after the user adds `CATALOGUE_ADMIN_TOKEN` to GitHub Actions Secrets and the routing repair is deployed once, a real catalogue request can publish an entry/image and verify the live result without any local user action.
