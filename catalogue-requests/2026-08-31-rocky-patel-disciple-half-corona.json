@@ -1,0 +1,50 @@
+{
+  "id": "2026-08-31-rocky-patel-disciple-half-corona",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "brand": "Rocky Patel",
+    "title": "Disciple Half Corona — Single",
+    "eyebrow": "Bold short-format San Andrés candidate",
+    "packagePrice": 31,
+    "packageLabel": "single cigar",
+    "price": 31,
+    "country": "Nicaragua",
+    "length": 3.5,
+    "ring": 46,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 11,
+    "taster": false,
+    "archived": false,
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon, cola (projected)",
+      "Occasion: Quick dark-profile smoke, after a meal, outdoor break"
+    ],
+    "summaryHtml": "<strong>Espresso, black pepper, earth, cocoa and cedar with a caramel/toffee sweetness</strong> are the strongest recurring notes across independent reviews of this exact Half Corona. The Mexican San Andrés wrapper and all-Nicaraguan core point to a darker, more forceful profile than Rocky Patel's smoother vintage-style blends, while multiple reviews praise its open draw, clean burn and unusually complete progression for a 3½″ cigar. It remains untasted in this catalogue, so Strength 8 and Quality 8 are projections rather than palate-confirmed scores.",
+    "noteHtml": "Untasted projection. Cigar Aficionado scored the Half Corona 88 points in repeated tastings; independent reviews consistently report strong coffee/pepper character and reliable construction.",
+    "productionLines": [
+      "Unflavoured",
+      "Handmade at TAVICUSA, Estelí",
+      "Mexican San Andrés maduro wrapper; Nicaraguan binder and filler."
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Round / non-box-pressed",
+      "Short format; slow cadence recommended"
+    ],
+    "smokeTime": "20–30 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/rocky-patel-disciple-half-corona",
+      "https://www.cigarhut.com.au/rocky-patel-disciple-half-corona/",
+      "https://cigarbox.com.au/collections/nicaraguan-cigars/type_cigars-by-brand?page=6"
+    ],
+    "priceChecked": "2026-08-31",
+    "stockChecked": "2026-08-31"
+  },
+  "note": "Ranked at No. 11: stronger projected flavour fit and construction than the currently lower-ranked AJ Fernandez New World Oscuro/Oliva Serie O tier, but held outside the top 10 by the 3.5-inch Bronze Size and high A$31 single-stick price. The Index single was explicitly available at A$31 on 2026-08-31; Cigar Hut listed A$26–A$449 but stock for the single was not independently confirmed."
+}
