@@ -11,5 +11,5 @@
       "Filler: Cuban short filler (blend undisclosed)"
     ]
   },
-  "note": "Composition researched from https://www.habanos.com/en/the-anatomy-of-a-habano/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://www.habanos.com/en/the-anatomy-of-a-habano/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

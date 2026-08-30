@@ -11,5 +11,5 @@
       "Filler: Nicaraguan, including Jalapa ligero"
     ]
   },
-  "note": "Composition researched from https://olivacigar.com/cigars/serie-v-melanio/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://olivacigar.com/cigars/serie-v-melanio/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

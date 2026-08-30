@@ -11,5 +11,5 @@
       "Filler: Indonesian and Nicaraguan"
     ]
   },
-  "note": "Composition researched from https://drewestate.com/products/isla-del-sol/isla-del-sol-maduro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines."
+  "note": "Composition researched from https://drewestate.com/products/isla-del-sol/isla-del-sol-maduro/ on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
 }

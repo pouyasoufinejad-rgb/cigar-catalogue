@@ -8,6 +8,7 @@ export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'replace-image']);
+const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
   'archived', 'archivedAt', 'archivedRank', 'stockPin', 'rank', 'strength', 'quality', 'size', 'laurel',
@@ -69,6 +70,22 @@ async function fetchJson(fetchImpl, url, options = {}, label = 'Request', secret
   } catch {
     throw new Error(`${label} returned invalid JSON.`);
   }
+}
+
+async function fetchProductionHtml(fetchImpl, url, sleep) {
+  for (let attempt = 0; attempt <= PRODUCTION_VERIFY_RETRY_DELAYS.length; attempt += 1) {
+    const response = await fetchImpl(url, { method: 'GET', headers: { accept: 'text/html' }, cache: 'no-store' });
+    if (response.ok) return response.text();
+
+    const retryable = response.status === 429 || response.status >= 500;
+    if (!retryable || attempt === PRODUCTION_VERIFY_RETRY_DELAYS.length) {
+      throw await responseError(response, 'Production HTML verification');
+    }
+
+    await response.arrayBuffer().catch(() => {});
+    await sleep(PRODUCTION_VERIFY_RETRY_DELAYS[attempt]);
+  }
+  throw new Error('Production HTML verification exhausted its retry budget.');
 }
 
 function stripDerivedCardValue(card) {
@@ -414,6 +431,9 @@ export async function publishRequestDocument(input, options = {}) {
   if (!token) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
   const repoRoot = resolve(options.repoRoot || process.cwd());
   const timestamp = nowIso(options.now);
+  const sleep = typeof options.sleep === 'function'
+    ? options.sleep
+    : milliseconds => new Promise(resolveSleep => setTimeout(resolveSleep, milliseconds));
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
@@ -506,9 +526,7 @@ export async function publishRequestDocument(input, options = {}) {
   if (request.operation === 'unarchive-entry') cardKeys.add('rank');
   assertSubset(savedCard, nextCard, cardKeys, 'Catalogue state read-back');
 
-  const htmlResponse = await fetchImpl(`${baseUrl}/?catalogue_verify=${encodeURIComponent(request.key)}`, { method: 'GET', headers: { accept: 'text/html' }, cache: 'no-store' });
-  if (!htmlResponse.ok) throw await responseError(htmlResponse, 'Production HTML verification');
-  const html = await htmlResponse.text();
+  const html = await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=${encodeURIComponent(request.key)}`, sleep);
   const keyPattern = new RegExp(`\\bdata-key=["']${escapeRegex(request.key)}["']`, 'i');
   if (!keyPattern.test(html)) throw new Error(`Catalogue key "${request.key}" is saved in KV but not represented in production HTML.`);
 
