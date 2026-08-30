@@ -11,5 +11,5 @@
       "Filler: Dominican"
     ]
   },
-  "note": "Composition researched from https://kohlhase-soehne.com/en/brands/ashton/aged-maduro on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
+  "note": "Composition researched from https://kohlhase-soehne.com/en/brands/ashton/aged-maduro on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent. Single-pass Worker rendering keeps batch verification within production resource limits."
 }

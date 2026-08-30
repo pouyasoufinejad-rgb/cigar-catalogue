@@ -727,20 +727,21 @@ function formatSizeNumber(value) {
   return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
 }
 
-export function applyStructuralOverridesToHtml(html, cards) {
-  let output = String(html || '');
-  for (const [rawKey, rawOverride] of Object.entries(record(cards))) {
-    const key = sanitiseKey(rawKey);
-    const override = record(rawOverride);
-    if (!key || !Object.keys(override).some(name => [
-      'brand','title','packagePrice','packageLabel','price','country','length','ring','risk','taster','retailerLinks','imageUrl','smokeTime'
-    ].includes(name))) continue;
+const STRUCTURAL_OVERRIDE_FIELDS = new Set([
+  'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk',
+  'taster', 'retailerLinks', 'imageUrl', 'smokeTime'
+]);
 
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const cardRx = new RegExp(`<article\\b(?=[^>]*\\bdata-key=[\"']${escapedKey}[\"'])[^>]*>[\\s\\S]*?<\\/article>`, 'i');
-    const match = output.match(cardRx);
-    if (!match) continue;
-    let card = match[0];
+export function applyStructuralOverridesToHtml(html, cards) {
+  const overrides = record(cards);
+  const allCardsRx = /<article\b[^>]*\bdata-key=["'][a-z0-9][a-z0-9_-]{0,95}["'][^>]*>[\s\S]*?<\/article>/gi;
+  return String(html || '').replace(allCardsRx, matchedCard => {
+    const keyMatch = matchedCard.match(/^<article\b[^>]*\bdata-key=["']([^"']+)["'][^>]*>/i);
+    const key = sanitiseKey(keyMatch?.[1]);
+    const override = record(overrides[key]);
+    if (!key || !Object.keys(override).some(name => STRUCTURAL_OVERRIDE_FIELDS.has(name))) return matchedCard;
+
+    let card = matchedCard;
 
     card = card.replace(/^<article\b[^>]*>/i, tag => {
       let next = tag;
@@ -812,9 +813,8 @@ export function applyStructuralOverridesToHtml(html, cards) {
       }
     }
 
-    output = output.replace(cardRx, card);
-  }
-  return output;
+    return card;
+  });
 }
 
 export function injectEntriesIntoHtml(html, entries) {

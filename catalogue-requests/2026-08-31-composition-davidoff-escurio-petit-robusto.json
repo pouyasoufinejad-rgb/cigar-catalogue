@@ -11,5 +11,5 @@
       "Filler: Brazilian Mata Fina and Cubra; Dominican San Vicente, Piloto and Olor"
     ]
   },
-  "note": "Composition researched from https://www.davidofflondon.com/collections/escurio/products/davidoff-escurio-robusto on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent."
+  "note": "Composition researched from https://www.davidofflondon.com/collections/escurio/products/davidoff-escurio-robusto on 2026-08-31; wrapper, binder and filler are shown as separate Production lines. Safe to replay after a partial batch because the update is idempotent. Single-pass Worker rendering keeps batch verification within production resource limits."
 }

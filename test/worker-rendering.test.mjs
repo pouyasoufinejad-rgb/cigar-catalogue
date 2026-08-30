@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { injectEntriesIntoHtml } from '../src/index.js';
+import { applyStructuralOverridesToHtml, injectEntriesIntoHtml } from '../src/index.js';
 
 function parseJsonc(text) {
   return JSON.parse(text.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''));
@@ -37,4 +37,39 @@ test('KV-only dynamic entry is injected into catalogue HTML', () => {
   assert.match(transformed, /data-key="kv-only-test"/);
   assert.match(transformed, /Test Brand/);
   assert.match(transformed, /KV-only cigar/);
+});
+
+test('single-pass structural overrides update every matching card without touching others', () => {
+  const html = [
+    '<article class="card" data-key="one" data-taster="1"><h3><span>Brand One</span>Old One</h3></article>',
+    '<article class="card" data-key="two"><h3><span>Brand Two</span>Old Two</h3></article>',
+    '<article class="card" data-key="three"><h3><span>Brand Three</span>Unchanged</h3></article>'
+  ].join('');
+
+  const transformed = applyStructuralOverridesToHtml(html, {
+    one: { title: 'New One', taster: false },
+    two: { title: 'New Two', taster: true }
+  });
+
+  assert.match(transformed, /data-key="one"><h3><span>Brand One<\/span>New One<\/h3>/);
+  assert.match(transformed, /data-key="two" data-taster="1"><h3><span>Brand Two<\/span>New Two<\/h3>/);
+  assert.match(transformed, /data-key="three"><h3><span>Brand Three<\/span>Unchanged<\/h3>/);
+});
+
+test('structural overrides process a production-sized catalogue in one bounded pass', () => {
+  const cardCount = 100;
+  const filler = 'x'.repeat(80_000);
+  const cards = Array.from({ length: cardCount }, (_value, index) =>
+    `<article class="card" data-key="card-${index}" data-taster="1"><p>${filler}</p></article>`
+  ).join('');
+  const overrides = Object.fromEntries(
+    Array.from({ length: cardCount }, (_value, index) => [`card-${index}`, { taster: false }])
+  );
+
+  const started = performance.now();
+  const transformed = applyStructuralOverridesToHtml(cards, overrides);
+  const elapsed = performance.now() - started;
+
+  assert.doesNotMatch(transformed, /data-taster=/);
+  assert.ok(elapsed < 75, `structural override pass took ${elapsed.toFixed(0)}ms`);
 });
