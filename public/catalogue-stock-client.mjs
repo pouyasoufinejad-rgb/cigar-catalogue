@@ -75,6 +75,7 @@ article.card .artframe{
   article.card .artmeta-left,
   article.card .artmeta-right{
     max-width:46%!important;
+    transform:translateY(14px)!important;
   }
 }
 `;

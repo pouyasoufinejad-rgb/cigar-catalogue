@@ -16,3 +16,7 @@ test('card layout gives Production and Practical more room, especially on mobile
   assert.match(stockClient, /grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(stockClient, /min-height:\s*var\(--catalogue-artframe-min-height\)/);
 });
+
+test('mobile Production and Practical blocks sit lower in the taller art frame', () => {
+  assert.match(stockClient, /article\.card \.artmeta-left,[\s\S]*article\.card \.artmeta-right\{[\s\S]*transform:\s*translateY\(14px\)!important/);
+});
