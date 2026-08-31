@@ -1,7 +1,7 @@
-import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=145';
-
 const STATE_API = '/api/catalogue-overrides';
 const STYLE_ID = 'catalogue-direct-edit-style';
+const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
+let adminTokenMemory = '';
 let editMode = false;
 let selected = null;
 let allowModalOpen = false;
@@ -11,11 +11,44 @@ const q = id => document.getElementById(id);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
 const stripRankPrefix = value => String(value || '').replace(/^(?:T\d+|Taster|No\.\s*\d+|Archived)\s*[—–-]\s*/, '').trim();
 
+function readAdminToken() {
+  if (adminTokenMemory) return adminTokenMemory;
+  try { adminTokenMemory = sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY) || ''; }
+  catch (_) { adminTokenMemory = ''; }
+  return adminTokenMemory;
+}
+
+function requireAdminToken() {
+  const existing = readAdminToken();
+  if (existing) return existing;
+  const token = String(globalThis.prompt?.('Admin token required to change the catalogue.') || '').trim();
+  if (!token) throw new Error('Admin token is required to save catalogue changes.');
+  adminTokenMemory = token;
+  try { sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, token); } catch (_) {}
+  return token;
+}
+
+async function adminWriteFetch(url, options = {}) {
+  const token = requireAdminToken();
+  const headers = new Headers(options.headers || {});
+  headers.set('authorization', `Bearer ${token}`);
+  const response = await fetch(url, { ...options, headers });
+  if (response.status === 401) {
+    adminTokenMemory = '';
+    try { sessionStorage.removeItem(ADMIN_TOKEN_SESSION_KEY); } catch (_) {}
+  }
+  return response;
+}
+
 function ensureStyles() {
   if (q(STYLE_ID)) return;
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
+@media (max-width:700px){
+  body article.card .artmeta-left,
+  body article.card .artmeta-right{transform:translateY(22px)!important}
+}
 body.catalogue-direct-edit-mode article.card[data-key]{cursor:pointer;outline:1px dashed rgba(217,188,112,.28);outline-offset:3px}
 body.catalogue-direct-edit-mode article.card[data-key]:hover{outline-color:rgba(217,188,112,.72)}
 body.catalogue-direct-edit-mode article.card.catalogue-direct-selected{outline:2px solid #d9bc70;outline-offset:5px;z-index:3}
@@ -71,13 +104,12 @@ function selectInExistingAdmin(card) {
 }
 
 function readLayout(card) {
-  const saved = {
+  return {
     imageScale: Number(card.dataset.directImageScale || 100),
     imageX: Number(card.dataset.directImageX || 0),
     imageY: Number(card.dataset.directImageY || 0),
     metaY: Number(card.dataset.directMetaY || 22)
   };
-  return saved;
 }
 
 function applyLayout(card, values = {}) {
@@ -96,7 +128,7 @@ function applyLayout(card, values = {}) {
     image.style.transformOrigin = 'center center';
   }
   card.querySelectorAll('.artmeta-left,.artmeta-right').forEach(node => {
-    node.style.transform = `translateY(${metaY}px)`;
+    node.style.setProperty('transform', `translateY(${metaY}px)`, 'important');
   });
 }
 
@@ -183,7 +215,6 @@ function experienceTags(card) {
 }
 
 function directPatch(card) {
-  const layout = readLayout(card);
   return {
     summaryHtml: card.querySelector('.summary')?.innerHTML || '',
     noteHtml: card.querySelector('.mog-note')?.innerHTML || '',
@@ -191,7 +222,7 @@ function directPatch(card) {
     experienceTags: experienceTags(card),
     productionHtml: artmetaHtml(card, '.artmeta-left'),
     practicalHtml: artmetaHtml(card, '.artmeta-right'),
-    ...layout
+    ...readLayout(card)
   };
 }
 
