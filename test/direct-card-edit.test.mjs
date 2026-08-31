@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const directEdit = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8').catch(() => '');
-const stockClient = await readFile(new URL('../public/catalogue-stock-client.mjs', import.meta.url), 'utf8');
+const valueModule = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
 
 test('Edit catalogue activates direct card edit mode instead of opening the dropdown modal', () => {
   assert.match(directEdit, /catalogue-admin-toggle/);
@@ -13,20 +13,26 @@ test('Edit catalogue activates direct card edit mode instead of opening the drop
 
 test('clicking a card selects it and exposes in-place text editing plus image controls', () => {
   assert.match(directEdit, /article\.card\[data-key\]/);
-  assert.match(directEdit, /contentEditable\s*=\s*'true'/);
+  assert.match(directEdit, /contentEditable\s*=\s*enabled\s*\?\s*'true'/);
   assert.match(directEdit, /Image size/);
   assert.match(directEdit, /Image X/);
   assert.match(directEdit, /Image Y/);
+  assert.match(directEdit, /Text Y/);
 });
 
-test('direct editor reuses the existing admin fields and Save button', () => {
+test('direct editor uses the existing card selection and catalogue state save path', () => {
   assert.match(directEdit, /catalogue-admin-card/);
-  assert.match(directEdit, /catalogue-admin-summary/);
-  assert.match(directEdit, /catalogue-admin-production/);
-  assert.match(directEdit, /catalogue-admin-practical/);
-  assert.match(directEdit, /catalogue-admin-save/);
+  assert.match(directEdit, /\/api\/catalogue-overrides/);
+  assert.match(directEdit, /summaryHtml/);
+  assert.match(directEdit, /productionHtml/);
+  assert.match(directEdit, /practicalHtml/);
+  assert.match(directEdit, /More fields/);
+});
+
+test('direct editor is loaded by the existing catalogue module chain', () => {
+  assert.match(valueModule, /import '\.\/catalogue-direct-edit\.mjs'/);
 });
 
 test('mobile Production and Practical blocks are moved farther down', () => {
-  assert.match(stockClient, /transform:\s*translateY\(22px\)!important/);
+  assert.match(directEdit, /translateY\(22px\)!important/);
 });
