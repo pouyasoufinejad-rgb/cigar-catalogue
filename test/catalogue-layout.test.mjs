@@ -78,6 +78,14 @@ test('Substantial format sits immediately before the Noteworthy tier', () => {
   assert.equal(substantial.parent.children[substantialIndex + 1], noteworthy, 'Noteworthy must be the next sibling');
 });
 
+test('the former Neither group is presented as Flavoured & Infused Cigars', () => {
+  assert.match(
+    catalogueHtml,
+    /data-noteworthy-section="neither">\s*<h4 class="subtier-heading">Flavoured &amp; Infused Cigars<\/h4><p class="subtier-note">Sweetened, aromatic and infused profiles\.<\/p>/
+  );
+  assert.doesNotMatch(catalogueHtml, /<h4 class="subtier-heading">Neither<\/h4>/);
+});
+
 test('BRA/DR country labels resolve to the existing Brazil and Dominican flag assets', () => {
   assert.deepEqual(unifiedAdmin.countryFlagSlugs('BRA/DR'), ['brazil', 'dominican']);
   assert.deepEqual(unifiedAdmin.countryFlagSlugs('Brazil / Dominican Republic'), ['brazil', 'dominican']);
