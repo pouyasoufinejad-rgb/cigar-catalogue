@@ -275,6 +275,37 @@ test('live render absence is a hard failure and does not leak the token', async 
   );
 });
 
+test('section update writes, reads back, and verifies benchmark markup without requiring a catalogue key', async () => {
+  const calls = [];
+  const benchmarkMarkup = '<details class="test-impact-item"><summary>Test Cigar</summary><div class="test-impact-correlations">Related cigar</div><div class="test-impact-review">Review notes</div></details>';
+  const state = baseState({ sections: { legendHtml: '<p>Keep this legend</p>', benchmarksHtml: '<p>Old benchmarks</p>' } });
+  let writtenState;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
+      writtenState = JSON.parse(options.body);
+      return jsonResponse({ ok: true });
+    } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, sections: writtenState.sections }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=benchmarks`, response: new Response(`<div class="test-impact-panel">${benchmarkMarkup}</div>`, { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  const result = await publishRequestDocument({
+    operation: 'update-sections',
+    sections: { benchmarksHtml: benchmarkMarkup }
+  }, {
+    fetchImpl: createFetchRouter(routes, calls),
+    baseUrl: BASE,
+    token: TOKEN,
+    now: () => new Date('2026-08-31T00:00:00Z')
+  });
+
+  assert.equal(result.operation, 'update-sections');
+  assert.equal(writtenState.sections.legendHtml, '<p>Keep this legend</p>');
+  assert.equal(writtenState.sections.benchmarksHtml, benchmarkMarkup);
+  assert.equal(calls.some(call => call.href.includes('/api/catalogue-entry/')), false);
+});
+
 test('production verification retries a transient Worker resource-limit response', async () => {
   const calls = [];
   const delays = [];

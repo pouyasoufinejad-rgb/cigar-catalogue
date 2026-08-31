@@ -24,6 +24,7 @@ Supported operations:
 - `archive-entry` — archive an existing catalogue item and close its active ranking gap.
 - `unarchive-entry` — restore an archived item to its saved rank/cohort.
 - `replace-image` — replace the KV-hosted image for an existing item.
+- `update-sections` — update `legendHtml` and/or `benchmarksHtml` without touching catalogue entries or rankings.
 
 Keys must match the Worker key rule: lowercase `a-z`, digits, `_` or `-`, maximum 96 characters, beginning with a letter or digit.
 

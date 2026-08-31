@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'replace-image']);
+export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'replace-image', 'update-sections']);
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
@@ -326,16 +326,25 @@ export function validateRequest(input) {
   if (!isRecord(input)) throw new Error('Publication request must be a JSON object.');
   const operation = String(input.operation || '').trim();
   if (!SUPPORTED_OPERATIONS.has(operation)) throw new Error(`Unsupported operation: ${operation || '(missing)'}.`);
-  const key = safeKey(input.key);
-  if (!key) throw new Error('Invalid catalogue key.');
+  const key = operation === 'update-sections' ? '' : safeKey(input.key);
+  if (operation !== 'update-sections' && !key) throw new Error('Invalid catalogue key.');
   const entry = isRecord(input.entry) ? clone(input.entry) : {};
   if (operation === 'upsert-entry' && !isRecord(input.entry)) throw new Error('upsert-entry requires an entry object.');
+  const sections = isRecord(input.sections) ? clone(input.sections) : {};
+  if (operation === 'update-sections') {
+    const sectionNames = Object.keys(sections);
+    if (!sectionNames.length) throw new Error('update-sections requires a sections object.');
+    if (sectionNames.some(name => !['legendHtml', 'benchmarksHtml'].includes(name) || typeof sections[name] !== 'string')) {
+      throw new Error('update-sections only accepts string legendHtml and benchmarksHtml fields.');
+    }
+  }
   const image = validateImage(input.image, operation === 'replace-image');
   return {
     id: String(input.id || '').trim(),
     operation,
     key,
     entry,
+    sections,
     image,
     note: String(input.note || '').trim()
   };
@@ -437,6 +446,26 @@ export async function publishRequestDocument(input, options = {}) {
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
+  if (request.operation === 'update-sections') {
+    state.sections = { ...state.sections, ...request.sections };
+    await putState(fetchImpl, baseUrl, token, state);
+
+    const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+    const verifiedState = normaliseStateShape(verifiedStateRaw);
+    assertSubset(verifiedState.sections, state.sections, new Set(Object.keys(request.sections)), 'Catalogue section read-back');
+
+    const html = await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=benchmarks`, sleep);
+    if (typeof request.sections.benchmarksHtml === 'string') {
+      const summaries = [...request.sections.benchmarksHtml.matchAll(/<summary\b[^>]*>([\s\S]*?)<\/summary>/gi)]
+        .map(match => match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+      for (const summary of summaries) {
+        if (!html.includes(summary)) throw new Error(`Production Benchmarks is missing "${summary}".`);
+      }
+    }
+
+    return { ok: true, operation: request.operation, target: 'sections', verified: true };
+  }
   const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
   state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue));
   const existingDynamic = isRecord(state.entries[request.key]) ? clone(state.entries[request.key]) : null;
@@ -546,7 +575,8 @@ async function main(argv) {
   const requestPath = argv[2];
   if (!requestPath) throw new Error('Usage: node scripts/publish-catalogue-request.mjs <catalogue-requests/request.json>');
   const result = await publishRequestFile(requestPath);
-  console.log(`Published ${result.operation} for ${result.key}; KV and production rendering verified.`);
+  const subject = result.key ? ` for ${result.key}` : '';
+  console.log(`Published ${result.operation}${subject}; KV and production rendering verified.`);
 }
 
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';
