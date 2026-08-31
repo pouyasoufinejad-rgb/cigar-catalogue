@@ -454,14 +454,22 @@ export async function publishRequestDocument(input, options = {}) {
     const verifiedState = normaliseStateShape(verifiedStateRaw);
     assertSubset(verifiedState.sections, state.sections, new Set(Object.keys(request.sections)), 'Catalogue section read-back');
 
-    const html = await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=benchmarks`, sleep);
+    const productionUrl = `${baseUrl}/?catalogue_verify=benchmarks`;
     if (typeof request.sections.benchmarksHtml === 'string') {
       const summaries = [...request.sections.benchmarksHtml.matchAll(/<summary\b[^>]*>([\s\S]*?)<\/summary>/gi)]
         .map(match => match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
         .filter(Boolean);
-      for (const summary of summaries) {
-        if (!html.includes(summary)) throw new Error(`Production Benchmarks is missing "${summary}".`);
+      for (let attempt = 0; attempt <= PRODUCTION_VERIFY_RETRY_DELAYS.length; attempt += 1) {
+        const html = await fetchProductionHtml(fetchImpl, productionUrl, sleep);
+        const missing = summaries.filter(summary => !html.includes(summary));
+        if (!missing.length) break;
+        if (attempt === PRODUCTION_VERIFY_RETRY_DELAYS.length) {
+          throw new Error(`Production Benchmarks is missing "${missing[0]}".`);
+        }
+        await sleep(PRODUCTION_VERIFY_RETRY_DELAYS[attempt]);
       }
+    } else {
+      await fetchProductionHtml(fetchImpl, productionUrl, sleep);
     }
 
     return { ok: true, operation: request.operation, target: 'sections', verified: true };
