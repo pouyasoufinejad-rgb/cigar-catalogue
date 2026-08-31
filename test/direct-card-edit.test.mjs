@@ -59,6 +59,14 @@ test('saved layout also survives immediate refresh and later DOM card rebuilds',
   assert.match(persistence, /applyCachedLayouts/);
 });
 
+test('persistence observer ignores slider output and in-card text mutations', () => {
+  assert.match(persistence, /mutationTouchesCatalogueCards/);
+  assert.match(persistence, /addedNodes/);
+  assert.match(persistence, /removedNodes/);
+  assert.match(persistence, /article\.card\[data-key\]/);
+  assert.doesNotMatch(persistence, /mutations\.some\(mutation => mutation\.type === 'childList'\)/);
+});
+
 test('mobile Production and Practical blocks are moved farther down', () => {
   assert.match(directEdit, /translateY\(22px\)!important/);
 });
