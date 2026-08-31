@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const directEdit = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8').catch(() => '');
 const valueModule = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const unifiedAdmin = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
 test('Edit catalogue activates direct card edit mode instead of opening the dropdown modal', () => {
   assert.match(directEdit, /catalogue-admin-toggle/);
@@ -40,12 +41,14 @@ test('direct editor is loaded by the existing catalogue module chain in browsers
   assert.match(valueModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
 });
 
-// Persisted layout must wait until KV hydration has finished mutating/reordering cards.
-test('saved direct layout waits for catalogue hydration before reapplying', () => {
-  assert.match(directEdit, /waitForCatalogueHydration/);
-  assert.match(directEdit, /window\.catalogueOverridesReady/);
-  assert.match(directEdit, /await\s+waitForCatalogueHydration\(\)/);
-  assert.match(directEdit, /applySavedLayouts\(\)/);
+// The normal KV hydration pass must restore saved layout itself, not depend on a later direct-editor race.
+test('main catalogue hydrator restores saved image and metadata layout', () => {
+  assert.match(unifiedAdmin, /function applySavedCardLayout\(card, saved = \{\}\)/);
+  assert.match(unifiedAdmin, /saved\.imageScale/);
+  assert.match(unifiedAdmin, /saved\.imageX/);
+  assert.match(unifiedAdmin, /saved\.imageY/);
+  assert.match(unifiedAdmin, /saved\.metaY/);
+  assert.match(unifiedAdmin, /applySavedCardLayout\(card, saved\)/);
 });
 
 test('mobile Production and Practical blocks are moved farther down', () => {
