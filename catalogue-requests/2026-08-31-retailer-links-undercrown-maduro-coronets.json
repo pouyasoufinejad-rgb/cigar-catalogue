@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-undercrown-maduro-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-maduro-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/undercrown-maduro-coronets/",
+      "https://www.cigarworld.com.au/aud/products/drew-estate-undercrown-maduro-coronet-%284%22-x-32%29-%252d-tin-of-10.html",
+      "https://www.theindexcigars.com.au/products/undercrown-maduro-coronet-tin-of-10"
+    ]
+  },
+  "note": "Verified on 2026-08-31; replaces the Cigarworld category URL with the exact tin product and adds The Index's exact product page."
+}

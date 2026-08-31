@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-davidoff-escurio-petit-robusto",
+  "operation": "upsert-entry",
+  "key": "davidoff-escurio-petit-robusto",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/davidoff-escurio-petit-robusto/",
+      "https://www.cigarworld.com.au/aud/products/davidoff-escurio-petite-robusto-%252d-single-%252d-%283-1%7B47%7D4-x-50%29.html",
+      "https://firmincigars.com.au/product/davidoff-escurio-petit-robusto-dominican-republic/"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds Firmin's exact single product page after the two existing live links."
+}

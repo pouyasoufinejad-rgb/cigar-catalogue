@@ -1,0 +1,11 @@
+{
+  "id": "2026-08-31-retailer-links-aj-fernandez-new-world-oscuro",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-oscuro",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/new-world-oscuro-pack-by-aj-fernandez-%252d-%284-x-36%29-%252d-pack-of-5.html"
+    ]
+  },
+  "note": "Verified on 2026-08-31; removes the duplicate live Cigarworld URL while retaining the exact pack-of-five product page."
+}

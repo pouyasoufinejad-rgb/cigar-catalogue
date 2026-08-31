@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-oliva-serie-o",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-o",
+  "entry": {
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/collections/all/products/oliva-serie-o-cigarillo?variant=48503352262905",
+      "https://www.cigarhut.com.au/oliva-serie-o-cigarillos-tin-of-5-habano/",
+      "https://cigarbox.com.au/products/oliva-serie-o-cigarillos-tin-of-5-habano"
+    ]
+  },
+  "note": "Verified on 2026-08-31; restores the exact Cigar Hut and CigarBox pages after the existing The Index link."
+}

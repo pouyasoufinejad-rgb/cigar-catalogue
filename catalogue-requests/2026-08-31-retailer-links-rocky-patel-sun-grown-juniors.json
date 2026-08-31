@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-rocky-patel-sun-grown-juniors",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/rocky-patel-sun-grown-juniors-pack-of-5/",
+      "https://cigarbox.com.au/products/rocky-pate-sun-grown-juniors-tin-of-5-4-x-38rg",
+      "https://www.theindexcigars.com.au/products/rocky-patel-sun-grown-juniors"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds the exact CigarBox and The Index product pages after the existing Cigar Hut link."
+}

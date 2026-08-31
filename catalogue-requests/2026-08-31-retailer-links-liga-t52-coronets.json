@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-liga-t52-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-t52-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/",
+      "https://firmincigars.com.au/product/drew-estate-liga-privada-t52-coronets-single-cigar-nicaragua/",
+      "https://www.cigarworld.com.au/aud/products/liga-privada-t52-coronet-%284%22-x-32%29-%252d-single.html"
+    ]
+  },
+  "note": "Verified against the five required Australian retailer catalogues on 2026-08-31; restores Cigarworld's confirmed exact T52 Coronet listing while preserving the two live links."
+}

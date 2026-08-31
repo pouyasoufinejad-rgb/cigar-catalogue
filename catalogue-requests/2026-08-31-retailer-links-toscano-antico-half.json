@@ -1,0 +1,14 @@
+{
+  "id": "2026-08-31-retailer-links-toscano-antico-half",
+  "operation": "upsert-entry",
+  "key": "toscano-antico-half",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/toscano-antico-%286%22-x-38%29-%252d-pack-of-5.html",
+      "https://www.cigarhut.com.au/toscano-antico/",
+      "https://cigarbox.com.au/products/toscani-antico-toscano-italian-pack-of-5",
+      "https://www.theindexcigars.com.au/products/toscano-antico"
+    ]
+  },
+  "note": "Verified on 2026-08-31; replaces both category URLs with exact product pages and adds the confirmed CigarBox and The Index listings."
+}

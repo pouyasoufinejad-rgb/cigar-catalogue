@@ -1,0 +1,14 @@
+{
+  "id": "2026-08-31-retailer-links-arturo-fuente-exquisitos-maduro",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/arturo-fuente-exquisitos_maduro/",
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-exquisitos-maduro-%252d-single-%252d-%284-1%7B47%7D2%22-x-33%29.html",
+      "https://cigarbox.com.au/products/arturo-fuente-exquisitos-4-5-x-33rg-1",
+      "https://www.theindexcigars.com.au/products/arturo-fuente-exquisitos-maduro"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds The Index's exact single/box product page after the three existing live retailer links."
+}

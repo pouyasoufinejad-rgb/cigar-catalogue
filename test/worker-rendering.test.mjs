@@ -2,7 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { applyStructuralOverridesToHtml, injectEntriesIntoHtml } from '../src/index.js';
+import {
+  applyStructuralOverridesToHtml,
+  extractStockTargetsFromHtml,
+  injectEntriesIntoHtml,
+  renderEntryCard
+} from '../src/index.js';
 
 function parseJsonc(text) {
   return JSON.parse(text.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''));
@@ -72,4 +77,40 @@ test('structural overrides process a production-sized catalogue in one bounded p
 
   assert.doesNotMatch(transformed, /data-taster=/);
   assert.ok(elapsed < 75, `structural override pass took ${elapsed.toFixed(0)}ms`);
+});
+
+test('stock targets retain one URL for each of the five audited retailers', () => {
+  const html = `<article class="card" data-key="five-retailers" data-stock="out">
+    <h3><span>Test Brand</span>Test Cigar</h3>
+    <a class="shop" href="https://www.cigarhut.com.au/test-cigar/">Cigar Hut</a>
+    <a class="shop" href="https://www.cigarworld.com.au/aud/products/test-cigar.html">Cigarworld</a>
+    <a class="shop" href="https://cigarbox.com.au/products/test-cigar">CigarBox</a>
+    <a class="shop" href="https://firmincigars.com.au/product/test-cigar/">Firmin Cigars</a>
+    <a class="shop" href="https://www.theindexcigars.com.au/products/test-cigar">The Index</a>
+  </article>`;
+
+  const [target] = extractStockTargetsFromHtml(html);
+
+  assert.deepEqual(target.links, [
+    { retailer: 'CigarHut', url: 'https://www.cigarhut.com.au/test-cigar/' },
+    { retailer: 'Cigarworld', url: 'https://www.cigarworld.com.au/aud/products/test-cigar.html' },
+    { retailer: 'CigarBox', url: 'https://cigarbox.com.au/products/test-cigar' },
+    { retailer: 'Firmin Cigars', url: 'https://firmincigars.com.au/product/test-cigar/' },
+    { retailer: 'The Index', url: 'https://www.theindexcigars.com.au/products/test-cigar' }
+  ]);
+});
+
+test('catalogue cards show friendly labels for Firmin Cigars and The Index', () => {
+  const html = renderEntryCard({
+    key: 'retailer-labels',
+    brand: 'Test Brand',
+    title: 'Test Cigar',
+    retailerLinks: [
+      'https://firmincigars.com.au/product/test-cigar/',
+      'https://www.theindexcigars.com.au/products/test-cigar'
+    ]
+  });
+
+  assert.match(html, />View at Firmin Cigars <span>/);
+  assert.match(html, />View at The Index <span>/);
 });
