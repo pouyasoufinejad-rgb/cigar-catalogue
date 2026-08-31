@@ -111,6 +111,16 @@ function scheduleCachedLayoutApply() {
   mutationTimer = setTimeout(applyCachedLayouts, 0);
 }
 
+function nodeTouchesCatalogueCard(node) {
+  if (!node || node.nodeType !== 1) return false;
+  return Boolean(node.matches?.('article.card[data-key]') || node.querySelector?.('article.card[data-key]'));
+}
+
+function mutationTouchesCatalogueCards(mutation) {
+  if (mutation.type !== 'childList') return false;
+  return [...mutation.addedNodes, ...mutation.removedNodes].some(nodeTouchesCatalogueCard);
+}
+
 function artmetaHtml(card, selector) {
   const node = card.querySelector(selector);
   if (!node) return '';
@@ -226,7 +236,7 @@ export function initDirectPersistence() {
   waitForCatalogueHydration().then(refreshRemoteLayouts);
   const observer = new MutationObserver(mutations => {
     if (applyingLayouts) return;
-    if (mutations.some(mutation => mutation.type === 'childList')) scheduleCachedLayoutApply();
+    if (mutations.some(mutationTouchesCatalogueCards)) scheduleCachedLayoutApply();
   });
   observer.observe(document.body, { childList:true, subtree:true });
 }
