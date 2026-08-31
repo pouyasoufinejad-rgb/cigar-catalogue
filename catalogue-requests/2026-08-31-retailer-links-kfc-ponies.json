@@ -1,0 +1,12 @@
+{
+  "id": "2026-08-31-retailer-links-kfc-ponies",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies",
+  "entry": {
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/collections/kentucky-fire-cured/products/kentucky-fire-cured-ponies?variant=45691606925561",
+      "https://www.cigarhut.com.au/kfc-ponies/"
+    ]
+  },
+  "note": "Verified on 2026-08-31; restores Cigar Hut's confirmed KFC Ponies product page after the existing The Index link."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "2026-08-31-retailer-links-isla-del-sol-maduro-gran-corona",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/isla-del-sol-maduro-gran-corona/",
+      "https://www.cigarworld.com.au/aud/products/isla-del-sol-%252d-maduro-%252d-gran-corona-%285-x-44%29-single.html"
+    ]
+  },
+  "note": "Verified on 2026-08-31; replaces the Cigarworld category URL with the exact Maduro Gran Corona single product page."
+}

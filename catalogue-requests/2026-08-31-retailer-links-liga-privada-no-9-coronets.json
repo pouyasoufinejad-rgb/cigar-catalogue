@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-liga-privada-no-9-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-no-9-coronets-tins-10-cigars/",
+      "https://firmincigars.com.au/product/drew-estate-liga-privada-no-9-coronets-10s-nicaragua/",
+      "https://www.cigarworld.com.au/aud/products/liga-privada-no.9-coronet-%284%22-x-32%29-%252d-tin-of-10.html"
+    ]
+  },
+  "note": "Verified against the five required Australian retailer catalogues on 2026-08-31; preserves the live Cigar Hut position, uses Firmin's exact 10-count listing, and restores Cigarworld's confirmed exact listing."
+}

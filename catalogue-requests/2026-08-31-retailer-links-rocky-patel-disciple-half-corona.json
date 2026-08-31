@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-rocky-patel-disciple-half-corona",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/rocky-patel-disciple-half-corona",
+      "https://www.cigarhut.com.au/rocky-patel-disciple-half-corona/",
+      "https://cigarbox.com.au/products/rocky-patel-disciple-half-corona-3-5-x-46rg-1"
+    ]
+  },
+  "note": "Verified on 2026-08-31; replaces the CigarBox collection URL with the exact Disciple Half Corona product page."
+}

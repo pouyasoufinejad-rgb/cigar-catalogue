@@ -1,0 +1,12 @@
+{
+  "id": "2026-08-31-retailer-links-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/oliva-serie-v-melanio-4-petit-corona-4-5-x-46rg",
+      "https://www.cigarhut.com.au/oliva-serie-v-melanio-no-4/"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds Cigar Hut's exact Melanio No. 4 product page after the existing CigarBox link."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-cohiba-short-single",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-single",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/cohiba-short-%252d-single-%252d-%283-1%7B47%7D4%22-x-28%29.html",
+      "https://www.cigarhut.com.au/cohiba-short/",
+      "https://www.theindexcigars.com.au/products/cohiba-short"
+    ]
+  },
+  "note": "Verified on 2026-08-31; replaces the Cigarworld category URL with the exact single page and adds Cigar Hut plus The Index, whose shared page has a single variant."
+}

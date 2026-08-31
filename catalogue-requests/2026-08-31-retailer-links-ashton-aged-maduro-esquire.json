@@ -1,0 +1,12 @@
+{
+  "id": "2026-08-31-retailer-links-ashton-aged-maduro-esquire",
+  "operation": "upsert-entry",
+  "key": "ashton-aged-maduro-esquire",
+  "entry": {
+    "retailerLinks": [
+      "https://firmincigars.com.au/product/ashton-esquire-10s-dominican-republic/",
+      "https://cigarbox.com.au/products/ashton-aged-maduro-esquire-maduro-chicos-pack-of-10-4-25-x-32rg"
+    ]
+  },
+  "note": "Verified on 2026-08-31; canonicalises Firmin's live listing and restores CigarBox's exact sold-out listing so restocks can be detected."
+}

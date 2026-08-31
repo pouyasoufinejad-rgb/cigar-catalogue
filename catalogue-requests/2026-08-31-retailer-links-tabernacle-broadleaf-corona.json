@@ -1,0 +1,12 @@
+{
+  "id": "2026-08-31-retailer-links-tabernacle-broadleaf-corona",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/the-tabernacle-broadleaf-corona/",
+      "https://www.theindexcigars.com.au/products/the-tabernacle-corona"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds The Index's exact Connecticut Broadleaf Corona product page after the existing Cigar Hut link."
+}

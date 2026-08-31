@@ -1,0 +1,14 @@
+{
+  "id": "2026-08-31-retailer-links-cohiba-short-10",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-10",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cohiba-short/",
+      "https://www.cigarworld.com.au/aud/products/cohiba-short-%252d-packet-of-10-%252d-%283-1%7B47%7D4%22-x-28%29.html",
+      "https://firmincigars.com.au/product/cohiba-short-cigars-10s-cuba/",
+      "https://www.theindexcigars.com.au/products/cohiba-short"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds Firmin's exact 10-count page and The Index's verified box-of-10/single product page."
+}

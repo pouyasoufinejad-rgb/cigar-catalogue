@@ -1,0 +1,13 @@
+{
+  "id": "2026-08-31-retailer-links-oliva-serie-g-maduro-special-g",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/oliva-serie-g-maduro-special-g-3-7-x-48rg",
+      "https://www.theindexcigars.com.au/collections/all/products/oliva-serie-g-special-g-maduro",
+      "https://www.cigarworld.com.au/aud/products/oliva-%252d-%28serie-g%29-special-g-maduro-%252d-single-%252d-%283.75%22-x-48%29.html"
+    ]
+  },
+  "note": "Verified on 2026-08-31; adds Cigarworld's exact Special G Maduro product page after the two existing live links."
+}

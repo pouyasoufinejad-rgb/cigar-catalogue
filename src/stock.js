@@ -10,7 +10,9 @@ const CIGARHUT_CIGARS = `${CIGARHUT_ORIGIN}/cigars/`;
 const RETAILERS = [
   { host: 'cigarhut.com.au', label: 'CigarHut' },
   { host: 'cigarworld.com.au', label: 'Cigarworld' },
-  { host: 'cigarbox.com.au', label: 'CigarBox' }
+  { host: 'cigarbox.com.au', label: 'CigarBox' },
+  { host: 'firmincigars.com.au', label: 'Firmin Cigars' },
+  { host: 'theindexcigars.com.au', label: 'The Index' }
 ];
 
 function isRecord(value) {
