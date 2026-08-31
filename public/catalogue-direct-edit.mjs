@@ -295,13 +295,27 @@ async function applySavedLayouts() {
   } catch (_) {}
 }
 
+async function waitForCatalogueHydration() {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    if (window.catalogueOverridesReady) {
+      try { await window.catalogueOverridesReady; } catch (_) {}
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+}
+
+async function restoreSavedLayoutsAfterHydration() {
+  await waitForCatalogueHydration();
+  await applySavedLayouts();
+}
+
 export function initDirectCardEditing() {
   ensureStyles();
   ensurePanel();
   document.addEventListener('click', onToggleCapture, { capture: true });
   document.addEventListener('click', onDocumentClick, true);
-  const ready = window.catalogueOverridesReady;
-  Promise.resolve(ready).finally(applySavedLayouts);
+  restoreSavedLayoutsAfterHydration();
   document.addEventListener('catalogue:cards-refreshed', applySavedLayouts);
 }
 
