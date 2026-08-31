@@ -64,6 +64,7 @@ test('persistence observer ignores slider output and in-card text mutations', ()
   assert.match(persistence, /addedNodes/);
   assert.match(persistence, /removedNodes/);
   assert.match(persistence, /article\.card\[data-key\]/);
+  assert.match(persistence, /mutations\.some\(mutationTouchesCatalogueCards\)/);
   assert.doesNotMatch(persistence, /mutations\.some\(mutation => mutation\.type === 'childList'\)/);
 });
 
