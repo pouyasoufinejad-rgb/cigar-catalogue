@@ -20,6 +20,7 @@ test('clicking a card selects it and exposes in-place text editing plus image co
   assert.match(directEdit, /Text Y/);
 });
 
+// The catalogue's art CSS uses !important transforms, so direct positioning must outrank it.
 test('direct image and text positioning overrides existing important transforms', () => {
   assert.match(directEdit, /style\.setProperty\('transform',\s*`translate\(\$\{x\}px, \$\{y\}px\) scale\(\$\{scale \/ 100\}\)`,\s*'important'\)/);
   assert.match(directEdit, /style\.setProperty\('transform',\s*`translateY\(\$\{metaY\}px\)`,\s*'important'\)/);
