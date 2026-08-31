@@ -3,6 +3,7 @@ import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=145';
 const STOCK_API = '/api/stock';
 const STOCK_CHECK_API = '/api/stock/check';
 const STALE_AFTER_DAYS = 21;
+const CARD_LAYOUT_STYLE_ID = 'catalogue-card-layout-v146';
 
 const panel = document.getElementById('live-stock-check');
 const summary = document.getElementById('live-stock-summary');
@@ -29,6 +30,61 @@ const effectiveStatus = card => {
   return card.dataset.stock || 'unknown';
 };
 const isUnavailable = card => ['out','delisted'].includes(effectiveStatus(card));
+
+function removeRedundantProductionLabels(root = document) {
+  root.querySelectorAll('article.card .artmeta-left').forEach(production => {
+    const title = production.querySelector('.artmeta-title');
+    if (!title || title.textContent.trim().toLowerCase() !== 'production') return;
+    production.querySelectorAll('.artmeta-line').forEach(line => {
+      if (line.textContent.trim().toLowerCase() === 'unflavoured') line.remove();
+    });
+  });
+}
+
+function ensureCardLayoutStyles() {
+  if (document.getElementById(CARD_LAYOUT_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = CARD_LAYOUT_STYLE_ID;
+  style.textContent = `
+:root{
+  --catalogue-card-max-width:430px;
+  --catalogue-artframe-min-height:390px;
+}
+.grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))!important;
+}
+article.card{
+  width:100%!important;
+  max-width:var(--catalogue-card-max-width)!important;
+  margin-inline:auto!important;
+}
+article.card .artframe{
+  min-height:var(--catalogue-artframe-min-height)!important;
+}
+@media (max-width:700px){
+  .grid{
+    grid-template-columns:minmax(0, 1fr)!important;
+  }
+  article.card{
+    width:100%!important;
+    max-width:min(100%, var(--catalogue-card-max-width))!important;
+  }
+  article.card .artframe{
+    min-height:410px!important;
+  }
+  article.card .artmeta-left,
+  article.card .artmeta-right{
+    max-width:46%!important;
+  }
+}
+`;
+  document.head.appendChild(style);
+}
+
+function tidyCardPresentation(root = document) {
+  ensureCardLayoutStyles();
+  removeRedundantProductionLabels(root);
+}
 
 function setPanelState(state) {
   if (!panel) return;
@@ -208,6 +264,7 @@ function applyCachedResults(fromManualRun = false) {
     if (saved) applyStatus(card, saved, fromManualRun);
     else renderFreshness(card, effectiveStatus(card), []);
   });
+  tidyCardPresentation();
   restoreAndSeparate();
   updateMetaText();
 }
@@ -285,6 +342,7 @@ async function runCheck(mode) {
 async function init() {
   try { if (window.catalogueOverridesReady) await window.catalogueOverridesReady; } catch (_) {}
   initialisePanel();
+  tidyCardPresentation();
   cards = Array.from(document.querySelectorAll('article.card[data-key]'));
   try { await loadStock(); }
   catch (error) {
@@ -304,6 +362,7 @@ async function init() {
   document.querySelectorAll('.toggle button[data-filter]').forEach(button => button.addEventListener('click', () => setTimeout(updateDividerVisibility, 0)));
   document.addEventListener('catalogue:cards-refreshed', () => {
     cards = Array.from(document.querySelectorAll('article.card[data-key]'));
+    tidyCardPresentation();
     applyCachedResults();
   });
 }
