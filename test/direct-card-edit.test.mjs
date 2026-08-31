@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const directEdit = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8').catch(() => '');
 const valueModule = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const adminModule = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
 test('Edit catalogue activates direct card edit mode instead of opening the dropdown modal', () => {
   assert.match(directEdit, /catalogue-admin-toggle/);
@@ -38,6 +39,11 @@ test('direct editor uses the existing card selection and catalogue state save pa
 test('direct editor is loaded by the existing catalogue module chain in browsers only', () => {
   assert.match(valueModule, /typeof document !== 'undefined'/);
   assert.match(valueModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
+});
+
+test('saved direct layout is reapplied after catalogue hydration completes', () => {
+  assert.match(directEdit, /addEventListener\('catalogue:cards-refreshed',\s*applySavedLayouts\)/);
+  assert.match(adminModule, /dispatchEvent\(new CustomEvent\('catalogue:cards-refreshed'/);
 });
 
 test('mobile Production and Practical blocks are moved farther down', () => {
