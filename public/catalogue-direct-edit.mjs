@@ -124,8 +124,8 @@ function applyLayout(card, values = {}) {
   card.dataset.directMetaY = String(metaY);
   const image = card.querySelector('.artframe img');
   if (image) {
-    image.style.transform = `translate(${x}px, ${y}px) scale(${scale / 100})`;
-    image.style.transformOrigin = 'center center';
+    image.style.setProperty('transform', `translate(${x}px, ${y}px) scale(${scale / 100})`, 'important');
+    image.style.setProperty('transform-origin', 'center center', 'important');
   }
   card.querySelectorAll('.artmeta-left,.artmeta-right').forEach(node => {
     node.style.setProperty('transform', `translateY(${metaY}px)`, 'important');
