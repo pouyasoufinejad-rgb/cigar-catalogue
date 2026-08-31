@@ -40,6 +40,7 @@ test('direct editor is loaded by the existing catalogue module chain in browsers
   assert.match(valueModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
 });
 
+// Persisted layout must wait until KV hydration has finished mutating/reordering cards.
 test('saved direct layout waits for catalogue hydration before reapplying', () => {
   assert.match(directEdit, /waitForCatalogueHydration/);
   assert.match(directEdit, /window\.catalogueOverridesReady/);
