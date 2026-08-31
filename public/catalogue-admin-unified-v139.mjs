@@ -314,12 +314,14 @@ function deriveSize(length, ring) {
   if (l >= 4 && r >= 28) return 'silver';
   return 'bronze';
 }
-function retailerLabel(urlValue) {
+export function retailerLabel(urlValue) {
   try {
     const host = new URL(urlValue).hostname.replace(/^www\./, '').toLowerCase();
     if (host.includes('cigarhut.com.au')) return 'Cigarhut';
     if (host.includes('cigarworld.com.au')) return 'Cigarworld';
     if (host.includes('cigarbox.com.au')) return 'CigarBox';
+    if (host.includes('firmincigars.com.au')) return 'Firmin Cigars';
+    if (host.includes('theindexcigars.com.au')) return 'The Index';
     return host;
   } catch (_) { return 'retailer'; }
 }

@@ -114,3 +114,11 @@ test('BRA/DR overrides replace stale flags with two rendered flag assets', () =>
   assert.match(catalogueHtml, /\.country-flag\.flag-brazil\{background-image:url\(/);
   assert.match(catalogueHtml, /\.country-flag\.flag-dominican\{background-image:url\(/);
 });
+
+test('catalogue updater shows friendly names for every stock-check retailer', () => {
+  assert.equal(unifiedAdmin.retailerLabel('https://www.cigarhut.com.au/test/'), 'Cigarhut');
+  assert.equal(unifiedAdmin.retailerLabel('https://www.cigarworld.com.au/aud/products/test.html'), 'Cigarworld');
+  assert.equal(unifiedAdmin.retailerLabel('https://cigarbox.com.au/products/test'), 'CigarBox');
+  assert.equal(unifiedAdmin.retailerLabel('https://firmincigars.com.au/product/test/'), 'Firmin Cigars');
+  assert.equal(unifiedAdmin.retailerLabel('https://www.theindexcigars.com.au/products/test'), 'The Index');
+});
