@@ -20,6 +20,11 @@ test('clicking a card selects it and exposes in-place text editing plus image co
   assert.match(directEdit, /Text Y/);
 });
 
+test('direct image and text positioning overrides existing important transforms', () => {
+  assert.match(directEdit, /style\.setProperty\('transform',\s*`translate\(\$\{x\}px, \$\{y\}px\) scale\(\$\{scale \/ 100\}\)`,\s*'important'\)/);
+  assert.match(directEdit, /style\.setProperty\('transform',\s*`translateY\(\$\{metaY\}px\)`,\s*'important'\)/);
+});
+
 test('direct editor uses the existing card selection and catalogue state save path', () => {
   assert.match(directEdit, /catalogue-admin-card/);
   assert.match(directEdit, /\/api\/catalogue-overrides/);
