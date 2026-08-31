@@ -29,8 +29,9 @@ test('direct editor uses the existing card selection and catalogue state save pa
   assert.match(directEdit, /More fields/);
 });
 
-test('direct editor is loaded by the existing catalogue module chain', () => {
-  assert.match(valueModule, /import '\.\/catalogue-direct-edit\.mjs'/);
+test('direct editor is loaded by the existing catalogue module chain in browsers only', () => {
+  assert.match(valueModule, /typeof document !== 'undefined'/);
+  assert.match(valueModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
 });
 
 test('mobile Production and Practical blocks are moved farther down', () => {
