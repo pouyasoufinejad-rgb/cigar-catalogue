@@ -1,4 +1,7 @@
-if (typeof document !== 'undefined') import('./catalogue-direct-edit.mjs');
+if (typeof document !== 'undefined') {
+  import('./catalogue-direct-edit.mjs');
+  import('./catalogue-direct-persistence.mjs');
+}
 
 export const QUALITY_BENCHMARKS = Object.freeze({
   1: 1.75, 2: 2.50, 3: 3.50, 4: 5, 5: 7,
