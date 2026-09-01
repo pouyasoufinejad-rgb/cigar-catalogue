@@ -59,6 +59,16 @@ test('stock state maps to one traffic-light dot colour', () => {
 test('presentation hides dated freshness boxes while retaining compact stock-dot UI', () => {
   assert.match(presentationSource, /article\.card \.freshness\{display:none!important\}/);
   assert.match(presentationSource, /className\s*=\s*['"]stock-dot['"]/);
-  assert.match(presentationSource, /rankflag/);
   assert.match(presentationSource, /aria-label/);
+});
+
+test('stock dots contain no visible or hover text', () => {
+  assert.match(presentationSource, /dot\.textContent\s*=\s*['"]['"]/);
+  assert.doesNotMatch(presentationSource, /setAttribute\(['"]title['"]/);
+});
+
+test('stock dots sit to the left of the full ranking caption eyebrow', () => {
+  assert.match(presentationSource, /const eyebrow = card\.querySelector\(['"]\.eyebrow['"]\)/);
+  assert.match(presentationSource, /eyebrow\.insertBefore\(dot, eyebrow\.firstChild\)/);
+  assert.doesNotMatch(presentationSource, /const rankflag = card\.querySelector\(['"]\.rankflag['"]\)/);
 });
