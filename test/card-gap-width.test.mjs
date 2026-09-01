@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+// Locks the approved desktop spacing/width tweak while preserving mobile behaviour.
 const layoutSource = await readFile(new URL('../public/catalogue-card-layout.mjs', import.meta.url), 'utf8');
 
 test('desktop catalogue keeps three columns with an 8px gap and a 42px width extension', () => {
