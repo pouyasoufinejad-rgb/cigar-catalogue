@@ -20,8 +20,9 @@ test('desktop catalogue grid stays at three columns with a very small gap and sl
   assert.match(wideLayout, /max-width:\s*none!important/);
 });
 
-test('a final desktop row with two cards uses the outside columns for more separation', () => {
-  assert.match(wideLayout, /\.grid\s*>\s*article\.card:last-of-type:nth-of-type\(3n\s*\+\s*2\)\{[\s\S]*grid-column:\s*3!important/);
+test('a final desktop row with two cards keeps outside-column balance but moves both inward', () => {
+  assert.match(wideLayout, /\.grid\s*>\s*article\.card:nth-last-of-type\(2\):nth-of-type\(3n\s*\+\s*1\)\{[\s\S]*transform:\s*translateX\(30%\)!important/);
+  assert.match(wideLayout, /\.grid\s*>\s*article\.card:last-of-type:nth-of-type\(3n\s*\+\s*2\)\{[\s\S]*grid-column:\s*3!important;[\s\S]*transform:\s*translateX\(-30%\)!important/);
 });
 
 test('laurel boxes are wider, less tall, and keep the score closer to the laurel image', () => {
@@ -44,7 +45,8 @@ test('mobile remains one full-width column with no horizontal overhang and compa
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*gap:\s*6px!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*width:\s*100%!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*margin-inline:\s*0!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card:last-of-type:nth-of-type\(3n\s*\+\s*2\)\{[\s\S]*grid-column:\s*auto!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card:nth-last-of-type\(2\):nth-of-type\(3n\s*\+\s*1\)\{[\s\S]*transform:\s*none!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card:last-of-type:nth-of-type\(3n\s*\+\s*2\)\{[\s\S]*grid-column:\s*auto!important;[\s\S]*transform:\s*none!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:140px!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:84px!important/);
 });

@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v151';
+const STYLE_ID = 'catalogue-wide-card-layout-v152';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -16,8 +16,12 @@ html body article.card{
   max-width:none!important;
   margin:0!important;
 }
+html body .grid > article.card:nth-last-of-type(2):nth-of-type(3n + 1){
+  transform:translateX(30%)!important;
+}
 html body .grid > article.card:last-of-type:nth-of-type(3n + 2){
   grid-column:3!important;
+  transform:translateX(-30%)!important;
 }
 html body article.card .medals{
   gap:4px!important;
@@ -48,8 +52,12 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
     max-width:100%!important;
     margin:0!important;
   }
+  html body .grid > article.card:nth-last-of-type(2):nth-of-type(3n + 1){
+    transform:none!important;
+  }
   html body .grid > article.card:last-of-type:nth-of-type(3n + 2){
     grid-column:auto!important;
+    transform:none!important;
   }
   html body article.card .medals{gap:4px!important}
   html body article.card .medals .rating{
