@@ -7,9 +7,9 @@ export function ensureWideCardLayout() {
   style.textContent = `
 html body .grid{
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:6px!important;
-  width:calc(100% + 30px)!important;
-  margin-inline:-15px!important;
+  gap:8px!important;
+  width:calc(100% + 42px)!important;
+  margin-inline:-21px!important;
 }
 html body article.card{
   width:100%!important;
