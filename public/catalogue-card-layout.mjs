@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v148';
+const STYLE_ID = 'catalogue-wide-card-layout-v149';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -7,7 +7,9 @@ export function ensureWideCardLayout() {
   style.textContent = `
 html body .grid{
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:0!important;
+  gap:6px!important;
+  width:calc(100% + 30px)!important;
+  margin-inline:-15px!important;
 }
 html body article.card{
   width:100%!important;
@@ -25,7 +27,9 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
 @media(max-width:700px){
   html body .grid{
     grid-template-columns:minmax(0,1fr)!important;
-    gap:0!important;
+    gap:6px!important;
+    width:100%!important;
+    margin-inline:0!important;
   }
   html body article.card{
     width:100%!important;

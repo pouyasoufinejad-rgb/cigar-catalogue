@@ -11,12 +11,13 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
   assert.match(stockClient, /production[^\n]*querySelectorAll\('\.artmeta-line'\)/);
 });
 
-test('desktop catalogue grid is exactly three flush columns', () => {
+test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
   assert.match(valueLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
-  assert.match(wideLayout, /gap:\s*0!important/);
+  assert.match(wideLayout, /gap:\s*6px!important/);
+  assert.match(wideLayout, /width:\s*calc\(100% \+ 30px\)!important/);
+  assert.match(wideLayout, /margin-inline:\s*-15px!important/);
   assert.match(wideLayout, /max-width:\s*none!important/);
-  assert.match(wideLayout, /margin:\s*0!important/);
   assert.doesNotMatch(wideLayout, /min-height:/);
 });
 
@@ -28,9 +29,11 @@ test('wider cards keep readable rating and copy text', () => {
   assert.match(wideLayout, /article\.card \.artmeta\{font-size:\s*11px!important;line-height:\s*1\.35!important/);
 });
 
-test('mobile remains one full-width column while keeping cards flush', () => {
+test('mobile remains one full-width column with the small gap and no horizontal overhang', () => {
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*grid-template-columns:\s*minmax\(0,1fr\)!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*max-width:\s*100%!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*gap:\s*6px!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*width:\s*100%!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*margin-inline:\s*0!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.rating>span\{font-size:9px!important\}/);
 });
 
