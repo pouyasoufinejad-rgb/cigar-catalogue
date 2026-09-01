@@ -14,9 +14,9 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
   assert.match(valueLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
-  assert.match(wideLayout, /gap:\s*6px!important/);
-  assert.match(wideLayout, /width:\s*calc\(100% \+ 30px\)!important/);
-  assert.match(wideLayout, /margin-inline:\s*-15px!important/);
+  assert.match(wideLayout, /gap:\s*8px!important/);
+  assert.match(wideLayout, /width:\s*calc\(100% \+ 42px\)!important/);
+  assert.match(wideLayout, /margin-inline:\s*-21px!important/);
   assert.match(wideLayout, /max-width:\s*none!important/);
   assert.doesNotMatch(wideLayout, /min-height:/);
 });
