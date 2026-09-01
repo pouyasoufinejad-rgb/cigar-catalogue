@@ -15,26 +15,33 @@ test('desktop catalogue grid stays at three columns with a very small gap and sl
   assert.match(valueLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
-  assert.match(wideLayout, /width:\s*calc\(100% \+ 42px\)!important/);
-  assert.match(wideLayout, /margin-inline:\s*-21px!important/);
+  assert.match(wideLayout, /width:\s*calc\(100% \+ 60px\)!important/);
+  assert.match(wideLayout, /margin-inline:\s*-30px!important/);
   assert.match(wideLayout, /max-width:\s*none!important/);
-  assert.doesNotMatch(wideLayout, /min-height:/);
+});
+
+test('laurel boxes are wider, less tall, and keep the score closer to the laurel image', () => {
+  assert.match(wideLayout, /article\.card \.medals\{[\s\S]*gap:4px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.rating\{[\s\S]*min-height:148px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*height:92px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*margin:2px auto -3px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.rating b\{font-size:\s*11px!important;margin-top:-2px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.subscore\{font-size:\s*9px!important;margin-top:-1px!important/);
 });
 
 test('wider cards keep readable rating and copy text', () => {
   assert.match(wideLayout, /article\.card \.medals \.rating>span\{font-size:\s*10px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.rating b\{font-size:\s*11px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.subscore\{font-size:\s*9px!important/);
   assert.match(wideLayout, /article\.card \.cardbody \.summary\{font-size:\s*14px!important;line-height:\s*1\.5!important/);
   assert.match(wideLayout, /article\.card \.artmeta\{font-size:\s*11px!important;line-height:\s*1\.35!important/);
 });
 
-test('mobile remains one full-width column with the small gap and no horizontal overhang', () => {
+test('mobile remains one full-width column with no horizontal overhang and compact laurels', () => {
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*grid-template-columns:\s*minmax\(0,1fr\)!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*gap:\s*6px!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*width:\s*100%!important/);
   assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*margin-inline:\s*0!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.rating>span\{font-size:9px!important\}/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:140px!important/);
+  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:84px!important/);
 });
 
 test('existing art-frame heights and mobile metadata placement remain unchanged', () => {

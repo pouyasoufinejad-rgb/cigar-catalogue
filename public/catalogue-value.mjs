@@ -3,6 +3,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-direct-persistence.mjs');
   import('./catalogue-flavour.mjs');
   import('./catalogue-card-layout.mjs');
+  import('./catalogue-presentation.mjs');
 }
 
 export const QUALITY_BENCHMARKS = Object.freeze({
