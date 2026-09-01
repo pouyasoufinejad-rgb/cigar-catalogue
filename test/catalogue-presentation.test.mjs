@@ -62,3 +62,8 @@ test('presentation hides dated freshness boxes while retaining compact stock-dot
   assert.match(presentationSource, /rankflag/);
   assert.match(presentationSource, /aria-label/);
 });
+
+test('stock dots contain no visible or hover text', () => {
+  assert.match(presentationSource, /dot\.textContent\s*=\s*['"]['"]/);
+  assert.doesNotMatch(presentationSource, /setAttribute\(['"]title['"]/);
+});
