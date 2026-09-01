@@ -9,6 +9,7 @@ import {
   normaliseFlavour
 } from '../public/catalogue-flavour.mjs';
 
+// Behaviour tests for the fifth manual catalogue rating.
 const loaderSource = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
 const flavourSource = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
 
