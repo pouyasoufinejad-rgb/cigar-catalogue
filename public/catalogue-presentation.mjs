@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-presentation-v150';
+const STYLE_ID = 'catalogue-presentation-v151';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
 
 function normaliseGoldLabels(labels = []) {
@@ -43,22 +43,20 @@ function ensureStyle() {
   style.id = STYLE_ID;
   style.textContent = `
 article.card .freshness{display:none!important}
-article.card .rankflag{overflow:visible!important}
-article.card .rankflag .stock-dot{
-  position:absolute;
-  left:-12px;
-  top:50%;
+article.card .eyebrow .stock-dot{
+  display:inline-block;
   width:9px;
   height:9px;
-  transform:translateY(-50%);
+  margin-right:6px;
   border-radius:50%;
   border:1px solid rgba(255,255,255,.7);
   box-shadow:0 1px 4px rgba(0,0,0,.5);
-  z-index:3;
+  vertical-align:1px;
+  flex:0 0 auto;
 }
-article.card .rankflag .stock-dot-green{background:#3f9a4a}
-article.card .rankflag .stock-dot-yellow{background:#d7a52f}
-article.card .rankflag .stock-dot-red{background:#a92d35}
+article.card .eyebrow .stock-dot-green{background:#3f9a4a}
+article.card .eyebrow .stock-dot-yellow{background:#d7a52f}
+article.card .eyebrow .stock-dot-red{background:#a92d35}
 `;
   document.head.appendChild(style);
 }
@@ -77,20 +75,24 @@ function effectiveStockStatus(card) {
 
 export function ensureStockDot(card) {
   if (!card?.querySelector) return null;
-  const rankflag = card.querySelector('.rankflag');
-  if (!rankflag) return null;
-  let dot = rankflag.querySelector('.stock-dot');
+  const eyebrow = card.querySelector('.eyebrow');
+  if (!eyebrow) return null;
+
+  card.querySelector('.rankflag .stock-dot')?.remove();
+  let dot = eyebrow.querySelector('.stock-dot');
   if (!dot) {
     dot = document.createElement('span');
     dot.className = 'stock-dot';
-    rankflag.insertBefore(dot, rankflag.firstChild);
+    eyebrow.insertBefore(dot, eyebrow.firstChild);
   }
+
+  dot.textContent = '';
+  dot.removeAttribute?.('title');
   const colour = stockColourForStatus(effectiveStockStatus(card));
   const className = `stock-dot stock-dot-${STOCK_COLOURS.has(colour) ? colour : 'yellow'}`;
   if (dot.className !== className) dot.className = className;
   const label = stockLabelForColour(colour);
   if (dot.getAttribute('aria-label') !== label) dot.setAttribute('aria-label', label);
-  if (dot.getAttribute('title') !== label) dot.setAttribute('title', label);
   return dot;
 }
 
