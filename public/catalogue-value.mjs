@@ -1,6 +1,7 @@
 if (typeof document !== 'undefined') {
   import('./catalogue-direct-edit.mjs');
   import('./catalogue-direct-persistence.mjs');
+  import('./catalogue-flavour.mjs');
 }
 
 export const QUALITY_BENCHMARKS = Object.freeze({
