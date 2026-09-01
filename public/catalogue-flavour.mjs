@@ -1,3 +1,5 @@
+import { deriveValue } from './catalogue-value.mjs';
+
 const STATE_API = '/api/catalogue-overrides';
 const SCORE_CLASSES = ['gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low', 'flavour-unrated'];
 
@@ -87,6 +89,11 @@ function setText(node, value) {
   if (node && node.textContent !== value) node.textContent = value;
 }
 
+function formatAUD(value) {
+  const number = Math.max(0, finite(value));
+  return `A$${Number.isInteger(number) ? number.toFixed(0) : number.toFixed(2)}`;
+}
+
 function setFlavourVisual(card, value) {
   const node = ratingNode(card, 'Flavour');
   if (!node) return;
@@ -117,6 +124,44 @@ function setFlavourVisual(card, value) {
   setText(bold, tier[0].toUpperCase() + tier.slice(1));
   setText(small, `${score}/10`);
   card.dataset.flavour = String(score >= 7 ? 3 : score >= 5 ? 2 : 1);
+}
+
+function setValueVisual(card, value) {
+  const node = ratingNode(card, 'Value');
+  if (!node) return;
+  const score = Math.max(1, Math.min(10, Math.round(finite(value, 1))));
+  node.classList.remove('gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low');
+  const tier = tierForScore(score);
+  const scoreClass = score >= 8 ? 'score-high' : score >= 5 ? 'score-mid' : 'score-low';
+  node.classList.add(tier, scoreClass);
+  const medal = node.querySelector('.medal');
+  if (medal) medal.className = `medal ${tier}`;
+  setText(node.querySelector('b'), tier[0].toUpperCase() + tier.slice(1));
+  let small = node.querySelector('.subscore');
+  if (!small) {
+    small = document.createElement('small');
+    small.className = 'subscore';
+    node.appendChild(small);
+  }
+  setText(small, `${score}/10`);
+  card.dataset.value = String(score >= 7 ? 3 : score >= 5 ? 2 : 1);
+}
+
+export function refreshValueForCard(card, flavour = null) {
+  if (!card) return null;
+  const quality = ratingScore(card, 'Quality', 5);
+  const price = Math.max(0, finite(card.dataset.price));
+  const result = deriveValue(price, quality, flavour);
+  setValueVisual(card, result.score);
+  card.dataset.expected = String(result.benchmark);
+  card.dataset.ratio = Number.isFinite(result.ratio) ? result.ratio.toFixed(2) : '';
+  const row = card.querySelector('.value-calc');
+  if (row) {
+    row.classList.remove('gold', 'silver', 'bronze');
+    row.classList.add(result.score >= 7 ? 'gold' : result.score >= 5 ? 'silver' : 'bronze');
+    row.innerHTML = `<span>Q${quality} benchmark <b>${formatAUD(result.benchmark)}</b></span><span>Actual <b>${formatAUD(price)}</b></span><span>Ratio <b>${Number.isFinite(result.ratio) ? result.ratio.toFixed(2) : '—'}×</b></span>`;
+  }
+  return result;
 }
 
 export function ensureFlavourRating(card, value = null) {
@@ -218,6 +263,37 @@ function ensureFlavourEditor() {
   host.insertAdjacentElement('afterend', field);
 }
 
+export function previewFlavourAdjustedValue() {
+  const flavourInput = document.getElementById('catalogue-admin-flavour');
+  const qualityInput = document.getElementById('catalogue-admin-quality');
+  const priceInput = document.getElementById('catalogue-v139-price');
+  if (!flavourInput || !qualityInput || !priceInput) return null;
+
+  const flavour = normaliseFlavour(flavourInput.value);
+  const quality = Math.max(1, Math.min(10, Math.round(finite(qualityInput.value, 1))));
+  const price = Math.max(0, finite(priceInput.value));
+  const result = deriveValue(price, quality, flavour);
+  const valueInput = document.getElementById('catalogue-admin-value');
+  if (valueInput) valueInput.value = String(result.score);
+  const detail = document.getElementById('catalogue-admin-value-detail');
+  if (detail) {
+    const baseRatio = Number.isFinite(result.baseRatio) ? result.baseRatio.toFixed(2) : '—';
+    const adjustedRatio = Number.isFinite(result.ratio) ? result.ratio.toFixed(2) : '—';
+    const flavourNote = result.flavourMultiplier < 1 && flavour !== null
+      ? ` · Flavour ${flavour}/10 ×${result.flavourMultiplier.toFixed(2)}`
+      : '';
+    detail.textContent = `Q${quality} benchmark ${formatAUD(result.benchmark)} · base ratio ${baseRatio}×${flavourNote} · adjusted ratio ${adjustedRatio}×`;
+  }
+
+  const card = selectedCard();
+  if (card) {
+    refreshValueForCard(card, flavour);
+    const saved = { ...(state.cards?.[card.dataset.key] || {}), flavour };
+    refreshLaurelForCard(card, saved);
+  }
+  return result;
+}
+
 function populateEditorField() {
   ensureFlavourEditor();
   const input = document.getElementById('catalogue-admin-flavour');
@@ -225,11 +301,13 @@ function populateEditorField() {
   const key = selectedKey();
   if (!key || document.getElementById('catalogue-admin-card')?.value?.startsWith('__v139_')) {
     input.value = '';
+    setTimeout(previewFlavourAdjustedValue, 0);
     return;
   }
   const saved = state.cards?.[key];
   const score = saved && own(saved, 'flavour') ? normaliseFlavour(saved.flavour) : null;
   input.value = score === null ? '' : String(score);
+  setTimeout(previewFlavourAdjustedValue, 0);
 }
 
 function refreshAllCards() {
@@ -240,6 +318,7 @@ function refreshAllCards() {
     const saved = state.cards?.[card.dataset.key] || {};
     const flavour = own(saved, 'flavour') ? saved.flavour : null;
     ensureFlavourRating(card, flavour);
+    refreshValueForCard(card, flavour);
     refreshLaurelForCard(card, saved);
   });
   populateEditorField();
@@ -334,6 +413,15 @@ function bindEvents() {
 
   document.addEventListener('change', event => {
     if (event.target?.id === 'catalogue-admin-card') setTimeout(populateEditorField, 0);
+    if (['catalogue-admin-flavour', 'catalogue-admin-quality', 'catalogue-v139-price'].includes(event.target?.id)) {
+      setTimeout(previewFlavourAdjustedValue, 0);
+    }
+  });
+
+  document.addEventListener('input', event => {
+    if (['catalogue-admin-flavour', 'catalogue-admin-quality', 'catalogue-v139-price'].includes(event.target?.id)) {
+      setTimeout(previewFlavourAdjustedValue, 0);
+    }
   });
 
   const observer = new MutationObserver(mutations => {
