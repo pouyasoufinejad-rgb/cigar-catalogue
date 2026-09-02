@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-02-liga-privada-unico-l40-lancero",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-l40-lancero",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "Único Serie L40 Lancero — Single",
+    "eyebrow": "Top-10 calibre narrow-format Liga candidate",
+    "packagePrice": 51.90,
+    "packageLabel": "single cigar",
+    "price": 25.95,
+    "country": "Nicaragua",
+    "length": 7,
+    "ring": 40,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 8,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon, cola (projected)",
+      "Occasion: Pre-cut premium session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, roasted coffee, malt, earth, black pepper, leather, sweet spice and charred oak</strong> recur across reviews of this exact 7″ × 40 Liga Privada lancero. Drew Estate describes the L40 as an award-winning, highly specialised vitola built specifically to showcase the T52 wrapper, with an extra filler leaf taking the traditional lancero ring from 38 to 40. The narrow format should concentrate wrapper character while retaining the dense smoke and intensity expected from Liga Privada. Pre-light splitting creates two practical 3½″ × 40 sessions at A$25.95 each. Untasted in this catalogue, so Strength 8 and Quality 8 remain projections.",
+    "noteHtml": "Untasted projection. The Index currently lists the single at A$51.90 and in stock. Drew Estate confirms the L40 at 7″ × 40 and says it is rolled by only one pair at La Gran Fabrica Drew Estate. Independent blend references consistently identify a Connecticut River Valley stalk-cut Habano wrapper and Brazilian Mata Fina binder.",
+    "productionLines": [
+      "Handmade at La Gran Fabrica Drew Estate, Estelí",
+      "Wrapper: Connecticut River Valley stalk-cut & stalk-cured Habano",
+      "Binder: Brazilian Mata Fina",
+      "Filler: Nicaraguan long-filler"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Pre-cut before lighting into two 3½″ × 40 sessions",
+      "A$25.95 per session",
+      "40 RG; slow cadence recommended"
+    ],
+    "smokeTime": "35–45 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/collections/liga-privada/products/liga-privada-unico-serie-l40-lancero"
+    ],
+    "priceChecked": "2026-09-02",
+    "stockChecked": "2026-09-02"
+  },
+  "note": "Add the Liga Privada Único Serie L40 Lancero as an active top-15 candidate. No image is attached yet; the user will add one later. The A$51.90 single price is represented as A$25.95 per practical pre-cut session under the established long-cigar halving convention. Insert at rank 8 provisionally; normal ranking normalization should shift lower active entries accordingly."
+}
