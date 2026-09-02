@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-02-daniel-marshall-red-label-petit-corona-taster",
+  "operation": "upsert-entry",
+  "key": "daniel-marshall-red-label-petit-corona",
+  "entry": {
+    "taster": true,
+    "rank": 1
+  },
+  "note": "Move Daniel Marshall Red Label Petit Corona from the active main catalogue cohort into the taster cohort while preserving all existing product, pricing, rating, stock, retailer and editorial metadata."
+}
