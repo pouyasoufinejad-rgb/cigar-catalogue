@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-02-daniel-marshall-red-label-petit-corona",
+  "operation": "upsert-entry",
+  "key": "daniel-marshall-red-label-petit-corona",
+  "entry": {
+    "brand": "Daniel Marshall",
+    "title": "Red Label Petit Corona — Single",
+    "eyebrow": "Sweet Nicaraguan Petit Corona with benchmark potential",
+    "packagePrice": 39,
+    "packageLabel": "single cigar",
+    "price": 39,
+    "country": "Nicaragua",
+    "length": 4.75,
+    "ring": 42,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 13,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon, cola (projected)",
+      "Occasion: Premium short session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Sweet pipe tobacco, vanilla bean, dark chocolate, cherry, cedar, earth, oak and baking spice</strong> define the recurring profile of Daniel Marshall's Red Label line. The exact 4¾″ × 42 Petit Corona has scored 89 points with Cigar Aficionado, while broader Red Label reviews consistently praise rich cocoa, fruit, spice and dependable construction. The compact 42-ring format is an unusually good ergonomic fit and should keep the wrapper contribution prominent. Untasted in this catalogue, so Strength 7 and Quality 8 remain projections.",
+    "noteHtml": "Untasted projection. Exact-vitola Cigar Aficionado review: 89 points, with sweet pipe tobacco, vanilla bean, earth and oak. Broader Red Label reviews repeatedly report dark chocolate, cherry, cedar, spice and strong construction.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Nicaraguan Colorado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "42 RG",
+      "Compact premium format",
+      "Moderate cadence recommended"
+    ],
+    "smokeTime": "30–40 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/daniel-marshall-red-label-petit-corona"
+    ],
+    "priceChecked": "2026-09-02",
+    "stockChecked": "2026-09-02"
+  },
+  "note": "Add Daniel Marshall Red Label Petit Corona as an active top-15 candidate from The Index. No image supplied yet; user will add one later."
+}
