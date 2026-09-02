@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-02-cao-flathead-v642-piston",
+  "operation": "upsert-entry",
+  "key": "cao-flathead-v642-piston",
+  "entry": {
+    "brand": "CAO",
+    "title": "Flathead V642 Piston — Single",
+    "eyebrow": "High-confidence long-format Broadleaf candidate",
+    "packagePrice": 46.20,
+    "packageLabel": "single cigar",
+    "price": 23.10,
+    "country": "Nicaragua",
+    "length": 6.5,
+    "ring": 42,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 11,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, cola, dark rum (projected)",
+      "Occasion: Pre-cut short session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, heavily roasted coffee, mocha, molasses, pecan, black pepper, earth and leather</strong> recur across repeated professional tastings of this exact 6½″ × 42 box-pressed Lonsdale. Cigar Aficionado has repeatedly scored the V642 Piston in the high 80s to 90, with praise for its dense dark profile and generally solid construction. The narrow 42 ring is especially well suited to a wrapper-forward Broadleaf presentation, while pre-light splitting into roughly 3″ + 3½″ sessions brings the practical cost to A$23.10 per session. Untasted in this catalogue, so Strength 8 and Quality 8 remain projections.",
+    "noteHtml": "Untasted projection. Exact-vitola professional reviews have repeatedly landed around 88–90 points. The Index lists the length as 6″, but CAO's official specification and exact-vitola review records identify the V642 Piston as 6½″ × 42.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut Broadleaf",
+      "Binder: Connecticut Habano",
+      "Filler: Dominican Piloto Cubano Ligero + Nicaraguan Ligero"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Box-pressed",
+      "Pre-cut before lighting into ~3″ + 3½″ sessions",
+      "A$23.10 per session",
+      "42 RG; slow-to-moderate cadence"
+    ],
+    "smokeTime": "25–35 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/cao-flathead-v642-piston"
+    ],
+    "priceChecked": "2026-09-02",
+    "stockChecked": "2026-09-02"
+  },
+  "image": {
+    "path": "catalogue-requests/assets/cao-flathead-v642-piston.webp",
+    "mimeType": "image/webp"
+  },
+  "note": "Add the CAO Flathead V642 Piston as an active long-format candidate using the user-supplied box-and-stick image. The supplied PNG was resized and encoded as WebP for the catalogue asset while retaining the same composition. Price is A$46.20 for one 6½″ cigar, represented as A$23.10 per practical pre-cut session under the catalogue's established long-cigar halving convention."
+}
