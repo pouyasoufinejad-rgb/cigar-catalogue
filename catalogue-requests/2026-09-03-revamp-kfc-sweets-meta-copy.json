@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-kfc-sweets-meta-copy",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies-sweets",
+  "entry": {
+    "eyebrow": "Sweetened fire-cured compact",
+    "noteHtml": ""
+  },
+  "note": "Remove the remaining dual-Gold/medal meta copy from the KFC Sweets eyebrow and note after the broader prose revamp."
+}
