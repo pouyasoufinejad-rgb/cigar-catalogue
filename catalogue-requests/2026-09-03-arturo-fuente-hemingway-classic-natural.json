@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-03-arturo-fuente-hemingway-classic-natural",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-hemingway-classic-natural",
+  "entry": {
+    "brand": "Arturo Fuente",
+    "title": "Hemingway Classic Natural — Single",
+    "eyebrow": "Long-format Cameroon perfecto",
+    "packagePrice": 45,
+    "packageLabel": "single cigar",
+    "price": 22.5,
+    "country": "Dominican Republic",
+    "length": 7,
+    "ring": 46,
+    "strength": 6,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 16,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium (projected)",
+      "Pairings: Coffee, aged rum, black tea (projected)",
+      "Occasion: Pre-cut relaxed session, afternoon smoke, after a meal"
+    ],
+    "summaryHtml": "<strong>Cedar, toasted wood, coffee, cashew, caramel, black tea and orange peel</strong> give the Hemingway Classic a balanced Cameroon profile with more aromatic sweetness than dark weight. The smoke should be smooth and woody with a nutty centre, light spice around the edges and a clean cedar-coffee finish. Its long, narrow perfecto shape keeps it elegant rather than bulky while still giving the blend room to develop.",
+    "noteHtml": "Untasted. Arturo Fuente lists the Classic Natural at 7″ × 46; Cigar Hut currently lists the same cigar at 7″ × 48.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: African Cameroon",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Double-tapered perfecto",
+      "Pre-cut before lighting into two 3½″ sessions",
+      "46 RG at its nominal body",
+      "Slow-to-moderate cadence"
+    ],
+    "smokeTime": "30–45 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/arturo-fuente-hemingway-classic/"
+    ],
+    "priceChecked": "2026-09-03",
+    "stockChecked": "2026-09-03"
+  },
+  "note": "Add the Arturo Fuente Hemingway Classic Natural as an active long-format candidate. Cigar Hut currently lists the single at A$45 and offers it for purchase. Use Arturo Fuente's official 7-inch by 46-ring specification rather than Cigar Hut's 48-ring listing. The practical price is represented as A$22.50 per pre-light half under the catalogue's established long-cigar splitting convention. No image is attached yet."
+}
