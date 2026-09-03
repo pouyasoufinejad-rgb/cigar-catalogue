@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-03-retailer-links-alexanders-arturo-fuente-exquisitos-maduro",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/arturo-fuente-exquisitos_maduro/",
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-exquisitos-maduro-%252d-single-%252d-%284-1%7B47%7D2%22-x-33%29.html",
+      "https://cigarbox.com.au/products/arturo-fuente-exquisitos-4-5-x-33rg-1",
+      "https://www.theindexcigars.com.au/products/arturo-fuente-exquisitos-maduro",
+      "https://www.cigars.com.au/product/cigars/arturo-fuente-exquisitos-maduro-single"
+    ]
+  },
+  "note": "Add Alexander's exact Arturo Fuente Exquisitos Maduro product page after verifying the 114 mm x 33 single listing on 2026-09-03."
+}

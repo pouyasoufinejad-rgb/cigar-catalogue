@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-03-retailer-links-alexanders-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/oliva-serie-v-melanio-4-petit-corona-4-5-x-46rg",
+      "https://www.cigarhut.com.au/oliva-serie-v-melanio-no-4/",
+      "https://www.cigars.com.au/product/cigars/oliva-serie-v-melanio-corona-no-4-sing"
+    ]
+  },
+  "note": "Add Alexander's exact Oliva Serie V Melanio Corona No. 4 single product page after verifying the 115 mm x 46 listing on 2026-09-03."
+}

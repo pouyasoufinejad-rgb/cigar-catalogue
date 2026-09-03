@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-03-retailer-links-alexanders-cohiba-short-10",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-10",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cohiba-short/",
+      "https://www.cigarworld.com.au/aud/products/cohiba-short-%252d-packet-of-10-%252d-%283-1%7B47%7D4%22-x-28%29.html",
+      "https://firmincigars.com.au/product/cohiba-short-cigars-10s-cuba/",
+      "https://www.theindexcigars.com.au/products/cohiba-short",
+      "https://www.cigars.com.au/product/cigars/short"
+    ]
+  },
+  "note": "Add Alexander's exact Cohiba Short 10-count product page after verifying the 82 mm x 28 ten-pack listing on 2026-09-03."
+}
