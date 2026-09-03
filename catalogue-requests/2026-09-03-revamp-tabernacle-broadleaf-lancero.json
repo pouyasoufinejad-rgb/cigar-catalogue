@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-03-revamp-tabernacle-broadleaf-lancero",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "eyebrow": "Broadleaf Lancero split into short premium sessions",
+    "summaryHtml": "<strong>Dark chocolate, espresso, walnut, charred oak, earth and black pepper</strong> form a dense, savoury-sweet Broadleaf profile. The smoke is expected to be oily and chewy, with cocoa and roasted coffee through the aroma and a long finish of leather, oak, pepper and dark sweetness. The 40-ring Lancero should keep the wrapper prominent without the bulk of the larger Tabernacle formats.",
+    "noteHtml": "Card represents one pre-light half of the 7″ × 40 Connecticut Broadleaf Lancero.",
+    "practicalLines": [
+      "Single 7″ × 40 Lancero",
+      "Pre-cut before lighting",
+      "Two 3½″ × 40 sessions",
+      "Slow cadence recommended"
+    ]
+  },
+  "note": "Refresh the Tabernacle card for the current halved Connecticut Broadleaf Lancero format. The legacy static key is retained in this editorial repair to avoid creating a duplicate card; key migration requires a separate source-level migration."
+}

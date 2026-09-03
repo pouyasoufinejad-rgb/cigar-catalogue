@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-oliva-serie-o",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-o",
+  "entry": {
+    "noteHtml": ""
+  },
+  "note": "Remove the stale offer for the now-archived Serie O Petit Corona taster."
+}

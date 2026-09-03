@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-don-pepin-demi-tasse",
+  "operation": "upsert-entry",
+  "key": "don-pepin-garcia-demi-tasse",
+  "entry": {
+    "eyebrow": "Pepper-forward compact Nicaraguan"
+  },
+  "note": "Remove the stale hard-coded No. 5 eyebrow so the live rank can render correctly."
+}

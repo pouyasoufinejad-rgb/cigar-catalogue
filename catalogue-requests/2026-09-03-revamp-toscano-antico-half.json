@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-toscano-antico-half",
+  "operation": "upsert-entry",
+  "key": "toscano-antico-half",
+  "entry": {
+    "summaryHtml": "<strong>Fire-cured wood, leather, earth, black pepper and charred sweetness</strong> give Antico a rustic, unmistakably Tuscan profile. The smoke is dry, dense and aromatic, with the Kentucky leaf carrying a campfire edge and a firm spicy finish rather than creamy refinement.",
+    "noteHtml": ""
+  },
+  "note": "Replace cut-in-half arithmetic with sensory copy; logistics remain in Practical."
+}

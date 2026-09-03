@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "summaryHtml": "<strong>Cocoa, espresso, cedar, caramel, toasted nuts and black pepper</strong> form a polished, layered profile with a creamy texture and restrained sweetness. The smoke is dense without becoming rough, moving from roasted and woody notes into leather, cocoa and a long nutty-spice finish.",
+    "noteHtml": ""
+  },
+  "note": "Remove price justification from the Melanio description."
+}

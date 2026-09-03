@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-kfc-ponies",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies",
+  "entry": {
+    "summaryHtml": "<strong>Campfire smoke, hickory, oak, earth, leather and black pepper</strong> dominate this tiny fire-cured cigar. The profile is dry, woody and savoury with a faint natural sweetness underneath, producing an unusually forceful aroma for the 4″ × 32 format and a lingering smoky finish."
+  },
+  "note": "Replace catalogue-rating and manufacturer copy with a direct sensory description."
+}

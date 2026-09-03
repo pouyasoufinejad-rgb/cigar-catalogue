@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-03-revamp-isla-del-sol-gran-corona",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "packagePrice": 37.39,
+    "price": 37.39,
+    "stockPin": "in",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/isla-del-sol/"
+    ],
+    "noteHtml": "Pinned in as the current Isla del Sol Maduro taster. Cigarworld lists the single at A$37.39."
+  },
+  "note": "Replace the sold-out Cigar Hut A$32 reference with the current Cigarworld A$37.39 taster and keep the manual in-stock pin."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-cohiba-short-single",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-single",
+  "entry": {
+    "summaryHtml": "<strong>Cedar, toasted tobacco, coffee, cocoa and pepper</strong> make the Cohiba Short dry, aromatic and more concentrated than its tiny dimensions suggest. The draw is typically direct and the narrow ring gives the smoke a crisp edge, with toasted wood and coffee carrying into a peppery finish if the cadence stays controlled.",
+    "noteHtml": ""
+  },
+  "note": "Replace the de-risking/price argument with a cigar-focused sensory description."
+}

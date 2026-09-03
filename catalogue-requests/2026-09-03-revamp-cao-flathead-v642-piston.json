@@ -1,0 +1,23 @@
+{
+  "id": "2026-09-03-revamp-cao-flathead-v642-piston",
+  "operation": "upsert-entry",
+  "key": "cao-flathead-v642-piston",
+  "entry": {
+    "summaryHtml": "<strong>Dark chocolate, heavily roasted coffee, mocha, molasses, pecan, black pepper, earth and leather</strong> make the V642 Piston a dark, concentrated Broadleaf cigar with plenty of roasted sweetness. The box-pressed 42 ring should keep the wrapper prominent while producing dense smoke and a long coffee-cocoa finish, with pepper and earth adding weight rather than overwhelming the sweeter notes.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut Broadleaf",
+      "Binder: Ecuadorian Connecticut",
+      "Filler: Dominican Piloto Cubano Ligero + Nicaraguan Ligero"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Box-pressed",
+      "Pre-cut before lighting into two 3¼″ × 42 sessions",
+      "42 RG; slow-to-moderate cadence"
+    ],
+    "smokeTime": "25–35 min per pre-cut session (projected)"
+  },
+  "note": "Correct the binder to Ecuadorian Connecticut, align the stored half length to 3.25 inches, and remove price arithmetic and third-party rating copy."
+}

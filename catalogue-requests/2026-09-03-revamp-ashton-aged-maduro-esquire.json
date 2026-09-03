@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-ashton-aged-maduro-esquire",
+  "operation": "upsert-entry",
+  "key": "ashton-aged-maduro-esquire",
+  "entry": {
+    "summaryHtml": "<strong>Dark cocoa, molasses, toasted nuts, cedar, coffee and sweet spice</strong> give the Esquire a soft Maduro sweetness rather than an aggressive pepper attack. The small format should keep the cocoa and nutty notes concentrated, with a creamy texture and a mellow woody finish."
+  },
+  "note": "Replace brand-positioning copy with a cigar-focused sensory description."
+}

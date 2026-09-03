@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-oliva-serie-g-maduro-special-g",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "summaryHtml": "<strong>Cocoa, roasted coffee, toasted nuts, cedar, sweet earth and mild pepper</strong> give the Special G Maduro a rounder, sweeter profile than a dry spice-led Nicaraguan. The short figurado shape should concentrate the first half before opening into a creamier cocoa-and-nut middle, with cedar and coffee lingering on the finish.",
+    "noteHtml": ""
+  },
+  "note": "Remove manufacturer copy and price/format arithmetic from the Serie G Maduro prose."
+}

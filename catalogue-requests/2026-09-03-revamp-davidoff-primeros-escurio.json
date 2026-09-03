@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-03-revamp-davidoff-primeros-escurio",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-escurio",
+  "entry": {
+    "summaryHtml": "<strong>Sweet pepper, dark chocolate, coffee, leather, wood and a flicker of citrus</strong> give the Primeros Escurio a compact but lively Brazilian character. The small handmade format should deliver a concentrated spicy-sweet smoke with enough body to avoid feeling like a thin mini. Coffee and dark cocoa linger behind the pepper on the finish.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Ecuadorian Habano",
+      "Binder: Brazilian Cubra",
+      "Filler: Brazilian and Dominican tobaccos"
+    ]
+  },
+  "note": "Replace copied Robusto filler specifics with the Primeros-level Brazilian and Dominican filler description and remove manufacturer-style prose."
+}

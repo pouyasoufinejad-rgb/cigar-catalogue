@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-liga-privada-l40",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-l40-lancero",
+  "entry": {
+    "summaryHtml": "<strong>Dark chocolate, roasted coffee, malt, earth, black pepper, leather, sweet spice and charred oak</strong> form a dense, wrapper-forward Liga profile. The narrow 40 ring should sharpen the roasted cocoa and pepper while keeping the smoke oily and substantial, with malt and dark sweetness softening the char through the middle. The finish is expected to stay long, leathery and coffee-heavy.",
+    "noteHtml": "Untasted."
+  },
+  "note": "Remove manufacturer accolades, ring-gauge trivia and price arithmetic from the L40 prose."
+}

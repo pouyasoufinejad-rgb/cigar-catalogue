@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-alonso-menendez-gold-cigarillo",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-gold-cigarillo",
+  "entry": {
+    "summaryHtml": "<strong>Brazilian wood, roasted nuts, coffee, earth and a light herbal sweetness</strong> make the Gold Cigarillo a restrained but distinctive Brazilian smoke. The narrow format keeps it dry and aromatic, with a woody-nutty centre and a short coffee-and-herb finish rather than heavy pepper or syrupy sweetness."
+  },
+  "note": "Replace discussion of Axe Charutos with a direct description of the Gold Cigarillo."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-kfc-sweets-ponies",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies-sweets",
+  "entry": {
+    "strength": 7,
+    "summaryHtml": "<strong>Hickory smoke, charred oak, earth, barbecue spice and a rounded sweetness</strong> give the Sweet Ponies a compact fire-cured profile that is both savoury and sugary. The sweetened edge softens the dry wood and campfire character without hiding it, leaving a smoky, slightly peppery finish that should stay distinctive even in the short 4″ × 32 format."
+  },
+  "note": "Remove stale medal/value arithmetic and align the prose with the stored Strength 7."
+}

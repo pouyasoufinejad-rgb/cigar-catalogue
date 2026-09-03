@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-03-revamp-java-x-press-maduro",
+  "operation": "upsert-entry",
+  "key": "java-x-press-maduro",
+  "entry": {
+    "archived": true,
+    "stockPin": "out",
+    "summaryHtml": "<strong>Mocha, espresso, cocoa, dark chocolate and sweet cream</strong> make Java X-Press a dense dessert-style infused smoke, backed by earthy Maduro tobacco and a roasted coffee aroma. The sweetness is pronounced but the coffee and cocoa keep it darker than a simple confectionery cigar, with a creamy mouthfeel and lingering mocha finish.",
+    "noteHtml": "Archived after its only tracked retailer delisted the product."
+  },
+  "note": "Archive Java X-Press Maduro after delisting and replace medal-explanation prose with a sensory description."
+}

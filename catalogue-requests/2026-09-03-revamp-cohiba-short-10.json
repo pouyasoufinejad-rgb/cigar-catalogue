@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-cohiba-short-10",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-10",
+  "entry": {
+    "summaryHtml": "<strong>Cedar, toasted tobacco, coffee, cocoa and pepper</strong> come through in a dry, compact Cuban profile with a touch of sweetness underneath. The narrow format keeps the flavour concentrated but can turn hotter and sharper when rushed, so the best part of the smoke is the toasted, woody middle rather than the final few puffs."
+  },
+  "note": "Remove medal/value explanations from the Cohiba Short 10 prose."
+}

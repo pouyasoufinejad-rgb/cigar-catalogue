@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-tabak-especial-colada-oscuro",
+  "operation": "upsert-entry",
+  "key": "tabak-especial-colada-oscuro",
+  "entry": {
+    "summaryHtml": "<strong>Espresso, cocoa, sweet cream, dark earth and gentle spice</strong> define the Colada Oscuro's coffee-infused profile. The aroma is intensely roasted and sweet, while the Maduro tobacco underneath gives the smoke enough earth and cocoa to keep the infusion from feeling thin. The finish is creamy, coffee-heavy and persistent.",
+    "noteHtml": ""
+  },
+  "note": "Replace price/de-risking copy with a direct flavour description."
+}

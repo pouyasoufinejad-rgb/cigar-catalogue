@@ -1,0 +1,23 @@
+{
+  "id": "2026-09-03-revamp-curivari-fuerte-churchill",
+  "operation": "upsert-entry",
+  "key": "curivari-fuerte-churchill-single",
+  "entry": {
+    "quality": 6,
+    "experienceTags": [
+      "Nicotine: Moderate-High",
+      "Pairings: Citrus, cola, dark rum",
+      "Occasion: Short pre-cut session, outdoor smoke"
+    ],
+    "eyebrow": "Tasted long-format Fuerte",
+    "summaryHtml": "<strong>Dry earth, black pepper, cocoa and straightforward Nicaraguan tobacco</strong> carried through the Churchill without losing the direct Fuerte character. Pre-cutting it before lighting worked cleanly: the foot-end half still smoked properly and retained the blend. The profile stays pepper-led and fairly simple rather than highly complex, with a noticeable nicotine presence and a dry, savoury finish.",
+    "noteHtml": "",
+    "practicalLines": [
+      "Single Churchill",
+      "Pre-cut before lighting",
+      "Both halves tested successfully",
+      "Moderate cadence"
+    ]
+  },
+  "note": "Replace pre-tasting Curivari Churchill copy with the recorded smoking result and align Quality with the stored 6."
+}

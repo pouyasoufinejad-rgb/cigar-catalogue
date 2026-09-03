@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-davidoff-escurio-mini",
+  "operation": "upsert-entry",
+  "key": "davidoff-escurio",
+  "entry": {
+    "noteHtml": "Related Escurio taster: A$47.42 single."
+  },
+  "note": "Correct the Escurio taster price from A$41 to A$47.42."
+}

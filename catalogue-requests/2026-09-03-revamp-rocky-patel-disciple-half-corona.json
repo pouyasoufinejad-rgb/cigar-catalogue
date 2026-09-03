@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-03-revamp-rocky-patel-disciple-half-corona",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "strength": 7,
+    "quality": 7,
+    "experienceTags": [
+      "Nicotine: Medium-High",
+      "Pairings: Espresso, dark chocolate, bourbon, cola",
+      "Occasion: Quick dark-profile smoke, after a meal, outdoor break"
+    ],
+    "eyebrow": "Tasted short-format San Andrés",
+    "summaryHtml": "<strong>Espresso, black pepper, earth, cocoa and cedar with a caramel edge</strong> give the Disciple a dark, punchy profile. It comes across as robust and savoury rather than especially intricate, with enough sweetness to soften the pepper and roasted notes. The 46 ring feels noticeably chunky for such a short cigar, which is the main ergonomic drawback.",
+    "noteHtml": ""
+  },
+  "note": "Remove stale untasted/projected language, align Strength and Quality to 7/7, and keep the card focused on the cigar rather than third-party scores."
+}

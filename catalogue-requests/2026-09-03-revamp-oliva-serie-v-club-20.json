@@ -1,0 +1,10 @@
+{
+  "id": "2026-09-03-revamp-oliva-serie-v-club-20",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-club-20",
+  "entry": {
+    "summaryHtml": "<strong>Dark chocolate, espresso, cedar, earth and pepper</strong> arrive in a concentrated, dry-roasted club profile. The very narrow ring makes the smoke quick and intense, with coffee and cocoa strongest through the middle and a sharper cedar-pepper finish if it is smoked too fast.",
+    "noteHtml": ""
+  },
+  "note": "Remove retailer copy, price arithmetic and medal explanations from the Serie V Club prose."
+}

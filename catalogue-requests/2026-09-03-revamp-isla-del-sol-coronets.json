@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-03-revamp-isla-del-sol-coronets",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-coronets",
+  "entry": {
+    "noteHtml": "The related Isla del Sol Maduro Gran Corona taster is currently pinned in at A$37.39 from Cigarworld."
+  },
+  "note": "Remove the stale unavailable-taster note."
+}
