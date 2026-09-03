@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-03-drew-estate-acid-cold-infusion-tea",
+  "operation": "upsert-entry",
+  "key": "drew-estate-acid-cold-infusion-tea",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "ACID Cold Infusion Tea — Single",
+    "eyebrow": "Tea-and-botanicals infused long format",
+    "packagePrice": 51,
+    "packageLabel": "single cigar",
+    "price": 25.5,
+    "country": "Nicaragua",
+    "length": 6.75,
+    "ring": 44,
+    "strength": 5,
+    "quality": 7,
+    "risk": 2,
+    "stock": "in",
+    "rank": 17,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Low-Medium (projected)",
+      "Pairings: Ginger ale, iced tea, citrus drink (projected)",
+      "Occasion: Pre-cut aromatic session, afternoon smoke, warm-weather smoke"
+    ],
+    "summaryHtml": "<strong>Black tea, peach, cream, fresh pine, herbs and light citrus</strong> give Cold Infusion Tea a bright aromatic profile that is very different from the darker coffee-and-cocoa infused cigars in the catalogue. The Connecticut Shade wrapper keeps the tobacco soft and creamy while the infusion adds floral, botanical and lightly sweet notes. Expect a smooth, fragrant smoke with tea and peach through the middle and a clean herbal-pine finish rather than heavy earth or pepper.",
+    "noteHtml": "Untasted. Cigar Hut currently lists the single at A$51 and offers it for purchase.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Infused with herbs and botanicals",
+      "Wrapper: Connecticut Shade",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Parejo / Lonsdale",
+      "Pre-cut before lighting into two ~3⅜″ × 44 sessions",
+      "44 RG",
+      "Slow-to-moderate cadence"
+    ],
+    "smokeTime": "30–40 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/acid-cold-infusion/"
+    ],
+    "priceChecked": "2026-09-03",
+    "stockChecked": "2026-09-03"
+  },
+  "note": "Add Drew Estate ACID Cold Infusion Tea as an active long-format infused candidate. Cigar Hut currently lists the 6¾-inch by 44-ring single at A$51 and available to order. The practical price is represented as A$25.50 per pre-light half under the catalogue's long-cigar splitting convention. No image is attached yet."
+}
