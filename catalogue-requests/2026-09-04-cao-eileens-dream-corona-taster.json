@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-04-cao-eileens-dream-corona-taster",
+  "operation": "upsert-entry",
+  "key": "cao-eileens-dream-corona",
+  "entry": {
+    "brand": "CAO",
+    "title": "Flavours Eileen's Dream Corona — Single",
+    "eyebrow": "Closest sweet CAO follow-up to Bella Vanilla",
+    "packagePrice": 44,
+    "packageLabel": "single cigar",
+    "price": 44,
+    "country": "Dominican Republic",
+    "length": 5.25,
+    "ring": 42,
+    "strength": 4,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 1,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Low (projected)",
+      "Pairings: Coffee, bourbon, cola (projected)",
+      "Occasion: Sweet aromatic taster, after dinner, relaxed session"
+    ],
+    "summaryHtml": "<strong>Cream, white chocolate, cocoa, vanilla, hazelnut and Irish-whiskey sweetness</strong> define this mellow infused Corona. The Cameroon wrapper and Dominican filler closely mirror the structure of Bella Vanilla, while the Eileen's Dream infusion shifts the emphasis toward richer cream, chocolate, nut and whiskey notes. It is intentionally mild, but the attraction here is the same quality that made Bella Vanilla work: a clear sweet flavour layer rather than bland smoothness.",
+    "noteHtml": "Untasted. Added as the highest-priority follow-up to the positive CAO Bella Vanilla Petit Corona tasting. Cigar Hut currently lists the single at A$44 and available to order.",
+    "productionLines": [
+      "Flavoured / infused",
+      "Handmade",
+      "Wrapper: Cameroon",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "5¼″ × 42 Corona",
+      "Slow-to-moderate cadence"
+    ],
+    "smokeTime": "40–55 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cao-flavours-eileens-dream-corona/"
+    ],
+    "priceChecked": "2026-09-04",
+    "stockChecked": "2026-09-04"
+  },
+  "note": "Add CAO Flavours Eileen's Dream Corona as T1. Current Cigar Hut listing is A$44 for a single, 5.25 by 42, Dominican Republic and available to order. CAO's official profile confirms Cameroon wrapper, Connecticut Broadleaf binder, Dominican filler, mellow body, and chocolate/cocoa/vanilla/cream/whiskey/hazelnut tasting notes. Leave Flavour unrated until tasted."
+}
