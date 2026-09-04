@@ -1,0 +1,22 @@
+{
+  "id": "2026-09-04-replay-hemingway-classic-style",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-hemingway-classic-natural",
+  "entry": {
+    "summaryHtml": "<strong>Cedar, toasted wood, coffee, cashew, caramel, black tea and orange peel</strong> give the Hemingway Classic a smooth, aromatic Cameroon profile with nutty sweetness and gentle spice. The smoke should stay woody and creamy through the middle, with caramel and citrus lifting the cedar before a clean coffee-and-nut finish.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: African Cameroon",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single 7″ × 46 Perfecto",
+      "Pre-cut before lighting",
+      "Two ~3½″ sessions",
+      "Slow-to-moderate Cadence"
+    ]
+  },
+  "note": "Replay the Hemingway Classic house-style cleanup because the preceding batch stopped before reaching this request."
+}
