@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-04-recreate-normalise-daniel-marshall-style",
+  "operation": "upsert-entry",
+  "key": "daniel-marshall-red-label-petit-corona",
+  "entry": {
+    "brand": "Daniel Marshall",
+    "title": "Red Label Petit Corona — Single",
+    "eyebrow": "Sweet Nicaraguan Petit Corona",
+    "packagePrice": 39,
+    "packageLabel": "single cigar",
+    "price": 39,
+    "country": "Nicaragua",
+    "length": 4.75,
+    "ring": 42,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 2,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon, cola (projected)",
+      "Occasion: Premium short session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Sweet pipe tobacco, vanilla bean, dark chocolate, cherry, cedar, earth and baking spice</strong> give the Red Label Petit Corona a rich, sweet-leaning Nicaraguan profile. The 42 ring should keep the smoke concentrated without becoming too sharp, with cocoa and fruit through the middle and cedar, earth and warm spice on the finish.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Nicaraguan Colorado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ],
+    "smokeTime": "30–40 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/daniel-marshall-red-label-petit-corona"
+    ],
+    "priceChecked": "2026-09-02",
+    "stockChecked": "2026-09-02"
+  },
+  "note": "The current KV entry was missing, so recreate the intended T2 taster with its existing product/rating metadata while applying the catalogue house-style editorial cleanup."
+}
