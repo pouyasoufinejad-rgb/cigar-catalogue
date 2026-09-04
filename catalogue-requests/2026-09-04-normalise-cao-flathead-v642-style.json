@@ -1,0 +1,21 @@
+{
+  "id": "2026-09-04-normalise-cao-flathead-v642-style",
+  "operation": "upsert-entry",
+  "key": "cao-flathead-v642-piston",
+  "entry": {
+    "eyebrow": "Dark Broadleaf box-pressed Lonsdale",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Connecticut Broadleaf",
+      "Binder: Ecuadorian Connecticut",
+      "Filler: Dominican Piloto Cubano Ligero + Nicaraguan Ligero"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Pre-cut before lighting",
+      "Two 3¼″ × 42 sessions",
+      "Slow-to-moderate Cadence"
+    ]
+  },
+  "note": "Keep the already-revamped sensory description and normalise only the remaining Production, Practical and eyebrow copy to the catalogue house style."
+}
