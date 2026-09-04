@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-04-normalise-arturo-fuente-cubanitos-style",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "eyebrow": "Compact Cameroon Fuente",
+    "summaryHtml": "<strong>Chestnut, baking spice, coffee bean, cedar and gentle natural sweetness</strong> give Cubanitos a compact, aromatic Cameroon profile. The narrow format should keep the wrapper lively and woody, with coffee and toasted nuts through the middle and a dry cedar-spice finish softened by mild sweetness.",
+    "noteHtml": "Untasted. Exact single taster available: Arturo Fuente Cubanitos — A$17.38.",
+    "productionLines": [
+      "Handmade",
+      "Medium filler",
+      "Wrapper: African Cameroon",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ]
+  },
+  "note": "Normalise the new Cubanitos card to the catalogue house style: sensory-only description, taster information confined to the note, technical Production block and standard Practical taxonomy."
+}
