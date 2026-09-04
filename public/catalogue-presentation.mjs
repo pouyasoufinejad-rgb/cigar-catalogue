@@ -13,12 +13,12 @@ export function isSubstantialGoldSet(labels = []) {
     || golds.length === 2 && golds[0] === 'size' && golds[1] === 'strength';
 }
 
-export function recommendationDestination(labels = []) {
+export function recommendationDestination(labels = [], { flavourRated = false } = {}) {
   const golds = new Set(normaliseGoldLabels(labels));
   if (isSubstantialGoldSet(golds)) return 'substantial';
   const strengthGold = golds.has('strength');
   const qualityGold = golds.has('quality');
-  if (strengthGold && qualityGold) return 'elite';
+  if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
   if (strengthGold || qualityGold) return 'strong';
   if (golds.has('value')) return 'noteworthy-cheap';
   return 'noteworthy-neither';
@@ -65,6 +65,17 @@ function cardGoldLabels(card) {
   return Array.from(card?.querySelectorAll?.('.rating.gold') || []).map(node =>
     node.querySelector(':scope > span')?.textContent?.trim().toLowerCase() || ''
   ).filter(Boolean);
+}
+
+function cardFlavourRated(card) {
+  const flavour = Array.from(card?.querySelectorAll?.('.rating') || []).find(node =>
+    node.querySelector(':scope > span')?.textContent?.trim().toLowerCase() === 'flavour'
+  );
+  return Boolean(flavour && !flavour.classList.contains('flavour-unrated'));
+}
+
+export function recommendationDestinationForCard(card) {
+  return recommendationDestination(cardGoldLabels(card), { flavourRated: cardFlavourRated(card) });
 }
 
 function effectiveStockStatus(card) {
@@ -134,21 +145,11 @@ export function reclassifySubstantialCards(root = document) {
   let moved = 0;
   root.querySelectorAll('article.card[data-key]').forEach(card => {
     if (card.dataset.archived === '1' || card.dataset.taster === '1' || isUnavailableCard(card)) return;
-    const golds = cardGoldLabels(card);
-    const eligible = isSubstantialGoldSet(golds);
-    const inSubstantial = card.closest?.('[data-noteworthy-section="substantial"]') !== null;
-
-    if (eligible && !inSubstantial) {
-      insertByRank(substantialGrid, card);
+    const destination = recommendationDestinationForCard(card);
+    const target = destinationGrid(root, destination);
+    if (target && card.parentElement !== target) {
+      insertByRank(target, card);
       moved += 1;
-      return;
-    }
-    if (!eligible && inSubstantial) {
-      const target = destinationGrid(root, recommendationDestination(golds));
-      if (target && target !== substantialGrid) {
-        insertByRank(target, card);
-        moved += 1;
-      }
     }
   });
   return moved;
