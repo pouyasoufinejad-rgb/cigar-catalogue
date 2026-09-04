@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-04-arturo-fuente-cubanitos-10",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "brand": "Arturo Fuente",
+    "title": "Cubanitos — Pack of 10",
+    "eyebrow": "Compact Cameroon Fuente with exact single taster",
+    "packagePrice": 154.8,
+    "packageLabel": "pack of 10",
+    "price": 15.48,
+    "country": "Dominican Republic",
+    "length": 4.5,
+    "ring": 32,
+    "strength": 6,
+    "quality": 7,
+    "risk": 3,
+    "stock": "in",
+    "rank": 15,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium (projected)",
+      "Pairings: Coffee, black tea, cola (projected)",
+      "Occasion: Quick premium smoke, coffee break, afternoon smoke"
+    ],
+    "summaryHtml": "<strong>Chestnut, baking spice, coffee bean, cedar and gentle natural sweetness</strong> are the expected centre of this compact Fuente Cameroon profile. Cubanitos use the same well-aged Dominican tobacco family as Arturo Fuente Gran Reserva in a 4½″ × 32 small-cigar format, with an African Cameroon wrapper over Dominican binder and filler. The narrow ring should keep the aromatic wrapper prominent while preserving a proper cigar-length session rather than dropping into club-cigar territory. Untasted in this catalogue, so Strength 6, Quality 7 and the flavour profile remain projections.",
+    "noteHtml": "Untasted. Cigarworld currently lists the pack of 10 at A$154.80. The exact same Cubanito is also available singly for A$17.38, providing a low-commitment exact-line taster before buying the 10-pack.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Medium-filler format",
+      "Wrapper: African Cameroon",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "Uncut",
+      "Exact single taster available at A$17.38",
+      "4½″ × 32",
+      "Slow-to-moderate cadence"
+    ],
+    "smokeTime": "25–35 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-cubanitos-%252d-single-%252d-%284-1%7B47%7D2%22-x-32%29.html"
+    ],
+    "priceChecked": "2026-09-04",
+    "stockChecked": "2026-09-04"
+  },
+  "note": "Add Arturo Fuente Cubanitos as an active pack-of-10 catalogue entry. Cigarworld currently lists the 10-pack at A$154.80 and the exact same 4.5 by 32 Cubanito single at A$17.38; mention the single as the exact-line taster. Cigarworld lists both as in stock and advertises next-business-day Perth CBD delivery. Arturo Fuente's official catalogue identifies Cubanitos as 4.5 by 32, medium-filler, with the Natural Gran Reserva Cameroon wrapper family over Dominican binder and filler. Leave Flavour unrated until tasted."
+}
