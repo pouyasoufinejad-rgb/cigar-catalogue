@@ -1,0 +1,23 @@
+{
+  "id": "2026-09-04-normalise-daniel-marshall-red-label-style",
+  "operation": "upsert-entry",
+  "key": "daniel-marshall-red-label-petit-corona",
+  "entry": {
+    "eyebrow": "Sweet Nicaraguan Petit Corona",
+    "summaryHtml": "<strong>Sweet pipe tobacco, vanilla bean, dark chocolate, cherry, cedar, earth and baking spice</strong> give the Red Label Petit Corona a rich, sweet-leaning Nicaraguan profile. The 42 ring should keep the smoke concentrated without becoming too sharp, with cocoa and fruit through the middle and cedar, earth and warm spice on the finish.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Nicaraguan Colorado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ]
+  },
+  "note": "Normalise the current taster card to the catalogue house style: sensory-first description, compact technical Production block, compact Practical taxonomy and no review-score or catalogue-justification prose."
+}
