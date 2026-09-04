@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-04-replay-eileens-dream-style",
+  "operation": "upsert-entry",
+  "key": "cao-eileens-dream-corona",
+  "entry": {
+    "eyebrow": "Sweet Irish-cream CAO taster",
+    "summaryHtml": "<strong>Cream, white chocolate, cocoa, vanilla, hazelnut and Irish-whiskey sweetness</strong> give Eileen's Dream a soft dessert profile over a mellow tobacco base. The smoke should be creamy and aromatic, with vanilla and cocoa through the middle, hazelnut underneath and a sweet whiskey-cream finish.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Cameroon",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ]
+  },
+  "note": "Replay the Eileen's Dream house-style cleanup because the preceding batch stopped before reaching this request."
+}
