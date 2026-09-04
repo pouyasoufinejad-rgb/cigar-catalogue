@@ -1,0 +1,23 @@
+{
+  "id": "2026-09-04-normalise-acid-cold-infusion-style",
+  "operation": "upsert-entry",
+  "key": "drew-estate-acid-cold-infusion-tea",
+  "entry": {
+    "summaryHtml": "<strong>Black tea, peach, cream, pine, herbs and light citrus</strong> make Cold Infusion Tea bright, sweet and botanical rather than dark or tobacco-heavy. The smoke should stay soft and creamy, with peach and tea through the middle and a clean herbal-pine finish touched by citrus.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Connecticut Shade",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single 6¾″ × 44",
+      "Pre-cut before lighting",
+      "Two ~3⅜″ × 44 sessions",
+      "Slow-to-moderate Cadence"
+    ]
+  },
+  "note": "Normalise the card to the catalogue house style: sensory-only description, terse untasted note, compact flavoured Production block and compact split-session Practical block."
+}
