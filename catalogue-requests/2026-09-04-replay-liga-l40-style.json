@@ -1,0 +1,21 @@
+{
+  "id": "2026-09-04-replay-liga-l40-style",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-l40-lancero",
+  "entry": {
+    "eyebrow": "Narrow wrapper-forward Liga Lancero",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Connecticut River Valley stalk-cut Habano",
+      "Binder: Brazilian Mata Fina",
+      "Filler: Nicaraguan long-filler"
+    ],
+    "practicalLines": [
+      "Single 7″ × 40 Lancero",
+      "Pre-cut before lighting",
+      "Two 3½″ × 40 sessions",
+      "Slow Cadence"
+    ]
+  },
+  "note": "Replay the L40 house-style cleanup because the preceding batch stopped before reaching this request."
+}
