@@ -31,6 +31,30 @@ export function stockColourForStatus(status) {
   return 'yellow';
 }
 
+export function normaliseExperienceTagText(value) {
+  const text = String(value ?? '');
+  if (text === 'Nicotine: High') return 'Nicotine Bomb';
+  if (text === 'Nicotine: High (projected)') return 'Nicotine Bomb (projected)';
+  return text;
+}
+
+export function normaliseExperienceTags(root = document) {
+  if (!root?.querySelectorAll) return 0;
+  let changed = 0;
+  root.querySelectorAll('.tag-group').forEach(group => {
+    const label = group.querySelector?.('.tag-label')?.textContent?.trim().toLowerCase();
+    if (label !== 'experience') return;
+    group.querySelectorAll('.tag-chip').forEach(chip => {
+      const next = normaliseExperienceTagText(chip.textContent);
+      if (chip.textContent !== next) {
+        chip.textContent = next;
+        changed += 1;
+      }
+    });
+  });
+  return changed;
+}
+
 function stockLabelForColour(colour) {
   if (colour === 'green') return 'In stock';
   if (colour === 'red') return 'Out of stock';
@@ -159,6 +183,7 @@ let refreshTimer = 0;
 function refreshPresentation() {
   refreshTimer = 0;
   ensureStyle();
+  normaliseExperienceTags(document);
   document.querySelectorAll('article.card[data-key]').forEach(ensureStockDot);
   reclassifySubstantialCards(document);
 }
