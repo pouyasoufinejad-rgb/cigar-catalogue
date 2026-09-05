@@ -72,3 +72,34 @@ test('stock dots sit to the left of the full ranking caption eyebrow', () => {
   assert.match(presentationSource, /eyebrow\.insertBefore\(dot, eyebrow\.firstChild\)/);
   assert.doesNotMatch(presentationSource, /const rankflag = card\.querySelector\(['"]\.rankflag['"]\)/);
 });
+
+test('Experience relabels High nicotine as Nicotine Bomb without touching other levels', () => {
+  assert.ok(presentation, 'catalogue presentation module must load');
+  assert.equal(presentation.normaliseExperienceTagText('Nicotine: High'), 'Nicotine Bomb');
+  assert.equal(presentation.normaliseExperienceTagText('Nicotine: High (projected)'), 'Nicotine Bomb (projected)');
+  assert.equal(presentation.normaliseExperienceTagText('Nicotine: Medium-High'), 'Nicotine: Medium-High');
+  assert.equal(presentation.normaliseExperienceTagText('Pairings: Espresso, dark chocolate'), 'Pairings: Espresso, dark chocolate');
+
+  const label = { textContent: 'Experience' };
+  const high = { textContent: 'Nicotine: High' };
+  const projected = { textContent: 'Nicotine: High (projected)' };
+  const mediumHigh = { textContent: 'Nicotine: Medium-High' };
+  const group = {
+    querySelector(selector) {
+      return selector === '.tag-label' ? label : null;
+    },
+    querySelectorAll(selector) {
+      return selector === '.tag-chip' ? [high, projected, mediumHigh] : [];
+    }
+  };
+  const root = {
+    querySelectorAll(selector) {
+      return selector === '.tag-group' ? [group] : [];
+    }
+  };
+
+  assert.equal(presentation.normaliseExperienceTags(root), 2);
+  assert.equal(high.textContent, 'Nicotine Bomb');
+  assert.equal(projected.textContent, 'Nicotine Bomb (projected)');
+  assert.equal(mediumHigh.textContent, 'Nicotine: Medium-High');
+});
