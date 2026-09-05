@@ -79,6 +79,7 @@ test('Experience relabels High nicotine as Nicotine Bomb without touching other 
   assert.equal(presentation.normaliseExperienceTagText('Nicotine: High (projected)'), 'Nicotine Bomb (projected)');
   assert.equal(presentation.normaliseExperienceTagText('Nicotine: Medium-High'), 'Nicotine: Medium-High');
   assert.equal(presentation.normaliseExperienceTagText('Pairings: Espresso, dark chocolate'), 'Pairings: Espresso, dark chocolate');
+  assert.match(presentationSource, /normaliseExperienceTags\(document\)/);
 
   const label = { textContent: 'Experience' };
   const high = { textContent: 'Nicotine: High' };
