@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-06-davidoff-primeros-nicaragua-maduro",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "brand": "Davidoff",
+    "title": "Primeros Nicaragua Maduro — Tin of 6",
+    "eyebrow": "Dark Maduro Nicaragua Primeros",
+    "packagePrice": 135.4,
+    "packageLabel": "tin of 6",
+    "price": 22.57,
+    "country": "Dominican Republic",
+    "length": 4.125,
+    "ring": 34,
+    "strength": 8,
+    "quality": 8,
+    "risk": 3,
+    "stock": "in",
+    "rank": 4,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, dark rum (projected)",
+      "Occasion: Quick premium smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, roasted coffee, earth, leather, caramel sweetness and black pepper</strong> give the Nicaragua Maduro a darker, more forceful Primeros profile. The Mexican Sumatra Maduro wrapper should deepen the cocoa and sweetness while the Nicaraguan-Dominican core keeps the smoke earthy and spicy, with coffee and leather carrying into a peppery finish.",
+    "noteHtml": "Untasted. Exact single taster available from The Index for A$24.10.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Mexican Sumatra Maduro",
+      "Binder: Ecuadorian",
+      "Filler: Nicaraguan and Dominican"
+    ],
+    "practicalLines": [
+      "Tin of 6",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ],
+    "smokeTime": "15–20 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/davidoff-primeros-nicaraguan-maduro?variant=42549814788345"
+    ],
+    "priceChecked": "2026-09-06",
+    "stockChecked": "2026-09-06"
+  },
+  "note": "Add Davidoff Primeros Nicaragua Maduro as an active tin-of-6 catalogue entry. The Index currently lists the tin at A$135.40 and the exact same 4 1/8 x 34 cigar singly at A$24.10; keep the exact single taster in the card note. Leave Flavour unrated until tasted."
+}
