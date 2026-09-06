@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-06-cao-brazilia-lambada-taster",
+  "operation": "upsert-entry",
+  "key": "cao-brazilia-lambada",
+  "entry": {
+    "brand": "CAO",
+    "title": "Brazilia Lambada — Single",
+    "eyebrow": "Full-bodied Brazilian-wrapper CAO flavour test",
+    "packagePrice": 55,
+    "packageLabel": "single cigar",
+    "price": 55,
+    "country": "Honduras",
+    "length": 6,
+    "ring": 50,
+    "strength": 8,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 16,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium–high (projected)",
+      "Pairings: Coffee, rye, dark rum, cola (projected)",
+      "Occasion: Full-flavour CAO test, long evening smoke"
+    ],
+    "summaryHtml": "<strong>Toasty earth, nuts, floral depth and dark Brazilian-wrapper richness</strong> define CAO Brazilia, with cocoa, coffee, spice and tobacco sweetness commonly reported around the Lambada. The 6″ × 50 Toro uses Brazilian Arapiraca over Nicaraguan binder and filler and is officially positioned medium-full to full bodied. This is a strong flavour-fit test for the catalogue, though the 50 ring gauge is well outside the ergonomic sweet spot. Untasted here, so Strength 8 and Quality 7 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Cigarworld currently lists the exact CAO Brazilia Lambada 6″ × 50 single at A$55 and available to add to cart. This is intentionally a taster despite the large ring gauge because the dark, rich CAO profile is much more relevant than another mild neutral premium.",
+    "productionLines": [
+      "Handmade in Honduras",
+      "Wrapper: Brazilian Arapiraca",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "6″ × 50 Toro",
+      "Large ring gauge; slow cadence"
+    ],
+    "smokeTime": "60–85 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/cao-%252d-brazilia-lambada-%252d-%286x-50%29-%252d-single.html"
+    ],
+    "priceChecked": "2026-09-06",
+    "stockChecked": "2026-09-06"
+  },
+  "note": "Add CAO Brazilia Lambada as a taster. Cigarworld currently lists the exact 6 x 50 single at A$55 and Add to Cart. Official CAO profile confirms Brazilian Arapiraca wrapper, Nicaraguan binder/filler, medium-full body and toasty/earthy/nutty/floral notes. Leave Flavour unrated until tasted."
+}
