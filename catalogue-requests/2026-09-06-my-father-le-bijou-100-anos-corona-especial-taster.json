@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-06-my-father-le-bijou-100-anos-corona-especial-taster",
+  "operation": "upsert-entry",
+  "key": "my-father-le-bijou-100-anos-corona-especial",
+  "entry": {
+    "brand": "My Father",
+    "title": "Le Bijou 1922 100 Años LE Corona Especial — Single",
+    "eyebrow": "High-confidence dark Nicaraguan limited-edition taster",
+    "packagePrice": 51.5,
+    "packageLabel": "single cigar",
+    "price": 51.5,
+    "country": "Nicaragua",
+    "length": 6.5,
+    "ring": 44,
+    "strength": 8,
+    "quality": 9,
+    "risk": 1,
+    "stock": "in",
+    "rank": 17,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, dark rum, bourbon, cola (projected)",
+      "Occasion: Serious evening smoke, limited-edition benchmark test"
+    ],
+    "summaryHtml": "<strong>Mocha, espresso, dark chocolate, earth, cedar, black pepper and underlying sweetness</strong> are the recurring themes around this limited-edition Le Bijou. The 6½″ × 44 Corona Especial is a 100% Nicaraguan puro using a dark Habano Oscuro wrapper and tobaccos from the Garcia family farms. It has the long, relatively narrow proportions that suit this catalogue far better than most modern prestige cigars, while the blend is repeatedly described as rich, bold and complex. Untasted here, so Strength 8 and Quality 9 are projections and Flavour remains unrated.",
+    "noteHtml": "Untasted. Cigarworld currently lists the exact 100 Años Limited Edition Corona Especial single at A$51.50 and in stock; the exact box of 22 is A$1,089. The 2026 production is again highly limited, with 1,922 boxes of this size released.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Limited edition Nicaraguan puro",
+      "Wrapper: Nicaraguan Habano Oscuro",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut; pigtail cap",
+      "6½″ × 44 Corona Especial",
+      "Long narrow format; slow cadence"
+    ],
+    "smokeTime": "70–95 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/my-father-%252d-le-bijou-1922-%22100-anos-le%22-corona-especial-%252d-single-%252d-6-1%7B47%7D2-x-44.html"
+    ],
+    "priceChecked": "2026-09-06",
+    "stockChecked": "2026-09-06"
+  },
+  "note": "Add My Father Le Bijou 1922 100 Años Limited Edition Corona Especial as a taster. Cigarworld currently lists the exact 6.5 x 44 single at A$51.50 and In Stock. The blend is an all-Nicaraguan puro with Habano Oscuro wrapper; 2026 release information confirms the same Corona Especial size and 1,922-box production. Leave Flavour unrated until tasted."
+}
