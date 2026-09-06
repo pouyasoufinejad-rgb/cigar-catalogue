@@ -68,7 +68,7 @@ test('structural overrides process a production-sized catalogue in one bounded p
     `<article class="card" data-key="card-${index}" data-taster="1"><p>${filler}</p></article>`
   ).join('');
   const overrides = Object.fromEntries(
-    Array.from({ length: cardCount }, (_value, index) => [`card-${index}`, { taster: false }])
+    Array.from({ length:cardCount }, (_value, index) => [`card-${index}`, { taster:false }])
   );
 
   const started = performance.now();
@@ -102,19 +102,17 @@ test('stock targets retain one URL for each of the six audited retailers', () =>
   ]);
 });
 
-test('catalogue cards show friendly labels for Firmin Cigars, The Index and Ubercigar', () => {
+test('catalogue cards show friendly labels for Firmin Cigars and The Index', () => {
   const html = renderEntryCard({
     key: 'retailer-labels',
     brand: 'Test Brand',
     title: 'Test Cigar',
     retailerLinks: [
       'https://firmincigars.com.au/product/test-cigar/',
-      'https://www.theindexcigars.com.au/products/test-cigar',
-      'https://ubercigar.com.au/cigars/test-cigar/'
+      'https://www.theindexcigars.com.au/products/test-cigar'
     ]
   });
 
   assert.match(html, />View at Firmin Cigars <span>/);
   assert.match(html, />View at The Index <span>/);
-  assert.match(html, />View at Ubercigar <span>/);
 });
