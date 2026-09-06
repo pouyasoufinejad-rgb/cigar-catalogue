@@ -1,0 +1,16 @@
+{
+  "id": "2026-09-06-price-audit-undercrown-maduro-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-maduro-coronets",
+  "entry": {
+    "packagePrice": 119,
+    "price": 11.9,
+    "priceChecked": "2026-09-06",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/undercrown-maduro-coronet-tin-of-10",
+      "https://www.cigarhut.com.au/undercrown-maduro-coronets/",
+      "https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/undercrown/"
+    ]
+  },
+  "note": "Catalogue-wide price audit: The Index currently has the exact Maduro Coronets tin of 10 in stock at A$119, below Cigarworld A$132; CigarHut's cheaper A$110 listing is unavailable."
+}
