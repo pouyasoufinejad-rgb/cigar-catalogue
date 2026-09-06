@@ -49,7 +49,9 @@ test('moving in-stock Strength+Size cards into Substantial refreshes group visib
   const cheap = grid();
   const neither = grid();
   const kfc = card('kfc-ponies', 12);
+  const aj = card('aj-fernandez-new-world-oscuro', 13);
   strong.appendChild(kfc);
+  strong.appendChild(aj);
 
   const selectors = new Map([
     ['[data-noteworthy-section="substantial"] .grid', substantial],
@@ -68,8 +70,9 @@ test('moving in-stock Strength+Size cards into Substantial refreshes group visib
   const previousWindow = globalThis.window;
   globalThis.window = { refreshGroupVisibility: () => { visibilityRefreshes += 1; } };
   try {
-    assert.equal(presentation.reclassifySubstantialCards(root), 1);
+    assert.equal(presentation.reclassifySubstantialCards(root), 2);
     assert.equal(kfc.parentElement, substantial);
+    assert.equal(aj.parentElement, substantial);
     assert.equal(visibilityRefreshes, 1);
   } finally {
     if (previousWindow === undefined) delete globalThis.window;
