@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-06-rocky-patel-sun-grown-torpedo-taster",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-torpedo",
+  "entry": {
+    "brand": "Rocky Patel",
+    "title": "Sun Grown Torpedo — Single",
+    "eyebrow": "Tasted high-intensity Sun Grown benchmark",
+    "packagePrice": 60,
+    "packageLabel": "single cigar",
+    "price": 60,
+    "country": "Honduras",
+    "length": 6.25,
+    "ring": 52,
+    "strength": 9,
+    "quality": 8,
+    "flavour": 9,
+    "risk": 1,
+    "stock": "in",
+    "rank": 1,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High",
+      "Pairings: Espresso, dark rum, cola",
+      "Occasion: Long evening, after a meal, flavour benchmark"
+    ],
+    "summaryHtml": "<strong>A Liga-like blast of pepper and spice opened the smoke, then the profile kept gaining complexity with a faint sweetness that developed into a distinct honeyed note.</strong> The strength stayed high rather than fading as the sweetness came forward. Construction was good rather than elite on this sample: the draw stayed tight and the burn was slightly uneven. Only roughly half of the Torpedo was smoked, so Quality stays at 8/10 while Strength and Flavour both earn 9/10.",
+    "noteHtml": "Tasted to roughly halfway. Tight draw and a slightly uneven burn prevent a Quality 9 on this sample. Cigar Hut currently lists the exact Sun Grown Torpedo at A$60 for a single and available to choose options. The existing Sun Grown Juniors remain separate; these ratings record the tasted Torpedo rather than extrapolating them to the smaller vitola.",
+    "productionLines": [
+      "Handmade in Honduras",
+      "Wrapper: 5-year-aged Ecuadorian Sumatra",
+      "Binder: Nicaraguan",
+      "Filler: Dominican and Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut; torpedo head",
+      "6¼″ × 52 Torpedo",
+      "Tight draw on tasted sample"
+    ],
+    "smokeTime": "70–95 min smoke (full stick)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/rocky-patel-sun-grown-torpedo/"
+    ],
+    "priceChecked": "2026-09-06",
+    "stockChecked": "2026-09-06"
+  },
+  "note": "Add the tasted Rocky Patel Sun Grown Torpedo as a separate taster at rank 1. User-approved ratings: Strength/Intensity 9, Quality 8, Flavour 9. Preserve the existing Sun Grown Juniors as a separate entry. Tasting notes: Liga-like pepper/spice opening, increasing complexity, faint sweetness developing into honey, high strength throughout, tight draw and slightly uneven burn; roughly half smoked. Official Rocky Patel specification confirms the 6.25 x 52 Torpedo and 5-year-old Ecuadorian Sumatra wrapper; existing audited Sun Grown composition records Nicaraguan binder with Dominican/Nicaraguan filler. Cigar Hut lists the exact Torpedo at A$60 single and Choose Options on 2026-09-06."
+}
