@@ -1,0 +1,20 @@
+{
+  "id": "2026-09-06-fix-rocky-patel-sun-grown-torpedo-card-style",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-torpedo",
+  "entry": {
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Ecuadorian Sumatra wrapper."
+    ],
+    "practicalLines": [
+      "Single",
+      "Uncut",
+      "Fragile",
+      "Forgiving Cadence"
+    ],
+    "smokeTime": "70–95 min smoke"
+  },
+  "note": "Align the Rocky Patel Sun Grown Torpedo taster metadata with the catalogue house style. Production uses flavouring, manufacture and wrapper only. Practical uses package format, cut status, protection/fragility and cadence. Size remains in the card's size fields and the tight-draw observation remains in the tasting copy."
+}
