@@ -1,0 +1,16 @@
+{
+  "id": "2026-09-06-price-audit-cohiba-short-single",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-single",
+  "entry": {
+    "packagePrice": 11.8,
+    "price": 11.8,
+    "priceChecked": "2026-09-06",
+    "retailerLinks": [
+      "https://firmincigars.com.au/product-category/single-cigars/?v=2c18c36508d1",
+      "https://www.cigarworld.com.au/aud/products/cohiba-short-%252d-single-%252d-%283-1%7B47%7D4%22-x-28%29.html",
+      "https://www.theindexcigars.com.au/products/cohiba-short"
+    ]
+  },
+  "note": "Catalogue-wide price audit: Firmin currently lists the exact Cohiba Short single at A$11.80, narrowly below Cigarworld A$11.85 and The Index A$13."
+}
