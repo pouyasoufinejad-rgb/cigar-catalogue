@@ -159,6 +159,11 @@ function insertByRank(grid, card) {
   else grid.appendChild(card);
 }
 
+function refreshRecommendationGroupVisibility() {
+  const refresh = globalThis?.window?.refreshGroupVisibility;
+  if (typeof refresh === 'function') refresh();
+}
+
 export function reclassifySubstantialCards(root = document) {
   if (!root?.querySelectorAll) return 0;
   const sort = root.getElementById?.('sort') || root.querySelector?.('#sort');
@@ -176,6 +181,7 @@ export function reclassifySubstantialCards(root = document) {
       moved += 1;
     }
   });
+  if (moved) refreshRecommendationGroupVisibility();
   return moved;
 }
 
