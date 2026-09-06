@@ -12,7 +12,8 @@ const RETAILERS = [
   { host: 'cigarworld.com.au', label: 'Cigarworld' },
   { host: 'cigarbox.com.au', label: 'CigarBox' },
   { host: 'firmincigars.com.au', label: 'Firmin Cigars' },
-  { host: 'theindexcigars.com.au', label: 'The Index' }
+  { host: 'theindexcigars.com.au', label: 'The Index' },
+  { host: 'ubercigar.com.au', label: 'Ubercigar' }
 ];
 
 function isRecord(value) {
@@ -323,7 +324,7 @@ export function aggregateRetailerResults(retailers, lastConfirmed = 'unknown') {
   const definite = retailers.filter(item => item.status === 'in' || item.status === 'out');
   const cigarhutVote = retailers.find(item => item.retailer === 'CigarHut');
   if (!definite.length) return lastConfirmed;
-  if (definite.some(item => item.status === 'in')) return 'in';
+  if (definite.some(item => item.status === 'in') ) return 'in';
   if (cigarhutVote && cigarhutVote.status === 'unknown' && definite.length === 1 && definite[0].retailer !== 'CigarHut') return lastConfirmed;
   return 'out';
 }
