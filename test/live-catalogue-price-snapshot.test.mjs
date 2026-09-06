@@ -52,3 +52,5 @@ test('print current production catalogue prices for audit', async () => {
   console.log('LIVE_CATALOGUE_PRICE_SNAPSHOT=' + JSON.stringify(rows));
   assert.ok(rows.length > 20, `expected full catalogue, got ${rows.length} cards`);
 });
+
+// Re-run after the 2026-09-06 catalogue-wide retailer price audit.
