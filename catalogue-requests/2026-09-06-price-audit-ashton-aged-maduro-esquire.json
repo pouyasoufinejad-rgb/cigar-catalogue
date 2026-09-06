@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-06-price-audit-ashton-aged-maduro-esquire",
+  "operation": "upsert-entry",
+  "key": "ashton-aged-maduro-esquire",
+  "entry": {
+    "packagePrice": 147.9,
+    "price": 14.79,
+    "priceChecked": "2026-09-06",
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/ashton-aged-maduro-esquire-maduro-chicos-pack-of-10-4-25-x-32rg",
+      "https://firmincigars.com.au/product/ashton-esquire-10s-dominican-republic/"
+    ]
+  },
+  "note": "Catalogue-wide price audit: replace the stale A$145 generic Esquire reference with CigarBox's exact Aged Maduro Esquire Maduro Chicos pack of 10 at A$147.90. Firmin's cheaper generic Esquire listing is not wrapper-specific enough to override an exact Maduro SKU."
+}
