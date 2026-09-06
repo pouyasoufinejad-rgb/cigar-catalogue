@@ -1,0 +1,16 @@
+{
+  "id": "2026-09-06-price-audit-rocky-patel-disciple-half-corona",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-disciple-half-corona",
+  "entry": {
+    "packagePrice": 26,
+    "price": 26,
+    "priceChecked": "2026-09-06",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/rocky-patel-disciple-half-corona/",
+      "https://www.theindexcigars.com.au/products/rocky-patel-disciple-half-corona",
+      "https://cigarbox.com.au/products/rocky-patel-disciple-half-corona-3-5-x-46rg-1"
+    ]
+  },
+  "note": "Catalogue-wide price audit: CigarHut currently has the exact Disciple Half Corona single at A$26, below The Index A$31 and CigarBox A$32.05."
+}
