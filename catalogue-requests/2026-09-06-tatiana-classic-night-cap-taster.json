@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-06-tatiana-classic-night-cap-taster",
+  "operation": "upsert-entry",
+  "key": "tatiana-classic-night-cap",
+  "entry": {
+    "brand": "Tatiana",
+    "title": "Classic Night Cap — Single",
+    "eyebrow": "Almond, coffee and cocoa Tatiana redemption test",
+    "packagePrice": 43,
+    "packageLabel": "single cigar",
+    "price": 43,
+    "country": "Dominican Republic",
+    "length": 6,
+    "ring": 44,
+    "strength": 5,
+    "quality": 6,
+    "risk": 1,
+    "stock": "in",
+    "rank": 15,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Low–medium (projected)",
+      "Pairings: Coffee, cola, dark rum (projected)",
+      "Occasion: Dessert smoke, after dinner, Tatiana redemption test"
+    ],
+    "summaryHtml": "<strong>Vanilla, Marcona almond, Arabica coffee and cocoa</strong> are the advertised centre of this infused Tatiana Classic. The 6″ × 44 format uses an Indonesian wrapper over Dominican binder and filler, giving it substantially more tobacco and smoking time than the Dolce Vanilla that disappointed. The flavour combination is much closer to the sweet coffee-and-cocoa profile this catalogue tends to reward, but it remains untasted here, so Strength 5 and Quality 6 are projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Added specifically as a Tatiana redemption test after the poor Dolce Vanilla result. CigarHut currently lists the exact Classic Night Cap single at A$43 and offers Single / 10 Cigars / Box of 25 options.",
+    "productionLines": [
+      "Flavoured / infused",
+      "Handmade in the Dominican Republic",
+      "Wrapper: Indonesian",
+      "Binder: Dominican",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "6″ × 44",
+      "Full-length aromatic taster"
+    ],
+    "smokeTime": "45–60 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/tatiana-classic-night-cap/"
+    ],
+    "priceChecked": "2026-09-06",
+    "stockChecked": "2026-09-06"
+  },
+  "note": "Add Tatiana Classic Night Cap as a taster. CigarHut currently lists the exact 6 x 44 single at A$43 and available via Choose Options. Profile sources consistently identify Indonesian wrapper, Dominican binder/filler, Dominican origin, and vanilla, almond, coffee and cocoa flavouring. Leave Flavour unrated until tasted."
+}
