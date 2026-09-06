@@ -11,7 +11,7 @@ export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'u
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
-  'archived', 'archivedAt', 'archivedRank', 'stockPin', 'rank', 'strength', 'quality', 'size', 'laurel',
+  'archived', 'archivedAt', 'archivedRank', 'stockPin', 'rank', 'strength', 'quality', 'flavour', 'size', 'laurel',
   'experienceTags', 'eyebrow', 'summaryHtml', 'noteHtml', 'productionHtml', 'practicalHtml'
 ]);
 const CARD_STRUCTURAL_FIELDS = new Set([
