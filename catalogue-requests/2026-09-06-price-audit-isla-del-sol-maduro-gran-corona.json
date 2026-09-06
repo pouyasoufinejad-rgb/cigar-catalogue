@@ -3,13 +3,13 @@
   "operation": "upsert-entry",
   "key": "isla-del-sol-maduro-gran-corona",
   "entry": {
-    "packagePrice": 32,
-    "price": 32,
+    "packagePrice": 37.39,
+    "price": 37.39,
     "priceChecked": "2026-09-06",
     "retailerLinks": [
-      "https://www.cigarhut.com.au/isla-del-sol-maduro-gran-corona/",
-      "https://www.cigarworld.com.au/aud/products/isla-del-sol-%252d-maduro-%252d-gran-corona-%285-x-44%29-single.html"
+      "https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/isla-del-sol/",
+      "https://www.cigarhut.com.au/isla-del-sol-maduro-gran-corona/"
     ]
   },
-  "note": "Catalogue-wide price audit: the exact Maduro Gran Corona is unavailable at the audited retailers; CigarHut's current exact listed single price is A$32 versus Cigarworld A$37.39, so A$32 is the best current reference price."
+  "note": "Catalogue-wide price audit final: Cigarworld's current exact Maduro Gran Corona single is purchasable at A$37.39; CigarHut's cheaper A$32 exact listing is sold out, so the live purchasable price remains A$37.39."
 }
