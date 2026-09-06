@@ -79,14 +79,15 @@ test('structural overrides process a production-sized catalogue in one bounded p
   assert.ok(elapsed < 75, `structural override pass took ${elapsed.toFixed(0)}ms`);
 });
 
-test('stock targets retain one URL for each of the five audited retailers', () => {
-  const html = `<article class="card" data-key="five-retailers" data-stock="out">
+test('stock targets retain one URL for each of the six audited retailers', () => {
+  const html = `<article class="card" data-key="six-retailers" data-stock="out">
     <h3><span>Test Brand</span>Test Cigar</h3>
     <a class="shop" href="https://www.cigarhut.com.au/test-cigar/">Cigar Hut</a>
     <a class="shop" href="https://www.cigarworld.com.au/aud/products/test-cigar.html">Cigarworld</a>
     <a class="shop" href="https://cigarbox.com.au/products/test-cigar">CigarBox</a>
     <a class="shop" href="https://firmincigars.com.au/product/test-cigar/">Firmin Cigars</a>
     <a class="shop" href="https://www.theindexcigars.com.au/products/test-cigar">The Index</a>
+    <a class="shop" href="https://ubercigar.com.au/cigars/test-cigar/">Ubercigar</a>
   </article>`;
 
   const [target] = extractStockTargetsFromHtml(html);
@@ -96,21 +97,24 @@ test('stock targets retain one URL for each of the five audited retailers', () =
     { retailer: 'Cigarworld', url: 'https://www.cigarworld.com.au/aud/products/test-cigar.html' },
     { retailer: 'CigarBox', url: 'https://cigarbox.com.au/products/test-cigar' },
     { retailer: 'Firmin Cigars', url: 'https://firmincigars.com.au/product/test-cigar/' },
-    { retailer: 'The Index', url: 'https://www.theindexcigars.com.au/products/test-cigar' }
+    { retailer: 'The Index', url: 'https://www.theindexcigars.com.au/products/test-cigar' },
+    { retailer: 'Ubercigar', url: 'https://ubercigar.com.au/cigars/test-cigar/' }
   ]);
 });
 
-test('catalogue cards show friendly labels for Firmin Cigars and The Index', () => {
+test('catalogue cards show friendly labels for Firmin Cigars, The Index and Ubercigar', () => {
   const html = renderEntryCard({
     key: 'retailer-labels',
     brand: 'Test Brand',
     title: 'Test Cigar',
     retailerLinks: [
       'https://firmincigars.com.au/product/test-cigar/',
-      'https://www.theindexcigars.com.au/products/test-cigar'
+      'https://www.theindexcigars.com.au/products/test-cigar',
+      'https://ubercigar.com.au/cigars/test-cigar/'
     ]
   });
 
   assert.match(html, />View at Firmin Cigars <span>/);
   assert.match(html, />View at The Index <span>/);
+  assert.match(html, />View at Ubercigar <span>/);
 });
