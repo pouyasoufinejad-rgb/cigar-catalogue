@@ -204,6 +204,7 @@ function patchForDynamic(entryPatch) {
     if (key === 'value' || value === undefined) continue;
     if (CARD_EDITORIAL_FIELDS.has(key) || CARD_STRUCTURAL_FIELDS.has(key) || DYNAMIC_ONLY_FIELDS.has(key)) patch[key] = clone(value);
   }
+  delete patch.flavour;
   delete patch.laurel;
   delete patch.archivedRank;
   delete patch.productionHtml;
