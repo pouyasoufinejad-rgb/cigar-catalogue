@@ -1,0 +1,16 @@
+{
+  "id": "2026-09-06-price-audit-oliva-serie-g-cigarillos",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g",
+  "entry": {
+    "packagePrice": 88.5,
+    "price": 17.7,
+    "priceChecked": "2026-09-06",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/oliva-serie-g-cigarillo-tin-of-10",
+      "https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/",
+      "https://cigarbox.com.au/products/oliva-serie-g-cigarillos-tin-of-5-cameroon"
+    ]
+  },
+  "note": "Catalogue-wide price audit: The Index currently has the exact Cameroon Cigarillo tin of 5 at A$88.50; CigarHut is now A$96 and CigarBox is higher."
+}
