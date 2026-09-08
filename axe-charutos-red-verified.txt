@@ -1,0 +1,3 @@
+RED verified on the repository before implementation:
+- Axe Charutos Gem regression failed under the old award logic.
+- Axe Charutos Elite regression failed under the old placement logic.
