@@ -1,39 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import * as presentation from '../public/catalogue-presentation.mjs';
 
-const source = await readFile(new URL('../public/catalogue-presentation.mjs', import.meta.url), 'utf8');
+const presentationSource = await readFile(new URL('../public/catalogue-presentation.mjs', import.meta.url), 'utf8');
+const cohortSource = await readFile(new URL('../public/catalogue-half-cohort.mjs', import.meta.url), 'utf8').catch(() => '');
 
-function fakeCard({ text = '', taster = '0', archived = '0', stock = 'in' } = {}) {
-  return {
-    dataset: { taster, archived, stock, key: 'example' },
-    textContent: text,
-    querySelector() { return null; }
-  };
-}
-
-test('Half-Cigar UI does not inject a second ranking/recommendations structure or rewrite rank captions', () => {
-  assert.doesNotMatch(source, /data-ranking-section/);
-  assert.doesNotMatch(source, /data-recommendations-heading/);
-  assert.doesNotMatch(source, /catalogue-tasters-selected/);
-  assert.doesNotMatch(source, /normaliseCardRankCaption/);
+test('recommendation presentation no longer owns Half-Cigar membership or text detection', () => {
+  assert.doesNotMatch(presentationSource, /containsHalfCigarCue/);
+  assert.doesNotMatch(presentationSource, /isHalfCigarCard/);
+  assert.doesNotMatch(presentationSource, /data-noteworthy-section=["']substantial["']/);
+  assert.doesNotMatch(presentationSource, /data-half-cigar-filter/);
 });
 
-test('Half-Cigar filter matches only active available main entries containing half or halv wording', () => {
-  assert.equal(typeof presentation.halfCigarFilterMatchesCard, 'function');
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Pre-cut in half before lighting' })), true);
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Halve before lighting' })), true);
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Ordinary robusto' })), false);
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Half Corona', taster: '1' })), false);
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Half Corona', archived: '1' })), false);
-  assert.equal(presentation.halfCigarFilterMatchesCard(fakeCard({ text: 'Half Corona', stock: 'out' })), false);
+test('Half-Cigar cohort owns a separate section and explicit catalogue-type membership', () => {
+  assert.match(cohortSource, /half-cigar-section/);
+  assert.match(cohortSource, /half-cigar-cards/);
+  assert.match(cohortSource, /catalogueType/);
+  assert.match(cohortSource, /data-catalogue-type/);
+  assert.match(cohortSource, /Half-Cigar/);
+  assert.match(cohortSource, /H\$\{/);
 });
 
-test('Half Cigars control is a narrow filter and does not intercept the existing toggle controls', () => {
-  assert.match(source, /Half Cigars/);
-  assert.match(source, /data-half-cigar-filter/);
-  assert.match(source, /applyHalfCigarFilter/);
-  assert.doesNotMatch(source, /halfCigarExitBound/);
-  assert.doesNotMatch(source, /body\.classList\.toggle\(['"]catalogue-half-only/);
+test('Half-Cigar cohort extends the existing Catalogue type control rather than creating a second editor', () => {
+  assert.match(cohortSource, /catalogue-v139-type/);
+  assert.match(cohortSource, /option/);
+  assert.match(cohortSource, /value\s*=\s*['"]half['"]/);
+  assert.doesNotMatch(cohortSource, /catalogue-admin-secondary/);
 });
