@@ -6,6 +6,7 @@ on:
       - '.github/workflows/publish-catalogue.yml'
       - 'catalogue-requests/**'
       - 'scripts/publish-catalogue-request.mjs'
+      - 'scripts/publish-live-catalogue-request.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -16,6 +17,7 @@ on:
       - '.github/workflows/publish-catalogue.yml'
       - 'catalogue-requests/**'
       - 'scripts/publish-catalogue-request.mjs'
+      - 'scripts/publish-live-catalogue-request.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -105,6 +107,6 @@ jobs:
               echo "::error::Refusing unexpected request path: ${request}"
               exit 1
             fi
-            echo "Publishing ${request}"
-            node scripts/publish-catalogue-request.mjs "${request}"
+            echo "Publishing ${request} from current live Worker state"
+            node scripts/publish-live-catalogue-request.mjs "${request}"
           done
