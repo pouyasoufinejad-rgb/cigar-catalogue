@@ -1,0 +1,6 @@
+Axe Charutos publication verified.
+quality=6
+strength=7
+flavour=7
+size=gold
+laurel=auto
