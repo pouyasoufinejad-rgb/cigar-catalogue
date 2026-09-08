@@ -1,0 +1,49 @@
+test_status=0
+# tests 81
+# pass 81
+# fail 0
+kv_curl_status=0 http=200
+--- live Axe card ---
+{
+  "taster": false,
+  "archived": false,
+  "rank": 10,
+  "stockPin": "auto",
+  "strength": 7,
+  "quality": 7,
+  "size": "gold",
+  "laurel": "auto",
+  "experienceTags": [
+    "Nicotine: Moderate",
+    "Pairings: Coffee, dark chocolate, Whiskey",
+    "Occasion: Relaxed session, outdoor smoke"
+  ],
+  "eyebrow": "Best Brazilian-value outsider",
+  "summaryHtml": "<strong>Cocoa, wood, toasted earth, coffee and mild herbs</strong> give this Brazilian charuto a unique character, however its soft and somewhat inconsistent construction can cause the wrapper/fill to loosen during smoking and it needs serious babysitting to mitigate it (at least a week of storage in proper humidity and ensuring the tip stays dry). Despite this, the draw is exceptionally easy and smoke production is substantial. Strong herbal/floral flavour is the standout, with the mouthfeel starting creamy and medium-weight before becoming drier. The finish leaves herbs and earth with only a light bitterness when smoked patiently.",
+  "noteHtml": "",
+  "productionHtml": "<span class=\"artmeta-line\">Machine-made</span><span class=\"artmeta-line\">Wrapper: Sumatra</span><span class=\"artmeta-line\">Binder: Reconstituted tobacco</span><span class=\"artmeta-line\">Filler: Brazilian Mata Fina short filler</span>",
+  "practicalHtml": "<span class=\"artmeta-line\">Pack of 5</span><span class=\"artmeta-line\">Cut</span><span class=\"artmeta-line\">Fragile</span><span class=\"artmeta-line\">Forgiving Cadence</span>",
+  "archivedAt": "",
+  "brand": "Alonso Menendez",
+  "title": "Axe Charutos — Pack of 5",
+  "packagePrice": 48,
+  "packageLabel": "pack of 5",
+  "price": 9.6,
+  "country": "Brazil",
+  "length": 4.6,
+  "ring": 35,
+  "risk": 1,
+  "retailerLinks": [
+    "https://www.cigarhut.com.au/alonso-menendez-axe-charutos-pack-of-5/"
+  ],
+  "smokeTime": "25–35 min smoke",
+  "imageScale": 100,
+  "imageX": -6,
+  "imageY": -11,
+  "metaY": 41,
+  "flavour": 7
+}
+--- Netlify modules ---
+catalogue-rating-exceptions.mjs 404 3985 bytes
+catalogue-presentation.mjs 404 3985 bytes
+catalogue-flavour.mjs 404 3985 bytes
