@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-08-aj-fernandez-last-call-maduro-flaquitas",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-last-call-maduro-flaquitas",
+  "entry": {
+    "brand": "AJ Fernandez",
+    "title": "Last Call Maduro Flaquitas — Single",
+    "eyebrow": "Dark Broadleaf slim Torpedo",
+    "packagePrice": 45.07,
+    "packageLabel": "single cigar",
+    "price": 22.54,
+    "country": "Nicaragua",
+    "length": 6,
+    "ring": 46,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 11,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate, dark rum (projected)",
+      "Occasion: Pre-cut short session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark cocoa, espresso, leather, earth, black pepper, molasses and baking spice</strong> give the Last Call Maduro Flaquitas a dense, sweet-spicy Broadleaf profile. The pepper-heavy opening is reported to settle into coffee, cocoa and leather, with cinnamon, nutmeg and brown-sugar sweetness adding complexity through the middle. The 46 ring should keep the Pennsylvania Broadleaf prominent without the oversized feel of thicker AJ Fernandez vitolas, while the long roasted finish can develop some char and bitterness if pushed.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Pennsylvania Broadleaf Maduro",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Pre-cut before lighting",
+      "Two 3″ × 46 sessions",
+      "Slow-to-moderate Cadence"
+    ],
+    "smokeTime": "25–35 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/last-call-%252d-maduro-flaquitas-%286%22-x-46%29-single.html"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add AJ Fernandez Last Call Maduro Flaquitas as an active long-format candidate using the CAO Flathead V642 Piston card as the structural reference. Cigarworld lists the exact 6 x 46 single at A$45.07 and Add to Cart on 2026-09-08. Represent it under the catalogue's established long-cigar halving convention as two 3-inch sessions at A$22.54 per practical session. Strength 8 and Quality 8 are untasted projections; leave Flavour unrated until personally tasted. Blend research identifies a Pennsylvania Broadleaf Maduro wrapper over Nicaraguan binder and filler, handmade in Nicaragua."
+}
