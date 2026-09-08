@@ -93,6 +93,10 @@ test('Axe Charutos quality exception preserves Elite placement only for that car
   assert.equal(presentation.recommendationDestinationForCard(axe), 'elite');
 });
 
+test('Axe Charutos quality exception does not create Strong eligibility', () => {
+  assert.equal(presentation.recommendationDestination(['value'], { flavourRated: false, key: 'alonso-menendez-axe-charutos' }), 'noteworthy-cheap');
+});
+
 test('rated non-Gold flavour moves an otherwise Elite card to Strong', () => {
   const elite = fakeGrid();
   const strong = fakeGrid();

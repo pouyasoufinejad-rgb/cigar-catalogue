@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';
+import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
 
 const STATE_API = '/api/catalogue-overrides';
 const SCORE_CLASSES = ['gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low', 'flavour-unrated'];
@@ -56,12 +56,13 @@ export function deriveAutoLaurel({ key = '', strength, quality, flavour, size, v
   if (strengthScore < 5) return 'none';
   let golds = 0;
   if (strengthScore >= 7) golds++;
-  if (qualityCountsForAwards(key, finite(quality, 0) >= 7)) golds++;
+  const qualityGold = finite(quality, 0) >= 7;
+  if (qualityGold) golds++;
   const flavourScore = normaliseFlavour(flavour);
   if (flavourScore !== null && flavourScore >= 7) golds++;
   if (String(size || '').toLowerCase() === 'gold') golds++;
   if (finite(value, 0) >= 7) golds++;
-  if (golds >= 4) return 'gem';
+  if (golds >= 4 || (!qualityGold && hasQualityAwardException(key) && golds >= 3)) return 'gem';
   if (golds >= 3) return 'crown';
   return 'none';
 }

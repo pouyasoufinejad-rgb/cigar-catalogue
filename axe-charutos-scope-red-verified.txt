@@ -1,3 +1,0 @@
-RED verified before scope refinement:
-- Current exception incorrectly creates a Crown when only two real Gold ratings exist.
-- Current exception incorrectly creates Strong eligibility when neither Strength nor Quality is actually Gold.

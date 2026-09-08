@@ -66,6 +66,10 @@ test('Axe Charutos quality exception preserves Gem qualification without promoti
   assert.equal(deriveAutoLaurel({ key: 'ordinary-cigar', ...qualifying }), 'crown');
 });
 
+test('Axe Charutos quality exception does not create lower-tier laurels', () => {
+  assert.equal(deriveAutoLaurel({ key: 'alonso-menendez-axe-charutos', strength: 7, quality: 6, flavour: 7, size: 'bronze', value: 5 }), 'none');
+});
+
 test('browser runtime loads Flavour UI, card hydration and save interception', () => {
   assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs'\)/);
   assert.match(flavourSource, /catalogue-admin-flavour/);

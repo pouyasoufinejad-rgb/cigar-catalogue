@@ -1,4 +1,4 @@
-import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';
+import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
 
 const STYLE_ID = 'catalogue-presentation-v151';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
@@ -18,8 +18,9 @@ export function isSubstantialGoldSet(labels = []) {
 export function recommendationDestination(labels = [], { flavourRated = false, key = '' } = {}) {
   const golds = new Set(normaliseGoldLabels(labels));
   const strengthGold = golds.has('strength');
-  const qualityGold = qualityCountsForAwards(key, golds.has('quality'));
-  if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
+  const qualityGold = golds.has('quality');
+  const eliteQualityGold = qualityGold || hasQualityAwardException(key);
+  if (strengthGold && eliteQualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
   if (isSubstantialGoldSet(golds)) return 'substantial';
   if (strengthGold || qualityGold) return 'strong';
   if (golds.has('value')) return 'noteworthy-cheap';
