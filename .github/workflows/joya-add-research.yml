@@ -1,0 +1,80 @@
+name: Joya catalogue add research
+
+on:
+  push:
+    paths:
+      - .github/workflows/joya-add-research.yml
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Read live catalogue and Index product data
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides > /tmp/state.json
+          for handle in joya-de-nicaragua-joya-black-cigarillo joya-antano-1970-cigarillo; do
+            url="https://www.theindexcigars.com.au/products/${handle}.js"
+            code=$(curl -L -sS -o "/tmp/${handle}.json" -w '%{http_code}' "$url")
+            echo "$code" > "/tmp/${handle}.status"
+          done
+
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+
+          const state = JSON.parse(readFileSync('/tmp/state.json', 'utf8'));
+          const candidates = [
+            'joya-black-cigarillo',
+            'joya-de-nicaragua-joya-black-cigarillo',
+            'joya-antano-1970-cigarillo',
+            'joya-de-nicaragua-antano-1970-cigarillo'
+          ];
+          const all = [];
+          for (const [key, card] of Object.entries(state.cards || {})) {
+            if (!card || typeof card !== 'object') continue;
+            all.push({ source: 'cards', key, brand: card.brand || '', title: card.title || '', rank: card.rank ?? null, taster: Boolean(card.taster), archived: Boolean(card.archived), strength: card.strength ?? null, quality: card.quality ?? null, flavour: card.flavour ?? null, size: card.size ?? null, price: card.price ?? null });
+          }
+          for (const [key, entry] of Object.entries(state.entries || {})) {
+            if (!entry || typeof entry !== 'object') continue;
+            all.push({ source: 'entries', key, brand: entry.brand || '', title: entry.title || '', rank: entry.rank ?? null, taster: Boolean(entry.taster), archived: Boolean(entry.archived), strength: entry.strength ?? null, quality: entry.quality ?? null, flavour: entry.flavour ?? null, size: entry.size ?? null, price: entry.price ?? null });
+          }
+          const activeMain = all.filter(x => !x.archived && !x.taster && Number.isFinite(Number(x.rank))).sort((a,b)=>Number(a.rank)-Number(b.rank));
+          const activeTasters = all.filter(x => !x.archived && x.taster && Number.isFinite(Number(x.rank))).sort((a,b)=>Number(a.rank)-Number(b.rank));
+          const existingCandidates = all.filter(x => candidates.includes(x.key) || /joya.*(black|anta)/i.test(`${x.brand} ${x.title} ${x.key}`));
+
+          const products = {};
+          for (const handle of ['joya-de-nicaragua-joya-black-cigarillo','joya-antano-1970-cigarillo']) {
+            const status = Number(readFileSync(`/tmp/${handle}.status`, 'utf8').trim());
+            let payload = null;
+            try { payload = JSON.parse(readFileSync(`/tmp/${handle}.json`, 'utf8')); } catch {}
+            products[handle] = { status, payload };
+          }
+
+          writeFileSync('joya-add-research.json', JSON.stringify({
+            stateUpdatedAt: state.updatedAt || null,
+            existingCandidates,
+            activeMainCount: activeMain.length,
+            activeTasterCount: activeTasters.length,
+            activeMain,
+            activeTasters,
+            products
+          }, null, 2) + '\n');
+          NODE
+
+      - name: Commit research snapshot and remove workflow
+        run: |
+          rm .github/workflows/joya-add-research.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add joya-add-research.json .github/workflows/joya-add-research.yml
+          git commit -m 'Capture live Joya catalogue research'
+          git push
