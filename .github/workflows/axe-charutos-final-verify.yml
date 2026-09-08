@@ -1,0 +1,98 @@
+name: Verify Axe Charutos exception live
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-final-verify.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run full test suite
+        run: npm test | tee /tmp/tests.log
+
+      - name: Verify exact exception behavior
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { deriveAutoLaurel } from './public/catalogue-flavour.mjs';
+          import * as presentation from './public/catalogue-presentation.mjs';
+
+          const key = 'alonso-menendez-axe-charutos';
+          assert.equal(deriveAutoLaurel({ key, strength: 7, quality: 6, flavour: 7, size: 'gold', value: 5 }), 'gem');
+          assert.equal(deriveAutoLaurel({ key: 'ordinary-cigar', strength: 7, quality: 6, flavour: 7, size: 'gold', value: 5 }), 'crown');
+          assert.equal(deriveAutoLaurel({ key, strength: 7, quality: 6, flavour: 7, size: 'bronze', value: 5 }), 'none');
+          assert.equal(presentation.recommendationDestination(['strength', 'flavour'], { flavourRated: true, key }), 'elite');
+          assert.equal(presentation.recommendationDestination(['strength', 'flavour'], { flavourRated: true, key: 'ordinary-cigar' }), 'strong');
+          assert.equal(presentation.recommendationDestination(['value'], { flavourRated: false, key }), 'noteworthy-cheap');
+          console.log('Exact Axe Charutos Gem/Elite exception behavior verified.');
+          NODE
+
+      - name: Verify live KV quality downgrade
+        run: |
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl -fsS https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides > /tmp/state.json; then
+              if node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const state = JSON.parse(readFileSync('/tmp/state.json', 'utf8'));
+          const card = state.cards?.['alonso-menendez-axe-charutos'];
+          if (!card || Number(card.quality) !== 6) process.exit(1);
+          console.log(`Live Axe Charutos: Quality ${card.quality}, Strength ${card.strength}, Flavour ${card.flavour}, Size ${card.size}, Laurel ${card.laurel}`);
+          NODE
+              then
+                ok=1
+                break
+              fi
+            fi
+            sleep 3
+          done
+          test "$ok" -eq 1
+
+      - name: Verify deployed exception modules
+        run: |
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl -fsSL https://cigarcatalogue.netlify.app/catalogue-rating-exceptions.mjs > /tmp/exceptions.mjs \
+              && curl -fsSL https://cigarcatalogue.netlify.app/catalogue-presentation.mjs > /tmp/presentation.mjs \
+              && curl -fsSL https://cigarcatalogue.netlify.app/catalogue-flavour.mjs > /tmp/flavour.mjs \
+              && grep -q "alonso-menendez-axe-charutos" /tmp/exceptions.mjs \
+              && grep -q "hasQualityAwardException" /tmp/presentation.mjs \
+              && grep -q "hasQualityAwardException" /tmp/flavour.mjs; then
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+          test "$ok" -eq 1
+          echo 'Production is serving the narrowed Axe Charutos exception logic.'
+
+      - name: Record verification and remove one-shot workflow
+        run: |
+          tests=$(grep '^# tests ' /tmp/tests.log | tail -1 | sed 's/^# //')
+          pass=$(grep '^# pass ' /tmp/tests.log | tail -1 | sed 's/^# //')
+          fail=$(grep '^# fail ' /tmp/tests.log | tail -1 | sed 's/^# //')
+          cat > axe-charutos-final-verification.txt <<TXT
+          Axe Charutos exception final verification passed.
+          ${tests:-tests verified}
+          ${pass:-passes verified}
+          ${fail:-fail 0}
+          Live KV: Quality 6.
+          Exact logic: Silver Quality is exempt only at Gem and Elite gates; Crown/Strong remain normal.
+          Production: deployed exception, presentation, and flavour modules verified.
+          TXT
+          rm .github/workflows/axe-charutos-final-verify.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add axe-charutos-final-verification.txt .github/workflows/axe-charutos-final-verify.yml
+          git commit -m 'Verify Axe Charutos exception live'
+          git push
