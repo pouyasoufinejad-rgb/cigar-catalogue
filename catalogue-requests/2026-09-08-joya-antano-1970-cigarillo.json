@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-08-joya-antano-1970-cigarillo",
+  "operation": "upsert-entry",
+  "key": "joya-antano-1970-cigarillo",
+  "entry": {
+    "brand": "Joya de Nicaragua",
+    "title": "Antaño 1970 Cigarillos — Tin of 10",
+    "eyebrow": "Full-strength Nicaraguan quick-smoke candidate",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 8,
+    "quality": 7,
+    "risk": 2,
+    "stock": "in",
+    "rank": 15,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon (projected)",
+      "Occasion: Quick strong smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, earth, cocoa, coffee, cedar and dark-fruit sweetness</strong> are the expected core of this concentrated 4″ × 32 Nicaraguan puro. Antaño 1970 was deliberately built as an exceptionally strong, full-bodied blend, and the cigarillo keeps the same Nicaraguan Habano Criollo wrapper over Nicaraguan binder and ligero-heavy filler. Reports on the exact cigarillo describe dense smoke, early Nicaraguan pepper, cocoa and coffee with some black-cherry sweetness. It should be the harder-hitting and drier of the two Joya cigarillos, with substantially more nicotine than JOYA Black.",
+    "noteHtml": "Untasted. The Index currently lists the exact cigarillo singly at A$13 and the tin of 10 at A$119; Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Nicaraguan puro",
+      "Wrapper: Nicaraguan Habano Criollo",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan ligero"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 cigarillo",
+      "Compact narrow format",
+      "Slow cadence"
+    ],
+    "smokeTime": "20–30 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/joya-antano-1970-cigarillo"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add Joya de Nicaragua Antaño 1970 Cigarillo as an active untasted main-catalogue candidate. The Index live product data lists the exact 4 x 32 cigarillo at A$13 singly and A$119 per tin of 10. Joya de Nicaragua identifies Antaño 1970 as a handmade all-Nicaraguan puro built for exceptional strength; exact cigarillo listings specify Nicaraguan Habano Criollo wrapper with Nicaraguan binder and filler. Strength 8 and Quality 7 are projections; leave Flavour unrated until tasted."
+}
