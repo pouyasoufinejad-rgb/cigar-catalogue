@@ -1,0 +1,66 @@
+name: Axe Charutos scope RED
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-scope-red.yml
+
+permissions:
+  contents: write
+
+jobs:
+  red:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Add scope regression tests in runner only
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          p = Path('test/flavour-rating.test.mjs')
+          s = p.read_text()
+          marker = "test('browser runtime loads Flavour UI, card hydration and save interception'"
+          addition = """test('Axe Charutos quality exception does not create lower-tier laurels', () => {\n  assert.equal(deriveAutoLaurel({ key: 'alonso-menendez-axe-charutos', strength: 7, quality: 6, flavour: 7, size: 'bronze', value: 5 }), 'none');\n});\n\n"""
+          if marker not in s:
+            raise SystemExit('flavour marker missing')
+          p.write_text(s.replace(marker, addition + marker, 1))
+
+          p = Path('test/elite-flavour-gating.test.mjs')
+          s = p.read_text()
+          marker = "test('rated non-Gold flavour moves an otherwise Elite card to Strong'"
+          addition = """test('Axe Charutos quality exception does not create Strong eligibility', () => {\n  assert.equal(presentation.recommendationDestination(['value'], { flavourRated: false, key: 'alonso-menendez-axe-charutos' }), 'noteworthy-cheap');\n});\n\n"""
+          if marker not in s:
+            raise SystemExit('elite marker missing')
+          p.write_text(s.replace(marker, addition + marker, 1))
+          PY
+
+      - name: Verify both scope regressions fail
+        shell: bash
+        run: |
+          set +e
+          node --test test/flavour-rating.test.mjs test/elite-flavour-gating.test.mjs > /tmp/red.log 2>&1
+          status=$?
+          set -e
+          cat /tmp/red.log
+          test "$status" -ne 0
+          grep -q 'not ok .*Axe Charutos quality exception does not create lower-tier laurels' /tmp/red.log
+          grep -q 'not ok .*Axe Charutos quality exception does not create Strong eligibility' /tmp/red.log
+
+      - name: Record verified RED state
+        run: |
+          cat > axe-charutos-scope-red-verified.txt <<'TXT'
+          RED verified before scope refinement:
+          - Current exception incorrectly creates a Crown when only two real Gold ratings exist.
+          - Current exception incorrectly creates Strong eligibility when neither Strength nor Quality is actually Gold.
+          TXT
+          rm .github/workflows/axe-charutos-scope-red.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add axe-charutos-scope-red-verified.txt .github/workflows/axe-charutos-scope-red.yml
+          git commit -m 'Verify Axe Charutos scope regressions are RED'
+          git push
