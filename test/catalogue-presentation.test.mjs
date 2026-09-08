@@ -25,7 +25,7 @@ test('Half-Cigar cue matcher accepts half and halv forms case-insensitively', ()
   assert.equal(presentation.containsHalfCigarCue('ordinary corona'), false);
 });
 
-test('Half-Cigar classification uses identity and usage metadata but ignores summary-only half wording', () => {
+test('Half-Cigar classification includes every entry containing half or halve wording', () => {
   assert.ok(presentation, 'catalogue presentation module must load');
 
   const practicalCard = {
@@ -61,7 +61,7 @@ test('Half-Cigar classification uses identity and usage metadata but ignores sum
       return null;
     }
   };
-  assert.equal(presentation.isHalfCigarCard(summaryOnlyCard), false);
+  assert.equal(presentation.isHalfCigarCard(summaryOnlyCard), true);
 });
 
 test('recommendation routing no longer creates a rating-driven Substantial destination', () => {
