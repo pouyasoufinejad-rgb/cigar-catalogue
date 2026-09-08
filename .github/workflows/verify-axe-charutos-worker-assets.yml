@@ -1,0 +1,38 @@
+name: Verify Axe Charutos Worker assets
+
+on:
+  push:
+    paths:
+      - .github/workflows/verify-axe-charutos-worker-assets.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Worker serves narrowed exception logic
+        run: |
+          base=https://cigar-catalogue.psncodex.workers.dev
+          curl -fsSL "$base/catalogue-rating-exceptions.mjs" -o /tmp/exceptions.mjs
+          curl -fsSL "$base/catalogue-presentation.mjs" -o /tmp/presentation.mjs
+          curl -fsSL "$base/catalogue-flavour.mjs" -o /tmp/flavour.mjs
+          grep -q "alonso-menendez-axe-charutos" /tmp/exceptions.mjs
+          grep -q "hasQualityAwardException" /tmp/presentation.mjs
+          grep -q "hasQualityAwardException" /tmp/flavour.mjs
+          grep -q "const qualityGold = golds.has('quality')" /tmp/presentation.mjs
+          grep -q "golds >= 4 || (!qualityGold && hasQualityAwardException(key) && golds >= 3)" /tmp/flavour.mjs
+          cat > axe-charutos-worker-assets-verified.txt <<'TXT'
+          Worker production assets verified:
+          - catalogue-rating-exceptions.mjs contains the Axe Charutos-only exception key.
+          - catalogue-presentation.mjs applies the exception only to the Elite quality gate.
+          - catalogue-flavour.mjs applies the exception only to the Gem gate.
+          TXT
+          rm .github/workflows/verify-axe-charutos-worker-assets.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add axe-charutos-worker-assets-verified.txt .github/workflows/verify-axe-charutos-worker-assets.yml
+          git commit -m 'Verify Axe Charutos Worker assets live'
+          git push
