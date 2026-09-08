@@ -1,4 +1,0 @@
-Worker production assets verified:
-- catalogue-rating-exceptions.mjs contains the Axe Charutos-only exception key.
-- catalogue-presentation.mjs applies the exception only to the Elite quality gate.
-- catalogue-flavour.mjs applies the exception only to the Gem gate.
