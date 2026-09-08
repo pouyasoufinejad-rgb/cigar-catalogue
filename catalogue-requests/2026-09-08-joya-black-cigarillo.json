@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-08-joya-black-cigarillo",
+  "operation": "upsert-entry",
+  "key": "joya-black-cigarillo",
+  "entry": {
+    "brand": "Joya de Nicaragua",
+    "title": "JOYA Black Cigarillos — Pack of 10",
+    "eyebrow": "Sweet San Andrés quick-smoke candidate",
+    "packagePrice": 119,
+    "packageLabel": "pack of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 6,
+    "quality": 7,
+    "risk": 2,
+    "stock": "in",
+    "rank": 14,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Moderate (projected)",
+      "Pairings: Coffee, dark chocolate, bourbon (projected)",
+      "Occasion: Quick rich smoke, after a meal, casual evening smoke"
+    ],
+    "summaryHtml": "<strong>Cocoa, sweet tobacco, fruit, nuts and pepper</strong> are the expected core of this compact San Andrés cigarillo. Joya describes the Black blend as medium-bodied but full-flavoured, with a Mexican San Andrés wrapper over an all-Nicaraguan core; reports on the 4″ × 32 cigarillo add an initial pepper hit followed by sweeter fruit, cocoa and a nutty finish. It should be the smoother and sweeter of the two Joya cigarillos being added, with less nicotine than Antaño but a strong chance of better flavour density for this catalogue.",
+    "noteHtml": "Untasted. The Index currently lists the exact cigarillo singly at A$13 and the pack of 10 at A$119; Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "4″ × 32 cigarillo",
+      "Compact narrow format",
+      "Slow cadence"
+    ],
+    "smokeTime": "20–30 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/joya-de-nicaragua-joya-black-cigarillo"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add Joya Black Cigarillo as an active untasted main-catalogue candidate. The Index live product data lists the exact 4 x 32 cigarillo at A$13 singly and A$119 per pack of 10. Joya de Nicaragua specifies Mexican San Andrés wrapper with Nicaraguan binder and filler and rates the Black line medium-bodied/full-flavoured. Strength 6 and Quality 7 are projections; leave Flavour unrated until tasted."
+}
