@@ -7,7 +7,7 @@ const GRID_ID = 'half-cigar-cards';
 const EDITOR_TYPE_ID = 'catalogue-v139-type';
 const EDITOR_KEY_ID = 'catalogue-v139-key';
 const EDITOR_RANK_ID = 'catalogue-admin-rank';
-const STYLE_ID = 'catalogue-half-cohort-v1';
+const STYLE_ID = 'catalogue-half-cohort-v2';
 
 export const __sourceContract = Object.freeze({
   sectionId: SECTION_ID,
@@ -35,8 +35,15 @@ export function normaliseCatalogueType(value, legacyTaster = false) {
   return MAIN_TYPE;
 }
 
+export function catalogueTypeFromFields({ catalogueType = '', taster = false, text = '' } = {}) {
+  const explicit = String(catalogueType || '').trim();
+  if (explicit) return normaliseCatalogueType(explicit, Boolean(taster));
+  if (taster) return TASTER_TYPE;
+  return /half|halv/i.test(String(text || '')) ? HALF_TYPE : MAIN_TYPE;
+}
+
 export function catalogueTypeForRow(row = {}) {
-  return normaliseCatalogueType(row.catalogueType, Boolean(row.taster));
+  return catalogueTypeFromFields(row);
 }
 
 export function rankDisplayForType(type, rank) {
@@ -47,13 +54,25 @@ export function rankDisplayForType(type, rank) {
   return { label: 'No.', value: String(number), eyebrow: `No. ${number}` };
 }
 
+export function compactCatalogueCohorts(rows = []) {
+  const source = Array.isArray(rows) ? rows.map(row => ({ ...row, catalogueType: catalogueTypeForRow(row) })) : [];
+  const rankByKey = new Map();
+  for (const type of [MAIN_TYPE, HALF_TYPE, TASTER_TYPE]) {
+    source
+      .filter(row => !row.archived && row.catalogueType === type)
+      .sort((a, b) => finiteNumber(a.rank, Number.MAX_SAFE_INTEGER) - finiteNumber(b.rank, Number.MAX_SAFE_INTEGER))
+      .forEach((row, index) => rankByKey.set(row.key, index + 1));
+  }
+  return source.map(row => row.archived ? row : { ...row, rank: rankByKey.get(row.key) || 1 });
+}
+
 export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
   const key = String(options.key || '');
   const targetType = normaliseCatalogueType(options.targetType);
   const wantsArchived = Boolean(options.wantsArchived);
   const targetRank = Math.max(1, Math.round(finiteNumber(options.targetRank, 1)));
   const now = String(options.now || new Date().toISOString());
-  const sourceRows = Array.isArray(rows) ? rows.map(row => ({ ...row })) : [];
+  const sourceRows = compactCatalogueCohorts(Array.isArray(rows) ? rows : []);
   const selected = sourceRows.find(row => row.key === key);
   const updates = {};
   if (!selected) return updates;
@@ -114,21 +133,17 @@ export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
 
 export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', selectedType = MAIN_TYPE, selectedRank = 1) {
   const targetType = normaliseCatalogueType(selectedType);
-  const activeRows = (Array.isArray(rows) ? rows : [])
+  const activeRows = compactCatalogueCohorts((Array.isArray(rows) ? rows : [])
     .filter(row => !row.archived)
     .map(row => row.key === selectedKey
-      ? { ...row, catalogueType: targetType, taster: targetType === TASTER_TYPE, rank: selectedRank }
-      : { ...row });
+      ? { ...row, catalogueType: targetType, taster: targetType === TASTER_TYPE }
+      : { ...row }));
   const output = {};
 
   for (const type of [MAIN_TYPE, HALF_TYPE, TASTER_TYPE]) {
     const cohort = activeRows
       .filter(row => catalogueTypeForRow(row) === type)
-      .sort((a, b) => {
-        if (a.key === selectedKey && b.key !== selectedKey) return 0;
-        if (b.key === selectedKey && a.key !== selectedKey) return 0;
-        return finiteNumber(a.rank) - finiteNumber(b.rank);
-      });
+      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
 
     if (selectedKey && targetType === type) {
       const selectedIndex = cohort.findIndex(row => row.key === selectedKey);
@@ -150,9 +165,24 @@ export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', s
   return output;
 }
 
+function cardText(card) {
+  if (!card) return '';
+  return [
+    card.textContent || '',
+    card.querySelector?.('h3')?.textContent || '',
+    card.querySelector?.('.artmeta-right')?.textContent || '',
+    card.querySelector?.('.mog-note')?.textContent || '',
+    card.querySelector?.('.summary')?.textContent || ''
+  ].filter(Boolean).join(' ');
+}
+
 function cardCatalogueType(card) {
   if (!card) return MAIN_TYPE;
-  return normaliseCatalogueType(card.dataset?.catalogueType, card.dataset?.taster === '1');
+  return catalogueTypeFromFields({
+    catalogueType: card.dataset?.catalogueType || '',
+    taster: card.dataset?.taster === '1',
+    text: cardText(card)
+  });
 }
 
 function documentFor(root) {
@@ -192,10 +222,15 @@ export function ensureHalfCigarSection(root = document) {
   return section;
 }
 
+function cleanEyebrowLabel(value) {
+  return String(value || '')
+    .replace(/^(?:H\d+|T\d+|No\.\s*\d+|Half-Cigar|Taster)\s*[—–-]\s*/i, '')
+    .trim();
+}
+
 function updateCardRankVisual(card) {
   if (!card || card.dataset?.archived === '1') return;
   const type = cardCatalogueType(card);
-  if (type !== HALF_TYPE) return;
   const display = rankDisplayForType(type, card.dataset?.rank);
   const rankflag = card.querySelector?.('.rankflag');
   const label = rankflag?.querySelector?.('span');
@@ -203,12 +238,39 @@ function updateCardRankVisual(card) {
   if (label) label.textContent = display.label;
   if (value) value.textContent = display.value;
   const eyebrow = card.querySelector?.('.eyebrow');
-  if (eyebrow) {
-    const clean = String(eyebrow.textContent || '')
-      .replace(/^(?:H\d+|T\d+|No\.\s*\d+|Half-Cigar|Taster)\s*[—–-]\s*/i, '')
-      .trim();
-    eyebrow.textContent = `${display.eyebrow} — ${clean}`;
-  }
+  if (eyebrow) eyebrow.textContent = `${display.eyebrow} — ${cleanEyebrowLabel(eyebrow.textContent)}`;
+}
+
+function compactDomCohortRanks(root = document) {
+  if (!root?.querySelectorAll) return 0;
+  const cards = Array.from(root.querySelectorAll('article.card[data-key]'));
+  const rows = cards.map(card => ({
+    key: card.dataset.key,
+    rank: Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1))),
+    catalogueType: cardCatalogueType(card),
+    taster: card.dataset.taster === '1',
+    archived: card.dataset.archived === '1'
+  }));
+  const compacted = compactCatalogueCohorts(rows);
+  const byKey = new Map(compacted.map(row => [row.key, row]));
+  let changed = 0;
+  cards.forEach(card => {
+    const row = byKey.get(card.dataset.key);
+    if (!row || row.archived) return;
+    const nextRank = String(row.rank);
+    if (card.dataset.rank !== nextRank) {
+      card.dataset.rank = nextRank;
+      changed += 1;
+    }
+    if (card.dataset.catalogueType !== row.catalogueType) {
+      card.dataset.catalogueType = row.catalogueType;
+      changed += 1;
+    }
+    if (row.catalogueType === TASTER_TYPE) card.dataset.taster = '1';
+    else delete card.dataset.taster;
+    updateCardRankVisual(card);
+  });
+  return changed;
 }
 
 function scoreForSort(card, key) {
@@ -251,6 +313,7 @@ export function syncHalfCigarSection(root = document) {
   const grid = section?.querySelector?.(`#${GRID_ID}`);
   if (!grid) return 0;
 
+  compactDomCohortRanks(root);
   const cards = Array.from(root.querySelectorAll('article.card[data-key]'))
     .filter(card => card.dataset.archived !== '1' && cardCatalogueType(card) === HALF_TYPE);
   orderedHalfCards(cards, root).forEach(card => {
@@ -275,14 +338,16 @@ function applyStateMembership(state, root = document) {
   const cards = state && typeof state.cards === 'object' ? state.cards : {};
   root.querySelectorAll?.('article.card[data-key]').forEach(card => {
     const saved = cards[card.dataset.key];
-    if (!saved || !Object.prototype.hasOwnProperty.call(saved, 'catalogueType')) return;
-    const type = normaliseCatalogueType(saved.catalogueType, saved.taster);
-    card.dataset.catalogueType = type;
-    if (type === TASTER_TYPE) card.dataset.taster = '1';
-    else delete card.dataset.taster;
+    if (!saved) return;
+    if (Object.prototype.hasOwnProperty.call(saved, 'catalogueType')) {
+      const type = normaliseCatalogueType(saved.catalogueType, saved.taster);
+      card.dataset.catalogueType = type;
+      if (type === TASTER_TYPE) card.dataset.taster = '1';
+      else delete card.dataset.taster;
+    }
     if (saved.rank != null) card.dataset.rank = String(Math.max(1, Math.round(finiteNumber(saved.rank, 1))));
-    updateCardRankVisual(card);
   });
+  compactDomCohortRanks(root);
 }
 
 async function hydrateMembership(root = document) {
@@ -295,6 +360,8 @@ async function hydrateMembership(root = document) {
     syncEditorType(root);
     return true;
   } catch (_) {
+    compactDomCohortRanks(root);
+    syncHalfCigarSection(root);
     return false;
   }
 }
@@ -343,6 +410,8 @@ function syncEditorType(root = document) {
   const card = selectedEditorCard(root);
   if (!select || !card) return;
   select.value = cardCatalogueType(card);
+  const rankInput = root.getElementById?.(EDITOR_RANK_ID);
+  if (rankInput) rankInput.value = card.dataset.rank || '1';
   syncEditorRankBounds(root);
 }
 
@@ -434,17 +503,20 @@ function ensureHalfFilter(root = document) {
     globalThis.window?.refreshGroupVisibility?.();
   });
 
-  taster.parentElement.addEventListener('click', event => {
-    const control = event.target?.closest?.('button[data-filter]');
-    if (!control || control.dataset.filter === HALF_TYPE) return;
-    setTimeout(() => {
-      root.getElementById?.('tasters-section')?.classList.remove('hidden');
-      root.getElementById?.('archived-section')?.classList.remove('hidden');
-      const section = ensureHalfCigarSection(root);
-      const visibleHalf = Array.from(section?.querySelectorAll?.('article.card') || []).some(card => !card.classList.contains('hidden'));
-      section?.classList.toggle('hidden', !visibleHalf);
-    }, 0);
-  });
+  if (taster.parentElement.dataset.halfCohortDelegated !== '1') {
+    taster.parentElement.dataset.halfCohortDelegated = '1';
+    taster.parentElement.addEventListener('click', event => {
+      const control = event.target?.closest?.('button[data-filter]');
+      if (!control || control.dataset.filter === HALF_TYPE) return;
+      setTimeout(() => {
+        root.getElementById?.('tasters-section')?.classList.remove('hidden');
+        root.getElementById?.('archived-section')?.classList.remove('hidden');
+        const section = ensureHalfCigarSection(root);
+        const visibleHalf = Array.from(section?.querySelectorAll?.('article.card') || []).some(card => !card.classList.contains('hidden'));
+        section?.classList.toggle('hidden', !visibleHalf);
+      }, 0);
+    });
+  }
   return button;
 }
 
@@ -468,6 +540,7 @@ export function installHalfCigarCohort(root = document) {
   ensureHalfFilter(root);
   installEditorHooks(root);
   installSaveInterceptor(root);
+  compactDomCohortRanks(root);
   hydrateMembership(root);
 
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
