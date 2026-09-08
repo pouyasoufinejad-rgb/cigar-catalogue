@@ -1,4 +1,0 @@
-Final live verification passed.
-joya-black-cigarillo: rank=14, strength=6, quality=7, price=11.9, size=4x32
-joya-antano-1970-cigarillo: rank=15, strength=8, quality=7, price=11.9, size=4x32
-Main rankings contiguous: 1-33.
