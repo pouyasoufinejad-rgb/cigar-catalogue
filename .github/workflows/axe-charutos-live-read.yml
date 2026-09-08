@@ -1,0 +1,32 @@
+name: Axe Charutos live state read
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-live-read.yml
+
+permissions:
+  contents: write
+
+jobs:
+  read-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture current Axe Charutos state
+        run: |
+          curl -fsS https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides > /tmp/catalogue-overrides.json
+          node --input-type=module <<'NODE' > axe-charutos-live-state.json
+          import { readFileSync } from 'node:fs';
+          const state = JSON.parse(readFileSync('/tmp/catalogue-overrides.json', 'utf8'));
+          const key = 'alonso-menendez-axe-charutos';
+          const card = state.cards?.[key] || null;
+          const entry = state.entries?.[key] || null;
+          console.log(JSON.stringify({ key, card, entry }, null, 2));
+          NODE
+          rm .github/workflows/axe-charutos-live-read.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add axe-charutos-live-state.json .github/workflows/axe-charutos-live-read.yml
+          git commit -m 'Capture live Axe Charutos catalogue state'
+          git push
