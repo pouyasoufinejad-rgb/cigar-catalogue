@@ -1,0 +1,59 @@
+name: Diagnose Axe Charutos verification
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-diagnose.yml
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm test > /tmp/tests.log 2>&1
+          test_status=$?
+
+          curl -fsS -o /tmp/state.json -w '%{http_code}' https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides > /tmp/kv-http.txt
+          kv_status=$?
+          if [ "$kv_status" -eq 0 ]; then
+            node --input-type=module <<'NODE' > /tmp/kv-card.txt 2>&1
+          import { readFileSync } from 'node:fs';
+          const state = JSON.parse(readFileSync('/tmp/state.json', 'utf8'));
+          console.log(JSON.stringify(state.cards?.['alonso-menendez-axe-charutos'] || null, null, 2));
+          NODE
+          else
+            echo "curl failed with $kv_status" > /tmp/kv-card.txt
+          fi
+
+          for f in catalogue-rating-exceptions.mjs catalogue-presentation.mjs catalogue-flavour.mjs; do
+            code=$(curl -sSL -o "/tmp/$f" -w '%{http_code}' "https://cigarcatalogue.netlify.app/$f")
+            echo "$f $code $(wc -c < "/tmp/$f") bytes" >> /tmp/netlify.txt
+            grep -E 'alonso-menendez-axe-charutos|hasQualityAwardException|qualityCountsForAwards' "/tmp/$f" | head -5 >> /tmp/netlify.txt
+          done
+
+          {
+            echo "test_status=$test_status"
+            grep -E '^# (tests|pass|fail) ' /tmp/tests.log | tail -3
+            echo "kv_curl_status=$kv_status http=$(cat /tmp/kv-http.txt)"
+            echo '--- live Axe card ---'
+            cat /tmp/kv-card.txt
+            echo '--- Netlify modules ---'
+            cat /tmp/netlify.txt
+          } > axe-charutos-diagnostics.txt
+
+          rm .github/workflows/axe-charutos-diagnose.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add axe-charutos-diagnostics.txt .github/workflows/axe-charutos-diagnose.yml
+          git commit -m 'Capture Axe Charutos verification diagnostics'
+          git push
