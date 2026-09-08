@@ -9,8 +9,8 @@ Replace the rating-driven “Substantial Format” recommendation group with a s
 - The recommendation order is: Elite, Strong, The Half-Cigar, then Noteworthy groups.
 - “Substantial Format” is no longer a recommendation destination and no rating combination creates it.
 - The Half-Cigar group is semantic, not medal-driven.
-- A main-catalogue card belongs in The Half-Cigar when its identifying or usage metadata contains `half` or a `halv…` form, case-insensitively. This includes names such as “Half Corona” and usage wording such as “halve”, “halved”, “halves”, or “halving”.
-- Do not classify from tasting-summary prose alone, because incidental phrases such as “second half” do not describe a cigar intended to be halved.
+- A main-catalogue card belongs in The Half-Cigar whenever the entry contains `half` or a `halv…` form, case-insensitively. This includes names such as “Half Corona” and wording such as “halve”, “halved”, “halves”, or “halving”.
+- The match is intentionally literal across the entry rather than restricted to a hard-coded field or cigar list.
 - Tasters remain a separate cohort and must not be pulled into the Half-Cigar recommendation group.
 - Active main-catalogue ranking is presented independently of the recommendation groups. Ranking is ordered by each card’s current main rank and excludes archived cards and tasters.
 - Recommendation cards no longer need to communicate their numeric rank as part of the recommendation grouping; the independent Ranking presentation is the source of the ordered main list.
@@ -25,24 +25,16 @@ Generate a lightweight Ranking section from the current active main-card DOM ins
 
 ## Classification inputs
 
-A card is a Half-Cigar when the combined text from these sources contains `half` or `halv`:
-
-- `data-key`
-- cigar title (`h3`)
-- Practical metadata (`.artmeta-right`)
-- catalogue note (`.mog-note`)
-
-The tasting summary (`.summary`) is intentionally excluded.
+A card is a Half-Cigar when `half` or `halv` occurs anywhere in the rendered card entry or its catalogue key. The classifier also checks the principal card fields directly so test doubles and dynamically hydrated cards are covered consistently.
 
 ## Testing
 
 Update presentation tests first so they fail against the current Substantial logic. Cover:
 
 - `half`/`halve` cue matching and case-insensitivity
-- title/key/practical/note-based card classification
-- summary-only “second half” not qualifying
+- matching in title, key, Practical, note, summary, or other rendered entry text
 - removal of rating-driven `substantial` routing
-- Strong fallback for Strength + Size Gold
+- Strong fallback for Strength + Size Gold when no half/halve wording exists
 - runtime hooks for Half-Cigar section rename/order, ranking generation, and Half Cigars-only control
 
 Update the layout regression test so it no longer requires the old static Substantial-before-Noteworthy order; runtime presentation now owns the visible order.
