@@ -859,7 +859,7 @@ let draftSourceEditorial = null;
 let draftSourceStructural = null;
 let serverAvailableForBrowser = false;
 
-async function loadStateForBrowser(showMessage = false) {
+async function loadStateForBrowser({ showMessage = false, applyStructural = true } = {}) {
   try {
     const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -875,7 +875,7 @@ async function loadStateForBrowser(showMessage = false) {
     hydrateDynamicEntries(stateForBrowser);
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const key = card.dataset.key;
-      applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
+      if (applyStructural) applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
       const editorial = card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key] ? { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) } : (stateForBrowser.cards?.[key] || {});
       applyEditorialToCard(card, editorial);
     }
@@ -1200,7 +1200,7 @@ function closeEditor() {
 }
 
 async function reloadEditorState() {
-  await loadStateForBrowser(true);
+  await loadStateForBrowser({ showMessage: true, applyStructural: true });
   rebuildCardSelectFromDom();
   if (modeForBrowser === 'edit') populateSelectedFields();
 }
@@ -1230,7 +1230,7 @@ export function initUnifiedAdmin() {
   });
 
   refreshAllValueDisplays();
-  window.catalogueOverridesReady = loadStateForBrowser(false).then(() => {
+  window.catalogueOverridesReady = loadStateForBrowser({ applyStructural: false }).then(() => {
     if (modeForBrowser === 'edit') populateSelectedFields();
     return stateForBrowser;
   });
