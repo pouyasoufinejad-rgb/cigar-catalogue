@@ -1,8 +1,7 @@
 import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
 
-const STYLE_ID = 'catalogue-presentation-v154';
+const STYLE_ID = 'catalogue-presentation-v155';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
-const HALF_SECTION_SELECTOR = '[data-noteworthy-section="substantial"]';
 const STRONG_SECTION_SELECTOR = '[data-tier-section="strong"]';
 const ELITE_SECTION_SELECTOR = '[data-tier-section="elite"]';
 
@@ -10,23 +9,6 @@ function normaliseGoldLabels(labels = []) {
   return [...new Set(Array.from(labels || [])
     .map(label => String(label || '').trim().toLowerCase())
     .filter(Boolean))].sort();
-}
-
-export function containsHalfCigarCue(value) {
-  return /half|halv/i.test(String(value || ''));
-}
-
-export function isHalfCigarCard(card) {
-  if (!card) return false;
-  const sources = [
-    card.dataset?.key || '',
-    card.textContent || '',
-    card.querySelector?.('h3')?.textContent || '',
-    card.querySelector?.('.artmeta-right')?.textContent || '',
-    card.querySelector?.('.mog-note')?.textContent || '',
-    card.querySelector?.('.summary')?.textContent || ''
-  ];
-  return sources.some(containsHalfCigarCue);
 }
 
 export function recommendationDestination(labels = [], { flavourRated = false, key = '' } = {}) {
@@ -151,41 +133,27 @@ export function ensureStockDot(card) {
 }
 
 function destinationGrid(root, destination) {
-  const selector = destination === 'half-cigar' || destination === 'substantial'
-    ? `${HALF_SECTION_SELECTOR} .grid`
-    : destination === 'elite'
-      ? `${ELITE_SECTION_SELECTOR} .grid`
-      : destination === 'strong'
-        ? `${STRONG_SECTION_SELECTOR} .grid`
-        : destination === 'noteworthy-cheap'
-          ? '[data-noteworthy-section="cheap"] .grid'
-          : '[data-noteworthy-section="neither"] .grid';
+  const selector = destination === 'elite'
+    ? `${ELITE_SECTION_SELECTOR} .grid`
+    : destination === 'strong'
+      ? `${STRONG_SECTION_SELECTOR} .grid`
+      : destination === 'noteworthy-cheap'
+        ? '[data-noteworthy-section="cheap"] .grid'
+        : '[data-noteworthy-section="neither"] .grid';
   return root.querySelector(selector);
-}
-
-export function configureHalfCigarSection(root = document) {
-  if (!root?.querySelector) return null;
-  const halfSection = root.querySelector(HALF_SECTION_SELECTOR);
-  if (!halfSection) return null;
-
-  const heading = halfSection.querySelector?.('.subtier-heading');
-  if (heading && heading.textContent !== 'The Half-Cigar') heading.textContent = 'The Half-Cigar';
-  const note = halfSection.querySelector?.('.subtier-note');
-  const noteText = 'Cigars whose catalogue entry calls for a half or halved format.';
-  if (note && note.textContent !== noteText) note.textContent = noteText;
-
-  const strongSection = root.querySelector(STRONG_SECTION_SELECTOR);
-  const parent = strongSection?.parentElement;
-  if (parent && halfSection.parentElement === parent && strongSection.nextSibling !== halfSection) {
-    parent.insertBefore(halfSection, strongSection.nextSibling);
-  }
-  return halfSection;
 }
 
 function isUnavailableCard(card) {
   return card?.classList?.contains?.('is-unavailable')
     || card?.closest?.('.unavailable-grid')
     || ['out', 'delisted'].includes(effectiveStockStatus(card));
+}
+
+function catalogueType(card) {
+  const explicit = String(card?.dataset?.catalogueType || '').trim().toLowerCase();
+  if (explicit === 'half') return 'half';
+  if (explicit === 'taster' || card?.dataset?.taster === '1') return 'taster';
+  return 'main';
 }
 
 function insertByRank(grid, card) {
@@ -202,48 +170,15 @@ function refreshRecommendationGroupVisibility() {
   if (typeof refresh === 'function') refresh();
 }
 
-export function markHalfCigarCards(root = document) {
-  if (!root?.querySelectorAll) return 0;
-  let changed = 0;
-  root.querySelectorAll('article.card[data-key]').forEach(card => {
-    const next = isHalfCigarCard(card) ? '1' : '0';
-    if (card.dataset.halfCigar !== next) {
-      card.dataset.halfCigar = next;
-      changed += 1;
-    }
-  });
-  return changed;
-}
-
-export function halfCigarFilterMatchesCard(card) {
-  if (!card || card.dataset?.archived === '1' || card.dataset?.taster === '1' || isUnavailableCard(card)) return false;
-  return isHalfCigarCard(card);
-}
-
-export function applyHalfCigarFilter(root = document) {
-  if (!root?.querySelectorAll) return 0;
-  markHalfCigarCards(root);
-  let visible = 0;
-  root.querySelectorAll('article.card[data-key]').forEach(card => {
-    const show = halfCigarFilterMatchesCard(card);
-    card.classList?.toggle?.('hidden', !show);
-    if (show) visible += 1;
-  });
-  refreshRecommendationGroupVisibility();
-  return visible;
-}
-
 export function reclassifyRecommendationCards(root = document) {
   if (!root?.querySelectorAll) return 0;
   const sort = root.getElementById?.('sort') || root.querySelector?.('#sort');
   if (sort?.value && sort.value !== 'rank') return 0;
-  const halfGrid = destinationGrid(root, 'half-cigar');
-  if (!halfGrid) return 0;
 
   let moved = 0;
   root.querySelectorAll('article.card[data-key]').forEach(card => {
-    if (card.dataset.archived === '1' || card.dataset.taster === '1' || isUnavailableCard(card)) return;
-    const destination = isHalfCigarCard(card) ? 'half-cigar' : recommendationDestinationForCard(card);
+    if (card.dataset.archived === '1' || catalogueType(card) !== 'main' || isUnavailableCard(card)) return;
+    const destination = recommendationDestinationForCard(card);
     const target = destinationGrid(root, destination);
     if (target && card.parentElement !== target) {
       insertByRank(target, card);
@@ -254,55 +189,13 @@ export function reclassifyRecommendationCards(root = document) {
   return moved;
 }
 
-export const reclassifySubstantialCards = reclassifyRecommendationCards;
-
-function documentForRoot(root) {
-  if (root?.createElement) return root;
-  if (root?.ownerDocument?.createElement) return root.ownerDocument;
-  return typeof document !== 'undefined' ? document : null;
-}
-
-function findTasterControl(root) {
-  if (!root?.querySelector) return null;
-  return root.querySelector('.toggle button[data-filter="tasters"]');
-}
-
-export function ensureHalfCigarFilterControl(root = document) {
-  if (!root?.querySelector) return null;
-  const existing = root.querySelector('[data-half-cigar-filter]');
-  if (existing) return existing;
-  const tasterControl = findTasterControl(root);
-  if (!tasterControl?.parentElement) return null;
-  const doc = documentForRoot(root);
-  if (!doc) return null;
-
-  const button = doc.createElement('button');
-  button.type = 'button';
-  button.textContent = 'Half Cigars';
-  button.setAttribute('data-half-cigar-filter', '');
-  button.setAttribute('aria-pressed', 'false');
-  tasterControl.parentElement.insertBefore(button, tasterControl.nextSibling);
-  button.addEventListener('click', event => {
-    event?.stopImmediatePropagation?.();
-    root.querySelectorAll('.toggle button').forEach(control => control.classList.remove('active'));
-    button.classList.add('active');
-    button.setAttribute('aria-pressed', 'true');
-    applyHalfCigarFilter(root);
-  }, { capture: true });
-  return button;
-}
-
 let refreshTimer = 0;
 function refreshPresentation() {
   refreshTimer = 0;
   ensureStyle();
-  configureHalfCigarSection(document);
-  markHalfCigarCards(document);
   normaliseExperienceTags(document);
   document.querySelectorAll('article.card[data-key]').forEach(ensureStockDot);
   reclassifyRecommendationCards(document);
-  const halfButton = ensureHalfCigarFilterControl(document);
-  if (halfButton?.classList?.contains('active')) applyHalfCigarFilter(document);
 }
 
 function scheduleRefresh() {
@@ -323,7 +216,7 @@ export function installCataloguePresentation() {
         childList:true,
         characterData:true,
         attributes:true,
-        attributeFilter:['class', 'data-stock', 'data-stock-pin', 'data-archived', 'data-taster', 'data-key']
+        attributeFilter:['class', 'data-stock', 'data-stock-pin', 'data-archived', 'data-taster', 'data-catalogue-type', 'data-key']
       });
     }
   };
