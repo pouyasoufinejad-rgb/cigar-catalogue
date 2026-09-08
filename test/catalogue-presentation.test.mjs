@@ -76,15 +76,17 @@ test('recommendation routing no longer creates a rating-driven Substantial desti
   assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
 });
 
-test('presentation runtime owns Half-Cigar section order, ranking, and Half Cigars-only control', () => {
+test('presentation runtime changes only the requested Half-Cigar grouping and filter', () => {
   assert.match(presentationSource, /The Half-Cigar/);
   assert.match(presentationSource, /data-noteworthy-section=["']substantial["']/);
   assert.match(presentationSource, /data-tier-section=["']strong["']/);
   assert.match(presentationSource, /strongSection\.nextSibling/);
-  assert.match(presentationSource, /data-ranking-section/);
   assert.match(presentationSource, /data-half-cigar-filter/);
   assert.match(presentationSource, /Half Cigars/);
   assert.match(presentationSource, /data-half-cigar/);
+  assert.doesNotMatch(presentationSource, /data-ranking-section/);
+  assert.doesNotMatch(presentationSource, /data-recommendations-heading/);
+  assert.doesNotMatch(presentationSource, /normaliseCardRankCaption/);
 });
 
 test('stock state maps to one traffic-light dot colour', () => {

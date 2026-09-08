@@ -1,11 +1,10 @@
 import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
 
-const STYLE_ID = 'catalogue-presentation-v153';
+const STYLE_ID = 'catalogue-presentation-v154';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
 const HALF_SECTION_SELECTOR = '[data-noteworthy-section="substantial"]';
 const STRONG_SECTION_SELECTOR = '[data-tier-section="strong"]';
 const ELITE_SECTION_SELECTOR = '[data-tier-section="elite"]';
-const CONTROL_SELECTOR = 'button,a,[role="button"]';
 
 function normaliseGoldLabels(labels = []) {
   return [...new Set(Array.from(labels || [])
@@ -98,28 +97,6 @@ article.card .eyebrow .stock-dot{
 article.card .eyebrow .stock-dot-green{background:#3f9a4a}
 article.card .eyebrow .stock-dot-yellow{background:#d7a52f}
 article.card .eyebrow .stock-dot-red{background:#a92d35}
-[data-ranking-section="main"]{margin:0 0 28px}
-[data-ranking-section="main"] .catalogue-ranking-list{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:7px 18px;
-  margin:12px 0 0;
-  padding-left:24px;
-}
-[data-ranking-section="main"] .catalogue-ranking-list li{padding:2px 4px;line-height:1.35}
-[data-recommendations-heading]{margin-top:8px}
-body.catalogue-half-only [data-ranking-section],
-body.catalogue-half-only [data-recommendations-heading],
-body.catalogue-half-only [data-tier-section],
-body.catalogue-half-only [data-noteworthy-section]{display:none!important}
-body.catalogue-half-only [data-noteworthy-section="substantial"]{display:block!important}
-body.catalogue-half-only article.card{display:none!important}
-body.catalogue-half-only [data-noteworthy-section="substantial"] article.card[data-half-cigar="1"]{display:block!important}
-body.catalogue-tasters-selected [data-ranking-section],
-body.catalogue-tasters-selected [data-recommendations-heading]{display:none!important}
-@media(max-width:700px){
-  [data-ranking-section="main"] .catalogue-ranking-list{grid-template-columns:minmax(0,1fr)}
-}
 `;
   document.head.appendChild(style);
 }
@@ -186,19 +163,15 @@ function destinationGrid(root, destination) {
   return root.querySelector(selector);
 }
 
-function halfCigarSection(root) {
-  return root?.querySelector?.(HALF_SECTION_SELECTOR) || null;
-}
-
 export function configureHalfCigarSection(root = document) {
   if (!root?.querySelector) return null;
-  const halfSection = halfCigarSection(root);
+  const halfSection = root.querySelector(HALF_SECTION_SELECTOR);
   if (!halfSection) return null;
 
   const heading = halfSection.querySelector?.('.subtier-heading');
   if (heading && heading.textContent !== 'The Half-Cigar') heading.textContent = 'The Half-Cigar';
   const note = halfSection.querySelector?.('.subtier-note');
-  const noteText = 'Formats explicitly marked half or intended to be halved.';
+  const noteText = 'Cigars whose catalogue entry calls for a half or halved format.';
   if (note && note.textContent !== noteText) note.textContent = noteText;
 
   const strongSection = root.querySelector(STRONG_SECTION_SELECTOR);
@@ -210,8 +183,8 @@ export function configureHalfCigarSection(root = document) {
 }
 
 function isUnavailableCard(card) {
-  return card.classList?.contains('is-unavailable')
-    || card.closest?.('.unavailable-grid')
+  return card?.classList?.contains?.('is-unavailable')
+    || card?.closest?.('.unavailable-grid')
     || ['out', 'delisted'].includes(effectiveStockStatus(card));
 }
 
@@ -242,6 +215,24 @@ export function markHalfCigarCards(root = document) {
   return changed;
 }
 
+export function halfCigarFilterMatchesCard(card) {
+  if (!card || card.dataset?.archived === '1' || card.dataset?.taster === '1' || isUnavailableCard(card)) return false;
+  return isHalfCigarCard(card);
+}
+
+export function applyHalfCigarFilter(root = document) {
+  if (!root?.querySelectorAll) return 0;
+  markHalfCigarCards(root);
+  let visible = 0;
+  root.querySelectorAll('article.card[data-key]').forEach(card => {
+    const show = halfCigarFilterMatchesCard(card);
+    card.classList?.toggle?.('hidden', !show);
+    if (show) visible += 1;
+  });
+  refreshRecommendationGroupVisibility();
+  return visible;
+}
+
 export function reclassifyRecommendationCards(root = document) {
   if (!root?.querySelectorAll) return 0;
   const sort = root.getElementById?.('sort') || root.querySelector?.('#sort');
@@ -265,131 +256,15 @@ export function reclassifyRecommendationCards(root = document) {
 
 export const reclassifySubstantialCards = reclassifyRecommendationCards;
 
-function stripRankPrefix(value) {
-  return String(value || '').replace(/^\s*No\.\s*\d+\s*[—–-]\s*/i, '').trim();
-}
-
-function normaliseCardRankCaption(card) {
-  const eyebrow = card?.querySelector?.('.eyebrow');
-  if (!eyebrow) return false;
-  const current = eyebrow.textContent?.trim() || '';
-  const next = stripRankPrefix(current);
-  if (!next || next === current) return false;
-  const dot = eyebrow.querySelector?.('.stock-dot') || null;
-  eyebrow.textContent = next;
-  if (dot) eyebrow.insertBefore(dot, eyebrow.firstChild);
-  return true;
-}
-
-function cardTitleText(card) {
-  const h3 = card?.querySelector?.('h3');
-  if (!h3) return String(card?.dataset?.key || 'Untitled cigar');
-  const clone = h3.cloneNode?.(true);
-  if (clone?.querySelector) {
-    clone.querySelector('span')?.remove();
-    return clone.textContent?.trim() || String(card?.dataset?.key || 'Untitled cigar');
-  }
-  return h3.textContent?.trim() || String(card?.dataset?.key || 'Untitled cigar');
-}
-
 function documentForRoot(root) {
   if (root?.createElement) return root;
   if (root?.ownerDocument?.createElement) return root.ownerDocument;
   return typeof document !== 'undefined' ? document : null;
 }
 
-export function refreshRankingSection(root = document) {
-  if (!root?.querySelector || !root?.querySelectorAll) return null;
-  const anchor = root.querySelector(ELITE_SECTION_SELECTOR) || root.querySelector(STRONG_SECTION_SELECTOR);
-  if (!anchor?.parentElement) return null;
-  const doc = documentForRoot(root);
-  if (!doc) return null;
-
-  let section = root.querySelector('[data-ranking-section="main"]');
-  if (!section) {
-    section = doc.createElement('section');
-    section.setAttribute('data-ranking-section', 'main');
-    section.className = 'catalogue-ranking-section';
-    const heading = doc.createElement('h3');
-    heading.className = 'tier-heading';
-    heading.textContent = 'Ranking';
-    const note = doc.createElement('p');
-    note.className = 'tier-note';
-    note.textContent = 'Active catalogue in rank order.';
-    const list = doc.createElement('ol');
-    list.className = 'catalogue-ranking-list';
-    section.append(heading, note, list);
-    anchor.parentElement.insertBefore(section, anchor);
-  }
-
-  const cards = Array.from(root.querySelectorAll('article.card[data-key]'))
-    .filter(card => card.dataset.archived !== '1' && card.dataset.taster !== '1')
-    .sort((a, b) => {
-      const rankA = Number(a.dataset.rank) || Number.MAX_SAFE_INTEGER;
-      const rankB = Number(b.dataset.rank) || Number.MAX_SAFE_INTEGER;
-      return rankA - rankB || cardTitleText(a).localeCompare(cardTitleText(b));
-    });
-
-  const rows = cards.map(card => {
-    const rank = Number(card.dataset.rank);
-    return `${Number.isFinite(rank) && rank > 0 ? rank : '—'}\u0000${cardTitleText(card)}`;
-  });
-  const signature = rows.join('\u0001');
-  if (section.dataset.rankingSignature === signature) return section;
-  section.dataset.rankingSignature = signature;
-
-  const list = section.querySelector('.catalogue-ranking-list');
-  if (!list) return section;
-  list.replaceChildren();
-  for (const card of cards) {
-    const item = doc.createElement('li');
-    const rank = Number(card.dataset.rank);
-    const rankText = Number.isFinite(rank) && rank > 0 ? `No. ${rank}` : 'Unranked';
-    item.textContent = `${rankText} — ${cardTitleText(card)}`;
-    list.appendChild(item);
-  }
-  return section;
-}
-
-function ensureRecommendationsHeading(root = document) {
-  if (!root?.querySelector) return null;
-  const anchor = root.querySelector(ELITE_SECTION_SELECTOR) || root.querySelector(STRONG_SECTION_SELECTOR);
-  if (!anchor?.parentElement) return null;
-  let wrapper = root.querySelector('[data-recommendations-heading]');
-  if (wrapper) return wrapper;
-  const doc = documentForRoot(root);
-  if (!doc) return null;
-  wrapper = doc.createElement('div');
-  wrapper.setAttribute('data-recommendations-heading', '');
-  const heading = doc.createElement('h3');
-  heading.className = 'tier-heading';
-  heading.textContent = 'Recommendations';
-  wrapper.appendChild(heading);
-  anchor.parentElement.insertBefore(wrapper, anchor);
-  return wrapper;
-}
-
-function bodyForRoot(root) {
-  if (root?.body) return root.body;
-  return root?.ownerDocument?.body || (typeof document !== 'undefined' ? document.body : null);
-}
-
-export function setHalfCigarOnly(root = document, active = true) {
-  const body = bodyForRoot(root);
-  if (!body) return false;
-  body.classList.toggle('catalogue-half-only', Boolean(active));
-  if (active) body.classList.remove('catalogue-tasters-selected');
-  const button = root.querySelector?.('[data-half-cigar-filter]');
-  button?.setAttribute?.('aria-pressed', active ? 'true' : 'false');
-  refreshRecommendationGroupVisibility();
-  return Boolean(active);
-}
-
 function findTasterControl(root) {
-  if (!root?.querySelectorAll) return null;
-  return Array.from(root.querySelectorAll(CONTROL_SELECTOR)).find(node =>
-    /^tasters$/i.test(String(node.textContent || '').trim())
-  ) || null;
+  if (!root?.querySelector) return null;
+  return root.querySelector('.toggle button[data-filter="tasters"]');
 }
 
 export function ensureHalfCigarFilterControl(root = document) {
@@ -403,27 +278,17 @@ export function ensureHalfCigarFilterControl(root = document) {
 
   const button = doc.createElement('button');
   button.type = 'button';
-  button.className = tasterControl.className || '';
   button.textContent = 'Half Cigars';
   button.setAttribute('data-half-cigar-filter', '');
   button.setAttribute('aria-pressed', 'false');
   tasterControl.parentElement.insertBefore(button, tasterControl.nextSibling);
-  button.addEventListener('click', () => {
-    const active = bodyForRoot(root)?.classList?.contains('catalogue-half-only');
-    setHalfCigarOnly(root, !active);
-  });
-
-  const controls = tasterControl.parentElement;
-  if (controls.dataset.halfCigarExitBound !== '1') {
-    controls.dataset.halfCigarExitBound = '1';
-    controls.addEventListener('click', event => {
-      const control = event.target?.closest?.(CONTROL_SELECTOR);
-      if (!control || control.matches?.('[data-half-cigar-filter]')) return;
-      setHalfCigarOnly(root, false);
-      const body = bodyForRoot(root);
-      if (body) body.classList.toggle('catalogue-tasters-selected', /^tasters$/i.test(String(control.textContent || '').trim()));
-    });
-  }
+  button.addEventListener('click', event => {
+    event?.stopImmediatePropagation?.();
+    root.querySelectorAll('.toggle button').forEach(control => control.classList.remove('active'));
+    button.classList.add('active');
+    button.setAttribute('aria-pressed', 'true');
+    applyHalfCigarFilter(root);
+  }, { capture: true });
   return button;
 }
 
@@ -434,14 +299,10 @@ function refreshPresentation() {
   configureHalfCigarSection(document);
   markHalfCigarCards(document);
   normaliseExperienceTags(document);
-  document.querySelectorAll('article.card[data-key]').forEach(card => {
-    normaliseCardRankCaption(card);
-    ensureStockDot(card);
-  });
+  document.querySelectorAll('article.card[data-key]').forEach(ensureStockDot);
   reclassifyRecommendationCards(document);
-  refreshRankingSection(document);
-  ensureRecommendationsHeading(document);
-  ensureHalfCigarFilterControl(document);
+  const halfButton = ensureHalfCigarFilterControl(document);
+  if (halfButton?.classList?.contains('active')) applyHalfCigarFilter(document);
 }
 
 function scheduleRefresh() {
@@ -462,7 +323,7 @@ export function installCataloguePresentation() {
         childList:true,
         characterData:true,
         attributes:true,
-        attributeFilter:['class', 'data-stock', 'data-stock-pin', 'data-archived', 'data-taster', 'data-rank', 'data-key']
+        attributeFilter:['class', 'data-stock', 'data-stock-pin', 'data-archived', 'data-taster', 'data-key']
       });
     }
   };
