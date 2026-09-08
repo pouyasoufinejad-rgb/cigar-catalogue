@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-08-blackened-m81-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-m81-coronets",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "BLACKENED M81 Coronets — Tin of 10",
+    "eyebrow": "Dark all-Maduro Coronet",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 7,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, cola, dark rum or whiskey (projected)",
+      "Occasion: Quick rich smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, espresso, earth, toast, cedar and black pepper</strong> drive the M81 Coronet's dense all-Maduro profile. Mexican San Andrés over Connecticut Broadleaf and Nicaraguan-Pennsylvania Maduro tobaccos gives the 4″ × 32 format an unusually dark, forceful core for a Coronet, with cocoa and coffee richness underneath the pepper. It should be the more intense and more directly palate-aligned of the two BLACKENED small formats.",
+    "noteHtml": "Untasted. The Index lists the exact 4″ × 32 Coronet at A$13 singly and A$119 per tin of 10; both formats are currently available. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Mexican San Andrés Maduro",
+      "Binder: Connecticut Broadleaf Maduro",
+      "Filler: Nicaraguan + Pennsylvania Broadleaf Maduro"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 Coronet",
+      "Single available at A$13",
+      "Slow Cadence"
+    ],
+    "smokeTime": "About 20 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/blackened-m81-coronet?variant=47094620061945"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add BLACKENED M81 Coronets as an active untasted main-catalogue entry in the established compact-card house style. The Index lists the exact 4 x 32 Coronet at A$13 singly and A$119 per tin of 10, with both variants available. The Index specifies Mexican San Andres Maduro wrapper, USA Connecticut Broadleaf binder and Nicaraguan/Pennsylvania filler; Drew Estate describes M81 as a medium-full, all-Maduro, dark-chocolate/wood/toast profile. Strength 8 and Quality 8 are projections; leave Flavour unrated until tasted."
+}
