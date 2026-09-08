@@ -1,0 +1,177 @@
+name: Implement Axe Charutos quality exception
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-implement.yml
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Add exception logic and regression tests
+        run: |
+          cat > public/catalogue-rating-exceptions.mjs <<'EOF'
+          const QUALITY_AWARD_EXCEPTION_KEYS = new Set([
+            'alonso-menendez-axe-charutos'
+          ]);
+
+          function normaliseKey(value) {
+            return String(value || '').trim().toLowerCase();
+          }
+
+          export function qualityCountsForAwards(key, qualityGold = false) {
+            return Boolean(qualityGold) || QUALITY_AWARD_EXCEPTION_KEYS.has(normaliseKey(key));
+          }
+          EOF
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          flavour = Path('public/catalogue-flavour.mjs')
+          text = flavour.read_text()
+          replacements = [
+            (
+              "import { deriveValue } from './catalogue-value.mjs';\n",
+              "import { deriveValue } from './catalogue-value.mjs';\nimport { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';\n"
+            ),
+            (
+              "export function deriveAutoLaurel({ strength, quality, flavour, size, value } = {}) {",
+              "export function deriveAutoLaurel({ key = '', strength, quality, flavour, size, value } = {}) {"
+            ),
+            (
+              "  if (finite(quality, 0) >= 7) golds++;",
+              "  if (qualityCountsForAwards(key, finite(quality, 0) >= 7)) golds++;"
+            ),
+            (
+              "    kind = deriveAutoLaurel({ strength, quality, flavour, size, value });",
+              "    kind = deriveAutoLaurel({ key: card.dataset.key, strength, quality, flavour, size, value });"
+            )
+          ]
+          for old, new in replacements:
+            if text.count(old) != 1:
+              raise SystemExit(f'flavour replacement marker count was {text.count(old)} for: {old!r}')
+            text = text.replace(old, new, 1)
+          flavour.write_text(text)
+
+          presentation = Path('public/catalogue-presentation.mjs')
+          text = presentation.read_text()
+          old = "const STYLE_ID = 'catalogue-presentation-v151';\n"
+          new = "import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';\n\n" + old
+          if text.count(old) != 1:
+            raise SystemExit('presentation import marker not found exactly once')
+          text = text.replace(old, new, 1)
+
+          old = """export function recommendationDestination(labels = [], { flavourRated = false } = {}) {
+            const golds = new Set(normaliseGoldLabels(labels));
+            if (isSubstantialGoldSet(golds)) return 'substantial';
+            const strengthGold = golds.has('strength');
+            const qualityGold = golds.has('quality');
+            if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
+          """.replace('          ', '')
+          new = """export function recommendationDestination(labels = [], { flavourRated = false, key = '' } = {}) {
+            const golds = new Set(normaliseGoldLabels(labels));
+            const strengthGold = golds.has('strength');
+            const qualityGold = qualityCountsForAwards(key, golds.has('quality'));
+            if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
+            if (isSubstantialGoldSet(golds)) return 'substantial';
+          """.replace('          ', '')
+          if text.count(old) != 1:
+            raise SystemExit(f'presentation destination marker count was {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          old = "  return recommendationDestination(cardGoldLabels(card), { flavourRated: cardFlavourRated(card) });"
+          new = "  return recommendationDestination(cardGoldLabels(card), {\n    flavourRated: cardFlavourRated(card),\n    key: card?.dataset?.key || ''\n  });"
+          if text.count(old) != 1:
+            raise SystemExit('presentation card destination marker not found exactly once')
+          text = text.replace(old, new, 1)
+          presentation.write_text(text)
+
+          flavour_test = Path('test/flavour-rating.test.mjs')
+          text = flavour_test.read_text()
+          marker = "test('browser runtime loads Flavour UI, card hydration and save interception'"
+          addition = r'''test('Axe Charutos quality exception preserves Gem qualification without promoting other cigars', () => {
+            const qualifying = { strength: 7, quality: 6, flavour: 7, size: 'gold', value: 5 };
+            assert.equal(deriveAutoLaurel({ key: 'alonso-menendez-axe-charutos', ...qualifying }), 'gem');
+            assert.equal(deriveAutoLaurel({ key: 'ordinary-cigar', ...qualifying }), 'crown');
+          });
+
+          '''
+          if marker not in text:
+            raise SystemExit('flavour test marker not found')
+          flavour_test.write_text(text.replace(marker, addition + marker, 1))
+
+          elite_test = Path('test/elite-flavour-gating.test.mjs')
+          text = elite_test.read_text()
+          old = "function fakeCard(ratings = [], rank = 1) {\n  return {\n    dataset: { rank: String(rank), stock: 'in' },"
+          new = "function fakeCard(ratings = [], rank = 1, key = '') {\n  return {\n    dataset: { rank: String(rank), stock: 'in', key },"
+          if text.count(old) != 1:
+            raise SystemExit('fakeCard marker not found exactly once')
+          text = text.replace(old, new, 1)
+          marker = "test('rated non-Gold flavour moves an otherwise Elite card to Strong'"
+          addition = r'''test('Axe Charutos quality exception preserves Elite placement only for that card', () => {
+            const labels = ['strength', 'flavour'];
+            assert.equal(presentation.recommendationDestination(labels, {
+              flavourRated: true,
+              key: 'alonso-menendez-axe-charutos'
+            }), 'elite');
+            assert.equal(presentation.recommendationDestination(labels, {
+              flavourRated: true,
+              key: 'ordinary-cigar'
+            }), 'strong');
+            assert.equal(presentation.recommendationDestination(['strength', 'size'], {
+              flavourRated: false,
+              key: 'alonso-menendez-axe-charutos'
+            }), 'elite');
+
+            const axe = fakeCard([
+              fakeRating('Strength', ['gold']),
+              fakeRating('Quality', ['silver']),
+              fakeRating('Flavour', ['gold'])
+            ], 1, 'alonso-menendez-axe-charutos');
+            assert.equal(presentation.recommendationDestinationForCard(axe), 'elite');
+          });
+
+          '''
+          if marker not in text:
+            raise SystemExit('elite test marker not found')
+          elite_test.write_text(text.replace(marker, addition + marker, 1))
+          PY
+
+          cat > catalogue-requests/2026-09-08-axe-charutos-quality-silver.json <<'EOF'
+          {
+            "id": "2026-09-08-axe-charutos-quality-silver",
+            "operation": "upsert-entry",
+            "key": "alonso-menendez-axe-charutos",
+            "entry": {
+              "quality": 6
+            },
+            "note": "Downgrade Axe Charutos construction/Quality from Gold 7 to Silver 6. The named award exception preserves its Gem laurel and Elite eligibility without changing the displayed rating."
+          }
+          EOF
+
+      - name: Verify targeted regressions are GREEN
+        run: node --test test/flavour-rating.test.mjs test/elite-flavour-gating.test.mjs
+
+      - name: Verify full test suite
+        run: npm test
+
+      - name: Commit implementation and remove temporary files
+        run: |
+          rm -f axe-charutos-red-verified.txt axe-charutos-live-state.json
+          rm .github/workflows/axe-charutos-implement.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m 'Allow Axe Charutos quality award exception'
+          git push
