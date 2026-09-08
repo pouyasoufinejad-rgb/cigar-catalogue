@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-08-blackened-s84-shade-to-black-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-s84-shade-to-black-coronets",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "BLACKENED S84 Shade to Black Coronets — Tin of 10",
+    "eyebrow": "Creamy Shade over a dark Maduro core",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "out",
+    "rank": 14,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, dark chocolate or whiskey (projected)",
+      "Occasion: Quick rich smoke, coffee pairing, evening smoke"
+    ],
+    "summaryHtml": "<strong>Espresso, cream, cocoa, cedar and black pepper</strong> give S84 a smoother contrast between Connecticut Shade and a dark Maduro core. The Ecuadorian Connecticut wrapper softens the Broadleaf and Nicaraguan-Pennsylvania Maduro interior rather than turning the cigar mild, leaving chocolate, coffee and pepper beneath the creamy top note. It should be less forceful than M81 but considerably darker and richer than a conventional shade-wrapped cigar.",
+    "noteHtml": "Untasted. The Index lists the exact 4″ × 32 Coronet at A$13 singly and A$119 per tin of 10. The single is currently available but the tin of 10 is unavailable; Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Ecuadorian Connecticut Shade",
+      "Binder: Connecticut River Valley Broadleaf Maduro",
+      "Filler: Nicaraguan Maduro + Pennsylvania Broadleaf Maduro"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 Coronet",
+      "Single available at A$13",
+      "Slow Cadence"
+    ],
+    "smokeTime": "About 20 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/blackened-s84-shade-to-black-coronets?variant=47094620225785"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add BLACKENED S84 Shade to Black Coronets as an active untasted main-catalogue entry in the established compact-card house style. The Index lists the exact 4 x 32 Coronet at A$13 singly and A$119 per tin of 10; the single is available and the tin is currently unavailable. Drew Estate specifies Ecuadorian Connecticut Shade wrapper, Connecticut River Valley Broadleaf Maduro binder, and Nicaraguan Maduro/Pennsylvania Broadleaf Maduro fillers, with a medium body and creamy pepper profile. Strength 7 and Quality 8 are projections; leave Flavour unrated until tasted."
+}
