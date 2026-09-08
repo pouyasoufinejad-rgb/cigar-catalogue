@@ -1,0 +1,60 @@
+name: Verify Joya cigarillo additions
+
+on:
+  push:
+    paths:
+      - .github/workflows/verify-joya-cigarillos.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify final live state and production rendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides > /tmp/state.json
+          curl -fsS 'https://cigar-catalogue.psncodex.workers.dev/?catalogue_source=rankings' > /tmp/live.html
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const state = JSON.parse(readFileSync('/tmp/state.json', 'utf8'));
+          const html = readFileSync('/tmp/live.html', 'utf8');
+          const expected = {
+            'joya-black-cigarillo': { rank: 14, strength: 6, quality: 7, price: 11.9, length: 4, ring: 32 },
+            'joya-antano-1970-cigarillo': { rank: 15, strength: 8, quality: 7, price: 11.9, length: 4, ring: 32 }
+          };
+          const lines = [];
+          for (const [key, fields] of Object.entries(expected)) {
+            const entry = state.entries?.[key];
+            const card = state.cards?.[key];
+            assert.ok(entry, `Missing live entry ${key}`);
+            assert.ok(card, `Missing live card override ${key}`);
+            for (const [field, value] of Object.entries(fields)) {
+              const actual = field === 'rank' ? card.rank : entry[field];
+              assert.equal(Number(actual), Number(value), `${key} ${field}`);
+            }
+            assert.equal(Boolean(card.taster), false, `${key} taster`);
+            assert.equal(Boolean(card.archived), false, `${key} archived`);
+            assert.ok(html.includes(`data-key="${key}"`) || html.includes(`data-key='${key}'`), `Production HTML missing ${key}`);
+            lines.push(`${key}: rank=${card.rank}, strength=${entry.strength}, quality=${entry.quality}, price=${entry.price}, size=${entry.length}x${entry.ring}`);
+          }
+          const mainRanks = Object.values(state.cards || {})
+            .filter(card => card && !card.archived && !card.taster && Number.isFinite(Number(card.rank)))
+            .map(card => Number(card.rank))
+            .sort((a,b) => a-b);
+          mainRanks.forEach((rank, index) => assert.equal(rank, index + 1, `main rank ${index + 1}`));
+          writeFileSync('joya-cigarillos-live-verified.txt', `Final live verification passed.\n${lines.join('\n')}\nMain rankings contiguous: 1-${mainRanks.length}.\n`);
+          NODE
+      - name: Commit verification marker and remove workflow
+        run: |
+          rm .github/workflows/verify-joya-cigarillos.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add joya-cigarillos-live-verified.txt .github/workflows/verify-joya-cigarillos.yml
+          git commit -m 'Verify Joya cigarillo additions live'
+          git push
