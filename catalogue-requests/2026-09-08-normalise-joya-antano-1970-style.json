@@ -1,0 +1,22 @@
+{
+  "id": "2026-09-08-normalise-joya-antano-1970-style",
+  "operation": "upsert-entry",
+  "key": "joya-antano-1970-cigarillo",
+  "entry": {
+    "eyebrow": "Full-strength Nicaraguan puro cigarillo",
+    "summaryHtml": "<strong>Black pepper, earth, cocoa, coffee, cedar and dark-fruit sweetness</strong> give Antaño 1970 a dense, forceful Nicaraguan profile. The ligero-heavy puro brings substantial nicotine and a dry pepper backbone, while cocoa, coffee and black-cherry sweetness add enough depth to keep the strength from becoming one-dimensional. The 4″ × 32 format should make this one of the hardest-hitting quick smokes in the catalogue.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Nicaraguan Habano Criollo",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan ligero"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 cigarillo",
+      "Single available at A$13",
+      "Slow Cadence"
+    ]
+  },
+  "note": "Normalise Antaño 1970 to the established compact-card house style: remove research/report language and the redundant puro Production line, and keep Practical to package, size, single availability and cadence. Preserve all ratings, pricing, stock, notes and ranking."
+}
