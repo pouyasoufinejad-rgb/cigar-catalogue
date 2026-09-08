@@ -60,6 +60,12 @@ test('auto laurels count Flavour Gold while preserving the Strength 5+ gate', ()
   assert.equal(deriveAutoLaurel({ strength: 6, quality: 7, flavour: null, size: 'gold', value: 7 }), 'crown');
 });
 
+test('Axe Charutos quality exception preserves Gem qualification without promoting other cigars', () => {
+  const qualifying = { strength: 7, quality: 6, flavour: 7, size: 'gold', value: 5 };
+  assert.equal(deriveAutoLaurel({ key: 'alonso-menendez-axe-charutos', ...qualifying }), 'gem');
+  assert.equal(deriveAutoLaurel({ key: 'ordinary-cigar', ...qualifying }), 'crown');
+});
+
 test('browser runtime loads Flavour UI, card hydration and save interception', () => {
   assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs'\)/);
   assert.match(flavourSource, /catalogue-admin-flavour/);

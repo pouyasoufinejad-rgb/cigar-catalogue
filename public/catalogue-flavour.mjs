@@ -1,4 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
+import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';
 
 const STATE_API = '/api/catalogue-overrides';
 const SCORE_CLASSES = ['gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low', 'flavour-unrated'];
@@ -50,12 +51,12 @@ export function injectFlavourIntoStatePayload(payload, key, value) {
   };
 }
 
-export function deriveAutoLaurel({ strength, quality, flavour, size, value } = {}) {
+export function deriveAutoLaurel({ key = '', strength, quality, flavour, size, value } = {}) {
   const strengthScore = finite(strength, 0);
   if (strengthScore < 5) return 'none';
   let golds = 0;
   if (strengthScore >= 7) golds++;
-  if (finite(quality, 0) >= 7) golds++;
+  if (qualityCountsForAwards(key, finite(quality, 0) >= 7)) golds++;
   const flavourScore = normaliseFlavour(flavour);
   if (flavourScore !== null && flavourScore >= 7) golds++;
   if (String(size || '').toLowerCase() === 'gold') golds++;
@@ -209,7 +210,7 @@ function refreshLaurelForCard(card, saved = {}) {
     const flavour = own(saved, 'flavour') ? saved.flavour : null;
     const size = saved.size || ratingTier(card, 'Size', 'bronze');
     const value = ratingScore(card, 'Value', 0);
-    kind = deriveAutoLaurel({ strength, quality, flavour, size, value });
+    kind = deriveAutoLaurel({ key: card.dataset.key, strength, quality, flavour, size, value });
   }
   applyLaurelKind(card, kind);
 }

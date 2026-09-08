@@ -10,9 +10,9 @@ function fakeRating(label, classes = []) {
   };
 }
 
-function fakeCard(ratings = [], rank = 1) {
+function fakeCard(ratings = [], rank = 1, key = '') {
   return {
-    dataset: { rank: String(rank), stock: 'in' },
+    dataset: { rank: String(rank), stock: 'in', key },
     classList: { contains: () => false },
     closest: () => null,
     parentElement: null,
@@ -68,6 +68,29 @@ test('card recommendation distinguishes unrated from rated non-Gold flavour', ()
   assert.equal(presentation.recommendationDestinationForCard(unrated), 'elite');
   assert.equal(presentation.recommendationDestinationForCard(gold), 'elite');
   assert.equal(presentation.recommendationDestinationForCard(silver), 'strong');
+});
+
+test('Axe Charutos quality exception preserves Elite placement only for that card', () => {
+  const labels = ['strength', 'flavour'];
+  assert.equal(presentation.recommendationDestination(labels, {
+    flavourRated: true,
+    key: 'alonso-menendez-axe-charutos'
+  }), 'elite');
+  assert.equal(presentation.recommendationDestination(labels, {
+    flavourRated: true,
+    key: 'ordinary-cigar'
+  }), 'strong');
+  assert.equal(presentation.recommendationDestination(['strength', 'size'], {
+    flavourRated: false,
+    key: 'alonso-menendez-axe-charutos'
+  }), 'elite');
+
+  const axe = fakeCard([
+    fakeRating('Strength', ['gold']),
+    fakeRating('Quality', ['silver']),
+    fakeRating('Flavour', ['gold'])
+  ], 1, 'alonso-menendez-axe-charutos');
+  assert.equal(presentation.recommendationDestinationForCard(axe), 'elite');
 });
 
 test('rated non-Gold flavour moves an otherwise Elite card to Strong', () => {

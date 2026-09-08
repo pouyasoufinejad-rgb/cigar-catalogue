@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-08-axe-charutos-quality-silver",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-axe-charutos",
+  "entry": {
+    "quality": 6
+  },
+  "note": "Downgrade Axe Charutos construction/Quality from Gold 7 to Silver 6. The named award exception preserves its Gem laurel and Elite eligibility without changing the displayed rating."
+}

@@ -1,3 +1,5 @@
+import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';
+
 const STYLE_ID = 'catalogue-presentation-v151';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
 
@@ -13,12 +15,12 @@ export function isSubstantialGoldSet(labels = []) {
     || golds.length === 2 && golds[0] === 'size' && golds[1] === 'strength';
 }
 
-export function recommendationDestination(labels = [], { flavourRated = false } = {}) {
+export function recommendationDestination(labels = [], { flavourRated = false, key = '' } = {}) {
   const golds = new Set(normaliseGoldLabels(labels));
-  if (isSubstantialGoldSet(golds)) return 'substantial';
   const strengthGold = golds.has('strength');
-  const qualityGold = golds.has('quality');
+  const qualityGold = qualityCountsForAwards(key, golds.has('quality'));
   if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
+  if (isSubstantialGoldSet(golds)) return 'substantial';
   if (strengthGold || qualityGold) return 'strong';
   if (golds.has('value')) return 'noteworthy-cheap';
   return 'noteworthy-neither';
@@ -99,7 +101,10 @@ function cardFlavourRated(card) {
 }
 
 export function recommendationDestinationForCard(card) {
-  return recommendationDestination(cardGoldLabels(card), { flavourRated: cardFlavourRated(card) });
+  return recommendationDestination(cardGoldLabels(card), {
+    flavourRated: cardFlavourRated(card),
+    key: card?.dataset?.key || ''
+  });
 }
 
 function effectiveStockStatus(card) {
