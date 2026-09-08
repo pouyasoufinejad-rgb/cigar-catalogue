@@ -228,17 +228,18 @@ function cleanEyebrowLabel(value) {
     .trim();
 }
 
-function updateCardRankVisual(card) {
+export function updateCardRankVisual(card) {
   if (!card || card.dataset?.archived === '1') return;
   const type = cardCatalogueType(card);
   const display = rankDisplayForType(type, card.dataset?.rank);
   const rankflag = card.querySelector?.('.rankflag');
   const label = rankflag?.querySelector?.('span');
   const value = rankflag?.querySelector?.('b');
-  if (label) label.textContent = display.label;
-  if (value) value.textContent = display.value;
+  if (label && label.textContent !== display.label) label.textContent = display.label;
+  if (value && value.textContent !== display.value) value.textContent = display.value;
   const eyebrow = card.querySelector?.('.eyebrow');
-  if (eyebrow) eyebrow.textContent = `${display.eyebrow} — ${cleanEyebrowLabel(eyebrow.textContent)}`;
+  const nextEyebrow = `${display.eyebrow} — ${cleanEyebrowLabel(eyebrow?.textContent)}`;
+  if (eyebrow && eyebrow.textContent !== nextEyebrow) eyebrow.textContent = nextEyebrow;
 }
 
 function compactDomCohortRanks(root = document) {
