@@ -1,0 +1,112 @@
+name: Fix Axe Charutos exception scope
+
+on:
+  push:
+    paths:
+      - .github/workflows/axe-charutos-scope-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restrict exception to Gem and Elite
+        run: |
+          cat > public/catalogue-rating-exceptions.mjs <<'EOF'
+          const QUALITY_AWARD_EXCEPTION_KEYS = new Set([
+            'alonso-menendez-axe-charutos'
+          ]);
+
+          function normaliseKey(value) {
+            return String(value || '').trim().toLowerCase();
+          }
+
+          export function hasQualityAwardException(key) {
+            return QUALITY_AWARD_EXCEPTION_KEYS.has(normaliseKey(key));
+          }
+          EOF
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          p = Path('public/catalogue-flavour.mjs')
+          s = p.read_text()
+          replacements = [
+            (
+              "import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';",
+              "import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';"
+            ),
+            (
+              "  if (qualityCountsForAwards(key, finite(quality, 0) >= 7)) golds++;",
+              "  const qualityGold = finite(quality, 0) >= 7;\n  if (qualityGold) golds++;"
+            ),
+            (
+              "  if (golds >= 4) return 'gem';\n  if (golds >= 3) return 'crown';",
+              "  if (golds >= 4 || (!qualityGold && hasQualityAwardException(key) && golds >= 3)) return 'gem';\n  if (golds >= 3) return 'crown';"
+            )
+          ]
+          for old, new in replacements:
+            if s.count(old) != 1:
+              raise SystemExit(f'flavour marker count {s.count(old)} for {old!r}')
+            s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('public/catalogue-presentation.mjs')
+          s = p.read_text()
+          replacements = [
+            (
+              "import { qualityCountsForAwards } from './catalogue-rating-exceptions.mjs';",
+              "import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';"
+            ),
+            (
+              "  const qualityGold = qualityCountsForAwards(key, golds.has('quality'));\n  if (strengthGold && qualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';",
+              "  const qualityGold = golds.has('quality');\n  const eliteQualityGold = qualityGold || hasQualityAwardException(key);\n  if (strengthGold && eliteQualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';"
+            )
+          ]
+          for old, new in replacements:
+            if s.count(old) != 1:
+              raise SystemExit(f'presentation marker count {s.count(old)} for {old!r}')
+            s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('test/flavour-rating.test.mjs')
+          s = p.read_text()
+          marker = "test('browser runtime loads Flavour UI, card hydration and save interception'"
+          addition = """test('Axe Charutos quality exception does not create lower-tier laurels', () => {\n  assert.equal(deriveAutoLaurel({ key: 'alonso-menendez-axe-charutos', strength: 7, quality: 6, flavour: 7, size: 'bronze', value: 5 }), 'none');\n});\n\n"""
+          if marker not in s or 'does not create lower-tier laurels' in s:
+            raise SystemExit('unexpected flavour scope-test state')
+          p.write_text(s.replace(marker, addition + marker, 1))
+
+          p = Path('test/elite-flavour-gating.test.mjs')
+          s = p.read_text()
+          marker = "test('rated non-Gold flavour moves an otherwise Elite card to Strong'"
+          addition = """test('Axe Charutos quality exception does not create Strong eligibility', () => {\n  assert.equal(presentation.recommendationDestination(['value'], { flavourRated: false, key: 'alonso-menendez-axe-charutos' }), 'noteworthy-cheap');\n});\n\n"""
+          if marker not in s or 'does not create Strong eligibility' in s:
+            raise SystemExit('unexpected elite scope-test state')
+          p.write_text(s.replace(marker, addition + marker, 1))
+          PY
+
+      - name: Verify Axe Charutos regression tests
+        run: node --test test/flavour-rating.test.mjs test/elite-flavour-gating.test.mjs
+
+      - name: Verify full test suite
+        run: npm test
+
+      - name: Commit narrowed exception
+        run: |
+          rm -f axe-charutos-scope-red-verified.txt
+          rm -f .github/workflows/axe-charutos-scope-fix.yml
+          rm -f .github/workflows/axe-charutos-scope-refine.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Restrict Axe Charutos exception to Gem and Elite'
+          git push
