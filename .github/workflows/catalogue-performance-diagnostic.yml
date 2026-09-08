@@ -17,6 +17,23 @@ jobs:
         run: |
           set -euo pipefail
           base='https://cigar-catalogue.psncodex.workers.dev'
+          echo '=== live module deployment ==='
+          deployed=0
+          for attempt in $(seq 1 18); do
+            curl -fsS "$base/catalogue-admin-unified-v139.mjs?deploy_probe=$attempt" -o /tmp/admin.mjs
+            if grep -Fq 'loadStateForBrowser({ applyStructural: false })' /tmp/admin.mjs; then
+              echo "optimized_module_live=1 attempt=$attempt"
+              deployed=1
+              break
+            fi
+            echo "optimized_module_live=0 attempt=$attempt"
+            sleep 5
+          done
+          if [[ "$deployed" != 1 ]]; then
+            echo '::error::Live Worker is not serving the optimized admin module.'
+            exit 1
+          fi
+
           echo '=== catalogue state ==='
           curl -fsS "$base/api/catalogue-overrides" -o /tmp/state.json
           node - <<'NODE'
