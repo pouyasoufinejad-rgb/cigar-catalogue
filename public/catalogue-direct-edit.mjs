@@ -160,10 +160,15 @@ function selectCard(card) {
   selected.scrollIntoView?.({ block:'nearest', behavior:'smooth' });
 }
 
+function closeDiagnosticSections() {
+  document.querySelectorAll('.legend-dropdown, #test-impact-map').forEach(section => section.removeAttribute('open'));
+}
+
 function enterEditMode() {
   editMode = true;
   ensureStyles();
   ensurePanel();
+  closeDiagnosticSections();
   document.body.classList.add('catalogue-direct-edit-mode');
   const toggle = q('catalogue-admin-toggle');
   if (toggle) toggle.textContent = 'Finish editing';

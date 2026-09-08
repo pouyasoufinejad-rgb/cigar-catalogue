@@ -12,6 +12,13 @@ test('Edit catalogue activates direct card edit mode instead of opening the drop
   assert.match(directEdit, /catalogue-direct-edit-mode/);
 });
 
+test('entering direct edit mode closes the legend and benchmarks details', () => {
+  assert.match(directEdit, /function closeDiagnosticSections\(\)/);
+  assert.match(directEdit, /querySelectorAll\('\.legend-dropdown, #test-impact-map'\)/);
+  assert.match(directEdit, /removeAttribute\('open'\)/);
+  assert.match(directEdit, /function enterEditMode\(\)[\s\S]*?closeDiagnosticSections\(\)/);
+});
+
 test('clicking a card selects it and exposes in-place text editing plus image controls', () => {
   assert.match(directEdit, /article\.card\[data-key\]/);
   assert.match(directEdit, /contentEditable\s*=\s*enabled\s*\?\s*'true'/);
