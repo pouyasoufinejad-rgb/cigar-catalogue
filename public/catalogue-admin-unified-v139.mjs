@@ -1144,8 +1144,22 @@ async function saveUnified() {
     }
     setStatus('Saving catalogue fields and sections to Cloudflare KV…');
     await putState(plan.statePayload);
-    setStatus('Saved site-wide. Reloading…');
-    setTimeout(() => location.reload(), 250);
+    setStatus('Saved site-wide. Refreshing catalogue…');
+    await new Promise(resolve => setTimeout(resolve, 250));
+    await loadStateForBrowser({ showMessage: false, applyStructural: true });
+    if (!serverAvailableForBrowser) {
+      location.reload();
+      return;
+    }
+    modeForBrowser = 'edit';
+    draftSourceEditorial = null;
+    draftSourceStructural = null;
+    removeDraftOption();
+    rebuildCardSelectFromDom(key);
+    closeEditor();
+    saveButton.disabled = false;
+    reloadButton.disabled = false;
+    setStatus('Saved site-wide.');
   } catch (error) {
     setStatus(`Save failed: ${error.message || error}`, true);
     saveButton.disabled = false; reloadButton.disabled = false;
