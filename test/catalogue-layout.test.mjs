@@ -67,16 +67,11 @@ function createCountryCard() {
   };
 }
 
-test('Substantial format sits immediately before the Noteworthy tier', () => {
+test('legacy Substantial mount remains available for runtime Half-Cigar presentation', () => {
   const tree = parseDivTree(catalogueHtml);
   const substantial = findDiv(tree, 'data-noteworthy-section', 'substantial');
-  const noteworthy = findDiv(tree, 'data-tier-section', 'noteworthy');
 
-  assert.ok(substantial, 'Substantial format group must exist');
-  assert.ok(noteworthy, 'Noteworthy tier must exist');
-  assert.equal(substantial.parent, noteworthy.parent, 'both sections must be siblings');
-  const substantialIndex = substantial.parent.children.indexOf(substantial);
-  assert.equal(substantial.parent.children[substantialIndex + 1], noteworthy, 'Noteworthy must be the next sibling');
+  assert.ok(substantial, 'legacy Substantial mount must remain available for the presentation runtime');
 });
 
 test('the former Neither group is presented as Flavoured & Infused Cigars', () => {

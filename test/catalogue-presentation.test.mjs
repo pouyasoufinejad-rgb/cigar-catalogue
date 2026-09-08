@@ -16,34 +16,75 @@ test('catalogue loader installs the presentation runtime', () => {
   assert.match(valueLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
 });
 
-test('Substantial format accepts only Size Gold or Strength plus Size Gold', () => {
+test('Half-Cigar cue matcher accepts half and halv forms case-insensitively', () => {
   assert.ok(presentation, 'catalogue presentation module must load');
-  assert.equal(presentation.isSubstantialGoldSet(['size']), true);
-  assert.equal(presentation.isSubstantialGoldSet(['strength', 'size']), true);
-
-  for (const labels of [
-    ['size', 'quality'],
-    ['size', 'flavour'],
-    ['size', 'value'],
-    ['strength', 'size', 'quality'],
-    ['strength', 'size', 'flavour'],
-    ['strength', 'size', 'value'],
-    ['strength'],
-    ['quality', 'flavour']
-  ]) {
-    assert.equal(presentation.isSubstantialGoldSet(labels), false, `${labels.join('+')} must not be Substantial`);
-  }
+  assert.equal(presentation.containsHalfCigarCue('Half Corona'), true);
+  assert.equal(presentation.containsHalfCigarCue('halve before lighting'), true);
+  assert.equal(presentation.containsHalfCigarCue('HALVED FORMAT'), true);
+  assert.equal(presentation.containsHalfCigarCue('halving format'), true);
+  assert.equal(presentation.containsHalfCigarCue('ordinary corona'), false);
 });
 
-test('cards excluded from Substantial fall back to their normal recommendation destination', () => {
+test('Half-Cigar classification includes every entry containing half or halve wording', () => {
   assert.ok(presentation, 'catalogue presentation module must load');
-  assert.equal(presentation.recommendationDestination(['size']), 'substantial');
-  assert.equal(presentation.recommendationDestination(['strength', 'size']), 'substantial');
+
+  const practicalCard = {
+    dataset: { key: 'example-corona' },
+    querySelector(selector) {
+      if (selector === 'h3') return { textContent: 'Example Corona' };
+      if (selector === '.artmeta-right') return { textContent: 'Single · Halve before smoking' };
+      if (selector === '.mog-note') return { textContent: '' };
+      if (selector === '.summary') return { textContent: 'Ordinary tasting prose' };
+      return null;
+    }
+  };
+  assert.equal(presentation.isHalfCigarCard(practicalCard), true);
+
+  const titleCard = {
+    dataset: { key: 'h-upmann-half-corona' },
+    querySelector(selector) {
+      if (selector === 'h3') return { textContent: 'H. Upmann Half Corona' };
+      if (selector === '.artmeta-right') return { textContent: 'Single' };
+      if (selector === '.mog-note') return { textContent: '' };
+      return null;
+    }
+  };
+  assert.equal(presentation.isHalfCigarCard(titleCard), true);
+
+  const summaryOnlyCard = {
+    dataset: { key: 'ordinary-corona' },
+    querySelector(selector) {
+      if (selector === 'h3') return { textContent: 'Ordinary Corona' };
+      if (selector === '.artmeta-right') return { textContent: 'Single · Uncut' };
+      if (selector === '.mog-note') return { textContent: '' };
+      if (selector === '.summary') return { textContent: 'Pepper grows in the second half.' };
+      return null;
+    }
+  };
+  assert.equal(presentation.isHalfCigarCard(summaryOnlyCard), true);
+});
+
+test('recommendation routing no longer creates a rating-driven Substantial destination', () => {
+  assert.ok(presentation, 'catalogue presentation module must load');
+  assert.equal(presentation.recommendationDestination(['size']), 'noteworthy-neither');
+  assert.equal(presentation.recommendationDestination(['strength', 'size']), 'strong');
   assert.equal(presentation.recommendationDestination(['quality', 'size']), 'strong');
   assert.equal(presentation.recommendationDestination(['strength', 'size', 'flavour']), 'strong');
   assert.equal(presentation.recommendationDestination(['strength', 'quality', 'size']), 'elite');
   assert.equal(presentation.recommendationDestination(['size', 'value']), 'noteworthy-cheap');
   assert.equal(presentation.recommendationDestination(['size', 'flavour']), 'noteworthy-neither');
+  assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
+});
+
+test('presentation runtime owns Half-Cigar section order, ranking, and Half Cigars-only control', () => {
+  assert.match(presentationSource, /The Half-Cigar/);
+  assert.match(presentationSource, /data-noteworthy-section=["']substantial["']/);
+  assert.match(presentationSource, /data-tier-section=["']strong["']/);
+  assert.match(presentationSource, /strongSection\.nextSibling/);
+  assert.match(presentationSource, /data-ranking-section/);
+  assert.match(presentationSource, /data-half-cigar-filter/);
+  assert.match(presentationSource, /Half Cigars/);
+  assert.match(presentationSource, /data-half-cigar/);
 });
 
 test('stock state maps to one traffic-light dot colour', () => {
