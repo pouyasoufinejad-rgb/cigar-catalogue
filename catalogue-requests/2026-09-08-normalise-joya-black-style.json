@@ -1,0 +1,22 @@
+{
+  "id": "2026-09-08-normalise-joya-black-style",
+  "operation": "upsert-entry",
+  "key": "joya-black-cigarillo",
+  "entry": {
+    "eyebrow": "Sweet San Andrés quick smoke",
+    "summaryHtml": "<strong>Cocoa, sweet tobacco, fruit, nuts and pepper</strong> give JOYA Black a dark but rounded small-format profile. Mexican San Andrés over an all-Nicaraguan core keeps the smoke richer and sweeter than its medium body suggests, with the early pepper settling into cocoa, fruit and a nutty finish. The 4″ × 32 format should favour concentration without the nicotine aggression of Antaño 1970.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "4″ × 32 cigarillo",
+      "Single available at A$13",
+      "Slow Cadence"
+    ]
+  },
+  "note": "Normalise JOYA Black to the established compact-card house style: direct sensory prose, concise Production facts, and Practical lines limited to package, size, single availability and cadence. Preserve all ratings, pricing, stock, notes and ranking."
+}
