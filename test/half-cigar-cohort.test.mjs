@@ -20,6 +20,35 @@ test('Half-Cigar is a third catalogue type with its own H ranking', () => {
   });
 });
 
+test('legacy half or halve wording migrates only entries without an explicit catalogue type', () => {
+  assert.ok(cohort, 'Half-Cigar cohort module must load');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'Pre-cut in half before lighting' }), 'half');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'Halve before smoking' }), 'half');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'H. Upmann Half Corona' }), 'half');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'Half Corona', catalogueType: 'main' }), 'main');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'Half Corona', catalogueType: 'taster' }), 'taster');
+  assert.equal(cohort.catalogueTypeFromFields({ text: 'Ordinary robusto' }), 'main');
+});
+
+test('cohort ranks are compact and independent after legacy migration', () => {
+  assert.ok(cohort, 'Half-Cigar cohort module must load');
+  const rows = [
+    { key: 'main-a', rank: 1, catalogueType: 'main', archived: false },
+    { key: 'legacy-half', rank: 2, catalogueType: 'half', archived: false },
+    { key: 'main-c', rank: 3, catalogueType: 'main', archived: false },
+    { key: 'legacy-halve', rank: 9, catalogueType: 'half', archived: false },
+    { key: 'taster-a', rank: 4, catalogueType: 'taster', archived: false }
+  ];
+  const ranked = cohort.compactCatalogueCohorts(rows);
+  assert.deepEqual(ranked.map(row => [row.key, row.catalogueType, row.rank]), [
+    ['main-a', 'main', 1],
+    ['legacy-half', 'half', 1],
+    ['main-c', 'main', 2],
+    ['legacy-halve', 'half', 2],
+    ['taster-a', 'taster', 1]
+  ]);
+});
+
 test('moving a recommendation into Half-Cigar compacts main and ranks Half-Cigar independently', () => {
   assert.ok(cohort, 'Half-Cigar cohort module must load');
   const rows = [
