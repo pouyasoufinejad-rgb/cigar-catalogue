@@ -10,19 +10,13 @@ function rating(label, classes = []) {
   };
 }
 
-function card(key, rank, { title = '', practical = '', note = '' } = {}) {
+function card(key, rank, { catalogueType = 'main' } = {}) {
   const ratings = [rating('Strength', ['gold']), rating('Quality', ['silver']), rating('Size', ['gold'])];
   return {
-    dataset: { key, rank: String(rank), stock: 'in', archived: '0', taster: '0' },
+    dataset: { key, rank: String(rank), stock: 'in', archived: '0', catalogueType },
     classList: { contains: () => false },
     closest: () => null,
     parentElement: null,
-    querySelector: selector => {
-      if (selector === 'h3') return { textContent: title || key };
-      if (selector === '.artmeta-right') return { textContent: practical };
-      if (selector === '.mog-note') return { textContent: note };
-      return null;
-    },
     querySelectorAll: selector => selector === '.rating.gold'
       ? ratings.filter(item => item.classList.contains('gold'))
       : selector === '.rating' ? ratings : []
@@ -48,66 +42,42 @@ function grid() {
   return value;
 }
 
-test('moving in-stock half and halve entries into The Half-Cigar refreshes group visibility immediately', () => {
-  const strong = grid();
-  const halfCigar = grid();
-  const elite = grid();
-  const cheap = grid();
-  const neither = grid();
-  const halfTitle = card('example-half-corona', 12, { title: 'Example Half Corona' });
-  const halvePractical = card('example-long-corona', 13, { practical: 'Single · Halve before smoking' });
-  strong.appendChild(halfTitle);
-  strong.appendChild(halvePractical);
-
+function rootFor(cards, strong, elite, cheap, neither) {
   const selectors = new Map([
-    ['[data-noteworthy-section="substantial"] .grid', halfCigar],
     ['[data-tier-section="elite"] .grid', elite],
     ['[data-tier-section="strong"] .grid', strong],
     ['[data-noteworthy-section="cheap"] .grid', cheap],
     ['[data-noteworthy-section="neither"] .grid', neither]
   ]);
-  const root = {
+  return {
     getElementById: id => id === 'sort' ? { value: 'rank' } : null,
     querySelector: selector => selectors.get(selector) || null,
-    querySelectorAll: selector => selector === 'article.card[data-key]' ? [...strong.children, ...halfCigar.children] : []
+    querySelectorAll: selector => selector === 'article.card[data-key]' ? cards : []
   };
+}
 
-  let visibilityRefreshes = 0;
-  const previousWindow = globalThis.window;
-  globalThis.window = { refreshGroupVisibility: () => { visibilityRefreshes += 1; } };
-  try {
-    assert.equal(presentation.reclassifySubstantialCards(root), 2);
-    assert.equal(halfTitle.parentElement, halfCigar);
-    assert.equal(halvePractical.parentElement, halfCigar);
-    assert.equal(visibilityRefreshes, 1);
-  } finally {
-    if (previousWindow === undefined) delete globalThis.window;
-    else globalThis.window = previousWindow;
-  }
+test('Strength plus Size Gold without a separate cohort stays in Strong', () => {
+  const strong = grid();
+  const elite = grid();
+  const cheap = grid();
+  const neither = grid();
+  const ordinary = card('ordinary-corona', 14);
+  neither.appendChild(ordinary);
+  const root = rootFor([ordinary], strong, elite, cheap, neither);
+
+  assert.equal(presentation.reclassifyRecommendationCards(root), 1);
+  assert.equal(ordinary.parentElement, strong);
 });
 
-test('Strength plus Size Gold without half or halve stays in Strong', () => {
+test('explicit Half-Cigar entries are ignored by recommendation routing', () => {
   const strong = grid();
-  const halfCigar = grid();
   const elite = grid();
   const cheap = grid();
   const neither = grid();
-  const ordinary = card('ordinary-corona', 14, { title: 'Ordinary Corona', practical: 'Single · Uncut' });
-  halfCigar.appendChild(ordinary);
+  const half = card('half-session', 1, { catalogueType: 'half' });
+  strong.appendChild(half);
+  const root = rootFor([half], strong, elite, cheap, neither);
 
-  const selectors = new Map([
-    ['[data-noteworthy-section="substantial"] .grid', halfCigar],
-    ['[data-tier-section="elite"] .grid', elite],
-    ['[data-tier-section="strong"] .grid', strong],
-    ['[data-noteworthy-section="cheap"] .grid', cheap],
-    ['[data-noteworthy-section="neither"] .grid', neither]
-  ]);
-  const root = {
-    getElementById: id => id === 'sort' ? { value: 'rank' } : null,
-    querySelector: selector => selectors.get(selector) || null,
-    querySelectorAll: selector => selector === 'article.card[data-key]' ? [...strong.children, ...halfCigar.children] : []
-  };
-
-  assert.equal(presentation.reclassifySubstantialCards(root), 1);
-  assert.equal(ordinary.parentElement, strong);
+  assert.equal(presentation.reclassifyRecommendationCards(root), 0);
+  assert.equal(half.parentElement, strong);
 });

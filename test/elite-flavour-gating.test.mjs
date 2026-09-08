@@ -97,14 +97,12 @@ test('Axe Charutos quality exception does not create Strong eligibility', () => 
   assert.equal(presentation.recommendationDestination(['value'], { flavourRated: false, key: 'alonso-menendez-axe-charutos' }), 'noteworthy-cheap');
 });
 
-test('rated non-Gold flavour moves an otherwise Elite card to Strong', () => {
+test('rated non-Gold flavour moves an otherwise Elite recommendation to Strong', () => {
   const elite = fakeGrid();
   const strong = fakeGrid();
-  const substantial = fakeGrid();
   const cheap = fakeGrid();
   const neither = fakeGrid();
   const selectors = new Map([
-    ['[data-noteworthy-section="substantial"] .grid', substantial],
     ['[data-tier-section="elite"] .grid', elite],
     ['[data-tier-section="strong"] .grid', strong],
     ['[data-noteworthy-section="cheap"] .grid', cheap],
@@ -135,7 +133,7 @@ test('rated non-Gold flavour moves an otherwise Elite card to Strong', () => {
   elite.appendChild(unrated);
   elite.appendChild(ratedGold);
 
-  assert.equal(presentation.reclassifySubstantialCards(root), 1);
+  assert.equal(presentation.reclassifyRecommendationCards(root), 1);
   assert.equal(ratedSilver.parentElement, strong);
   assert.equal(unrated.parentElement, elite);
   assert.equal(ratedGold.parentElement, elite);

@@ -12,56 +12,9 @@ try {
 const valueLoader = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
 const presentationSource = await readFile(new URL('../public/catalogue-presentation.mjs', import.meta.url), 'utf8').catch(() => '');
 
-test('catalogue loader installs the presentation runtime', () => {
+test('catalogue loader installs presentation and Half-Cigar cohort runtimes', () => {
   assert.match(valueLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
-});
-
-test('Half-Cigar cue matcher accepts half and halv forms case-insensitively', () => {
-  assert.ok(presentation, 'catalogue presentation module must load');
-  assert.equal(presentation.containsHalfCigarCue('Half Corona'), true);
-  assert.equal(presentation.containsHalfCigarCue('halve before lighting'), true);
-  assert.equal(presentation.containsHalfCigarCue('HALVED FORMAT'), true);
-  assert.equal(presentation.containsHalfCigarCue('halving format'), true);
-  assert.equal(presentation.containsHalfCigarCue('ordinary corona'), false);
-});
-
-test('Half-Cigar classification includes every entry containing half or halve wording', () => {
-  assert.ok(presentation, 'catalogue presentation module must load');
-
-  const practicalCard = {
-    dataset: { key: 'example-corona' },
-    querySelector(selector) {
-      if (selector === 'h3') return { textContent: 'Example Corona' };
-      if (selector === '.artmeta-right') return { textContent: 'Single · Halve before smoking' };
-      if (selector === '.mog-note') return { textContent: '' };
-      if (selector === '.summary') return { textContent: 'Ordinary tasting prose' };
-      return null;
-    }
-  };
-  assert.equal(presentation.isHalfCigarCard(practicalCard), true);
-
-  const titleCard = {
-    dataset: { key: 'h-upmann-half-corona' },
-    querySelector(selector) {
-      if (selector === 'h3') return { textContent: 'H. Upmann Half Corona' };
-      if (selector === '.artmeta-right') return { textContent: 'Single' };
-      if (selector === '.mog-note') return { textContent: '' };
-      return null;
-    }
-  };
-  assert.equal(presentation.isHalfCigarCard(titleCard), true);
-
-  const summaryOnlyCard = {
-    dataset: { key: 'ordinary-corona' },
-    querySelector(selector) {
-      if (selector === 'h3') return { textContent: 'Ordinary Corona' };
-      if (selector === '.artmeta-right') return { textContent: 'Single · Uncut' };
-      if (selector === '.mog-note') return { textContent: '' };
-      if (selector === '.summary') return { textContent: 'Pepper grows in the second half.' };
-      return null;
-    }
-  };
-  assert.equal(presentation.isHalfCigarCard(summaryOnlyCard), true);
+  assert.match(valueLoader, /import\('\.\/catalogue-half-cohort\.mjs'\)/);
 });
 
 test('recommendation routing no longer creates a rating-driven Substantial destination', () => {
@@ -76,16 +29,11 @@ test('recommendation routing no longer creates a rating-driven Substantial desti
   assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
 });
 
-test('presentation runtime changes only the requested Half-Cigar grouping and filter', () => {
-  assert.match(presentationSource, /The Half-Cigar/);
-  assert.match(presentationSource, /data-noteworthy-section=["']substantial["']/);
-  assert.match(presentationSource, /data-tier-section=["']strong["']/);
-  assert.match(presentationSource, /strongSection\.nextSibling/);
-  assert.match(presentationSource, /data-half-cigar-filter/);
-  assert.match(presentationSource, /Half Cigars/);
-  assert.match(presentationSource, /data-half-cigar/);
-  assert.doesNotMatch(presentationSource, /data-ranking-section/);
-  assert.doesNotMatch(presentationSource, /data-recommendations-heading/);
+test('recommendation presentation does not own Half-Cigar sectioning or filtering', () => {
+  assert.doesNotMatch(presentationSource, /containsHalfCigarCue/);
+  assert.doesNotMatch(presentationSource, /isHalfCigarCard/);
+  assert.doesNotMatch(presentationSource, /data-half-cigar-filter/);
+  assert.doesNotMatch(presentationSource, /data-noteworthy-section=["']substantial["']/);
   assert.doesNotMatch(presentationSource, /normaliseCardRankCaption/);
 });
 

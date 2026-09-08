@@ -15,7 +15,7 @@ const CARD_EDITORIAL_FIELDS = new Set([
   'experienceTags', 'eyebrow', 'summaryHtml', 'noteHtml', 'productionHtml', 'practicalHtml'
 ]);
 const CARD_STRUCTURAL_FIELDS = new Set([
-  'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk', 'taster',
+  'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk', 'taster', 'catalogueType',
   'retailerLinks', 'imageUrl', 'smokeTime'
 ]);
 const DYNAMIC_ONLY_FIELDS = new Set([
@@ -111,6 +111,18 @@ function htmlAttribute(tag, name) {
   return tag.match(pattern)?.[2] ?? '';
 }
 
+function catalogueType(card) {
+  const explicit = String(card?.catalogueType || '').trim().toLowerCase();
+  if (explicit === 'half' || explicit === 'half-cigar' || explicit === 'halfcigar') return 'half';
+  if (explicit === 'taster' || Boolean(card?.taster)) return 'taster';
+  return 'main';
+}
+
+function applyCatalogueType(card, typeInput) {
+  const type = catalogueType({ catalogueType: typeInput, taster: typeInput === 'taster' });
+  return { ...card, catalogueType: type, taster: type === 'taster' };
+}
+
 function parseStaticRankingCards(html) {
   const cards = {};
   for (const match of String(html || '').matchAll(/<article\b[^>]*>/gi)) {
@@ -120,8 +132,11 @@ function parseStaticRankingCards(html) {
     const key = safeKey(htmlAttribute(tag, 'data-key'));
     if (!key) continue;
 
+    const taster = htmlAttribute(tag, 'data-taster') === '1';
+    const explicitType = htmlAttribute(tag, 'data-catalogue-type');
     const card = {
-      taster: htmlAttribute(tag, 'data-taster') === '1',
+      taster,
+      catalogueType: explicitType || (taster ? 'taster' : 'main'),
       archived: htmlAttribute(tag, 'data-archived') === '1'
     };
     const rank = Number(htmlAttribute(tag, 'data-rank'));
@@ -134,8 +149,10 @@ function parseStaticRankingCards(html) {
 }
 
 function rankingCardFromEntry(entry) {
+  const taster = Boolean(entry?.taster);
   const card = {
-    taster: Boolean(entry?.taster),
+    taster,
+    catalogueType: String(entry?.catalogueType || '').trim() || (taster ? 'taster' : 'main'),
     archived: Boolean(entry?.archived)
   };
   const rank = Number(entry?.rank);
@@ -204,6 +221,7 @@ function patchForDynamic(entryPatch) {
     if (key === 'value' || value === undefined) continue;
     if (CARD_EDITORIAL_FIELDS.has(key) || CARD_STRUCTURAL_FIELDS.has(key) || DYNAMIC_ONLY_FIELDS.has(key)) patch[key] = clone(value);
   }
+  delete patch.catalogueType;
   delete patch.flavour;
   delete patch.laurel;
   delete patch.archivedRank;
@@ -226,7 +244,8 @@ function rankNumber(card) {
 function normaliseRankings(cardsInput) {
   const cards = {};
   for (const [key, value] of Object.entries(cardsInput || {})) {
-    const card = stripDerivedCardValue(value);
+    let card = stripDerivedCardValue(value);
+    card = applyCatalogueType(card, catalogueType(card));
     if (card.archived) {
       const archivedRank = Number(card.archivedRank);
       const activeRank = rankNumber(card);
@@ -238,12 +257,12 @@ function normaliseRankings(cardsInput) {
     cards[key] = card;
   }
 
-  for (const taster of [false, true]) {
+  for (const type of ['main', 'half', 'taster']) {
     const cohort = Object.entries(cards)
-      .filter(([, card]) => !card.archived && Boolean(card.taster) === taster)
+      .filter(([, card]) => !card.archived && catalogueType(card) === type)
       .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
     cohort.forEach(([key], index) => {
-      cards[key] = { ...cards[key], rank: index + 1 };
+      cards[key] = { ...cards[key], rank: index + 1, catalogueType: type, taster: type === 'taster' };
     });
   }
 
@@ -257,13 +276,13 @@ function assertRankingInvariant(cardsInput, label) {
       throw new Error(`${label} contains active rank on archived card "${key}".`);
     }
   }
-  for (const taster of [false, true]) {
+  for (const type of ['main', 'half', 'taster']) {
     const ranks = Object.values(cards)
-      .filter(card => !card?.archived && Boolean(card?.taster) === taster)
+      .filter(card => !card?.archived && catalogueType(card) === type)
       .map(card => rankNumber(card))
       .sort((a, b) => a - b);
     ranks.forEach((rank, index) => {
-      if (rank !== index + 1) throw new Error(`${label} has a gap or duplicate in the ${taster ? 'taster' : 'active'} rankings.`);
+      if (rank !== index + 1) throw new Error(`${label} has a gap or duplicate in the ${type} rankings.`);
     });
   }
 }
@@ -272,40 +291,48 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
   const cards = normaliseRankings(cardsInput);
   const existing = cards[key] || {};
   const oldArchived = Boolean(existing.archived);
-  const oldTaster = Boolean(existing.taster);
+  const oldType = catalogueType(existing);
   const oldRank = rankNumber(existing);
   const targetArchived = Boolean(targetCard.archived);
-  const targetTaster = Boolean(targetCard.taster);
+  const targetType = catalogueType(targetCard);
   const requestedRank = Math.max(1, Math.round(Number(targetCard.rank) || (Number.isFinite(oldRank) ? oldRank : 1)));
 
   if (oldArchived && !targetArchived) {
     // The card rejoins the requested active cohort below.
-  } else if (!oldArchived && (targetArchived || oldTaster !== targetTaster || requestedRank !== oldRank)) {
+  } else if (!oldArchived && (targetArchived || oldType !== targetType || requestedRank !== oldRank)) {
     const oldCohort = Object.entries(cards)
-      .filter(([otherKey, card]) => otherKey !== key && !card.archived && Boolean(card.taster) === oldTaster)
+      .filter(([otherKey, card]) => otherKey !== key && !card.archived && catalogueType(card) === oldType)
       .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
-    oldCohort.forEach(([otherKey], index) => { cards[otherKey] = { ...cards[otherKey], rank: index + 1 }; });
+    oldCohort.forEach(([otherKey], index) => {
+      cards[otherKey] = { ...cards[otherKey], rank: index + 1, catalogueType: oldType, taster: oldType === 'taster' };
+    });
   }
 
   if (targetArchived) {
-    const archivedCard = {
+    const archivedCard = applyCatalogueType({
       ...targetCard,
       archived: true,
       archivedAt: targetCard.archivedAt || existing.archivedAt || nowString,
       archivedRank: targetCard.archivedRank || existing.archivedRank || (Number.isFinite(oldRank) ? oldRank : requestedRank)
-    };
+    }, targetType);
     delete archivedCard.rank;
     cards[key] = archivedCard;
     return normaliseRankings(cards);
   }
 
   const cohort = Object.entries(cards)
-    .filter(([otherKey, card]) => otherKey !== key && !card.archived && Boolean(card.taster) === targetTaster)
+    .filter(([otherKey, card]) => otherKey !== key && !card.archived && catalogueType(card) === targetType)
     .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
   const index = Math.max(0, Math.min(cohort.length, requestedRank - 1));
-  cohort.splice(index, 0, [key, { ...targetCard, archived: false, archivedAt: '', taster: targetTaster }]);
+  cohort.splice(index, 0, [key, applyCatalogueType({ ...targetCard, archived: false, archivedAt: '' }, targetType)]);
   cohort.forEach(([otherKey, card], cohortIndex) => {
-    cards[otherKey] = { ...cards[otherKey], ...card, rank: cohortIndex + 1 };
+    cards[otherKey] = {
+      ...cards[otherKey],
+      ...card,
+      rank: cohortIndex + 1,
+      catalogueType: targetType,
+      taster: targetType === 'taster'
+    };
   });
   return normaliseRankings(cards);
 }
@@ -522,10 +549,12 @@ export async function publishRequestDocument(input, options = {}) {
   if (request.operation === 'upsert-entry' || request.operation === 'archive-entry' || request.operation === 'unarchive-entry') {
     if (target === 'dynamic') {
       const fallbackRank = nextEntry.rank ?? nextCard.rank ?? 1;
+      const nextType = catalogueType(nextCard);
       nextCard = {
         ...nextCard,
         rank: nextCard.rank ?? fallbackRank,
-        taster: nextCard.taster ?? Boolean(nextEntry.taster),
+        catalogueType: nextType,
+        taster: nextType === 'taster',
         archived: nextCard.archived ?? Boolean(nextEntry.archived)
       };
     }
@@ -550,7 +579,7 @@ export async function publishRequestDocument(input, options = {}) {
   if (target === 'dynamic') {
     savedEntry = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-entry/${encodeURIComponent(request.key)}`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Entry read-back');
     savedEntry = isRecord(savedEntry?.entry) ? savedEntry.entry : savedEntry;
-    const expectedKeys = new Set([...intendedKeys(request)].filter(key => key !== 'archivedRank' && key !== 'laurel' && key !== 'productionHtml' && key !== 'practicalHtml'));
+    const expectedKeys = new Set([...intendedKeys(request)].filter(key => key !== 'catalogueType' && key !== 'archivedRank' && key !== 'laurel' && key !== 'productionHtml' && key !== 'practicalHtml'));
     if (request.operation === 'unarchive-entry') expectedKeys.add('rank');
     assertSubset(savedEntry, nextEntry, expectedKeys, 'Entry read-back');
   }

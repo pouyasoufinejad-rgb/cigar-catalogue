@@ -4,6 +4,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-flavour.mjs');
   import('./catalogue-card-layout.mjs');
   import('./catalogue-presentation.mjs');
+  import('./catalogue-half-cohort.mjs');
 }
 
 export const QUALITY_BENCHMARKS = Object.freeze({
