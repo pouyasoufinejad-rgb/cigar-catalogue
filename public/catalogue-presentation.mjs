@@ -21,9 +21,11 @@ export function isHalfCigarCard(card) {
   if (!card) return false;
   const sources = [
     card.dataset?.key || '',
+    card.textContent || '',
     card.querySelector?.('h3')?.textContent || '',
     card.querySelector?.('.artmeta-right')?.textContent || '',
-    card.querySelector?.('.mog-note')?.textContent || ''
+    card.querySelector?.('.mog-note')?.textContent || '',
+    card.querySelector?.('.summary')?.textContent || ''
   ];
   return sources.some(containsHalfCigarCue);
 }
