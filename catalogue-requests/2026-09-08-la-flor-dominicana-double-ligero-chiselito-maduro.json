@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-08-la-flor-dominicana-double-ligero-chiselito-maduro",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-double-ligero-chiselito-maduro",
+  "entry": {
+    "brand": "La Flor Dominicana",
+    "title": "Double Ligero Chiselito Maduro — Single",
+    "eyebrow": "Full-strength Dominican double-ligero chisel",
+    "packagePrice": 36.2,
+    "packageLabel": "single cigar",
+    "price": 36.2,
+    "country": "Dominican Republic",
+    "length": 5,
+    "ring": 44,
+    "strength": 9,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 12,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Very High (projected)",
+      "Pairings: Espresso, dark chocolate, dark rum or bourbon (projected)",
+      "Occasion: After a meal, serious evening smoke, high-intensity session"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, espresso, leather, raisin, red pepper and darker sweet-spice notes</strong> make the Double Ligero Chiselito Maduro one of the strongest profile matches in this size range. The compact 5″ × 44 Chiselito concentrates LFD's ligero-heavy Dominican core into a narrow figurado, with reports repeatedly emphasizing dense flavour, pepper, coffee, cocoa and substantial nicotine. Cigar Aficionado rated the exact vitola 92 points and placed it No. 21 in its 2024 Top 25, highlighting toasted coconut, leather, raisin and dark chocolate. The 44 ring sits almost exactly in this catalogue's ergonomic sweet spot, although the full 5-inch length is slightly longer than ideal.",
+    "noteHtml": "Untasted. The Index currently lists the exact 5″ × 44 single at A$36.20 and the box of 20 at A$684, with the single available and the box unavailable. Flavour remains unrated until personally tasted. Current Australian product data identifies an Ecuadorian wrapper over Dominican binder and filler; secondary sources disagree on the exact Maduro wrapper varietal, so the catalogue does not over-specify it.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Ecuadorian Maduro",
+      "Binder: Dominican Republic",
+      "Filler: Dominican Republic, ligero-heavy"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "5″ × 44 Chiselito",
+      "Distinctive chisel-shaped head",
+      "Slow cadence strongly recommended"
+    ],
+    "smokeTime": "About 50 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/la-flor-dominicana-double-ligero-chiselito-maduro"
+    ],
+    "priceChecked": "2026-09-08",
+    "stockChecked": "2026-09-08"
+  },
+  "note": "Add La Flor Dominicana Double Ligero Chiselito Maduro as an active untasted main-catalogue candidate. The Index currently lists the exact 5 x 44 Chiselito Maduro single at A$36.20 and available, with a box of 20 at A$684 but unavailable. The Index specifies Ecuadorian wrapper with Dominican binder and filler; broader blend references identify the Double Ligero family as full-strength and ligero-heavy. Cigar Aficionado rated the exact vitola 92 points and No. 21 of its 2024 Top 25. Strength 9 and Quality 8 are projections; leave Flavour unrated until personally tasted."
+}
