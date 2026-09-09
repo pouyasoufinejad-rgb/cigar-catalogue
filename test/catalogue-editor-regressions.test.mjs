@@ -9,6 +9,7 @@ try {
   behaviour = null;
 }
 const loaderSource = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
 
 test('Half-Cigar remains selected when legacy editor code programmatically writes Recommendation', () => {
   assert.ok(behaviour, 'catalogue editor behaviour module must load');
@@ -43,6 +44,11 @@ test('public Legend and Benchmarks disclosures are closed when editing starts', 
   behaviour.closePublicDiagnostics({ querySelectorAll: () => sections });
   assert.deepEqual(sections.map(section => section.open), [false, false]);
   assert.deepEqual(sections.map(section => section.removed), [true, true]);
+});
+
+test('edit click is observed at window capture before direct edit can stop document propagation', () => {
+  assert.match(behaviourSource, /const clickTarget = root\.defaultView \|\| root/);
+  assert.match(behaviourSource, /clickTarget\.addEventListener\?\.\('click',[\s\S]*?true\)/);
 });
 
 test('Legend and Benchmarks full-editor fields are converted to explicit collapsed disclosures', () => {
