@@ -4,6 +4,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-flavour.mjs');
   import('./catalogue-card-layout.mjs');
   import('./catalogue-legacy-copy.mjs');
+  import('./catalogue-size-presentation.mjs');
   import('./catalogue-presentation.mjs');
   import('./catalogue-half-cohort.mjs');
   import('./catalogue-editor-behaviour.mjs');
@@ -16,7 +17,7 @@ export const QUALITY_BENCHMARKS = Object.freeze({
 
 function clampScore(value) {
   const number = Number(value);
-  return Math.max(1, Math.min(10, Math.round(Number.isFinite(number) ? number : 1)));
+  return Math.max(1, Math.min(10, Math.round(Number.isFinite(number) ? number : 1));
 }
 
 function finiteNumber(value, fallback = 0) {
