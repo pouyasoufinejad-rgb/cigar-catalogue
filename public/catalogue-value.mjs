@@ -17,7 +17,7 @@ export const QUALITY_BENCHMARKS = Object.freeze({
 
 function clampScore(value) {
   const number = Number(value);
-  return Math.max(1, Math.min(10, Math.round(Number.isFinite(number) ? number : 1));
+  return Math.max(1, Math.min(10, Math.round(Number.isFinite(number) ? number : 1)));
 }
 
 function finiteNumber(value, fallback = 0) {
