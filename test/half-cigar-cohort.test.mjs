@@ -111,7 +111,7 @@ test('Half-Cigar UI creates a separate section and editor type instead of a reco
   assert.equal(source.filterValue, 'half');
 });
 
-test('rank visual refresh is idempotent and does not keep replacing the editable eyebrow node', () => {
+test('rank visual refresh updates only the rank flag and leaves the editable eyebrow alone', () => {
   assert.ok(cohort, 'Half-Cigar cohort module must load');
   assert.equal(typeof cohort.updateCardRankVisual, 'function');
 
@@ -121,8 +121,8 @@ test('rank visual refresh is idempotent and does not keep replacing the editable
     get textContent() { return eyebrowText; },
     set textContent(value) { eyebrowWrites += 1; eyebrowText = value; }
   };
-  const label = { textContent: 'Half-Cigar' };
-  const value = { textContent: 'H2' };
+  const label = { textContent: 'wrong label' };
+  const value = { textContent: 'wrong value' };
   const rankflag = {
     querySelector(selector) {
       if (selector === 'span') return label;
@@ -141,10 +141,8 @@ test('rank visual refresh is idempotent and does not keep replacing the editable
   };
 
   cohort.updateCardRankVisual(card);
-  assert.equal(eyebrowText, 'H2 — Untasted candidate');
-  assert.equal(eyebrowWrites, 1);
-
-  cohort.updateCardRankVisual(card);
-  assert.equal(eyebrowText, 'H2 — Untasted candidate');
-  assert.equal(eyebrowWrites, 1, 'second refresh must not replace the same eyebrow text node again');
+  assert.equal(label.textContent, 'Half-Cigar');
+  assert.equal(value.textContent, 'H2');
+  assert.equal(eyebrowText, 'Untasted candidate');
+  assert.equal(eyebrowWrites, 0);
 });

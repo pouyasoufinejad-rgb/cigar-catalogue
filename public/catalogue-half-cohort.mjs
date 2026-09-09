@@ -222,12 +222,6 @@ export function ensureHalfCigarSection(root = document) {
   return section;
 }
 
-function cleanEyebrowLabel(value) {
-  return String(value || '')
-    .replace(/^(?:H\d+|T\d+|No\.\s*\d+|Half-Cigar|Taster)\s*[—–-]\s*/i, '')
-    .trim();
-}
-
 export function updateCardRankVisual(card) {
   if (!card || card.dataset?.archived === '1') return;
   const type = cardCatalogueType(card);
@@ -237,9 +231,6 @@ export function updateCardRankVisual(card) {
   const value = rankflag?.querySelector?.('b');
   if (label && label.textContent !== display.label) label.textContent = display.label;
   if (value && value.textContent !== display.value) value.textContent = display.value;
-  const eyebrow = card.querySelector?.('.eyebrow');
-  const nextEyebrow = `${display.eyebrow} — ${cleanEyebrowLabel(eyebrow?.textContent)}`;
-  if (eyebrow && eyebrow.textContent !== nextEyebrow) eyebrow.textContent = nextEyebrow;
 }
 
 function compactDomCohortRanks(root = document) {
