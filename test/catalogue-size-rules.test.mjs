@@ -44,3 +44,12 @@ test('catalogue runtime loader installs the updated size presentation', () => {
   const source = fs.readFileSync(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
   assert.match(source, /import\(['"]\.\/catalogue-size-presentation\.mjs['"]\)/);
 });
+
+test('size presentation derives card display and editor saves from ring gauge', () => {
+  const source = fs.readFileSync(new URL('../public/catalogue-size-presentation.mjs', import.meta.url), 'utf8');
+  assert.match(source, /sizeRatingForRing\(ring\)/);
+  assert.match(source, /subscore\.textContent = `\$\{score\}\/10`/);
+  assert.match(source, /const tier = sizeTierForRing\(ring\)/);
+  assert.match(source, /SAVE_BUTTON_ID/);
+  assert.match(source, /syncAdminSizeFromRing\(document\)/);
+});
