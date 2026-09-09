@@ -197,7 +197,8 @@ function installModalObserver(root) {
 function installEditClickHooks(root) {
   if (root.documentElement?.dataset?.catalogueEditorBehaviourClicks === '1') return;
   if (root.documentElement?.dataset) root.documentElement.dataset.catalogueEditorBehaviourClicks = '1';
-  root.addEventListener?.('click', event => {
+  const clickTarget = root.defaultView || root;
+  clickTarget.addEventListener?.('click', event => {
     const toggle = event.target?.closest?.(`#${EDIT_TOGGLE_ID}`);
     if (!toggle) return;
     closePublicDiagnostics(root);
