@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-09-drew-estate-factory-smokes-sweet-toro",
+  "operation": "upsert-entry",
+  "key": "drew-estate-factory-smokes-sweet-toro",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "Factory Smokes Sweet Toro — Single",
+    "eyebrow": "Mellow sweet-capped Habano",
+    "packagePrice": 53,
+    "packageLabel": "single cigar",
+    "price": 26.5,
+    "country": "Nicaragua",
+    "length": 6,
+    "ring": 54,
+    "strength": 4,
+    "quality": 5,
+    "risk": 2,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "half",
+    "taster": false,
+    "archived": false,
+    "size": "bronze",
+    "experienceTags": [
+      "Nicotine: Low",
+      "Pairings: Coffee, ginger beer, cola",
+      "Occasion: Sweet short session, dessert smoke, casual evening"
+    ],
+    "summaryHtml": "<strong>Creamy sweetness, coffee, vanilla and mild toasted tobacco</strong> give the Factory Smokes Sweet Toro an easygoing dessert profile. The sweet-capped Habano keeps the smoke sugary and aromatic, while coffee and light tobacco underneath stop it from reading as pure confection. The profile is mellow and straightforward rather than dark or forceful, with sweetness carrying most of the character.",
+    "noteHtml": "",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: sweet-capped Habano",
+      "Binder: Indonesian",
+      "Filler: Central American"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Pre-cut before lighting",
+      "Two 3″ × 54 sessions",
+      "Sweetened cap retained only on the head half",
+      "54 RG; slow cadence recommended"
+    ],
+    "smokeTime": "25–35 min per pre-cut session (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/drew-estate-factory-smokes-sweet-toro/"
+    ],
+    "priceChecked": "2026-09-09",
+    "stockChecked": "2026-09-09"
+  },
+  "note": "Add Drew Estate Factory Smokes Sweet Toro as an explicit Half-Cigar cohort entry at the end of the H ranking. Use Drew Estate's official 6 × 54 specification and Cigar Hut's A$53 single price, represented as two A$26.50 practical sessions. Keep the card prose sensory and the halving mechanics in Practical."
+}
