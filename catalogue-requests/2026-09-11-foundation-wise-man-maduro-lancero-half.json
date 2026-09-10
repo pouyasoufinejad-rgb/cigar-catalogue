@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-11-foundation-wise-man-maduro-lancero-half",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-maduro-lancero-half",
+  "entry": {
+    "brand": "Foundation",
+    "title": "The Wise Man Maduro Lancero",
+    "eyebrow": "Full-bodied Broadleaf lancero half",
+    "packagePrice": 49,
+    "packageLabel": "single full lancero",
+    "price": 24.5,
+    "country": "Nicaragua",
+    "length": 3.5,
+    "ring": 40,
+    "strength": 9,
+    "quality": 9,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "half",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, dark chocolate, whisky (projected)",
+      "Occasion: Short premium smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Leather, oak, concentrated coffee, dark chocolate, black pepper, caramel, earth and raisin sweetness</strong> give this a dense, full-bodied profile with a long sweet finish. The 40 ring keeps the current My Father-made blend concentrated and wrapper-forward while still producing the dense smoke expected from the full lancero. As a pre-cut half it should preserve the Lancero’s intensity and progression while bringing the session down to a practical 3½-inch format.",
+    "noteHtml": "Untasted exact vitola. The current 7″ × 40 My Father-made Wise Man Maduro Lancero scored 93 points in both Cigar Aficionado (February 2026) and Cigar Insider (November 2025), so Strength and Quality are provisional pending a personal tasting.",
+    "productionLines": [
+      "Made in Nicaragua at My Father Cigars: Connecticut Broadleaf wrapper, Mexican San Andrés binder, and Nicaraguan filler tobaccos grown by the García family.",
+      "Full-size vitola: 7″ × 40.",
+      "Purchased as a full lancero and split before lighting into two ~3½″ × 40 half-sessions."
+    ],
+    "practicalLines": [
+      "Buy the full Wise Man Maduro Lancero at Cigar Hut for ~A$49 each.",
+      "Cut it cleanly in half before lighting: ~A$24.50 per ~3½″ × 40 session.",
+      "This keeps the current full-bodied Broadleaf blend inside the catalogue’s practical-session target while preserving the concentrated lancero format."
+    ],
+    "smokeTime": "30–45 min smoke per half (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/the-wise-man-maduro-lancero/",
+      "https://www.theindexcigars.com.au/products/the-wise-man-maduro-lancero",
+      "https://www.cigarworld.com.au/aud/categories/cigars/foundation-cigar-company/"
+    ],
+    "priceChecked": "2026-09-11",
+    "stockChecked": "2026-09-11"
+  },
+  "note": "Add the current 7 x 40 My Father-made Foundation The Wise Man Maduro Lancero as an active Half-Cigar entry. Use Cigar Hut's A$49 single as the purchase benchmark, giving A$24.50 per 3.5 x 40 practical half-session. Current blend references identify Connecticut Broadleaf wrapper, Mexican San Andres binder and Nicaraguan filler grown by the Garcia family; do not use the composition of the discontinued older 7.5 x 40 TABSA version. Exact current vitola is rated 93 and full strength by Cigar Aficionado. Append safely to the Half-Cigar ranking, leave Value automatically derived, and leave Flavour unrated until personally tasted."
+}
