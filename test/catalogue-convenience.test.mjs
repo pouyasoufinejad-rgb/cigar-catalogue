@@ -8,12 +8,13 @@ import {
   toggleCompareKey,
   retailerLabelForUrl,
   matchRetailerStatus,
-  retailerPriceAttribution,
   cardMatchesPersonalFilter,
   isCardExpanded
 } from '../public/catalogue-convenience.mjs';
+import { retailerBestPriceAttribution } from '../public/catalogue-retailer-best-price.mjs';
 
 const moduleUrl = new URL('../public/catalogue-convenience.mjs', import.meta.url);
+const valueModuleUrl = new URL('../public/catalogue-value.mjs', import.meta.url);
 
 function state(overrides = {}) {
   return normaliseConvenienceState(overrides);
@@ -119,9 +120,14 @@ test('retailer stock matching prefers URL and falls back to retailer label', () 
 });
 
 test('retailer price attribution assigns the catalogue best available price to the first retailer row', () => {
-  assert.equal(retailerPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
-  assert.equal(retailerPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), '—');
-  assert.equal(retailerPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
+  assert.equal(retailerBestPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
+  assert.equal(retailerBestPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), '—');
+  assert.equal(retailerBestPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
+});
+
+test('retailer best-price refinement is loaded by the catalogue value module', async () => {
+  const source = await readFile(valueModuleUrl, 'utf8');
+  assert.match(source, /catalogue-retailer-best-price\.mjs/);
 });
 
 test('card UI contract includes four status chips plus Compare and Details controls', async () => {
