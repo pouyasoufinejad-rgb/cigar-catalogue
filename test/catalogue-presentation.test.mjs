@@ -29,6 +29,7 @@ test('recommendation routing no longer creates a rating-driven Substantial desti
   assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
 });
 
+// Regression: dynamically hydrated main cards must not stay in the flat/flavoured host.
 test('dynamic main entries are reclassified even when a non-rank sort is active', () => {
   assert.doesNotMatch(presentationSource, /if \(sort\?\.value && sort\.value !== ['"]rank['"]\) return 0;/);
   assert.match(presentationSource, /if \(!rankSortActive && card\.dataset\.dynamicEntry !== ['"]1['"]\) return;/);
