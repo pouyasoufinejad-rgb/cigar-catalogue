@@ -42,7 +42,7 @@ export function applyBestAvailableRetailerPrice(card) {
   const firstPriceCell = bodyCells[2];
   if (!firstPriceCell || bestPrice === '—') return false;
 
-  firstPriceCell.textContent = bestPrice;
+  if (cleanText(firstPriceCell.textContent) !== bestPrice) firstPriceCell.textContent = bestPrice;
   firstPriceCell.dataset.bestAvailablePrice = '1';
   return true;
 }
