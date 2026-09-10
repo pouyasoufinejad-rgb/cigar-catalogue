@@ -8,6 +8,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-presentation.mjs');
   import('./catalogue-half-cohort.mjs');
   import('./catalogue-editor-behaviour.mjs');
+  import('./catalogue-convenience.mjs');
 }
 
 export const QUALITY_BENCHMARKS = Object.freeze({
