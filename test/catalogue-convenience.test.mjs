@@ -8,6 +8,7 @@ import {
   toggleCompareKey,
   retailerLabelForUrl,
   matchRetailerStatus,
+  retailerPriceAttribution,
   cardMatchesPersonalFilter,
   isCardExpanded
 } from '../public/catalogue-convenience.mjs';
@@ -117,6 +118,12 @@ test('retailer stock matching prefers URL and falls back to retailer label', () 
   assert.equal(matchRetailerStatus(null, 'https://www.cigarhut.com.au/test/', 'CigarHut'), 'unknown');
 });
 
+test('retailer price attribution only uses card pricing when exactly one retailer exists', () => {
+  assert.equal(retailerPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
+  assert.equal(retailerPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
+  assert.equal(retailerPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), '—');
+});
+
 test('card UI contract includes four status chips plus Compare and Details controls', async () => {
   const source = await readFile(moduleUrl, 'utf8');
   for (const label of ['Owned', 'Tried', 'Want to Try', 'Rebuy', 'Compare', 'Details']) {
@@ -149,6 +156,16 @@ test('compare UI provides a four-cigar tray and a full comparison field set', as
   for (const field of ['Price / stick', 'Package', 'Dimensions', 'Strength', 'Quality', 'Flavour', 'Size', 'Value', 'Smoke time', 'Stock', 'Personal status', 'Production']) {
     assert.ok(source.includes(field), `compare UI should include ${field}`);
   }
+});
+
+test('retailer matrix uses existing shop links, read-only stock cache, and preserves legacy links', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  assert.match(source, /\/api\/stock/);
+  assert.match(source, /querySelectorAll\(['"]\.shop['"]\)/);
+  assert.match(source, /retailer-matrix/);
+  for (const heading of ['Retailer', 'Stock', 'Price', 'Open']) assert.ok(source.includes(heading));
+  assert.match(source, /legacyLink\.hidden\s*=\s*true/);
+  assert.doesNotMatch(source, /legacyLink\.remove\s*\(/);
 });
 
 test('convenience module is browser-local and contains no catalogue write endpoint', async () => {
