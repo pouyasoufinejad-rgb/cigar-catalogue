@@ -9,6 +9,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-half-cohort.mjs');
   import('./catalogue-editor-behaviour.mjs');
   import('./catalogue-convenience.mjs');
+  import('./catalogue-convenience-refinements.mjs');
 }
 
 export const QUALITY_BENCHMARKS = Object.freeze({
