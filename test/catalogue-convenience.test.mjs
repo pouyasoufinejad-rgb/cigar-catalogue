@@ -7,7 +7,9 @@ import {
   togglePersonalStatus,
   toggleCompareKey,
   retailerLabelForUrl,
-  matchRetailerStatus
+  matchRetailerStatus,
+  cardMatchesPersonalFilter,
+  isCardExpanded
 } from '../public/catalogue-convenience.mjs';
 
 const moduleUrl = new URL('../public/catalogue-convenience.mjs', import.meta.url);
@@ -45,6 +47,15 @@ test('personal statuses are independent booleans per cigar', () => {
   assert.equal(next.statuses['montecristo-short'].rebuy, true);
 });
 
+test('personal filters only hide cards that lack the selected independent status', () => {
+  let next = state({ personalFilter: 'owned' });
+  next = togglePersonalStatus(next, 'one', 'owned');
+  next = togglePersonalStatus(next, 'two', 'tried');
+  assert.equal(cardMatchesPersonalFilter(next, 'one'), true);
+  assert.equal(cardMatchesPersonalFilter(next, 'two'), false);
+  assert.equal(cardMatchesPersonalFilter({ ...next, personalFilter:'all' }, 'two'), true);
+});
+
 test('compare selection de-duplicates, toggles existing keys, and refuses a fifth cigar', () => {
   let next = state();
   for (const key of ['one', 'two', 'three', 'four']) next = toggleCompareKey(next, key, 4);
@@ -76,6 +87,13 @@ test('state normalisation removes invalid and duplicate compare keys', () => {
   assert.deepEqual(next.collapsedKeys, ['two']);
 });
 
+test('per-card disclosure overrides the compact or detailed global baseline', () => {
+  assert.equal(isCardExpanded(state(), 'one'), false);
+  assert.equal(isCardExpanded(state({ expandedKeys:['one'] }), 'one'), true);
+  assert.equal(isCardExpanded(state({ viewMode:'detailed' }), 'one'), true);
+  assert.equal(isCardExpanded(state({ viewMode:'detailed', collapsedKeys:['one'] }), 'one'), false);
+});
+
 test('retailer labels map the catalogue retailers without depending on link copy', () => {
   assert.equal(retailerLabelForUrl('https://www.cigarhut.com.au/test/'), 'CigarHut');
   assert.equal(retailerLabelForUrl('https://www.cigarworld.com.au/aud/products/test.html'), 'Cigarworld');
@@ -97,6 +115,27 @@ test('retailer stock matching prefers URL and falls back to retailer label', () 
   assert.equal(matchRetailerStatus(result, 'https://different.example/product', 'The Index'), 'in');
   assert.equal(matchRetailerStatus(result, 'https://different.example/product', 'Unknown Shop'), 'unknown');
   assert.equal(matchRetailerStatus(null, 'https://www.cigarhut.com.au/test/', 'CigarHut'), 'unknown');
+});
+
+test('card UI contract includes four status chips plus Compare and Details controls', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  for (const label of ['Owned', 'Tried', 'Want to Try', 'Rebuy', 'Compare', 'Details']) {
+    assert.match(source, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(source, /catalogue-personal-controls/);
+  assert.match(source, /catalogue-card-actions/);
+  assert.match(source, /data-personal-filter-hidden/);
+  assert.match(source, /stopPropagation\(\)/);
+});
+
+test('compact presentation hides only secondary detail groups and keeps core card identity/ratings visible', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  assert.match(source, /convenience-compact/);
+  for (const selector of ['.value-calc', '.tag-groups', '.summary', '.mog-note', '.artmeta', '.retailer-matrix']) {
+    assert.ok(source.includes(selector), `compact CSS should account for ${selector}`);
+  }
+  assert.doesNotMatch(source, /convenience-compact[^}]*h3\s*\{[^}]*display\s*:\s*none/is);
+  assert.doesNotMatch(source, /convenience-compact[^}]*\.medals\s*\{[^}]*display\s*:\s*none/is);
 });
 
 test('convenience module is browser-local and contains no catalogue write endpoint', async () => {
