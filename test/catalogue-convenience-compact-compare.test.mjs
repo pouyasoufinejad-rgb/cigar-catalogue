@@ -27,7 +27,7 @@ test('compare view keeps crucial rows primary and moves secondary rows behind Mo
   for (const field of ['Price / stick', 'Dimensions', 'Strength', 'Quality', 'Flavour', 'Value', 'Smoke time', 'Stock']) {
     assert.ok(source.includes(field), `primary compare should include ${field}`);
   }
-  assert.match(source, /data-compare-more/);
+  assert.match(source, /(?:data-compare-more|dataset\.compareMore)/);
   assert.match(source, /More details/);
   assert.match(source, /catalogue-compare-secondary/);
   for (const field of ['Package', 'Size', 'Personal status', 'Production']) {
