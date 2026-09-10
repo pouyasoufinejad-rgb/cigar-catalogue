@@ -118,10 +118,10 @@ test('retailer stock matching prefers URL and falls back to retailer label', () 
   assert.equal(matchRetailerStatus(null, 'https://www.cigarhut.com.au/test/', 'CigarHut'), 'unknown');
 });
 
-test('retailer price attribution only uses card pricing when exactly one retailer exists', () => {
-  assert.equal(retailerPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
+test('retailer price attribution assigns the catalogue best available price to the first retailer row', () => {
+  assert.equal(retailerPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
+  assert.equal(retailerPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), '—');
   assert.equal(retailerPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
-  assert.equal(retailerPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), '—');
 });
 
 test('card UI contract includes four status chips plus Compare and Details controls', async () => {
