@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-11-rocky-patel-sun-grown-maduro-lancero-half",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-maduro-lancero-half",
+  "entry": {
+    "brand": "Rocky Patel",
+    "title": "Sun Grown Maduro Lancero",
+    "eyebrow": "Broadleaf Maduro lancero half",
+    "packagePrice": 47.6,
+    "packageLabel": "single full lancero",
+    "price": 23.8,
+    "country": "Nicaragua",
+    "length": 3.75,
+    "ring": 38,
+    "strength": 8,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "half",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, dark chocolate, rum or cola (projected)",
+      "Occasion: Short dark-profile smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark-roasted coffee, earth, cocoa, caramel, black licorice and pepper</strong> make this darker and sweeter than the standard Sun Grown line while retaining a strong roasted core. The very slim 38 ring keeps the Connecticut Broadleaf prominent and the profile concentrated, with recent exact-vitola reviews reporting an even burn and only slightly firm draw resistance. As a pre-cut half it should preserve the blend’s dark, sweet-spicy character while turning the 7½-inch lancero into a compact 3¾-inch session.",
+    "noteHtml": "Untasted exact Maduro vitola. The Sun Grown Maduro Lancero scored 90 points in Cigar Aficionado (February 2026) and 91 in December 2023, so Strength and Quality are provisional pending a personal tasting.",
+    "productionLines": [
+      "Made in Estelí, Nicaragua at Rocky Patel’s TAVICUSA factory: Connecticut Broadleaf wrapper over Nicaraguan binder and filler tobaccos.",
+      "Full-size vitola: 7½″ × 38.",
+      "Purchased as a full lancero and split before lighting into two ~3¾″ × 38 half-sessions."
+    ],
+    "practicalLines": [
+      "Buy the full Sun Grown Maduro Lancero at The Index for ~A$47.60 each.",
+      "Cut it cleanly in half before lighting: ~A$23.80 per ~3¾″ × 38 session.",
+      "This puts the full Sun Grown Maduro blend inside the catalogue’s practical-session target while keeping the narrow-ring Broadleaf concentration intact."
+    ],
+    "smokeTime": "30–45 min smoke per half (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/sungrown-maduro-lancero",
+      "https://www.cigarhut.com.au/rocky-patel-sun-grown-maduro-lancero/"
+    ],
+    "priceChecked": "2026-09-11",
+    "stockChecked": "2026-09-11"
+  },
+  "note": "Add Rocky Patel Sun Grown Maduro Lancero as an active Half-Cigar entry. Use The Index's in-stock A$47.60 single as the purchase benchmark, giving A$23.80 per 3.75 x 38 practical half-session. The blend is made at TAVICUSA in Esteli, Nicaragua with Connecticut Broadleaf wrapper and Nicaraguan binder/filler. Exact Lancero is rated 90 medium-full by Cigar Aficionado in February 2026, with a 91-point December 2023 review. Append safely to the Half-Cigar ranking, leave Value automatically derived, and leave Flavour unrated until personally tasted."
+}
