@@ -152,6 +152,7 @@ export function writeConvenienceState(state, storage = globalThis?.localStorage)
 
 let browserState = normaliseConvenienceState();
 let refreshTimer = 0;
+let toastTimer = 0;
 
 function ensureStyles() {
   if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
@@ -170,14 +171,18 @@ function ensureStyles() {
 .catalogue-convenience-toolbar .convenience-toolbar-label{color:#cdbb8d;font-weight:700;margin-right:2px}
 .catalogue-convenience-toolbar button,
 .catalogue-personal-controls button,
-.catalogue-card-actions button{
+.catalogue-card-actions button,
+.catalogue-compare-tray button,
+.catalogue-compare-dialog button{
   appearance:none;border:1px solid rgba(217,188,112,.34);border-radius:999px;
   background:rgba(20,17,13,.9);color:#eee;padding:6px 9px;font:600 10px/1.1 system-ui,sans-serif;
   cursor:pointer;transition:border-color .14s ease,background .14s ease,color .14s ease,transform .14s ease;
 }
 .catalogue-convenience-toolbar button:hover,
 .catalogue-personal-controls button:hover,
-.catalogue-card-actions button:hover{border-color:rgba(217,188,112,.8)}
+.catalogue-card-actions button:hover,
+.catalogue-compare-tray button:hover,
+.catalogue-compare-dialog button:hover{border-color:rgba(217,188,112,.8)}
 .catalogue-convenience-toolbar button[aria-pressed="true"],
 .catalogue-personal-controls button[aria-pressed="true"],
 .catalogue-card-actions button[aria-pressed="true"]{
@@ -196,11 +201,37 @@ article.card.convenience-compact .artmeta,
 article.card.convenience-compact .retailer-matrix,
 article.card.convenience-compact .shop{display:none!important}
 article.card.convenience-compact .cardbody{padding-bottom:12px!important}
+.catalogue-compare-tray{
+  position:fixed;z-index:9992;left:50%;bottom:12px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;width:min(94vw,520px);padding:9px 10px;
+  border:1px solid rgba(217,188,112,.58);border-radius:13px;background:rgba(10,9,7,.97);
+  box-shadow:0 14px 38px rgba(0,0,0,.55);color:#eee;font:11px/1.25 system-ui,sans-serif;
+}
+.catalogue-compare-tray[hidden]{display:none!important}
+.catalogue-compare-tray .catalogue-compare-count{flex:1;color:#d8cba9}
+.catalogue-compare-tray .catalogue-compare-count b{color:#f2d894;font-size:13px}
+body.catalogue-compare-tray-active{padding-bottom:72px!important}
+.catalogue-compare-overlay{position:fixed;z-index:10020;inset:0;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.76);backdrop-filter:blur(5px)}
+.catalogue-compare-overlay[hidden]{display:none!important}
+.catalogue-compare-dialog{width:min(96vw,1180px);max-height:92vh;overflow:hidden;border:1px solid rgba(217,188,112,.62);border-radius:16px;background:#0d0b09;color:#eee;box-shadow:0 24px 80px rgba(0,0,0,.75);font:12px/1.4 system-ui,sans-serif}
+.catalogue-compare-header{display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid rgba(217,188,112,.2)}
+.catalogue-compare-header h2{flex:1;margin:0;color:#ead49b;font:700 17px/1.2 Georgia,serif}
+.catalogue-compare-scroll{overflow:auto;max-height:calc(92vh - 58px);padding:0 0 12px}
+.catalogue-compare-table{display:grid;min-width:max-content;grid-template-columns:130px repeat(var(--compare-count),minmax(210px,1fr));align-items:stretch}
+.catalogue-compare-cell{padding:10px 12px;border-right:1px solid rgba(217,188,112,.12);border-bottom:1px solid rgba(255,255,255,.07);min-width:0}
+.catalogue-compare-cell.compare-label{position:sticky;left:0;z-index:2;background:#12100d;color:#bfae83;font-weight:700}
+.catalogue-compare-product{display:flex;gap:9px;align-items:center;min-height:94px}
+.catalogue-compare-product img{width:72px;height:88px;object-fit:contain;background:#050505;border-radius:7px}
+.catalogue-compare-product b{display:block;color:#f0dfb1;font:700 13px/1.25 Georgia,serif}
+.catalogue-convenience-toast{position:fixed;z-index:10040;left:50%;bottom:82px;transform:translateX(-50%);padding:8px 11px;border:1px solid rgba(217,188,112,.52);border-radius:999px;background:#17130e;color:#f1e5c7;font:600 11px/1.2 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 body.catalogue-direct-edit-mode .catalogue-convenience-ui{display:none!important}
 @media(max-width:700px){
   .catalogue-convenience-toolbar{top:4px;margin-bottom:10px;padding:8px}
   .catalogue-convenience-toolbar .convenience-toolbar-group{width:100%}
   .catalogue-personal-controls button,.catalogue-card-actions button{padding:6px 8px;font-size:9px}
+  .catalogue-compare-overlay{padding:8px}
+  .catalogue-compare-dialog{width:98vw;max-height:96vh}
+  .catalogue-compare-scroll{max-height:calc(96vh - 58px)}
 }
 `;
   document.head.appendChild(style);
@@ -277,11 +308,170 @@ function renderToolbar() {
   });
 }
 
+function ensureCompareTray() {
+  let tray = document.getElementById('catalogue-compare-tray');
+  if (tray) return tray;
+  tray = document.createElement('div');
+  tray.id = 'catalogue-compare-tray';
+  tray.className = 'catalogue-compare-tray catalogue-convenience-ui';
+  tray.hidden = true;
+  tray.innerHTML = `<span class="catalogue-compare-count"><b data-compare-count>0</b> selected · up to ${MAX_COMPARE}</span><button type="button" data-compare-open>Compare</button><button type="button" data-compare-clear>Clear</button>`;
+  document.body.appendChild(tray);
+  return tray;
+}
+
+function ensureCompareOverlay() {
+  let overlay = document.getElementById('catalogue-compare-overlay');
+  if (overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'catalogue-compare-overlay';
+  overlay.className = 'catalogue-compare-overlay catalogue-convenience-ui';
+  overlay.hidden = true;
+  overlay.innerHTML = `<section class="catalogue-compare-dialog" role="dialog" aria-modal="true" aria-labelledby="catalogue-compare-title"><header class="catalogue-compare-header"><h2 id="catalogue-compare-title">Compare selected cigars</h2><button type="button" data-compare-close aria-label="Close comparison">Close</button></header><div class="catalogue-compare-scroll" data-compare-content></div></section>`;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function renderCompareTray() {
+  const tray = ensureCompareTray();
+  const count = browserState.compare.length;
+  tray.hidden = count === 0;
+  const countNode = tray.querySelector('[data-compare-count]');
+  if (countNode) countNode.textContent = String(count);
+  document.body.classList.toggle('catalogue-compare-tray-active', count > 0);
+}
+
+function ratingValue(card, label) {
+  const node = Array.from(card?.querySelectorAll?.('.rating') || []).find(item =>
+    item.querySelector(':scope > span')?.textContent?.trim().toLowerCase() === label.toLowerCase()
+  );
+  if (!node) return '—';
+  const score = node.querySelector('.subscore')?.textContent?.trim();
+  const tier = node.querySelector('b')?.textContent?.trim();
+  if (score && score !== '—') return tier ? `${score} · ${tier}` : score;
+  return tier || score || '—';
+}
+
+function factText(card, index) {
+  const node = card?.querySelectorAll?.('.facts > div')?.[index];
+  if (!node) return '—';
+  const primary = node.querySelector('b')?.textContent?.trim() || '';
+  const secondary = node.querySelector('small')?.textContent?.trim() || '';
+  return [primary, secondary].filter(Boolean).join(' · ') || '—';
+}
+
+function effectiveStockText(card) {
+  const pin = String(card?.dataset?.stockPin || '').toLowerCase();
+  const value = ['in', 'out'].includes(pin) ? pin : String(card?.dataset?.stock || 'unknown').toLowerCase();
+  if (value === 'in') return 'In stock';
+  if (value === 'out') return 'Out of stock';
+  if (value === 'delisted') return 'Delisted';
+  return 'Unknown';
+}
+
+function personalStatusText(key) {
+  const status = cardStatus(key);
+  const active = PERSONAL_STATUSES.filter(name => status[name]).map(name => PERSONAL_LABELS[name]);
+  return active.length ? active.join(' · ') : '—';
+}
+
+function cardTitle(card) {
+  const heading = card?.querySelector('h3');
+  if (!heading) return card?.dataset?.key || 'Cigar';
+  return heading.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function compareSnapshot(card) {
+  const key = cleanKey(card?.dataset?.key);
+  const image = card?.querySelector('.artframe img');
+  const production = Array.from(card?.querySelectorAll?.('.artmeta-left .artmeta-line') || []).map(node => node.textContent.trim()).filter(Boolean).join(' · ');
+  const smoke = card?.querySelector('.artmeta-bottom')?.textContent?.trim() || '—';
+  const perStick = Number(card?.dataset?.price);
+  return {
+    key,
+    title:cardTitle(card),
+    imageSrc:image?.currentSrc || image?.src || '',
+    imageAlt:image?.alt || cardTitle(card),
+    price:Number.isFinite(perStick) ? `A$${Number.isInteger(perStick) ? perStick.toFixed(0) : perStick.toFixed(2)}` : factText(card, 1).split(' · ')[0],
+    package:factText(card, 0),
+    dimensions:card?.querySelector('.facts .size-only b')?.textContent?.trim() || factText(card, 2).split(' · ')[0] || '—',
+    strength:ratingValue(card, 'Strength'),
+    quality:ratingValue(card, 'Quality'),
+    flavour:ratingValue(card, 'Flavour'),
+    size:ratingValue(card, 'Size'),
+    value:ratingValue(card, 'Value'),
+    smokeTime:smoke,
+    stock:effectiveStockText(card),
+    personalStatus:personalStatusText(key),
+    production:production || '—'
+  };
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+}
+
+function compareProductCell(item) {
+  const image = item.imageSrc ? `<img src="${escapeHtml(item.imageSrc)}" alt="${escapeHtml(item.imageAlt)}">` : '';
+  return `<div class="catalogue-compare-cell"><div class="catalogue-compare-product">${image}<b>${escapeHtml(item.title)}</b></div></div>`;
+}
+
+function compareFieldRow(label, items, property) {
+  return `<div class="catalogue-compare-cell compare-label">${escapeHtml(label)}</div>${items.map(item => `<div class="catalogue-compare-cell">${escapeHtml(item[property] || '—')}</div>`).join('')}`;
+}
+
+function openCompareOverlay() {
+  const overlay = ensureCompareOverlay();
+  const items = browserState.compare.map(key => document.querySelector(`article.card[data-key="${CSS.escape(key)}"]`)).filter(Boolean).map(compareSnapshot);
+  const content = overlay.querySelector('[data-compare-content]');
+  if (!items.length) {
+    if (content) content.innerHTML = '<div class="catalogue-compare-cell">No selected cigars are currently visible.</div>';
+  } else if (content) {
+    const fields = [
+      ['Price / stick', 'price'],
+      ['Package', 'package'],
+      ['Dimensions', 'dimensions'],
+      ['Strength', 'strength'],
+      ['Quality', 'quality'],
+      ['Flavour', 'flavour'],
+      ['Size', 'size'],
+      ['Value', 'value'],
+      ['Smoke time', 'smokeTime'],
+      ['Stock', 'stock'],
+      ['Personal status', 'personalStatus'],
+      ['Production', 'production']
+    ];
+    content.innerHTML = `<div class="catalogue-compare-table" style="--compare-count:${items.length}"><div class="catalogue-compare-cell compare-label">Cigar</div>${items.map(compareProductCell).join('')}${fields.map(([label, property]) => compareFieldRow(label, items, property)).join('')}</div>`;
+  }
+  overlay.hidden = false;
+  overlay.querySelector('[data-compare-close]')?.focus?.();
+}
+
+function closeCompareOverlay() {
+  const overlay = document.getElementById('catalogue-compare-overlay');
+  if (overlay) overlay.hidden = true;
+}
+
+function showToast(message) {
+  let toast = document.getElementById('catalogue-convenience-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'catalogue-convenience-toast';
+    toast.className = 'catalogue-convenience-toast catalogue-convenience-ui';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 2200);
+}
+
 function refreshAll() {
   refreshTimer = 0;
   ensureStyles();
   renderToolbar();
   document.querySelectorAll('article.card[data-key]').forEach(renderCard);
+  renderCompareTray();
 }
 
 function scheduleRefresh() {
@@ -309,8 +499,11 @@ function toggleDisclosureForKey(key) {
 }
 
 function onConvenienceClick(event) {
-  const target = event.target?.closest?.('[data-personal-status],[data-convenience-compare],[data-convenience-details],[data-personal-filter],[data-convenience-view]');
-  if (!target) return;
+  const target = event.target?.closest?.('[data-personal-status],[data-convenience-compare],[data-convenience-details],[data-personal-filter],[data-convenience-view],[data-compare-open],[data-compare-clear],[data-compare-close]');
+  if (!target) {
+    if (event.target?.id === 'catalogue-compare-overlay') closeCompareOverlay();
+    return;
+  }
   event.preventDefault();
   event.stopPropagation();
 
@@ -321,7 +514,13 @@ function onConvenienceClick(event) {
     return;
   }
   if (target.hasAttribute('data-convenience-compare') && key) {
-    saveAndRefresh(toggleCompareKey(browserState, key));
+    const wasSelected = browserState.compare.includes(key);
+    const next = toggleCompareKey(browserState, key);
+    if (!wasSelected && next.compare.length === browserState.compare.length) {
+      showToast('You can compare up to 4 cigars');
+      return;
+    }
+    saveAndRefresh(next);
     return;
   }
   if (target.hasAttribute('data-convenience-details') && key) {
@@ -339,7 +538,22 @@ function onConvenienceClick(event) {
       expandedKeys:[],
       collapsedKeys:[]
     });
+    return;
   }
+  if (target.hasAttribute('data-compare-open')) {
+    openCompareOverlay();
+    return;
+  }
+  if (target.hasAttribute('data-compare-clear')) {
+    saveAndRefresh({ ...browserState, compare:[] });
+    closeCompareOverlay();
+    return;
+  }
+  if (target.hasAttribute('data-compare-close')) closeCompareOverlay();
+}
+
+function onKeydown(event) {
+  if (event.key === 'Escape') closeCompareOverlay();
 }
 
 function installObserver() {
@@ -359,6 +573,7 @@ export function initCatalogueConvenience() {
   ensureStyles();
   refreshAll();
   document.addEventListener('click', onConvenienceClick);
+  document.addEventListener('keydown', onKeydown);
   document.addEventListener('catalogue:cards-refreshed', scheduleRefresh);
   installObserver();
 }
