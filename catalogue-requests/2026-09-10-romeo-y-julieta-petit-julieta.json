@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-10-romeo-y-julieta-petit-julieta",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-petit-julieta",
+  "entry": {
+    "brand": "Romeo y Julieta",
+    "title": "Romeo y Julieta Petit Julieta — Single",
+    "eyebrow": "Handmade step up from the RyJ Puritos",
+    "packagePrice": 28.16,
+    "packageLabel": "single cigar",
+    "price": 28.16,
+    "country": "Cuba",
+    "length": 4,
+    "ring": 30,
+    "strength": 5,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "taster": false,
+    "archived": false,
+    "size": "silver",
+    "experienceTags": [
+      "Nicotine: Moderate (projected)",
+      "Pairings: Coffee, cola, rum (projected)",
+      "Occasion: Short Cuban smoke, after a meal, relaxed session"
+    ],
+    "summaryHtml": "<strong>Cedar, toast, walnut, floral sweetness and gentle spice</strong> are the expected core of this compact handmade Romeo y Julieta. The catalogue's direct Puritos tasting already establishes the house profile as fragrant and balanced; the Petit Julieta's handmade 4″ × 30 format should add more tobacco depth, cooler combustion and room for progression without turning it into a genuinely forceful cigar. It is therefore a useful premium comparison with the much cheaper machine-made RyJ formats.",
+    "noteHtml": "Untasted. CigarWorld currently lists the exact 4″ × 30 single at A$28.16 and the box of 25 at A$628.90. Strength and Quality are provisional and Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Unflavoured",
+      "Handmade in Cuba",
+      "Wrapper: Cuban tobacco (variety undisclosed)",
+      "Binder: Cuban tobacco (variety undisclosed)",
+      "Filler: Cuban long filler (classic Romeo y Julieta blend)"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4″ × 30 RG",
+      "Box of 25 also listed",
+      "Uncut",
+      "Sensitive cadence"
+    ],
+    "smokeTime": "25–35 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/romeo-y-julieta-petit-julieta-%252d-single-%252d-%284%22-x-30%29.html"
+    ],
+    "priceChecked": "2026-09-10",
+    "stockChecked": "2026-09-10"
+  },
+  "note": "Add Romeo y Julieta Petit Julieta as an active untasted main-catalogue entry. CigarWorld currently lists the exact 4 x 30 single at A$28.16 and box of 25 at A$628.90. Strength 5 and Quality 7 are provisional, informed partly by the user's direct Romeo y Julieta Puritos tasting while allowing for the more substantial handmade format. Leave Value automatically derived and Flavour unrated. Append safely to the main ranking."
+}

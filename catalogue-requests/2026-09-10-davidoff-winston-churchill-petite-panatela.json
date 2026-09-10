@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-10-davidoff-winston-churchill-petite-panatela",
+  "operation": "upsert-entry",
+  "key": "davidoff-winston-churchill-petite-panatela",
+  "entry": {
+    "brand": "Davidoff",
+    "title": "Winston Churchill Petite Panatela — Tin of 5",
+    "eyebrow": "Premium compact Winston Churchill",
+    "packagePrice": 139,
+    "packageLabel": "tin of 5",
+    "price": 27.8,
+    "country": "Dominican Republic",
+    "length": 4,
+    "ring": 38,
+    "strength": 6,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Moderate (projected)",
+      "Pairings: Coffee, dark chocolate, whisky (projected)",
+      "Occasion: Short premium smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Wood, chocolate, coffee, warm spice and dried-fruit sweetness</strong> are the projected centre of this compact Winston Churchill. The Original Series uses an Ecuadorian Habano Rojiza wrapper over a Mexican San Andrés Oscuro binder and Dominican/Nicaraguan filler, giving it more savoury spice and structure than Davidoff's gentlest lines without pushing into Late Hour territory. The handmade 4″ × 38 format is substantial enough for a cooler, denser short smoke while remaining genuinely compact.",
+    "noteHtml": "Untasted. CigarWorld currently lists the five-cigar tin at A$139 (A$27.80 each) and an exact single at A$28.95, so the single provides a low-commitment test. Strength and Quality are provisional and Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Unflavoured",
+      "Handmade in Dominican Republic",
+      "Wrapper: Ecuadorian Habano Rojiza",
+      "Binder: Mexican San Andrés Oscuro",
+      "Filler: Dominican and Nicaraguan long filler (Winston Churchill Original blend)"
+    ],
+    "practicalLines": [
+      "Tin of 5",
+      "4″ × 38 RG",
+      "Single available at A$28.95",
+      "Uncut",
+      "Protected",
+      "Lenient cadence"
+    ],
+    "smokeTime": "20–30 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/davidoff/"
+    ],
+    "priceChecked": "2026-09-10",
+    "stockChecked": "2026-09-10"
+  },
+  "note": "Add Davidoff Winston Churchill Original Series Petite Panatela as an active untasted main-catalogue entry. CigarWorld currently lists the exact 4 x 38 five-pack tin at A$139 and a single at A$28.95. Use A$27.80 per cigar from the tin for Value and the single as the low-risk test commitment. Blend references identify Ecuadorian Habano Rojiza wrapper, Mexican San Andres Oscuro binder, and Dominican/Nicaraguan filler. Strength 6 and Quality 8 are provisional; leave Value automatically derived and Flavour unrated. Append safely to the main ranking."
+}
