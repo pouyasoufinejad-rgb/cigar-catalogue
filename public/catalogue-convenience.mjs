@@ -5,6 +5,7 @@ const PERSONAL_LABELS = Object.freeze({ owned:'Owned', tried:'Tried', want:'Want
 const PERSONAL_FILTERS = new Set(['all', ...PERSONAL_STATUSES]);
 const VIEW_MODES = new Set(['compact', 'detailed']);
 const MAX_COMPARE = 4;
+const STOCK_API = '/api/stock';
 
 function cleanKey(value) {
   return String(value || '').trim();
@@ -136,6 +137,16 @@ export function matchRetailerStatus(result, url, label = retailerLabelForUrl(url
   return ['in', 'out', 'delisted'].includes(match?.status) ? match.status : 'unknown';
 }
 
+export function retailerPriceAttribution(linkCount, packageText, perStickText) {
+  if (Number(linkCount) !== 1) return '—';
+  const packageValue = String(packageText || '').trim();
+  const stickValue = String(perStickText || '').trim();
+  const parts = [];
+  if (packageValue && packageValue !== '—') parts.push(packageValue);
+  if (stickValue && stickValue !== '—') parts.push(`${stickValue} / stick`);
+  return parts.join(' · ') || '—';
+}
+
 export function readConvenienceState(storage = globalThis?.localStorage) {
   try {
     return normaliseConvenienceState(JSON.parse(storage?.getItem?.(STORAGE_KEY) || '{}'));
@@ -151,6 +162,7 @@ export function writeConvenienceState(state, storage = globalThis?.localStorage)
 }
 
 let browserState = normaliseConvenienceState();
+let stockResults = {};
 let refreshTimer = 0;
 let toastTimer = 0;
 
@@ -201,6 +213,13 @@ article.card.convenience-compact .artmeta,
 article.card.convenience-compact .retailer-matrix,
 article.card.convenience-compact .shop{display:none!important}
 article.card.convenience-compact .cardbody{padding-bottom:12px!important}
+.retailer-matrix{margin:12px 0 4px;border:1px solid rgba(217,188,112,.18);border-radius:10px;overflow:hidden;background:rgba(12,10,8,.55);font:10px/1.3 system-ui,sans-serif}
+.retailer-matrix-title{padding:8px 9px;color:#d8c18a;font-weight:700;border-bottom:1px solid rgba(217,188,112,.14)}
+.retailer-matrix-grid{display:grid;grid-template-columns:minmax(90px,1.1fr) 72px minmax(120px,1.4fr) 50px;align-items:stretch}
+.retailer-matrix-cell{padding:7px 8px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);min-width:0}
+.retailer-matrix-head{color:#9f9277;font-size:9px;text-transform:uppercase;letter-spacing:.05em;background:rgba(255,255,255,.025)}
+.retailer-matrix-stock[data-stock="in"]{color:#8fcf91}.retailer-matrix-stock[data-stock="out"],.retailer-matrix-stock[data-stock="delisted"]{color:#d98989}.retailer-matrix-stock[data-stock="unknown"]{color:#c4ae77}
+.retailer-matrix-open{color:#e6cf91;text-decoration:none;font-weight:700}.retailer-matrix-open:hover{text-decoration:underline}
 .catalogue-compare-tray{
   position:fixed;z-index:9992;left:50%;bottom:12px;transform:translateX(-50%);
   display:flex;align-items:center;gap:8px;width:min(94vw,520px);padding:9px 10px;
@@ -229,6 +248,8 @@ body.catalogue-direct-edit-mode .catalogue-convenience-ui{display:none!important
   .catalogue-convenience-toolbar{top:4px;margin-bottom:10px;padding:8px}
   .catalogue-convenience-toolbar .convenience-toolbar-group{width:100%}
   .catalogue-personal-controls button,.catalogue-card-actions button{padding:6px 8px;font-size:9px}
+  .retailer-matrix-grid{grid-template-columns:minmax(84px,1fr) 64px minmax(105px,1.25fr) 46px}
+  .retailer-matrix-cell{padding:6px 5px;font-size:9px}
   .catalogue-compare-overlay{padding:8px}
   .catalogue-compare-dialog{width:98vw;max-height:96vh}
   .catalogue-compare-scroll{max-height:calc(96vh - 58px)}
@@ -272,10 +293,56 @@ function cardStatus(key) {
   return browserState.statuses[key] || { owned:false, tried:false, want:false, rebuy:false };
 }
 
+function factText(card, index) {
+  const node = card?.querySelectorAll?.('.facts > div')?.[index];
+  if (!node) return '—';
+  const primary = node.querySelector('b')?.textContent?.trim() || '';
+  const secondary = node.querySelector('small')?.textContent?.trim() || '';
+  return [primary, secondary].filter(Boolean).join(' · ') || '—';
+}
+
+function formatPerStick(card) {
+  const perStick = Number(card?.dataset?.price);
+  if (Number.isFinite(perStick)) return `A$${Number.isInteger(perStick) ? perStick.toFixed(0) : perStick.toFixed(2)}`;
+  return factText(card, 1).split(' · ')[0] || '—';
+}
+
+function stockLabel(status) {
+  if (status === 'in') return 'In stock';
+  if (status === 'out') return 'Out';
+  if (status === 'delisted') return 'Delisted';
+  return 'Unknown';
+}
+
+function decorateRetailerMatrix(card) {
+  if (!card?.querySelectorAll) return false;
+  const legacyLinks = Array.from(card.querySelectorAll('.shop'));
+  if (!legacyLinks.length) return false;
+  const key = cleanKey(card.dataset?.key);
+  const result = stockResults[key] || null;
+  const price = retailerPriceAttribution(legacyLinks.length, factText(card, 0), formatPerStick(card));
+  let matrix = card.querySelector('.retailer-matrix');
+  if (!matrix) {
+    matrix = document.createElement('div');
+    matrix.className = 'retailer-matrix';
+    legacyLinks[0].insertAdjacentElement('beforebegin', matrix);
+  }
+  const rows = legacyLinks.map(legacyLink => {
+    const url = legacyLink.href || legacyLink.getAttribute('href') || '';
+    const label = retailerLabelForUrl(url);
+    const status = matchRetailerStatus(result, url, label);
+    return `<div class="retailer-matrix-cell">${escapeHtml(label)}</div><div class="retailer-matrix-cell retailer-matrix-stock" data-stock="${escapeHtml(status)}">${escapeHtml(stockLabel(status))}</div><div class="retailer-matrix-cell">${escapeHtml(price)}</div><div class="retailer-matrix-cell"><a class="retailer-matrix-open" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open</a></div>`;
+  }).join('');
+  matrix.innerHTML = `<div class="retailer-matrix-title">Retailers</div><div class="retailer-matrix-grid"><div class="retailer-matrix-cell retailer-matrix-head">Retailer</div><div class="retailer-matrix-cell retailer-matrix-head">Stock</div><div class="retailer-matrix-cell retailer-matrix-head">Price</div><div class="retailer-matrix-cell retailer-matrix-head">Open</div>${rows}</div>`;
+  legacyLinks.forEach(legacyLink => { legacyLink.hidden = true; });
+  return true;
+}
+
 function renderCard(card) {
   const key = cleanKey(card?.dataset?.key);
   if (!key) return;
   decorateCard(card);
+  decorateRetailerMatrix(card);
   const status = cardStatus(key);
   card.querySelectorAll('[data-personal-status]').forEach(button => {
     const name = button.dataset.personalStatus;
@@ -352,14 +419,6 @@ function ratingValue(card, label) {
   return tier || score || '—';
 }
 
-function factText(card, index) {
-  const node = card?.querySelectorAll?.('.facts > div')?.[index];
-  if (!node) return '—';
-  const primary = node.querySelector('b')?.textContent?.trim() || '';
-  const secondary = node.querySelector('small')?.textContent?.trim() || '';
-  return [primary, secondary].filter(Boolean).join(' · ') || '—';
-}
-
 function effectiveStockText(card) {
   const pin = String(card?.dataset?.stockPin || '').toLowerCase();
   const value = ['in', 'out'].includes(pin) ? pin : String(card?.dataset?.stock || 'unknown').toLowerCase();
@@ -386,13 +445,12 @@ function compareSnapshot(card) {
   const image = card?.querySelector('.artframe img');
   const production = Array.from(card?.querySelectorAll?.('.artmeta-left .artmeta-line') || []).map(node => node.textContent.trim()).filter(Boolean).join(' · ');
   const smoke = card?.querySelector('.artmeta-bottom')?.textContent?.trim() || '—';
-  const perStick = Number(card?.dataset?.price);
   return {
     key,
     title:cardTitle(card),
     imageSrc:image?.currentSrc || image?.src || '',
     imageAlt:image?.alt || cardTitle(card),
-    price:Number.isFinite(perStick) ? `A$${Number.isInteger(perStick) ? perStick.toFixed(0) : perStick.toFixed(2)}` : factText(card, 1).split(' · ')[0],
+    price:formatPerStick(card),
     package:factText(card, 0),
     dimensions:card?.querySelector('.facts .size-only b')?.textContent?.trim() || factText(card, 2).split(' · ')[0] || '—',
     strength:ratingValue(card, 'Strength'),
@@ -556,6 +614,18 @@ function onKeydown(event) {
   if (event.key === 'Escape') closeCompareOverlay();
 }
 
+async function loadRetailerStock() {
+  try {
+    const response = await fetch(STOCK_API, { cache:'no-store', headers:{ accept:'application/json' } });
+    if (!response.ok) throw new Error(`Stock cache HTTP ${response.status}`);
+    const payload = await response.json();
+    stockResults = payload?.results && typeof payload.results === 'object' ? payload.results : {};
+  } catch (_) {
+    stockResults = {};
+  }
+  document.querySelectorAll('article.card[data-key]').forEach(decorateRetailerMatrix);
+}
+
 function installObserver() {
   if (typeof MutationObserver === 'undefined' || !document.body) return;
   const observer = new MutationObserver(mutations => {
@@ -576,6 +646,7 @@ export function initCatalogueConvenience() {
   document.addEventListener('keydown', onKeydown);
   document.addEventListener('catalogue:cards-refreshed', scheduleRefresh);
   installObserver();
+  loadRetailerStock();
 }
 
 if (typeof document !== 'undefined') {
