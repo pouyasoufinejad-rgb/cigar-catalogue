@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-10-montecristo-short",
+  "operation": "upsert-entry",
+  "key": "montecristo-short",
+  "entry": {
+    "brand": "Montecristo",
+    "title": "Montecristo Short — Pack of 10",
+    "eyebrow": "Thicker classic Montecristo quick smoke",
+    "packagePrice": 100,
+    "packageLabel": "pack of 10",
+    "price": 10,
+    "country": "Cuba",
+    "length": 3.23,
+    "ring": 27,
+    "strength": 6,
+    "quality": 6,
+    "risk": 2,
+    "stock": "in",
+    "rank": 999,
+    "taster": false,
+    "archived": false,
+    "size": "silver",
+    "experienceTags": [
+      "Nicotine: Moderate (projected)",
+      "Pairings: Coffee, dark chocolate, rum (projected)",
+      "Occasion: Quick Cuban smoke, short break, after a meal"
+    ],
+    "summaryHtml": "<strong>Cedar, earth, black coffee, brown sugar and warm spice</strong> are the expected core of this unusually thick small-format Montecristo. It uses the classic Montecristo blend rather than the smoother Open blend, with more tobacco mass than a Club despite its shorter length. The wider 10.6 mm format should give fuller smoke and better flavour density than a conventional Mini while keeping the session compact.",
+    "noteHtml": "Untasted. The Index currently lists the Short singly at A$13 and the pack of 10 at A$100; Cigar Hut lists the 10-pack at A$79 but is currently sold out. Strength and Quality are provisional and Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Made in Cuba",
+      "Classic Montecristo blend",
+      "Selected Vuelta Abajo short-filler and binder"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "82 mm × 10.6 mm (~3.23″ × 27 RG)",
+      "Single available at A$13",
+      "Slow cadence"
+    ],
+    "smokeTime": "15–25 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/montecristo-short",
+      "https://www.cigarhut.com.au/montecristo-short/"
+    ],
+    "priceChecked": "2026-09-10",
+    "stockChecked": "2026-09-10"
+  },
+  "note": "Add Montecristo Short as an active untasted main-catalogue candidate in Noteworthy. Use the official 82 mm × 10.6 mm dimensions (approximately 3.23 inches × 27 RG) and classic Montecristo blend. The Index currently has singles at A$13 and packs of 10 at A$100; Cigar Hut lists A$79 per 10 but is sold out. Strength 6 and Quality 6 are provisional so the entry remains in Noteworthy as requested; leave Value automatically derived and Flavour unrated until tasted. Append safely to the main ranking rather than overwriting an existing rank."
+}
