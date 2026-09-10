@@ -138,6 +138,19 @@ test('compact presentation hides only secondary detail groups and keeps core car
   assert.doesNotMatch(source, /convenience-compact[^}]*\.medals\s*\{[^}]*display\s*:\s*none/is);
 });
 
+test('compare UI provides a four-cigar tray and a full comparison field set', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  assert.match(source, /catalogue-compare-tray/);
+  assert.match(source, /catalogue-compare-overlay/);
+  assert.match(source, /Compare selected cigars/);
+  assert.match(source, /Clear/);
+  assert.match(source, /You can compare up to 4 cigars/);
+  assert.match(source, /Escape/);
+  for (const field of ['Price / stick', 'Package', 'Dimensions', 'Strength', 'Quality', 'Flavour', 'Size', 'Value', 'Smoke time', 'Stock', 'Personal status', 'Production']) {
+    assert.ok(source.includes(field), `compare UI should include ${field}`);
+  }
+});
+
 test('convenience module is browser-local and contains no catalogue write endpoint', async () => {
   const source = await readFile(moduleUrl, 'utf8');
   assert.doesNotMatch(source, /\/api\/catalogue-overrides/);
