@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-10-el-rey-del-mundo-demi-tasse",
+  "operation": "upsert-entry",
+  "key": "el-rey-del-mundo-demi-tasse",
+  "entry": {
+    "brand": "El Rey del Mundo",
+    "title": "El Rey del Mundo Demi Tasse — Single",
+    "eyebrow": "Delicate handmade Cuban small format",
+    "packagePrice": 21,
+    "packageLabel": "single cigar",
+    "price": 21,
+    "country": "Cuba",
+    "length": 4,
+    "ring": 30,
+    "strength": 4,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "taster": false,
+    "archived": false,
+    "size": "silver",
+    "experienceTags": [
+      "Nicotine: Low-Moderate (projected)",
+      "Pairings: Coffee, tea, light rum (projected)",
+      "Occasion: Short relaxed smoke, afternoon smoke, Cuban comparison"
+    ],
+    "summaryHtml": "<strong>Cream, cedar, floral tobacco, hay and gentle honeyed sweetness</strong> are the projected centre of this slender handmade Cuban. El Rey del Mundo is traditionally one of the softer Habanos profiles, so the Demi Tasse is more likely to win on refinement, aroma and gradual nuance than force. The 4″ × 30 format should give a more complete handmade-cigar experience than a machine-made club while still remaining a genuinely short smoke.",
+    "noteHtml": "Untasted. Cigar Hut currently lists the Demi Tasse from A$21 with Single, 10 Cigars and Box of 25 options. Strength and Quality are provisional and Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Unflavoured",
+      "Handmade in Cuba",
+      "Wrapper: Cuban tobacco (variety undisclosed)",
+      "Binder: Cuban tobacco (variety undisclosed)",
+      "Filler: Cuban long filler (classic El Rey del Mundo blend)"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4″ × 30 RG",
+      "10-cigar and 25-cigar options also listed",
+      "Uncut",
+      "Sensitive cadence"
+    ],
+    "smokeTime": "20–30 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/el-rey-del-mundo-demi-tasse/"
+    ],
+    "priceChecked": "2026-09-10",
+    "stockChecked": "2026-09-10"
+  },
+  "note": "Add El Rey del Mundo Demi Tasse as an active untasted main-catalogue entry. Cigar Hut currently lists the handmade Cuban 4 x 30 Demi Tasse from A$21 with Single, 10 Cigars and Box of 25 variants. Use the single as the catalogue package/minimum commitment. Strength 4 and Quality 7 are provisional; leave Value automatically derived and Flavour unrated. Append safely to the main ranking."
+}
