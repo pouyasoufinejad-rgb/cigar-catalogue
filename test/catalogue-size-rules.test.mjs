@@ -41,7 +41,7 @@ test('size rating returns both medal tier and numeric score', () => {
 });
 
 test('catalogue runtime loader installs the updated size presentation', () => {
-  const source = fs.readFileSync(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+  const source = fs.readFileSync(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
   assert.match(source, /import\(['"]\.\/catalogue-size-presentation\.mjs['"]\)/);
 });
 
