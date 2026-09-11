@@ -125,6 +125,39 @@ test('first retailer keeps the catalogue benchmark when the source retailer bloc
   assert.equal(cache.results.sample.retailers[0].price, 49);
 });
 
+test('CigarHut product fallback still verifies stock when the category sweep already supplied a price', async () => {
+  const env = { CATALOGUE_STATE:new MemoryKv() };
+  const productUrl = 'https://www.cigarhut.com.au/the-wise-man-maduro-lancero/';
+  const state = {
+    entries:{
+      sample:{
+        brand:'Foundation',
+        title:'The Wise Man Maduro Lancero',
+        packagePrice:49,
+        packageLabel:'single full lancero',
+        stock:'in',
+        retailerLinks:[productUrl]
+      }
+    }
+  };
+  let productFetches = 0;
+  const fetchImpl = async rawUrl => {
+    const url = new URL(rawUrl);
+    if (url.pathname === '/cigars/') return new Response('<main></main>', { status:200 });
+    if (url.pathname === '/the-wise-man-maduro-lancero/') {
+      productFetches += 1;
+      return new Response('<main><h1>The Wise Man Maduro Lancero</h1><div>Now: $49.00 - $919.00</div><button>Add to Cart</button></main>', { status:200 });
+    }
+    return new Response('', { status:404 });
+  };
+
+  await runStockCheck(env, state, 'full', { html:'', now:12345, fetchImpl });
+  const cache = await readStockCache(env);
+  assert.equal(productFetches, 1);
+  assert.equal(cache.results.sample.retailers[0].status, 'in');
+  assert.equal(cache.results.sample.retailers[0].price, 49);
+});
+
 test('matrix renders the actual cached price for every matching retailer row', () => {
   const result = {
     retailers:[
