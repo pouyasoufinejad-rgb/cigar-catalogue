@@ -1,18 +1,3 @@
-if (typeof document !== 'undefined') {
-  import('./catalogue-direct-edit.mjs');
-  import('./catalogue-direct-persistence.mjs');
-  import('./catalogue-flavour.mjs');
-  import('./catalogue-card-layout.mjs');
-  import('./catalogue-legacy-copy.mjs');
-  import('./catalogue-size-presentation.mjs');
-  import('./catalogue-presentation.mjs');
-  import('./catalogue-half-cohort.mjs');
-  import('./catalogue-editor-behaviour.mjs');
-  import('./catalogue-convenience.mjs');
-  import('./catalogue-convenience-refinements.mjs');
-  import('./catalogue-retailer-best-price.mjs');
-}
-
 export const QUALITY_BENCHMARKS = Object.freeze({
   1: 1.75, 2: 2.50, 3: 3.50, 4: 5, 5: 7,
   6: 10, 7: 14, 8: 18, 9: 22, 10: 26

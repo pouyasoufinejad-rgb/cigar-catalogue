@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const cleanup = await import('../public/catalogue-legacy-copy.mjs');
-const valueLoader = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const runtimeLoader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('removes only the redundant Substantial copy while preserving the legacy mount', () => {
   const heading = {
@@ -65,5 +65,5 @@ test('cleanup leaves similarly placed unrelated copy alone', () => {
 });
 
 test('catalogue loader installs the legacy copy cleanup', () => {
-  assert.match(valueLoader, /import\('\.\/catalogue-legacy-copy\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-legacy-copy\.mjs'\)/);
 });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const moduleUrl = new URL('../public/catalogue-convenience-refinements.mjs', import.meta.url);
-const bootstrapUrl = new URL('../public/catalogue-value.mjs', import.meta.url);
+const bootstrapUrl = new URL('../public/catalogue-runtime.mjs', import.meta.url);
 
 test('active personal statuses are visually explicit rather than looking disabled', async () => {
   const source = await readFile(moduleUrl, 'utf8');

@@ -193,8 +193,6 @@ export function sanitiseStoredMarkup(value) {
   let source = text(value);
   if (!source) return '';
 
-  // Remove executable/embedded elements and their contents before processing the
-  // small formatting subset used by catalogue summaries and notes.
   source = source.replace(/<\s*(script|style|iframe|object|embed|svg|math)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
 
   const allowedSimpleTags = new Set(['strong', 'b', 'em', 'i']);
@@ -225,7 +223,6 @@ export function sanitiseStoredMarkup(value) {
             : '<a>';
         }
       }
-      // All other tags are dropped while their text content is retained.
     }
     cursor = match.index + rawTag.length;
   }
@@ -384,7 +381,7 @@ function bearerToken(request) {
 
 function sameOriginWrite(request) {
   const origin = request.headers.get('origin');
-  if (!origin) return true; // Non-browser clients such as Wrangler/curl do not need an Origin header.
+  if (!origin) return true;
   try {
     return new URL(origin).origin === new URL(request.url).origin;
   } catch (_) {
@@ -522,7 +519,6 @@ export async function handleEntry(request, env, rawKey) {
   ]);
   return json({ ok: true, key });
 }
-
 
 export async function handleStock(request, env) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -706,7 +702,6 @@ export function renderEntryCard(rawEntry) {
 <div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3><div class="country-above"><div class="country-row">${countryFlag}<span class="country-name">${esc(entry.country)}</span></div></div><div class="facts"><div><b>${aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div><div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${medalRating('Value', valueScore)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
 }
 
-
 function setHtmlAttribute(tag, name, value) {
   const escaped = esc(value);
   const rx = new RegExp(`\\s${name}=(?:\"[^\"]*\"|'[^']*')`, 'i');
@@ -811,7 +806,6 @@ export function applyStructuralOverridesToHtml(html, cards) {
       if (newLinks) {
         card = card.replace(/<\/div>\s*<\/article>\s*$/i, `${newLinks}</div></article>`);
       } else if (!hadShop) {
-        // Nothing to remove or insert.
       }
     }
 
@@ -829,6 +823,15 @@ export function injectEntriesIntoHtml(html, entries) {
   return `${html.slice(0, insertAt)}\n${cards}\n${html.slice(insertAt)}`;
 }
 
+export function injectRuntimeBootstrap(html) {
+  const source = String(html || '');
+  if (/catalogue-runtime\.mjs/i.test(source)) return source;
+  const script = '<script type="module" src="/catalogue-runtime.mjs"></script>';
+  const closeBody = source.lastIndexOf('</body>');
+  if (closeBody < 0) return `${source}${script}`;
+  return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
+}
+
 async function maybeInjectCatalogueHtml(request, response, env) {
   if (request.method !== 'GET' || !response || !response.ok) return response;
   const url = new URL(request.url);
@@ -837,7 +840,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   if (!contentType.toLowerCase().includes('text/html')) return response;
   const state = await readState(env);
   const html = await response.text();
-  const transformed = applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards);
+  const transformed = injectRuntimeBootstrap(applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards));
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.set('cache-control', 'no-cache, must-revalidate');

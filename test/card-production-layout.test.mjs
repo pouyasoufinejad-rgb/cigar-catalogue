@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const stockClient = await readFile(new URL('../public/catalogue-stock-client.mjs', import.meta.url), 'utf8');
-const valueLoader = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const runtimeLoader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const wideLayout = await readFile(new URL('../public/catalogue-card-layout.mjs', import.meta.url), 'utf8').catch(() => '');
 
 test('card cleanup removes only an exact Unflavoured production line', () => {
@@ -12,7 +12,7 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 });
 
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
-  assert.match(valueLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
   assert.match(wideLayout, /width:\s*calc\(100% \+ 60px\)!important/);

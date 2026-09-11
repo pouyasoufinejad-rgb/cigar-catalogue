@@ -8,7 +8,7 @@ try {
 } catch (_) {
   behaviour = null;
 }
-const loaderSource = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const loaderSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
 
 test('Half-Cigar remains selected when legacy editor code programmatically writes Recommendation', () => {

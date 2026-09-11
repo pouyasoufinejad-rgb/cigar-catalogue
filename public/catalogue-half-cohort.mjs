@@ -1,3 +1,8 @@
+import {
+  registerCatalogueStateTransform,
+  registerCatalogueStateResponseListener
+} from './catalogue-save-pipeline.mjs';
+
 const STATE_API = '/api/catalogue-overrides';
 const HALF_TYPE = 'half';
 const TASTER_TYPE = 'taster';
@@ -447,27 +452,11 @@ function patchStatePayloadForEditor(payload, root = document) {
   return { ...payload, cards: { ...cards, ...rankUpdates } };
 }
 
-function installSaveInterceptor(root = document) {
-  if (typeof window === 'undefined' || typeof window.fetch !== 'function' || window.__catalogueHalfCohortFetchWrapped) return;
-  window.__catalogueHalfCohortFetchWrapped = true;
-  const originalFetch = window.fetch.bind(window);
-  window.fetch = async (input, init = {}) => {
-    const href = typeof input === 'string' ? input : input?.url || '';
-    const method = String(init?.method || 'GET').toUpperCase();
-    let nextInit = init;
-    let patchedState = false;
-    if (method === 'PUT' && href.split('?')[0] === STATE_API && typeof init.body === 'string') {
-      try {
-        const payload = JSON.parse(init.body);
-        const patched = patchStatePayloadForEditor(payload, root);
-        nextInit = { ...init, body: JSON.stringify(patched) };
-        patchedState = true;
-      } catch (_) {}
-    }
-    const response = await originalFetch(input, nextInit);
-    if (patchedState && response.ok) setTimeout(() => hydrateMembership(root), 0);
-    return response;
-  };
+function installSavePipeline(root = document) {
+  registerCatalogueStateTransform('half-cohort', 20, payload => patchStatePayloadForEditor(payload, root));
+  registerCatalogueStateResponseListener('half-cohort', event => {
+    if (event?.method === 'PUT') setTimeout(() => hydrateMembership(root), 0);
+  });
 }
 
 function ensureHalfFilter(root = document) {
@@ -531,7 +520,7 @@ export function installHalfCigarCohort(root = document) {
   ensureHalfCigarSection(root);
   ensureHalfFilter(root);
   installEditorHooks(root);
-  installSaveInterceptor(root);
+  installSavePipeline(root);
   compactDomCohortRanks(root);
   hydrateMembership(root);
 
