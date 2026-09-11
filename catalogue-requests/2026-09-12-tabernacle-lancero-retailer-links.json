@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-12-tabernacle-lancero-retailer-links",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/collections/the-tabernacle/products/the-tabernacle-lancero",
+      "https://www.cigarhut.com.au/the-tabernacle-lancero/"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Retailer-link integrity fix for the Tabernacle Half-Cigar card. The catalogue entry is the 7 x 40 Broadleaf Lancero, so remove Corona retailer links that caused the retailer matrix to compare a different vitola. Keep the exact Index Lancero source and add Cigar Hut's exact Tabernacle Lancero page. Preserve every unrelated field and keep Value automatically derived."
+}
