@@ -1,4 +1,4 @@
-name: Verify CigarHut search fallback
+name: Diagnose CigarHut search structure
 
 on:
   push:
@@ -10,76 +10,55 @@ permissions:
   contents: read
 
 jobs:
-  refresh:
-    name: Refresh and verify CigarHut search fallback
+  diagnose:
+    name: Inspect CigarHut search results
     runs-on: ubuntu-latest
-    env:
-      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
-      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Refresh until search fallback is live
+      - name: Inspect exact unresolved products in CigarHut search HTML
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
-            echo '::error::CATALOGUE_ADMIN_TOKEN is not configured.'
-            exit 1
-          fi
-
-          improved=0
-          for attempt in $(seq 1 12); do
-            echo "Full stock refresh attempt ${attempt}"
-            curl -fsS --max-time 240 \
-              -X POST \
-              -H "Authorization: Bearer ${CATALOGUE_ADMIN_TOKEN}" \
-              -H 'Content-Type: application/json' \
-              --data '{"mode":"full"}' \
-              "${CATALOGUE_URL}/api/stock/check" > /tmp/refresh.json
-
-            curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?verify=${GITHUB_SHA}-${attempt}" > /tmp/stock.json
-            read -r rows unknown missing < <(python3 - <<'PY'
-          import json
-          data=json.load(open('/tmp/stock.json'))
-          rows=[]
-          for key,result in data.get('results',{}).items():
-              for row in result.get('retailers',[]):
-                  if row.get('retailer')=='CigarHut': rows.append((key,row))
-          unknown=sum(1 for _,r in rows if r.get('status')=='unknown')
-          missing=sum(1 for _,r in rows if not isinstance(r.get('price'),(int,float)))
-          print(len(rows), unknown, missing)
+          python3 - <<'PY'
+          import html as htmllib, re, subprocess, urllib.parse
+          cases = [
+              ('liga-t52-coronets','https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/'),
+              ('oliva-serie-g','https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/'),
+              ('wise-man','https://www.cigarhut.com.au/the-wise-man-maduro-lancero/'),
+          ]
+          ua='Cigar Catalogue Stock Checker/1.0'
+          for key, product_url in cases:
+              path=urllib.parse.urlparse(product_url).path
+              slug=urllib.parse.unquote(path).strip('/').split('/')[-1].replace('-',' ').replace('_',' ')
+              search='https://www.cigarhut.com.au/search.php?search_query='+urllib.parse.quote_plus(slug)
+              out=f'/tmp/{key}.html'
+              cp=subprocess.run(['curl','-L','-sS','--max-time','30','-A',ua,'-o',out,'-w','%{http_code}',search],capture_output=True,text=True)
+              raw=open(out,encoding='utf-8',errors='replace').read()
+              print('\nCASE', key)
+              print('SEARCH', search)
+              print('HTTP', cp.stdout, 'BYTES', len(raw), 'TARGET_PATH_COUNT', raw.lower().count(path.lower()))
+              hrefs=[]
+              for m in re.finditer(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', raw, re.I):
+                  href=htmllib.unescape(m.group(1))
+                  text=re.sub(r'<[^>]+>',' ',m.group(2))
+                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
+                  if path.lower() in href.lower() or any(tok in text.lower() for tok in slug.lower().split()[:3]):
+                      hrefs.append((href,text))
+              print('MATCHING_ANCHORS', len(hrefs))
+              for href,text in hrefs[:12]: print('ANCHOR', repr(href), repr(text[:180]))
+              idx=raw.lower().find(path.lower())
+              if idx >= 0:
+                  snippet=raw[max(0,idx-1800):idx+3500]
+                  text=re.sub(r'<script\b[^>]*>[\s\S]*?</script>',' ',snippet,flags=re.I)
+                  text=re.sub(r'<style\b[^>]*>[\s\S]*?</style>',' ',text,flags=re.I)
+                  text=re.sub(r'<[^>]+>',' | ',text)
+                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
+                  print('TARGET_SNIPPET', text[:3000])
+              else:
+                  # show likely product-card text around strongest slug token
+                  token=slug.split()[0] if slug.split() else ''
+                  idx=raw.lower().find(token.lower()) if token else -1
+                  snippet=raw[max(0,idx-1200):idx+3000] if idx>=0 else raw[:3000]
+                  text=re.sub(r'<[^>]+>',' | ',snippet)
+                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
+                  print('FALLBACK_SNIPPET', text[:2500])
           PY
-            )
-            echo "CigarHut rows=${rows} unknown=${unknown} missing_price=${missing}"
-            if (( unknown < 17 && missing < 15 )); then
-              improved=1
-              break
-            fi
-            sleep 5
-          done
-
-          if [[ "${improved}" != "1" ]]; then
-            echo '::error::Search fallback did not improve both CigarHut baselines (17 unknown, 15 missing price).'
-            exit 1
-          fi
-
-      - name: Report final unresolved CigarHut rows
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?final=${GITHUB_SHA}" \
-            | python3 -c '
-          import json,sys
-          data=json.load(sys.stdin)
-          rows=[]
-          for key,result in data.get("results",{}).items():
-              for row in result.get("retailers",[]):
-                  if row.get("retailer")=="CigarHut": rows.append((key,row))
-          unknown=[(k,r) for k,r in rows if r.get("status")=="unknown"]
-          missing=[(k,r) for k,r in rows if not isinstance(r.get("price"),(int,float))]
-          print(f"FINAL CigarHut rows: {len(rows)}; unknown: {len(unknown)}; missing price: {len(missing)}")
-          for key,row in unknown:
-              print("UNKNOWN", key, row.get("url"), "price=", row.get("price"))
-          for key,row in missing:
-              print("NO_PRICE", key, row.get("url"), "status=", row.get("status"))
-          '
