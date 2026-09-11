@@ -1,7 +1,11 @@
+import { extractRetailerPrice, chooseRetailerPrice } from './retailer-price.js';
+
+export { extractRetailerPrice } from './retailer-price.js';
 export const STOCK_RESULTS_KEY = 'catalogue-stock:results';
 export const STOCK_META_KEY = 'catalogue-stock:meta';
 export const STOCK_RESTOCK_CRON = '15 2 * * *';
 export const STOCK_FULL_CRON = '45 2 * * SUN';
+export const STOCK_PRICE_SCHEMA_VERSION = 1;
 
 export const STOCK_REQUEST_TIMEOUT_MS = 12000;
 export const STOCK_MAX_CONCURRENT = 5;
@@ -194,9 +198,44 @@ function retailerLinks(urls) {
   return output;
 }
 
-export function parseListingPage(html, targetPaths, pageUrl = CIGARHUT_ORIGIN) {
+function priceCandidatesFromText(value) {
+  const output = [];
+  const seen = new Set();
+  const rx = /(?:AUD\s*)?(?:A)?\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)/gi;
+  let match;
+  while ((match = rx.exec(String(value || '')))) {
+    const price = Number(match[1].replace(/,/g, ''));
+    if (!Number.isFinite(price) || price <= 0 || price >= 100000 || seen.has(price)) continue;
+    seen.add(price);
+    output.push(price);
+  }
+  return output;
+}
+
+function contextForPath(targetContexts, path) {
+  if (targetContexts instanceof Map) return targetContexts.get(path) || {};
+  return isRecord(targetContexts) ? (targetContexts[path] || {}) : {};
+}
+
+function closestPriceNode(anchor, root) {
+  let current = anchor?.parent;
+  let fallback = null;
+  let depth = 0;
+  while (current && current !== root?.parent && depth < 8) {
+    const prices = priceCandidatesFromText(textContent(current));
+    if (prices.length) fallback = current;
+    const marker = classString(current).toLowerCase();
+    if ((current.tag === 'li' || current.tag === 'article' || /product|item/.test(marker)) && prices.length) return current;
+    current = current.parent;
+    depth += 1;
+  }
+  return fallback;
+}
+
+export function parseListingPage(html, targetPaths, pageUrl = CIGARHUT_ORIGIN, targetContexts = new Map()) {
   const statuses = new Map();
   const pricedPaths = new Set();
+  const pricesByPath = new Map();
   if (!html || typeof html !== 'string') return statuses;
   const doc = parseHtml(html);
   const root = rootForDocument(doc);
@@ -215,8 +254,18 @@ export function parseListingPage(html, targetPaths, pageUrl = CIGARHUT_ORIGIN) {
     } else if (/\$\s?\d/.test(label)) {
       pricedPaths.add(path);
     }
+
+    const priceNode = closestPriceNode(anchor, root);
+    if (priceNode) {
+      const price = chooseRetailerPrice(priceCandidatesFromText(textContent(priceNode)), contextForPath(targetContexts, path)?.packagePrice);
+      if (price != null) pricesByPath.set(path, price);
+    }
   });
   pricedPaths.forEach(path => { if (!statuses.has(path)) statuses.set(path, { status:'in' }); });
+  pricesByPath.forEach((price, path) => {
+    const prior = statuses.get(path) || { status:'in' };
+    statuses.set(path, { ...prior, price });
+  });
   return statuses;
 }
 
@@ -329,6 +378,14 @@ export function aggregateRetailerResults(retailers, lastConfirmed = 'unknown') {
   return 'out';
 }
 
+function cardPackage(fragment) {
+  const match = String(fragment || '').match(/<div\b[^>]*class=(?:"[^"]*\bfacts\b[^"]*"|'[^']*\bfacts\b[^']*')[^>]*>\s*<div\b[^>]*>\s*<b\b[^>]*>([\s\S]*?)<\/b>\s*<small\b[^>]*>([\s\S]*?)<\/small>/i);
+  if (!match) return { packagePrice:0, packageLabel:'' };
+  const price = chooseRetailerPrice(priceCandidatesFromText(decodeEntities(match[1].replace(/<[^>]+>/g, ' '))), 0) || 0;
+  const label = decodeEntities(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+  return { packagePrice:price, packageLabel:label };
+}
+
 function extractArticleCards(html) {
   const output = [];
   const rx = /<article\b([^>]*\bdata-key=(?:"[^"]+"|'[^']+')[^>]*)>([\s\S]*?)<\/article>/gi;
@@ -346,9 +403,11 @@ function extractArticleCards(html) {
     }
     const h3 = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || key;
     const title = decodeEntities(h3.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+    const packageInfo = cardPackage(match[2]);
     output.push({
       key,
       title,
+      ...packageInfo,
       archived: attrs['data-archived'] === '1',
       stockPin: attrs['data-stock-pin'] || '',
       stock: ['in','out','unknown','delisted'].includes(attrs['data-stock']) ? attrs['data-stock'] : 'unknown',
@@ -363,6 +422,11 @@ function normalisePin(value) {
   return ['in','out','hold'].includes(pin) ? pin : '';
 }
 
+function positivePrice(value, fallback = 0) {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? price : fallback;
+}
+
 export function extractStockTargetsFromHtml(html, state = {}) {
   const byKey = new Map();
   const cards = isRecord(state.cards) ? state.cards : {};
@@ -373,7 +437,9 @@ export function extractStockTargetsFromHtml(html, state = {}) {
       archived: own(override, 'archived') ? Boolean(override.archived) : base.archived,
       stockPin: own(override, 'stockPin') ? normalisePin(override.stockPin) : normalisePin(base.stockPin),
       stock: own(override, 'stock') && ['in','out','unknown','delisted'].includes(override.stock) ? override.stock : base.stock,
-      retailerLinks: Array.isArray(override.retailerLinks) ? override.retailerLinks : base.retailerLinks
+      retailerLinks: Array.isArray(override.retailerLinks) ? override.retailerLinks : base.retailerLinks,
+      packagePrice: own(override, 'packagePrice') ? positivePrice(override.packagePrice, base.packagePrice) : base.packagePrice,
+      packageLabel: own(override, 'packageLabel') ? String(override.packageLabel || '') : base.packageLabel
     };
     byKey.set(base.key, target);
   }
@@ -385,6 +451,8 @@ export function extractStockTargetsFromHtml(html, state = {}) {
     byKey.set(key, {
       key,
       title: `${raw.brand || ''} ${raw.title || key}`.trim(),
+      packagePrice:positivePrice(own(override, 'packagePrice') ? override.packagePrice : raw.packagePrice),
+      packageLabel:String(own(override, 'packageLabel') ? (override.packageLabel || '') : (raw.packageLabel || '')),
       archived: own(override, 'archived') ? Boolean(override.archived) : Boolean(raw.archived),
       stockPin: normalisePin(own(override, 'stockPin') ? override.stockPin : raw.stockPin),
       stock: ['in','out','unknown','delisted'].includes(raw.stock) ? raw.stock : 'unknown',
@@ -431,6 +499,11 @@ async function promisePool(tasks, limit) {
   return results;
 }
 
+function previousRetailerPrice(plan, link) {
+  const row = (plan.previousRetailers || []).find(item => item?.retailer === link.retailer);
+  return positivePrice(row?.price, 0) || null;
+}
+
 async function runCategorySweep(cardPlans, fetchImpl, counters) {
   const refsByPath = new Map();
   cardPlans.forEach((plan, key) => {
@@ -445,6 +518,11 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
   if (!refsByPath.size) return;
 
   const targetPaths = new Set(refsByPath.keys());
+  const targetContexts = new Map();
+  refsByPath.forEach((refs, path) => {
+    const first = refs[0]?.plan || {};
+    targetContexts.set(path, { title:first.title || '', packagePrice:first.packagePrice || 0, packageLabel:first.packageLabel || '' });
+  });
   const queue = [{ url:CIGARHUT_CIGARS, depth:0 }];
   const queued = new Set([canonicalCategoryUrl(CIGARHUT_CIGARS)]);
   const fetchedCategories = new Set();
@@ -455,7 +533,10 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
   const mergeListingResults = results => {
     results.forEach((value, path) => {
       const prior = found.get(path);
-      if (!prior || value.status === 'in' || prior.status !== 'in') found.set(path, value);
+      if (!prior) { found.set(path, value); return; }
+      const status = prior.status === 'in' || value.status === 'in' ? 'in' : value.status || prior.status;
+      const price = positivePrice(value.price, 0) || positivePrice(prior.price, 0) || undefined;
+      found.set(path, { ...prior, ...value, status, ...(price ? { price } : {}) });
     });
   };
 
@@ -483,7 +564,7 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
     baseResults.forEach(result => {
       if (!result?.item || !result.page) return;
       const { item, page } = result;
-      mergeListingResults(parseListingPage(page.html, targetPaths, item.canonical));
+      mergeListingResults(parseListingPage(page.html, targetPaths, item.canonical, targetContexts));
       if (item.depth < 2) {
         discoverCategoryLinks(page.html, item.canonical, targetPaths).forEach(child => {
           const childCanonical = canonicalCategoryUrl(child);
@@ -509,7 +590,7 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
           return { page, pageUrl };
         } catch (_) { counters.failed++; return { page:null, pageUrl }; }
       }), STOCK_MAX_CONCURRENT);
-      pages.filter(result => result?.page).forEach(result => mergeListingResults(parseListingPage(result.page.html, targetPaths, result.pageUrl)));
+      pages.filter(result => result?.page).forEach(result => mergeListingResults(parseListingPage(result.page.html, targetPaths, result.pageUrl, targetContexts)));
     }
   }
 
@@ -517,11 +598,13 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
     const result = found.get(path);
     refs.forEach(ref => {
       if (ref.plan.retailerResults[ref.linkIndex]) return;
+      const priorPrice = previousRetailerPrice(ref.plan, ref.link);
       if (result) {
-        ref.plan.retailerResults[ref.linkIndex] = { retailer:'CigarHut', status:result.status, url:ref.link.url };
+        const price = positivePrice(result.price, 0) || priorPrice;
+        ref.plan.retailerResults[ref.linkIndex] = { retailer:'CigarHut', status:result.status, url:ref.link.url, ...(price ? { price } : {}) };
         counters.sweepResolved++;
       } else {
-        ref.plan.retailerResults[ref.linkIndex] = { retailer:'CigarHut', status:'unknown', url:ref.link.url };
+        ref.plan.retailerResults[ref.linkIndex] = { retailer:'CigarHut', status:'unknown', url:ref.link.url, ...(priorPrice ? { price:priorPrice } : {}) };
         counters.delistingCandidates.set(ref.key, ref.plan.title || ref.key);
       }
     });
@@ -532,14 +615,21 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
   const tasks = [];
   cardPlans.forEach(plan => {
     plan.links.forEach((link, linkIndex) => {
-      if (link.retailer === 'CigarHut' || plan.retailerResults[linkIndex]) return;
+      const existing = plan.retailerResults[linkIndex];
+      if (existing && positivePrice(existing.price, 0)) return;
+      if (existing && link.retailer !== 'CigarHut') return;
       tasks.push(async () => {
-        let status = 'unknown';
+        let status = existing?.status || 'unknown';
+        let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link);
         try {
           const page = await fetchPage(link.url, fetchImpl, true);
-          status = detectAvailability(page.html);
-        } catch (_) { status = 'unknown'; }
-        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url };
+          if (status === 'unknown') status = detectAvailability(page.html);
+          const currentPrice = extractRetailerPrice(page.html, plan);
+          if (currentPrice != null) price = currentPrice;
+        } catch (_) {
+          if (!existing) status = 'unknown';
+        }
+        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(price ? { price } : {}) };
         if (status === 'unknown') counters.failed++;
         else counters.productResolved++;
       });
@@ -587,6 +677,7 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
     if (isFull) return true;
     const saved = results[target.key];
     if ((saved?.status === 'delisted') || target.stock === 'delisted') return false;
+    if (saved?.priceSchemaVersion !== STOCK_PRICE_SCHEMA_VERSION) return true;
     return target.stock === 'out' || saved?.status === 'out';
   });
 
@@ -601,7 +692,12 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
   for (const target of selected) {
     const saved = results[target.key];
     const oldStatus = saved?.status && saved.status !== 'unknown' ? saved.status : target.stock;
-    plans.set(target.key, { ...target, oldStatus, retailerResults:new Array(target.links.length) });
+    plans.set(target.key, {
+      ...target,
+      oldStatus,
+      previousRetailers:Array.isArray(saved?.retailers) ? saved.retailers : [],
+      retailerResults:new Array(target.links.length)
+    });
   }
 
   const counters = { sweepResolved:0, productResolved:0, failed:0, delistingCandidates:new Map() };
@@ -612,7 +708,8 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
   plans.forEach((plan, key) => {
     plan.links.forEach((link, index) => {
       if (plan.retailerResults[index]) return;
-      plan.retailerResults[index] = { retailer:link.retailer, status:'unknown', url:link.url };
+      const priorPrice = previousRetailerPrice(plan, link);
+      plan.retailerResults[index] = { retailer:link.retailer, status:'unknown', url:link.url, ...(priorPrice ? { price:priorPrice } : {}) };
       if (link.retailer === 'CigarHut') counters.delistingCandidates.set(key, plan.title || key);
       else counters.failed++;
     });
@@ -626,6 +723,7 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
       lastAttemptStatus:attemptedStatus,
       checkedAt:attemptedStatus === 'unknown' ? (previous.checkedAt || now) : now,
       lastAttemptAt:now,
+      priceSchemaVersion:STOCK_PRICE_SCHEMA_VERSION,
       retailers:retailerResults
     };
     if (['out','delisted'].includes(plan.oldStatus) && attemptedStatus === 'in') restocked.push(key);
