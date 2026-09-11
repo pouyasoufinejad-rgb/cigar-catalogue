@@ -1,4 +1,4 @@
-name: Diagnose CigarHut parser and Tabernacle
+name: Inspect stale retailer rows
 
 on:
   push:
@@ -10,67 +10,34 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
-    name: Run real retailer HTML through production parser
+  inspect:
     runs-on: ubuntu-latest
     env:
       CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Test production parser against live CigarHut search HTML
+      - name: Inspect Tabernacle and CigarHut live cache
         shell: bash
         run: |
           set -euo pipefail
-          urls=(
-            'https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/'
-            'https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/'
-            'https://www.cigarhut.com.au/java-x-press-maduro/'
-            'https://www.cigarhut.com.au/oliva-serie-v-melanio-no-4/'
-            'https://www.cigarhut.com.au/davidoff-escurio-petit-robusto/'
-          )
-          : > /tmp/cases.tsv
-          i=0
-          for product in "${urls[@]}"; do
-            slug="$(python3 -c 'import sys,urllib.parse; p=urllib.parse.urlparse(sys.argv[1]).path.strip("/").split("/")[-1].replace("-"," ").replace("_"," "); print(urllib.parse.quote_plus(p))' "$product")"
-            search="https://www.cigarhut.com.au/search.php?search_query=${slug}"
-            curl -LfsS --max-time 35 -A 'Cigar Catalogue Stock Checker/1.0' "$search" -o "/tmp/search-${i}.html"
-            printf '%s\t%s\t%s\n' "$i" "$product" "$search" >> /tmp/cases.tsv
-            i=$((i+1))
-          done
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import { parseListingPage } from './src/stock.js';
-          const rows=fs.readFileSync('/tmp/cases.tsv','utf8').trim().split('\n');
-          for (const row of rows) {
-            const [i, product, search]=row.split('\t');
-            const html=fs.readFileSync(`/tmp/search-${i}.html`,'utf8');
-            const path=new URL(product).pathname.toLowerCase().replace(/\/?$/, '/');
-            const context=new Map([[path,{packagePrice:0,packageLabel:'',title:''}]]);
-            const parsed=parseListingPage(html,new Set([path]),search,context);
-            console.log('PARSED', product, JSON.stringify(parsed.get(path) || null));
-          }
-          NODE
-      - name: Print live Tabernacle state and stock rows
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/catalogue-overrides?diag=${GITHUB_SHA}" -o /tmp/state.json
-          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/stock?diag=${GITHUB_SHA}" -o /tmp/stock.json
-          curl -fsSL --max-time 30 "${CATALOGUE_URL}/?diag=${GITHUB_SHA}" -o /tmp/catalogue.html
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/stock?inspect=${GITHUB_SHA}" -o /tmp/stock.json
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/?inspect=${GITHUB_SHA}" -o /tmp/catalogue.html
           python3 - <<'PY'
           import json,re,html
-          state=json.load(open('/tmp/state.json')); stock=json.load(open('/tmp/stock.json')); raw=open('/tmp/catalogue.html',encoding='utf8',errors='replace').read()
-          for key,val in (state.get('entries') or {}).items():
-              if 'tabernacle' in (key+' '+str(val)).lower():
-                  print('STATE',key,json.dumps(val,sort_keys=True))
-                  print('STOCK',key,json.dumps((stock.get('results') or {}).get(key),sort_keys=True))
-          for m in re.finditer(r'<article\b[^>]*data-key=["\']([^"\']+)["\'][^>]*>[\s\S]*?</article>',raw,re.I):
+          stock=json.load(open('/tmp/stock.json')); raw=open('/tmp/catalogue.html',encoding='utf8',errors='replace').read()
+          for key in ['tabernacle-broadleaf-corona','foundation-wise-man-maduro-lancero-half']:
+              print('STOCK_ROW',key,json.dumps((stock.get('results') or {}).get(key),sort_keys=True))
+          for key,result in (stock.get('results') or {}).items():
+              if 'tabernacle' in key.lower() or any('tabernacle' in str(x).lower() for x in result.get('retailers',[])):
+                  print('TABERNACLE_CACHE',key,json.dumps(result,sort_keys=True))
+          cigarhut=[]
+          for key,result in (stock.get('results') or {}).items():
+              for row in result.get('retailers',[]):
+                  if row.get('retailer')=='CigarHut':
+                      cigarhut.append((key,row.get('status'),row.get('price'),row.get('url')))
+          print('CIGARHUT_COUNT',len(cigarhut),'UNKNOWN',sum(s=='unknown' for _,s,_,_ in cigarhut),'MISSING_PRICE',sum(not isinstance(p,(int,float)) for _,_,p,_ in cigarhut))
+          for row in cigarhut:
+              if row[1]=='unknown' or not isinstance(row[2],(int,float)): print('UNRESOLVED',row)
+          for m in re.finditer(r'<article\b[^>]*data-key=["\']tabernacle-broadleaf-corona["\'][^>]*>[\s\S]*?</article>',raw,re.I):
               card=m.group(0)
-              text=re.sub(r'\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',card))).strip()
-              if 'tabernacle' in text.lower():
-                  links=re.findall(r'<a\b[^>]*class=["\'][^"\']*\bshop\b[^"\']*["\'][^>]*href=["\']([^"\']+)',card,re.I)
-                  print('HTML_CARD',m.group(1),'TEXT',text[:1400],'LINKS',links)
+              print('TABERNACLE_LINKS',re.findall(r'href=["\']([^"\']+)',card,re.I))
           PY
