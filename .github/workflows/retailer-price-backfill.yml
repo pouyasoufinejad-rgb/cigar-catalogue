@@ -1,4 +1,4 @@
-name: Refresh CigarHut after stock fix
+name: Verify CigarHut search fallback
 
 on:
   push:
@@ -11,13 +11,13 @@ permissions:
 
 jobs:
   refresh:
-    name: Refresh and verify CigarHut rows
+    name: Refresh and verify CigarHut search fallback
     runs-on: ubuntu-latest
     env:
       CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
       CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Refresh until fixed Worker is live
+      - name: Refresh until search fallback is live
         shell: bash
         run: |
           set -euo pipefail
@@ -50,7 +50,7 @@ jobs:
           PY
             )
             echo "CigarHut rows=${rows} unknown=${unknown} missing_price=${missing}"
-            if (( unknown < 33 )); then
+            if (( unknown < 17 && missing < 15 )); then
               improved=1
               break
             fi
@@ -58,11 +58,12 @@ jobs:
           done
 
           if [[ "${improved}" != "1" ]]; then
-            echo '::error::CigarHut unknown count did not improve from the pre-fix baseline of 33.'
+            echo '::error::Search fallback did not improve both CigarHut baselines (17 unknown, 15 missing price).'
             exit 1
           fi
 
       - name: Report final unresolved CigarHut rows
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
