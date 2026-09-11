@@ -10,5 +10,4 @@ if (typeof document !== 'undefined') {
   import('./catalogue-editor-behaviour.mjs');
   import('./catalogue-convenience.mjs');
   import('./catalogue-convenience-refinements.mjs');
-  import('./catalogue-retailer-best-price.mjs');
 }
