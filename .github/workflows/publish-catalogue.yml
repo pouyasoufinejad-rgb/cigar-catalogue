@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/publish-catalogue.yml'
       - 'catalogue-requests/**'
+      - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'test/**'
@@ -16,6 +17,7 @@ on:
     paths:
       - '.github/workflows/publish-catalogue.yml'
       - 'catalogue-requests/**'
+      - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'test/**'
