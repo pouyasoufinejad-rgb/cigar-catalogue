@@ -193,6 +193,22 @@ function headingMatchesProduct(html, title) {
   return heading ? titleScore(textOnly(heading), title) >= 0.5 : false;
 }
 
+function primaryProductScope(html) {
+  const source = String(html || '');
+  const heading = /<h1\b[^>]*>[\s\S]*?<\/h1\s*>/i.exec(source);
+  if (!heading) return source;
+
+  const start = heading.index;
+  const tail = source.slice(start);
+  const stopRx = /<h[1-6]\b[^>]*>\s*(?:related products?|you may also like|recommended(?: products?)?|customers also(?: bought| viewed)?|similar products?)\s*<\/h[1-6]\s*>/i;
+  const stop = stopRx.exec(tail);
+  if (stop) return source.slice(start, start + stop.index);
+
+  const relatedContainer = /<(?:section|aside|div)\b[^>]*(?:id|class)\s*=\s*(?:"[^"]*(?:related|recommend|upsell|similar)[^"]*"|'[^']*(?:related|recommend|upsell|similar)[^']*')[^>]*>/i.exec(tail);
+  if (relatedContainer) return source.slice(start, start + relatedContainer.index);
+  return tail;
+}
+
 export function extractRetailerPrice(html, context = {}) {
   if (!html || typeof html !== 'string') return null;
 
@@ -203,7 +219,8 @@ export function extractRetailerPrice(html, context = {}) {
   if (listed != null) return listed;
 
   if (!headingMatchesProduct(html, context.title)) return null;
-  return choosePrice(moneyCandidates(textOnly(html)), context.packagePrice);
+  const primary = primaryProductScope(html);
+  return choosePrice(moneyCandidates(textOnly(primary)), context.packagePrice);
 }
 
 export { choosePrice as chooseRetailerPrice };
