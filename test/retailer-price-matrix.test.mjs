@@ -66,13 +66,13 @@ test('matches the correct product and package on retailer category pages instead
   }), 58.5);
 });
 
-test('full stock checks persist a numeric price beside each retailer status', async () => {
-  class MemoryKv {
-    constructor() { this.values = new Map(); }
-    async get(key) { return this.values.get(key) ?? null; }
-    async put(key, value) { this.values.set(key, String(value)); }
-  }
+class MemoryKv {
+  constructor() { this.values = new Map(); }
+  async get(key) { return this.values.get(key) ?? null; }
+  async put(key, value) { this.values.set(key, String(value)); }
+}
 
+test('full stock checks persist a numeric price beside each retailer status', async () => {
   const env = { CATALOGUE_STATE:new MemoryKv() };
   const state = {
     entries:{
@@ -99,6 +99,30 @@ test('full stock checks persist a numeric price beside each retailer status', as
   const cache = await readStockCache(env);
   assert.equal(cache.results.sample.retailers[0].price, 51.5);
   assert.equal(cache.results.sample.priceSchemaVersion, STOCK_PRICE_SCHEMA_VERSION);
+});
+
+test('first retailer keeps the catalogue benchmark when the source retailer blocks the stock crawler', async () => {
+  const env = { CATALOGUE_STATE:new MemoryKv() };
+  const state = {
+    entries:{
+      sample:{
+        brand:'Foundation',
+        title:'The Wise Man Maduro Lancero',
+        packagePrice:49,
+        packageLabel:'single full lancero',
+        stock:'in',
+        retailerLinks:['https://www.cigarhut.com.au/the-wise-man-maduro-lancero/']
+      }
+    }
+  };
+
+  await runStockCheck(env, state, 'full', {
+    html:'',
+    now:12345,
+    fetchImpl:async () => { throw new Error('blocked'); }
+  });
+  const cache = await readStockCache(env);
+  assert.equal(cache.results.sample.retailers[0].price, 49);
 });
 
 test('matrix renders the actual cached price for every matching retailer row', () => {

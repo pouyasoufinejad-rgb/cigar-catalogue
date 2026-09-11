@@ -499,9 +499,12 @@ async function promisePool(tasks, limit) {
   return results;
 }
 
-function previousRetailerPrice(plan, link) {
+function previousRetailerPrice(plan, link, linkIndex = -1) {
   const row = (plan.previousRetailers || []).find(item => item?.retailer === link.retailer);
-  return positivePrice(row?.price, 0) || null;
+  const cached = positivePrice(row?.price, 0);
+  if (cached) return cached;
+  if (linkIndex === 0) return positivePrice(plan.packagePrice, 0) || null;
+  return null;
 }
 
 async function runCategorySweep(cardPlans, fetchImpl, counters) {
@@ -598,7 +601,7 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
     const result = found.get(path);
     refs.forEach(ref => {
       if (ref.plan.retailerResults[ref.linkIndex]) return;
-      const priorPrice = previousRetailerPrice(ref.plan, ref.link);
+      const priorPrice = previousRetailerPrice(ref.plan, ref.link, ref.linkIndex);
       if (result) {
         const price = positivePrice(result.price, 0) || priorPrice;
         ref.plan.retailerResults[ref.linkIndex] = { retailer:'CigarHut', status:result.status, url:ref.link.url, ...(price ? { price } : {}) };
@@ -620,7 +623,7 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
       if (existing && link.retailer !== 'CigarHut') return;
       tasks.push(async () => {
         let status = existing?.status || 'unknown';
-        let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link);
+        let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link, linkIndex);
         try {
           const page = await fetchPage(link.url, fetchImpl, true);
           if (status === 'unknown') status = detectAvailability(page.html);
@@ -708,7 +711,7 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
   plans.forEach((plan, key) => {
     plan.links.forEach((link, index) => {
       if (plan.retailerResults[index]) return;
-      const priorPrice = previousRetailerPrice(plan, link);
+      const priorPrice = previousRetailerPrice(plan, link, index);
       plan.retailerResults[index] = { retailer:link.retailer, status:'unknown', url:link.url, ...(priorPrice ? { price:priorPrice } : {}) };
       if (link.retailer === 'CigarHut') counters.delistingCandidates.set(key, plan.title || key);
       else counters.failed++;
