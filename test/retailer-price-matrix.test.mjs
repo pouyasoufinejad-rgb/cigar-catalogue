@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { extractRetailerPrice } from '../src/stock.js';
+import {
+  extractRetailerPrice,
+  readStockCache,
+  runStockCheck,
+  STOCK_PRICE_SCHEMA_VERSION
+} from '../src/stock.js';
 import { retailerPriceForRow } from '../public/catalogue-convenience.mjs';
 
 test('extracts the intended variant price from structured product offers', () => {
@@ -43,6 +48,41 @@ test('matches the correct product and package on retailer category pages instead
     packageLabel:'single full lancero',
     packagePrice:49
   }), 58.5);
+});
+
+test('full stock checks persist a numeric price beside each retailer status', async () => {
+  class MemoryKv {
+    constructor() { this.values = new Map(); }
+    async get(key) { return this.values.get(key) ?? null; }
+    async put(key, value) { this.values.set(key, String(value)); }
+  }
+
+  const env = { CATALOGUE_STATE:new MemoryKv() };
+  const state = {
+    entries:{
+      sample:{
+        brand:'Foundation',
+        title:'The Wise Man Maduro Lancero',
+        packagePrice:49,
+        packageLabel:'single full lancero',
+        stock:'in',
+        retailerLinks:['https://www.theindexcigars.com.au/products/test']
+      }
+    }
+  };
+  const productHtml = `<html><head><script type="application/ld+json">{
+    "@type":"Product","name":"The Wise Man Maduro Lancero",
+    "offers":[{"@type":"Offer","price":"51.50","priceCurrency":"AUD"}]
+  }</script></head><body><main><h1>The Wise Man Maduro Lancero</h1><button>Add to Cart</button></main></body></html>`;
+
+  await runStockCheck(env, state, 'full', {
+    html:'',
+    now:12345,
+    fetchImpl:async () => new Response(productHtml, { status:200 })
+  });
+  const cache = await readStockCache(env);
+  assert.equal(cache.results.sample.retailers[0].price, 51.5);
+  assert.equal(cache.results.sample.priceSchemaVersion, STOCK_PRICE_SCHEMA_VERSION);
 });
 
 test('matrix renders the actual cached price for every matching retailer row', () => {
