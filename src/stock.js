@@ -614,6 +614,31 @@ async function runCategorySweep(cardPlans, fetchImpl, counters) {
   });
 }
 
+function cigarhutSearchUrl(link) {
+  try {
+    const product = new URL(link.url);
+    let slug = decodeURIComponent(product.pathname).split('/').filter(Boolean).pop() || '';
+    slug = slug.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!slug) return '';
+    const search = new URL('/search.php', CIGARHUT_ORIGIN);
+    search.searchParams.set('search_query', slug);
+    return search.toString();
+  } catch (_) { return ''; }
+}
+
+async function recoverCigarhutListing(plan, link, fetchImpl) {
+  const searchUrl = cigarhutSearchUrl(link);
+  const path = normalisePathname(link.url);
+  if (!searchUrl || !path) return null;
+  const page = await fetchPage(searchUrl, fetchImpl, false);
+  const contexts = new Map([[path, {
+    title:plan.title || '',
+    packagePrice:plan.packagePrice || 0,
+    packageLabel:plan.packageLabel || ''
+  }]]);
+  return parseListingPage(page.html, new Set([path]), searchUrl, contexts).get(path) || null;
+}
+
 async function runProductPass(cardPlans, fetchImpl, counters) {
   const tasks = [];
   cardPlans.forEach(plan => {
@@ -631,6 +656,16 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
           if (currentPrice != null) price = currentPrice;
         } catch (_) {
           if (!existing) status = 'unknown';
+        }
+        if (link.retailer === 'CigarHut' && (status === 'unknown' || !positivePrice(price, 0))) {
+          try {
+            const recovered = await recoverCigarhutListing(plan, link, fetchImpl);
+            if (recovered) {
+              if (status === 'unknown' && ['in','out'].includes(recovered.status)) status = recovered.status;
+              const recoveredPrice = positivePrice(recovered.price, 0);
+              if (recoveredPrice) price = recoveredPrice;
+            }
+          } catch (_) {}
         }
         plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(price ? { price } : {}) };
         if (status === 'unknown') counters.failed++;

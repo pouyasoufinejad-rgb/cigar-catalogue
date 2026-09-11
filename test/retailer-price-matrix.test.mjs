@@ -158,6 +158,40 @@ test('CigarHut product fallback still verifies stock when the category sweep alr
   assert.equal(cache.results.sample.retailers[0].price, 49);
 });
 
+test('CigarHut search fallback recovers stock and current price when the direct product check is incomplete', async () => {
+  const env = { CATALOGUE_STATE:new MemoryKv() };
+  const productUrl = 'https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/';
+  const state = {
+    entries:{
+      sample:{
+        brand:'Liga Privada',
+        title:'T52 Coronets Tin of 10',
+        packagePrice:100,
+        packageLabel:'tin of 10',
+        stock:'in',
+        retailerLinks:[productUrl]
+      }
+    }
+  };
+  let searchFetches = 0;
+  const fetchImpl = async rawUrl => {
+    const url = new URL(rawUrl);
+    if (url.pathname === '/cigars/') return new Response('<main></main>', { status:200 });
+    if (url.pathname === '/liga-privada-t52-coronets-tins-10-cigars/') return new Response('temporary upstream failure', { status:503 });
+    if (url.pathname === '/search.php') {
+      searchFetches += 1;
+      return new Response(`<main><article class="product"><a href="${productUrl}">Liga Privada T52 Coronets Tins 10 Cigars</a><span>$115.00</span><a href="${productUrl}">Choose Options</a></article></main>`, { status:200 });
+    }
+    return new Response('', { status:404 });
+  };
+
+  await runStockCheck(env, state, 'full', { html:'', now:12345, fetchImpl });
+  const cache = await readStockCache(env);
+  assert.equal(searchFetches, 1);
+  assert.equal(cache.results.sample.retailers[0].status, 'in');
+  assert.equal(cache.results.sample.retailers[0].price, 115);
+});
+
 test('matrix renders the actual cached price for every matching retailer row', () => {
   const result = {
     retailers:[
