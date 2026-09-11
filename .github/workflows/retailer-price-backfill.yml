@@ -1,4 +1,4 @@
-name: One-time retailer price backfill
+name: Verify retailer price backfill
 
 on:
   push:
@@ -10,46 +10,32 @@ permissions:
   contents: read
 
 jobs:
-  backfill:
-    name: Refresh live retailer price cache
+  verify:
+    name: Verify live retailer prices
     runs-on: ubuntu-latest
     env:
-      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
       CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Wait for price-aware frontend deployment
+      - name: Assert three-retailer price cache
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
-            echo "::error::CATALOGUE_ADMIN_TOKEN repository Actions secret is not configured."
-            exit 1
-          fi
-
-          ready=0
-          for attempt in $(seq 1 30); do
-            source="$(curl -fsSL --max-time 15 "${CATALOGUE_URL}/catalogue-convenience.mjs?price_backfill=${GITHUB_SHA}" || true)"
-            if grep -q 'retailerPriceForRow' <<<"${source}"; then
-              ready=1
-              break
-            fi
-            sleep 5
-          done
-
-          if [[ "${ready}" != "1" ]]; then
-            echo "::error::Live Worker did not expose the price-aware frontend during the deployment check."
-            exit 1
-          fi
-
-      - name: Run full retailer stock and price refresh
-        shell: bash
-        run: |
-          set -euo pipefail
-          response="$(curl -fsS --max-time 240 \
-            -X POST \
-            -H "Authorization: Bearer ${CATALOGUE_ADMIN_TOKEN}" \
-            -H 'Content-Type: application/json' \
-            --data '{"mode":"full"}' \
-            "${CATALOGUE_URL}/api/stock/check")"
-
-          printf '%s' "${response}" | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data.get("ok") is True, data; print(f"Refreshed {data.get(chr(99)+chr(104)+chr(101)+chr(99)+chr(107)+chr(101)+chr(100), 0)} catalogue cards; retailer price cache updated.")'
+          curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?verify=${GITHUB_SHA}" \
+            | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)
+          key = "foundation-wise-man-maduro-lancero-half"
+          result = data.get("results", {}).get(key)
+          assert result, f"missing stock cache result for {key}"
+          rows = {row.get("retailer"): row for row in result.get("retailers", [])}
+          expected = ["CigarHut", "The Index", "Cigarworld"]
+          prices = {}
+          for retailer in expected:
+              row = rows.get(retailer)
+              assert row, f"missing retailer row: {retailer}"
+              price = row.get("price")
+              assert isinstance(price, (int, float)) and price > 0, f"missing price for {retailer}: {row}"
+              prices[retailer] = price
+          assert len(set(prices.values())) >= 2, f"retailer prices were not independently captured: {prices}"
+          print("Verified live retailer prices:", prices)
+          '
