@@ -649,25 +649,35 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
       tasks.push(async () => {
         let status = existing?.status || 'unknown';
         let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link, linkIndex);
+        let directNotFound = false;
         try {
           const page = await fetchPage(link.url, fetchImpl, true);
-          if (status === 'unknown') status = detectAvailability(page.html);
-          const currentPrice = extractRetailerPrice(page.html, plan);
-          if (currentPrice != null) price = currentPrice;
+          directNotFound = page.targetStatus === 404;
+          if (!directNotFound) {
+            if (status === 'unknown') status = detectAvailability(page.html);
+            const currentPrice = extractRetailerPrice(page.html, plan);
+            if (currentPrice != null) price = currentPrice;
+          }
         } catch (_) {
           if (!existing) status = 'unknown';
         }
-        if (link.retailer === 'CigarHut' && (status === 'unknown' || !positivePrice(price, 0))) {
+        if (link.retailer === 'CigarHut') {
+          let recoveryChecked = false;
           try {
             const recovered = await recoverCigarhutListing(plan, link, fetchImpl);
+            recoveryChecked = true;
             if (recovered) {
-              if (status === 'unknown' && ['in','out'].includes(recovered.status)) status = recovered.status;
+              if (['in','out'].includes(recovered.status)) status = recovered.status;
               const recoveredPrice = positivePrice(recovered.price, 0);
               if (recoveredPrice) price = recoveredPrice;
+            } else if (directNotFound) {
+              status = 'delisted';
+              price = null;
             }
           } catch (_) {}
+          if (directNotFound && recoveryChecked && status === 'delisted') counters.delistingCandidates.set(plan.key, plan.title || plan.key);
         }
-        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(price ? { price } : {}) };
+        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(positivePrice(price, 0) ? { price } : {}) };
         if (status === 'unknown') counters.failed++;
         else counters.productResolved++;
       });
