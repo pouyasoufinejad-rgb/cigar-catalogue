@@ -9,12 +9,12 @@ try {
   presentation = null;
 }
 
-const valueLoader = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const runtimeLoader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const presentationSource = await readFile(new URL('../public/catalogue-presentation.mjs', import.meta.url), 'utf8').catch(() => '');
 
 test('catalogue loader installs presentation and Half-Cigar cohort runtimes', () => {
-  assert.match(valueLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
-  assert.match(valueLoader, /import\('\.\/catalogue-half-cohort\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-half-cohort\.mjs'\)/);
 });
 
 test('recommendation routing no longer creates a rating-driven Substantial destination', () => {
@@ -29,7 +29,6 @@ test('recommendation routing no longer creates a rating-driven Substantial desti
   assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
 });
 
-// Regression: dynamically hydrated main cards must not stay in the flat/flavoured host.
 test('dynamic main entries are reclassified even when a non-rank sort is active', () => {
   assert.doesNotMatch(presentationSource, /if \(sort\?\.value && sort\.value !== ['"]rank['"]\) return 0;/);
   assert.match(presentationSource, /if \(!rankSortActive && card\.dataset\.dynamicEntry !== ['"]1['"]\) return;/);
