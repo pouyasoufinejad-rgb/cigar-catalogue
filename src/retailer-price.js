@@ -134,6 +134,7 @@ function structuredProductPrices(html, context) {
     .filter(product => product.score >= 0.5)
     .sort((a, b) => b.score - a.score);
   if (matched.length) return matched[0].prices;
+  if (target) return [];
   return products.length === 1 ? products[0].prices : [];
 }
 

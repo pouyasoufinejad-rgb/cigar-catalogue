@@ -1,40 +1,99 @@
-name: Diagnose Cigarworld metadata
+name: Refresh and verify retailer prices
 
 on:
   push:
     branches: [main]
     paths:
+      - 'src/retailer-price.js'
+      - 'src/stock.js'
       - '.github/workflows/retailer-price-backfill.yml'
 
 permissions:
   contents: read
 
 jobs:
-  diagnose:
+  verify:
+    name: Refresh live retailer cache and verify audited prices
     runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Inspect Cigarworld structured product data
+      - name: Wait for deployed Worker and refresh stock cache
         shell: bash
         run: |
           set -euo pipefail
-          curl -LfsS --max-time 35 -A 'Cigar Catalogue Stock Checker/1.0' 'https://www.cigarworld.com.au/aud/categories/cigars/foundation-cigar-company/' -o /tmp/cigarworld.html
+          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
+            echo '::error::CATALOGUE_ADMIN_TOKEN is not configured.'
+            exit 1
+          fi
+
+          verified=0
+          for attempt in $(seq 1 18); do
+            echo "Retailer refresh attempt ${attempt}"
+            curl -fsS --max-time 240 \
+              -X POST \
+              -H "Authorization: Bearer ${CATALOGUE_ADMIN_TOKEN}" \
+              -H 'Content-Type: application/json' \
+              --data '{"mode":"full"}' \
+              "${CATALOGUE_URL}/api/stock/check" > /tmp/refresh.json || true
+            curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?verify=${GITHUB_SHA}-${attempt}" > /tmp/stock.json
+
+            if python3 - <<'PY'
+          import json, math
+          data=json.load(open('/tmp/stock.json'))
+          results=data.get('results',{})
+          expected={
+              ('liga-t52-coronets','CigarHut'):('in',113.0),
+              ('oliva-serie-g','CigarHut'):('in',96.0),
+              ('java-x-press-maduro','CigarHut'):('out',99.0),
+              ('oliva-serie-v-melanio-no4','CigarHut'):('out',39.0),
+              ('davidoff-escurio-petit-robusto','CigarHut'):('out',41.0),
+              ('foundation-wise-man-maduro-lancero-half','Cigarworld'):('in',58.5),
+          }
+          ok=True
+          for (key,retailer),(status,price) in expected.items():
+              rows=results.get(key,{}).get('retailers',[])
+              row=next((r for r in rows if r.get('retailer')==retailer),None)
+              if not row or row.get('status')!=status or not isinstance(row.get('price'),(int,float)) or not math.isclose(float(row['price']),price,rel_tol=0,abs_tol=.01):
+                  print('NOT_READY',key,retailer,row)
+                  ok=False
+          axe=next((r for r in results.get('alonso-menendez-axe-charutos',{}).get('retailers',[]) if r.get('retailer')=='CigarHut'),None)
+          if not axe or axe.get('status')!='delisted':
+              print('NOT_READY Axe Charutos',axe)
+              ok=False
+          hut=[]
+          for key,result in results.items():
+              for row in result.get('retailers',[]):
+                  if row.get('retailer')=='CigarHut': hut.append((key,row))
+          unknown=[(k,r) for k,r in hut if r.get('status')=='unknown']
+          missing_current=[(k,r) for k,r in hut if r.get('status')!='delisted' and not isinstance(r.get('price'),(int,float))]
+          print(f'CigarHut rows={len(hut)} unknown={len(unknown)} current_rows_missing_price={len(missing_current)}')
+          if unknown or missing_current:
+              ok=False
+              for key,row in unknown: print('UNKNOWN',key,row)
+              for key,row in missing_current: print('NO_PRICE',key,row)
+          raise SystemExit(0 if ok else 1)
+          PY
+            then
+              verified=1
+              break
+            fi
+            sleep 8
+          done
+
+          if [[ "${verified}" != "1" ]]; then
+            echo '::error::Live retailer cache did not reach audited prices/statuses.'
+            exit 1
+          fi
+
+      - name: Report final audited rows
+        shell: bash
+        run: |
           python3 - <<'PY'
-          import json,re,html
-          raw=open('/tmp/cigarworld.html',encoding='utf8',errors='replace').read()
-          for i,m in enumerate(re.finditer(r'<script\b[^>]*type\s*=\s*["\']application/ld\+json["\'][^>]*>([\s\S]*?)</script\s*>',raw,re.I)):
-              text=html.unescape(m.group(1)).strip()
-              try: data=json.loads(text)
-              except Exception as e:
-                  print('JSONLD_ERROR',i,str(e)); continue
-              def visit(v):
-                  if isinstance(v,list):
-                      for x in v: visit(x)
-                  elif isinstance(v,dict):
-                      typ=v.get('@type')
-                      types=typ if isinstance(typ,list) else [typ]
-                      if any(str(x).lower()=='product' for x in types):
-                          print('PRODUCT',repr(v.get('name')),json.dumps(v.get('offers'),sort_keys=True)[:1500])
-                      for k,x in v.items():
-                          if k!='offers': visit(x)
-              visit(data)
+          import json
+          data=json.load(open('/tmp/stock.json'))
+          keys=['liga-t52-coronets','oliva-serie-g','java-x-press-maduro','oliva-serie-v-melanio-no4','davidoff-escurio-petit-robusto','alonso-menendez-axe-charutos','foundation-wise-man-maduro-lancero-half']
+          for key in keys:
+              print(key, json.dumps(data.get('results',{}).get(key,{}).get('retailers',[]),sort_keys=True))
           PY
