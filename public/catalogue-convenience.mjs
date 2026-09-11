@@ -126,7 +126,7 @@ function comparableUrl(value) {
   }
 }
 
-export function matchRetailerStatus(result, url, label = retailerLabelForUrl(url)) {
+export function matchRetailerOffer(result, url, label = retailerLabelForUrl(url)) {
   const rows = Array.isArray(result?.retailers) ? result.retailers : [];
   const targetUrl = comparableUrl(url);
   const targetLabel = String(label || '').trim().toLowerCase();
@@ -134,6 +134,11 @@ export function matchRetailerStatus(result, url, label = retailerLabelForUrl(url
   if (!match && targetLabel) {
     match = rows.find(item => String(item?.retailer || '').trim().toLowerCase() === targetLabel);
   }
+  return match || null;
+}
+
+export function matchRetailerStatus(result, url, label = retailerLabelForUrl(url)) {
+  const match = matchRetailerOffer(result, url, label);
   return ['in', 'out', 'delisted'].includes(match?.status) ? match.status : 'unknown';
 }
 
@@ -145,6 +150,18 @@ export function retailerPriceAttribution(rowIndex, packageText, perStickText) {
   if (packageValue && packageValue !== '—') parts.push(packageValue);
   if (stickValue && stickValue !== '—') parts.push(`${stickValue} / stick`);
   return parts.join(' · ') || '—';
+}
+
+function formatRetailerPrice(value) {
+  const price = Number(value);
+  if (!(Number.isFinite(price) && price > 0)) return '';
+  return `A$${Number.isInteger(price) ? price.toFixed(0) : price.toFixed(2)}`;
+}
+
+export function retailerPriceForRow(result, url, label, rowIndex, packageText, perStickText) {
+  const offer = matchRetailerOffer(result, url, label);
+  const current = formatRetailerPrice(offer?.price);
+  return current || retailerPriceAttribution(rowIndex, packageText, perStickText);
 }
 
 export function readConvenienceState(storage = globalThis?.localStorage) {
@@ -332,7 +349,7 @@ function decorateRetailerMatrix(card) {
     const url = legacyLink.href || legacyLink.getAttribute('href') || '';
     const label = retailerLabelForUrl(url);
     const status = matchRetailerStatus(result, url, label);
-    const price = retailerPriceAttribution(index, packageText, perStickText);
+    const price = retailerPriceForRow(result, url, label, index, packageText, perStickText);
     return `<div class="retailer-matrix-cell">${escapeHtml(label)}</div><div class="retailer-matrix-cell retailer-matrix-stock" data-stock="${escapeHtml(status)}">${escapeHtml(stockLabel(status))}</div><div class="retailer-matrix-cell">${escapeHtml(price)}</div><div class="retailer-matrix-cell"><a class="retailer-matrix-open" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open</a></div>`;
   }).join('');
   matrix.innerHTML = `<div class="retailer-matrix-title">Retailers</div><div class="retailer-matrix-grid"><div class="retailer-matrix-cell retailer-matrix-head">Retailer</div><div class="retailer-matrix-cell retailer-matrix-head">Stock</div><div class="retailer-matrix-cell retailer-matrix-head">Price</div><div class="retailer-matrix-cell retailer-matrix-head">Open</div>${rows}</div>`;
