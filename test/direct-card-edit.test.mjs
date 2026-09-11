@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const directEdit = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8').catch(() => '');
 const persistence = await readFile(new URL('../public/catalogue-direct-persistence.mjs', import.meta.url), 'utf8').catch(() => '');
-const valueModule = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
+const runtimeModule = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Edit catalogue activates direct card edit mode instead of opening the dropdown modal', () => {
   assert.match(directEdit, /catalogue-admin-toggle/);
@@ -28,7 +28,6 @@ test('clicking a card selects it and exposes in-place text editing plus image co
   assert.match(directEdit, /Text Y/);
 });
 
-// The catalogue's art CSS uses !important transforms, so direct positioning must outrank it.
 test('direct image and text positioning overrides existing important transforms', () => {
   assert.match(persistence, /style\.setProperty\('transform',\s*`translate\(\$\{layout\.imageX\}px, \$\{layout\.imageY\}px\) scale\(\$\{layout\.imageScale \/ 100\}\)`,\s*'important'\)/);
   assert.match(persistence, /style\.setProperty\('transform',\s*`translateY\(\$\{layout\.metaY\}px\)`,\s*'important'\)/);
@@ -44,9 +43,9 @@ test('direct editor uses the existing card selection and catalogue state save pa
 });
 
 test('direct editor and verified persistence are loaded by the browser module chain', () => {
-  assert.match(valueModule, /typeof document !== 'undefined'/);
-  assert.match(valueModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
-  assert.match(valueModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
+  assert.match(runtimeModule, /typeof document !== 'undefined'/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
 });
 
 test('direct save verifies layout fields by reading KV back', () => {
