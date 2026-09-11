@@ -1,5 +1,9 @@
 import { deriveValue } from './catalogue-value.mjs';
 import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
+import {
+  registerCatalogueStateTransform,
+  registerCatalogueStateResponseListener
+} from './catalogue-save-pipeline.mjs';
 
 const STATE_API = '/api/catalogue-overrides';
 const SCORE_CLASSES = ['gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low', 'flavour-unrated'];
@@ -331,56 +335,25 @@ function scheduleRefresh() {
   refreshTimer = setTimeout(refreshAllCards, 0);
 }
 
-function stateApiUrl(input) {
-  try {
-    const raw = typeof input === 'string' ? input : input?.url;
-    if (!raw) return null;
-    return new URL(raw, location.href);
-  } catch (_) {
-    return null;
-  }
-}
-
-function patchFetch() {
-  const original = globalThis.fetch;
-  if (typeof original !== 'function' || original.__catalogueFlavourWrapped) return;
-
-  async function wrappedFetch(input, init = {}) {
-    const url = stateApiUrl(input);
-    const method = String(init?.method || (typeof input !== 'string' ? input?.method : '') || 'GET').toUpperCase();
-    let options = init;
-    let injectedPayload = null;
-
-    if (url?.pathname === STATE_API && method === 'PUT' && pendingSave && Date.now() - pendingSave.at < 15000 && typeof init?.body === 'string') {
-      try {
-        const payload = JSON.parse(init.body);
-        injectedPayload = injectFlavourIntoStatePayload(payload, pendingSave.key, pendingSave.flavour);
-        options = { ...init, body: JSON.stringify(injectedPayload) };
-      } catch (_) {}
-      pendingSave = null;
+function installSavePipeline() {
+  registerCatalogueStateTransform('flavour', 10, payload => {
+    if (!pendingSave || Date.now() - pendingSave.at >= 15000) return payload;
+    const injected = injectFlavourIntoStatePayload(payload, pendingSave.key, pendingSave.flavour);
+    pendingSave = null;
+    return injected;
+  });
+  registerCatalogueStateResponseListener('flavour', event => {
+    if (!event?.state || typeof event.state !== 'object') return;
+    if (event.method === 'GET' || event.method === 'HEAD') {
+      state = event.state;
+      scheduleRefresh();
+      return;
     }
-
-    const response = await original.call(globalThis, input, options);
-
-    if (url?.pathname === STATE_API && response.ok) {
-      if (method === 'GET' || method === 'HEAD') {
-        response.clone().json().then(payload => {
-          if (payload && typeof payload === 'object') {
-            state = payload;
-            scheduleRefresh();
-          }
-        }).catch(() => {});
-      } else if (method === 'PUT' && injectedPayload) {
-        state = { ...state, cards: injectedPayload.cards || state.cards || {} };
-        scheduleRefresh();
-      }
+    if (event.method === 'PUT') {
+      state = { ...state, cards: event.state.cards || state.cards || {} };
+      scheduleRefresh();
     }
-    return response;
-  }
-
-  wrappedFetch.__catalogueFlavourWrapped = true;
-  wrappedFetch.__catalogueFlavourOriginal = original;
-  globalThis.fetch = wrappedFetch;
+  });
 }
 
 async function loadState() {
@@ -433,7 +406,7 @@ function bindEvents() {
 }
 
 export function initFlavourRuntime() {
-  patchFetch();
+  installSavePipeline();
   ensureStyle();
   ensureFlavourEditor();
   bindEvents();
