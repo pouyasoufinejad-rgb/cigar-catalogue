@@ -14,7 +14,7 @@ import {
 import { retailerBestPriceAttribution } from '../public/catalogue-retailer-best-price.mjs';
 
 const moduleUrl = new URL('../public/catalogue-convenience.mjs', import.meta.url);
-const valueModuleUrl = new URL('../public/catalogue-value.mjs', import.meta.url);
+const runtimeModuleUrl = new URL('../public/catalogue-runtime.mjs', import.meta.url);
 
 function state(overrides = {}) {
   return normaliseConvenienceState(overrides);
@@ -125,8 +125,8 @@ test('retailer price attribution assigns the catalogue best available price to t
   assert.equal(retailerBestPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
 });
 
-test('retailer best-price refinement is loaded by the catalogue value module', async () => {
-  const source = await readFile(valueModuleUrl, 'utf8');
+test('retailer best-price refinement is loaded by the browser runtime bootstrap', async () => {
+  const source = await readFile(runtimeModuleUrl, 'utf8');
   assert.match(source, /catalogue-retailer-best-price\.mjs/);
 });
 
