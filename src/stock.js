@@ -619,7 +619,7 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
   cardPlans.forEach(plan => {
     plan.links.forEach((link, linkIndex) => {
       const existing = plan.retailerResults[linkIndex];
-      if (existing && positivePrice(existing.price, 0)) return;
+      if (existing && positivePrice(existing.price, 0) && ['in','out','delisted'].includes(existing.status)) return;
       if (existing && link.retailer !== 'CigarHut') return;
       tasks.push(async () => {
         let status = existing?.status || 'unknown';
