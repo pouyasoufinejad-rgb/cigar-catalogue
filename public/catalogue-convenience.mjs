@@ -137,8 +137,8 @@ export function matchRetailerStatus(result, url, label = retailerLabelForUrl(url
   return ['in', 'out', 'delisted'].includes(match?.status) ? match.status : 'unknown';
 }
 
-export function retailerPriceAttribution(linkCount, packageText, perStickText) {
-  if (Number(linkCount) !== 1) return '—';
+export function retailerPriceAttribution(rowIndex, packageText, perStickText) {
+  if (Number(rowIndex) !== 0) return '—';
   const packageValue = String(packageText || '').trim();
   const stickValue = String(perStickText || '').trim();
   const parts = [];
@@ -320,17 +320,19 @@ function decorateRetailerMatrix(card) {
   if (!legacyLinks.length) return false;
   const key = cleanKey(card.dataset?.key);
   const result = stockResults[key] || null;
-  const price = retailerPriceAttribution(legacyLinks.length, factText(card, 0), formatPerStick(card));
+  const packageText = factText(card, 0);
+  const perStickText = formatPerStick(card);
   let matrix = card.querySelector('.retailer-matrix');
   if (!matrix) {
     matrix = document.createElement('div');
     matrix.className = 'retailer-matrix';
     legacyLinks[0].insertAdjacentElement('beforebegin', matrix);
   }
-  const rows = legacyLinks.map(legacyLink => {
+  const rows = legacyLinks.map((legacyLink, index) => {
     const url = legacyLink.href || legacyLink.getAttribute('href') || '';
     const label = retailerLabelForUrl(url);
     const status = matchRetailerStatus(result, url, label);
+    const price = retailerPriceAttribution(index, packageText, perStickText);
     return `<div class="retailer-matrix-cell">${escapeHtml(label)}</div><div class="retailer-matrix-cell retailer-matrix-stock" data-stock="${escapeHtml(status)}">${escapeHtml(stockLabel(status))}</div><div class="retailer-matrix-cell">${escapeHtml(price)}</div><div class="retailer-matrix-cell"><a class="retailer-matrix-open" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open</a></div>`;
   }).join('');
   matrix.innerHTML = `<div class="retailer-matrix-title">Retailers</div><div class="retailer-matrix-grid"><div class="retailer-matrix-cell retailer-matrix-head">Retailer</div><div class="retailer-matrix-cell retailer-matrix-head">Stock</div><div class="retailer-matrix-cell retailer-matrix-head">Price</div><div class="retailer-matrix-cell retailer-matrix-head">Open</div>${rows}</div>`;
