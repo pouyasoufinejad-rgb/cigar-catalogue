@@ -1,4 +1,4 @@
-name: Diagnose CigarHut search structure
+name: Audit live retailer prices
 
 on:
   push:
@@ -10,55 +10,83 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
-    name: Inspect CigarHut search results
+  audit:
+    name: Audit CigarHut unresolved rows and Tabernacle
     runs-on: ubuntu-latest
+    env:
+      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Inspect exact unresolved products in CigarHut search HTML
+      - name: Fetch live catalogue state and retailer pages
         shell: bash
         run: |
           set -euo pipefail
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/catalogue-overrides?audit=${GITHUB_SHA}" -o /tmp/state.json
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/stock?audit=${GITHUB_SHA}" -o /tmp/stock.json
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/?audit=${GITHUB_SHA}" -o /tmp/catalogue.html
           python3 - <<'PY'
-          import html as htmllib, re, subprocess, urllib.parse
-          cases = [
-              ('liga-t52-coronets','https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/'),
-              ('oliva-serie-g','https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/'),
-              ('wise-man','https://www.cigarhut.com.au/the-wise-man-maduro-lancero/'),
-          ]
-          ua='Cigar Catalogue Stock Checker/1.0'
-          for key, product_url in cases:
-              path=urllib.parse.urlparse(product_url).path
-              slug=urllib.parse.unquote(path).strip('/').split('/')[-1].replace('-',' ').replace('_',' ')
+          import json, re, html, subprocess, urllib.parse
+          state=json.load(open('/tmp/state.json'))
+          stock=json.load(open('/tmp/stock.json'))
+          catalogue=open('/tmp/catalogue.html',encoding='utf-8',errors='replace').read()
+
+          def clean(s):
+              return re.sub(r'\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',s or ''))).strip()
+          def get(url):
+              cp=subprocess.run(['curl','-L','-sS','--max-time','35','-A','Cigar Catalogue Stock Checker/1.0','-o','/tmp/page.html','-w','%{http_code}',url],capture_output=True,text=True)
+              raw=open('/tmp/page.html',encoding='utf-8',errors='replace').read() if cp.returncode==0 else ''
+              return cp.stdout, raw
+          def snippet_for(raw, needle, span=3500):
+              i=raw.lower().find((needle or '').lower())
+              if i < 0: return ''
+              return clean(raw[max(0,i-span):i+span])[:5000]
+
+          print('=== TABERNACLE LIVE STATE ===')
+          found=[]
+          for key,val in (state.get('entries') or {}).items():
+              blob=' '.join(str(val.get(k,'')) for k in ['brand','title','eyebrow'])
+              if 'tabernacle' in blob.lower():
+                  found.append((key,val))
+          for key,val in (state.get('cards') or {}).items():
+              if 'tabernacle' in key.lower() or 'tabernacle' in str(val).lower():
+                  if not any(k==key for k,_ in found): found.append((key,val))
+          print('TABERNACLE_MATCHES', len(found))
+          for key,val in found:
+              print('TABERNACLE', key, json.dumps(val,sort_keys=True))
+              for url in val.get('retailerLinks',[]) if isinstance(val,dict) else []:
+                  if 'cigarworld.com.au' in url:
+                      code,raw=get(url)
+                      print('CIGARWORLD_URL',url,'HTTP',code,'BYTES',len(raw))
+                      print('CIGARWORLD_SNIPPET',snippet_for(raw,'tabernacle'))
+                      prices=sorted(set(float(x.replace(',','')) for x in re.findall(r'\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)',clean(raw))))
+                      print('CIGARWORLD_PRICES',prices[:30])
+          if not found:
+              for m in re.finditer(r'<article\b[^>]*data-key=["\']([^"\']+)["\'][^>]*>[\s\S]*?</article>', catalogue, re.I):
+                  card=m.group(0)
+                  if 'tabernacle' in clean(card).lower():
+                      print('TABERNACLE_HTML',m.group(1),clean(card)[:5000])
+
+          print('\n=== UNRESOLVED CIGARHUT ROWS ===')
+          unresolved=[]
+          for key,result in (stock.get('results') or {}).items():
+              for row in result.get('retailers',[]):
+                  if row.get('retailer')=='CigarHut' and (row.get('status')=='unknown' or not isinstance(row.get('price'),(int,float))):
+                      unresolved.append((key,row))
+          print('COUNT',len(unresolved))
+          for key,row in unresolved:
+              url=row.get('url','')
+              code,raw=get(url)
+              text=clean(raw)
+              title=''
+              mt=re.search(r'<h1\b[^>]*>([\s\S]*?)</h1>',raw,re.I)
+              if mt: title=clean(mt.group(1))
+              prices=sorted(set(float(x.replace(',','')) for x in re.findall(r'\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)',text)))
+              status='in' if re.search(r'Add to Cart|Choose Options|Adding to cart',text,re.I) else ('out' if re.search(r'Sold out|Out of Stock|currently unavailable',text,re.I) else 'unknown')
+              print('ROW',key,'CACHE_STATUS',row.get('status'),'CACHE_PRICE',row.get('price'),'HTTP',code,'PAGE_STATUS',status,'TITLE',repr(title),'PRICES',prices[:15],'URL',url)
+              print('PAGE_SNIPPET',snippet_for(raw,title or urllib.parse.urlparse(url).path.strip('/').replace('-',' '),2200))
+              slug=urllib.parse.unquote(urllib.parse.urlparse(url).path).strip('/').split('/')[-1].replace('-',' ').replace('_',' ')
               search='https://www.cigarhut.com.au/search.php?search_query='+urllib.parse.quote_plus(slug)
-              out=f'/tmp/{key}.html'
-              cp=subprocess.run(['curl','-L','-sS','--max-time','30','-A',ua,'-o',out,'-w','%{http_code}',search],capture_output=True,text=True)
-              raw=open(out,encoding='utf-8',errors='replace').read()
-              print('\nCASE', key)
-              print('SEARCH', search)
-              print('HTTP', cp.stdout, 'BYTES', len(raw), 'TARGET_PATH_COUNT', raw.lower().count(path.lower()))
-              hrefs=[]
-              for m in re.finditer(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', raw, re.I):
-                  href=htmllib.unescape(m.group(1))
-                  text=re.sub(r'<[^>]+>',' ',m.group(2))
-                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
-                  if path.lower() in href.lower() or any(tok in text.lower() for tok in slug.lower().split()[:3]):
-                      hrefs.append((href,text))
-              print('MATCHING_ANCHORS', len(hrefs))
-              for href,text in hrefs[:12]: print('ANCHOR', repr(href), repr(text[:180]))
-              idx=raw.lower().find(path.lower())
-              if idx >= 0:
-                  snippet=raw[max(0,idx-1800):idx+3500]
-                  text=re.sub(r'<script\b[^>]*>[\s\S]*?</script>',' ',snippet,flags=re.I)
-                  text=re.sub(r'<style\b[^>]*>[\s\S]*?</style>',' ',text,flags=re.I)
-                  text=re.sub(r'<[^>]+>',' | ',text)
-                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
-                  print('TARGET_SNIPPET', text[:3000])
-              else:
-                  # show likely product-card text around strongest slug token
-                  token=slug.split()[0] if slug.split() else ''
-                  idx=raw.lower().find(token.lower()) if token else -1
-                  snippet=raw[max(0,idx-1200):idx+3000] if idx>=0 else raw[:3000]
-                  text=re.sub(r'<[^>]+>',' | ',snippet)
-                  text=re.sub(r'\s+',' ',htmllib.unescape(text)).strip()
-                  print('FALLBACK_SNIPPET', text[:2500])
+              scode,sraw=get(search)
+              path=urllib.parse.urlparse(url).path.lower()
+              idx=sraw.lower().find(path)
+              print('SEARCH_HTTP',scode,'SEARCH_PATH_COUNT',sraw.lower().count(path),'SEARCH_SNIPPET',clean(sraw[max(0,idx-1200):idx+2600])[:3500] if idx>=0 else '')
           PY
