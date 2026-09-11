@@ -36,6 +36,22 @@ test('extracts an exact product-page price from a visible range using the catalo
   }), 49);
 });
 
+test('product-page fallback ignores related-product prices even when they are closer to the catalogue benchmark', () => {
+  const html = `<main>
+    <h1>The Wise Man Maduro Lancero</h1>
+    <div class="product-price">Price: $58.50</div>
+    <button>Add to Cart</button>
+    <h2>Related Products</h2>
+    <div class="related-products"><a href="/other">Charter Oak Single</a><span>$49.00</span></div>
+  </main>`;
+
+  assert.equal(extractRetailerPrice(html, {
+    title:'The Wise Man Maduro Lancero',
+    packageLabel:'single full lancero',
+    packagePrice:49
+  }), 58.5);
+});
+
 test('matches the correct product and package on retailer category pages instead of taking a nearby unrelated price', () => {
   const html = `<main><ul>
     <li class="product"><a href="/charter-oak-single">Foundation Charter Oak Habano Grande Single</a><span>$49.00</span></li>
