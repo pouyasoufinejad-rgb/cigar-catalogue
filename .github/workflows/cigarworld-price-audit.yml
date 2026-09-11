@@ -1,0 +1,64 @@
+name: Audit Cigarworld prices
+
+on:
+  push:
+    branches: [audit/cigarworld-price-integrity]
+    paths:
+      - '.github/workflows/cigarworld-price-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/cigarworld-price-integrity
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare every Cigarworld cached price with fresh extraction
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/?audit=${GITHUB_SHA}" -o /tmp/catalogue.html
+          curl -fsSL --max-time 30 "${CATALOGUE_URL}/api/stock?audit=${GITHUB_SHA}" -o /tmp/stock.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { extractStockTargetsFromHtml } from './src/stock.js';
+          import { extractRetailerPrice } from './src/retailer-price.js';
+
+          const html=fs.readFileSync('/tmp/catalogue.html','utf8');
+          const stock=JSON.parse(fs.readFileSync('/tmp/stock.json','utf8'));
+          const targets=extractStockTargetsFromHtml(html, {});
+          const relevant=[];
+          for (const target of targets) {
+            for (const link of target.links || []) {
+              if (link.retailer === 'Cigarworld') relevant.push({ target, link });
+            }
+          }
+          console.log('CIGARWORLD_TARGET_COUNT',relevant.length);
+          let errors=0;
+          for (const {target,link} of relevant) {
+            let response, page='';
+            try {
+              response=await fetch(link.url,{redirect:'follow',headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},cache:'no-store'});
+              page=await response.text();
+            } catch (error) {
+              console.log('FETCH_ERROR',target.key,link.url,String(error));
+              errors++;
+              continue;
+            }
+            const fresh=extractRetailerPrice(page,target);
+            const cachedRows=stock.results?.[target.key]?.retailers || [];
+            const cached=cachedRows.find(row=>row.retailer==='Cigarworld');
+            const cachedPrice=Number(cached?.price);
+            const mismatch=Number.isFinite(fresh) && (!Number.isFinite(cachedPrice) || Math.abs(fresh-cachedPrice)>.009);
+            console.log('ROW',JSON.stringify({key:target.key,title:target.title,url:link.url,http:response.status,packagePrice:target.packagePrice,packageLabel:target.packageLabel,freshPrice:fresh,cachedPrice:Number.isFinite(cachedPrice)?cachedPrice:null,cachedStatus:cached?.status||null,mismatch}));
+          }
+          if (errors) console.log('FETCH_ERRORS',errors);
+          NODE
