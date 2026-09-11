@@ -1,45 +1,99 @@
-name: Apply retailer price integrity fix
+name: Refresh and verify retailer prices
 
 on:
   push:
-    branches: [fix/retailer-price-integrity]
+    branches: [main]
     paths:
+      - 'src/retailer-price.js'
+      - 'src/stock.js'
       - '.github/workflows/retailer-price-backfill.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch:
+  verify:
+    name: Refresh live retailer cache and verify audited prices
     runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: fix/retailer-price-integrity
-      - name: Apply tested source fixes
+      - name: Wait for deployed Worker and refresh stock cache
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
+          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
+            echo '::error::CATALOGUE_ADMIN_TOKEN is not configured.'
+            exit 1
+          fi
 
-          price = Path('src/retailer-price.js')
-          text = price.read_text()
-          old = """  if (matched.length) return matched[0].prices;\n  return products.length === 1 ? products[0].prices : [];\n"""
-          new = """  if (matched.length) return matched[0].prices;\n  if (target) return [];\n  return products.length === 1 ? products[0].prices : [];\n"""
-          assert text.count(old) == 1, 'structured-product fallback target changed'
-          price.write_text(text.replace(old, new))
+          verified=0
+          for attempt in $(seq 1 18); do
+            echo "Retailer refresh attempt ${attempt}"
+            curl -fsS --max-time 240 \
+              -X POST \
+              -H "Authorization: Bearer ${CATALOGUE_ADMIN_TOKEN}" \
+              -H 'Content-Type: application/json' \
+              --data '{"mode":"full"}' \
+              "${CATALOGUE_URL}/api/stock/check" > /tmp/refresh.json || true
+            curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?verify=${GITHUB_SHA}-${attempt}" > /tmp/stock.json
 
-          stock = Path('src/stock.js')
-          text = stock.read_text()
-          old = """async function runProductPass(cardPlans, fetchImpl, counters) {\n  const tasks = [];\n  cardPlans.forEach(plan => {\n    plan.links.forEach((link, linkIndex) => {\n      const existing = plan.retailerResults[linkIndex];\n      if (existing && positivePrice(existing.price, 0) && ['in','out','delisted'].includes(existing.status)) return;\n      if (existing && link.retailer !== 'CigarHut') return;\n      tasks.push(async () => {\n        let status = existing?.status || 'unknown';\n        let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link, linkIndex);\n        try {\n          const page = await fetchPage(link.url, fetchImpl, true);\n          if (status === 'unknown') status = detectAvailability(page.html);\n          const currentPrice = extractRetailerPrice(page.html, plan);\n          if (currentPrice != null) price = currentPrice;\n        } catch (_) {\n          if (!existing) status = 'unknown';\n        }\n        if (link.retailer === 'CigarHut' && (status === 'unknown' || !positivePrice(price, 0))) {\n          try {\n            const recovered = await recoverCigarhutListing(plan, link, fetchImpl);\n            if (recovered) {\n              if (status === 'unknown' && ['in','out'].includes(recovered.status)) status = recovered.status;\n              const recoveredPrice = positivePrice(recovered.price, 0);\n              if (recoveredPrice) price = recoveredPrice;\n            }\n          } catch (_) {}\n        }\n        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(price ? { price } : {}) };\n        if (status === 'unknown') counters.failed++;\n        else counters.productResolved++;\n      });\n    });\n  });\n  await promisePool(tasks, STOCK_MAX_CONCURRENT);\n}\n"""
-          new = """async function runProductPass(cardPlans, fetchImpl, counters) {\n  const tasks = [];\n  cardPlans.forEach(plan => {\n    plan.links.forEach((link, linkIndex) => {\n      const existing = plan.retailerResults[linkIndex];\n      if (existing && positivePrice(existing.price, 0) && ['in','out','delisted'].includes(existing.status)) return;\n      if (existing && link.retailer !== 'CigarHut') return;\n      tasks.push(async () => {\n        let status = existing?.status || 'unknown';\n        let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link, linkIndex);\n        let directNotFound = false;\n        try {\n          const page = await fetchPage(link.url, fetchImpl, true);\n          directNotFound = page.targetStatus === 404;\n          if (!directNotFound) {\n            if (status === 'unknown') status = detectAvailability(page.html);\n            const currentPrice = extractRetailerPrice(page.html, plan);\n            if (currentPrice != null) price = currentPrice;\n          }\n        } catch (_) {\n          if (!existing) status = 'unknown';\n        }\n        if (link.retailer === 'CigarHut') {\n          let recoveryChecked = false;\n          try {\n            const recovered = await recoverCigarhutListing(plan, link, fetchImpl);\n            recoveryChecked = true;\n            if (recovered) {\n              if (['in','out'].includes(recovered.status)) status = recovered.status;\n              const recoveredPrice = positivePrice(recovered.price, 0);\n              if (recoveredPrice) price = recoveredPrice;\n            } else if (directNotFound) {\n              status = 'delisted';\n              price = null;\n            }\n          } catch (_) {}\n          if (directNotFound && recoveryChecked && status === 'delisted') counters.delistingCandidates.set(plan.key, plan.title || plan.key);\n        }\n        plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(positivePrice(price, 0) ? { price } : {}) };\n        if (status === 'unknown') counters.failed++;\n        else counters.productResolved++;\n      });\n    });\n  });\n  await promisePool(tasks, STOCK_MAX_CONCURRENT);\n}\n"""
-          assert text.count(old) == 1, 'product-pass target changed'
-          stock.write_text(text.replace(old, new))
+            if python3 - <<'PY'
+          import json, math
+          data=json.load(open('/tmp/stock.json'))
+          results=data.get('results',{})
+          expected={
+              ('liga-t52-coronets','CigarHut'):('in',113.0),
+              ('oliva-serie-g','CigarHut'):('in',96.0),
+              ('java-x-press-maduro','CigarHut'):('out',99.0),
+              ('oliva-serie-v-melanio-no4','CigarHut'):('out',39.0),
+              ('davidoff-escurio-petit-robusto','CigarHut'):('out',41.0),
+              ('foundation-wise-man-maduro-lancero-half','Cigarworld'):('in',58.5),
+          }
+          ok=True
+          for (key,retailer),(status,price) in expected.items():
+              rows=results.get(key,{}).get('retailers',[])
+              row=next((r for r in rows if r.get('retailer')==retailer),None)
+              if not row or row.get('status')!=status or not isinstance(row.get('price'),(int,float)) or not math.isclose(float(row['price']),price,rel_tol=0,abs_tol=.01):
+                  print('NOT_READY',key,retailer,row)
+                  ok=False
+          axe=next((r for r in results.get('alonso-menendez-axe-charutos',{}).get('retailers',[]) if r.get('retailer')=='CigarHut'),None)
+          if not axe or axe.get('status')!='delisted':
+              print('NOT_READY Axe Charutos',axe)
+              ok=False
+          hut=[]
+          for key,result in results.items():
+              for row in result.get('retailers',[]):
+                  if row.get('retailer')=='CigarHut': hut.append((key,row))
+          unknown=[(k,r) for k,r in hut if r.get('status')=='unknown']
+          missing_current=[(k,r) for k,r in hut if r.get('status')!='delisted' and not isinstance(r.get('price'),(int,float))]
+          print(f'CigarHut rows={len(hut)} unknown={len(unknown)} current_rows_missing_price={len(missing_current)}')
+          if unknown or missing_current:
+              ok=False
+              for key,row in unknown: print('UNKNOWN',key,row)
+              for key,row in missing_current: print('NO_PRICE',key,row)
+          raise SystemExit(0 if ok else 1)
           PY
+            then
+              verified=1
+              break
+            fi
+            sleep 8
+          done
 
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/retailer-price.js src/stock.js
-          git commit -m 'Fix retailer price integrity'
-          git push origin HEAD:fix/retailer-price-integrity
+          if [[ "${verified}" != "1" ]]; then
+            echo '::error::Live retailer cache did not reach audited prices/statuses.'
+            exit 1
+          fi
+
+      - name: Report final audited rows
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/stock.json'))
+          keys=['liga-t52-coronets','oliva-serie-g','java-x-press-maduro','oliva-serie-v-melanio-no4','davidoff-escurio-petit-robusto','alonso-menendez-axe-charutos','foundation-wise-man-maduro-lancero-half']
+          for key in keys:
+              print(key, json.dumps(data.get('results',{}).get(key,{}).get('retailers',[]),sort_keys=True))
+          PY
