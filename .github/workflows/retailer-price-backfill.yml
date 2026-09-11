@@ -1,4 +1,4 @@
-name: Diagnose CigarHut stock failures
+name: Refresh CigarHut after stock fix
 
 on:
   push:
@@ -10,59 +10,75 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
-    name: Diagnose CigarHut unknown rows
+  refresh:
+    name: Refresh and verify CigarHut rows
     runs-on: ubuntu-latest
     env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
       CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
     steps:
-      - name: Summarise live CigarHut cache
+      - name: Refresh until fixed Worker is live
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?diag=${GITHUB_SHA}" > /tmp/stock.json
-          python3 - <<'PY'
+          if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
+            echo '::error::CATALOGUE_ADMIN_TOKEN is not configured.'
+            exit 1
+          fi
+
+          improved=0
+          for attempt in $(seq 1 12); do
+            echo "Full stock refresh attempt ${attempt}"
+            curl -fsS --max-time 240 \
+              -X POST \
+              -H "Authorization: Bearer ${CATALOGUE_ADMIN_TOKEN}" \
+              -H 'Content-Type: application/json' \
+              --data '{"mode":"full"}' \
+              "${CATALOGUE_URL}/api/stock/check" > /tmp/refresh.json
+
+            curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?verify=${GITHUB_SHA}-${attempt}" > /tmp/stock.json
+            read -r rows unknown missing < <(python3 - <<'PY'
           import json
           data=json.load(open('/tmp/stock.json'))
           rows=[]
           for key,result in data.get('results',{}).items():
               for row in result.get('retailers',[]):
-                  if row.get('retailer')=='CigarHut':
-                      rows.append((key,row))
-          unknown=[(k,r) for k,r in rows if r.get('status')=='unknown']
-          missing=[(k,r) for k,r in rows if not isinstance(r.get('price'),(int,float))]
-          print(f'CigarHut rows: {len(rows)}; unknown: {len(unknown)}; missing price: {len(missing)}')
-          for key,row in unknown[:12]:
-              print('UNKNOWN', key, row.get('url'), 'price=', row.get('price'))
-          with open('/tmp/cigarhut-unknown-urls.txt','w') as f:
-              for key,row in unknown[:8]:
-                  if row.get('url'): f.write(row['url']+'\n')
+                  if row.get('retailer')=='CigarHut': rows.append((key,row))
+          unknown=sum(1 for _,r in rows if r.get('status')=='unknown')
+          missing=sum(1 for _,r in rows if not isinstance(r.get('price'),(int,float)))
+          print(len(rows), unknown, missing)
           PY
+            )
+            echo "CigarHut rows=${rows} unknown=${unknown} missing_price=${missing}"
+            if (( unknown < 33 )); then
+              improved=1
+              break
+            fi
+            sleep 5
+          done
 
-      - name: Probe CigarHut direct and search pages
+          if [[ "${improved}" != "1" ]]; then
+            echo '::error::CigarHut unknown count did not improve from the pre-fix baseline of 33.'
+            exit 1
+          fi
+
+      - name: Report final unresolved CigarHut rows
         shell: bash
         run: |
           set -euo pipefail
-          custom_ua='Cigar Catalogue Stock Checker/1.0'
-          browser_ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/152 Safari/537.36'
-          probe() {
-            label="$1"; ua="$2"; url="$3"; body="/tmp/ch-${RANDOM}.html"
-            code="$(curl -L -sS --max-time 25 -A "$ua" -o "$body" -w '%{http_code}' "$url" || true)"
-            size="$(wc -c < "$body" 2>/dev/null || echo 0)"
-            signals="$(grep -Eio 'choose options|sold out|out of stock|add to cart|now:[[:space:]]*\$[0-9,. -]+' "$body" 2>/dev/null | head -n 3 | tr '\n' ' ' || true)"
-            echo "$label HTTP=$code bytes=$size signals=$signals"
-            rm -f "$body"
-          }
-          echo 'ROOT'
-          probe 'custom root' "$custom_ua" 'https://www.cigarhut.com.au/cigars/'
-          probe 'browser root' "$browser_ua" 'https://www.cigarhut.com.au/cigars/'
-          while IFS= read -r url; do
-            [[ -n "$url" ]] || continue
-            echo "URL $url"
-            probe 'custom direct' "$custom_ua" "$url"
-            probe 'browser direct' "$browser_ua" "$url"
-            sep='?'; [[ "$url" == *\?* ]] && sep='&'
-            probe 'custom cachebust' "$custom_ua" "${url}${sep}_catalogue_stock_check=123456789"
-            slug="$(python3 -c 'import sys,urllib.parse; p=urllib.parse.urlparse(sys.argv[1]).path.strip("/").split("/")[-1]; print(urllib.parse.quote_plus(p.replace("-"," ")))' "$url")"
-            probe 'custom search' "$custom_ua" "https://www.cigarhut.com.au/search.php?search_query=${slug}"
-          done < /tmp/cigarhut-unknown-urls.txt
+          curl -fsS --max-time 30 "${CATALOGUE_URL}/api/stock?final=${GITHUB_SHA}" \
+            | python3 -c '
+          import json,sys
+          data=json.load(sys.stdin)
+          rows=[]
+          for key,result in data.get("results",{}).items():
+              for row in result.get("retailers",[]):
+                  if row.get("retailer")=="CigarHut": rows.append((key,row))
+          unknown=[(k,r) for k,r in rows if r.get("status")=="unknown"]
+          missing=[(k,r) for k,r in rows if not isinstance(r.get("price"),(int,float))]
+          print(f"FINAL CigarHut rows: {len(rows)}; unknown: {len(unknown)}; missing price: {len(missing)}")
+          for key,row in unknown:
+              print("UNKNOWN", key, row.get("url"), "price=", row.get("price"))
+          for key,row in missing:
+              print("NO_PRICE", key, row.get("url"), "status=", row.get("status"))
+          '
