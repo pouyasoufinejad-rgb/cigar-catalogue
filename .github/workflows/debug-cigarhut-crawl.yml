@@ -16,39 +16,38 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Compare direct, search, curl and parser behavior
+      - name: Test exact CigarHut searches across live catalogue
         shell: bash
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
-          import { parseListingPage, extractRetailerPrice, detectAvailability } from './src/stock.js';
-          const cases = [
-            ['liga-t52-coronets','https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/',113,'tin of 10'],
-            ['java-x-press-maduro','https://www.cigarhut.com.au/java-x-press-maduro/',99,'single cigar'],
-            ['oliva-serie-g','https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/',96,'tin of 5'],
-            ['liga-no9','https://www.cigarhut.com.au/liga-privada-no-9-short-panatela-oscuro/',37,'single cigar']
-          ];
-          const pathFor = url => { const u=new URL(url); let p=decodeURIComponent(u.pathname); if(!p.endsWith('/'))p+='/'; return p.toLowerCase(); };
-          for (const [key,url,packagePrice,packageLabel] of cases) {
-            console.log('\nCASE',key,url);
-            for (const ua of ['Cigar Catalogue Stock Checker/1.0','Mozilla/5.0']) {
-              const r=await fetch(url,{headers:{'user-agent':ua},redirect:'follow',cache:'no-store'});
-              const h=await r.text();
-              console.log('DIRECT',ua,'status',r.status,'len',h.length,'availability',detectAvailability(h),'price',extractRetailerPrice(h,{title:key,packagePrice,packageLabel}),'title',h.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g,' ').trim().slice(0,120));
-            }
-            const slug=decodeURIComponent(new URL(url).pathname).split('/').filter(Boolean).pop().replace(/[-_]+/g,' ');
+          import { extractStockTargetsFromHtml, parseListingPage } from './src/stock.js';
+          const base='https://cigar-catalogue.psncodex.workers.dev';
+          const [html,state]=await Promise.all([
+            fetch(`${base}/?debug=${Date.now()}`).then(r=>r.text()),
+            fetch(`${base}/api/catalogue-overrides?debug=${Date.now()}`).then(r=>r.json())
+          ]);
+          const targets=extractStockTargetsFromHtml(html,state);
+          const rows=[];
+          for (const target of targets) for (const link of target.links) if(link.retailer==='CigarHut') rows.push({target,link});
+          const pathFor=url=>{const u=new URL(url);let p=decodeURIComponent(u.pathname).replace(/\/{2,}/g,'/');if(!p.endsWith('/'))p+='/';return p.toLowerCase();};
+          let unresolved=0, missing=0;
+          for (const {target,link} of rows) {
+            const slug=decodeURIComponent(new URL(link.url).pathname).split('/').filter(Boolean).pop().replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
             const search=new URL('https://www.cigarhut.com.au/search.php'); search.searchParams.set('search_query',slug);
-            const sr=await fetch(search,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});
-            const sh=await sr.text();
-            const path=pathFor(url);
-            const result=parseListingPage(sh,new Set([path]),search.toString(),new Map([[path,{title:key,packagePrice,packageLabel}]]));
-            console.log('SEARCH',sr.status,'len',sh.length,'url',search.toString(),'parsed',result.get(path),'contains exact path',sh.toLowerCase().includes(path));
+            let parsed=null,status=0,len=0;
+            try {
+              const r=await fetch(search,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});
+              status=r.status;
+              const h=await r.text(); len=h.length;
+              const path=pathFor(link.url);
+              parsed=parseListingPage(h,new Set([path]),search.toString(),new Map([[path,{title:target.title,packagePrice:target.packagePrice,packageLabel:target.packageLabel}]])).get(path)||null;
+            } catch(e) { console.log('ERROR',target.key,e.message); }
+            if(!parsed || !['in','out'].includes(parsed.status)) unresolved++;
+            if(!Number.isFinite(Number(parsed?.price))) missing++;
+            console.log(JSON.stringify({key:target.key,http:status,len,parsed,url:link.url}));
+            await new Promise(r=>setTimeout(r,120));
           }
+          console.log(`SUMMARY rows=${rows.length} unresolved=${unresolved} missing=${missing}`);
+          if(unresolved || missing) process.exit(1);
           NODE
-          echo '--- CURL CONTROL ---'
-          for url in \
-            'https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/' \
-            'https://www.cigarhut.com.au/search.php?search_query=liga%20privada%20t52%20coronets%20tins%2010%20cigars'; do
-            curl -L -sS -A 'Cigar Catalogue Stock Checker/1.0' -o /tmp/h -w 'curl status=%{http_code} bytes=%{size_download} final=%{url_effective}\n' "$url"
-            grep -oiE '<title[^>]*>[^<]*</title>|A?\$[0-9]+(\.[0-9]{1,2})?|sold out|out of stock|add to cart|choose options' /tmp/h | head -30 || true
-          done
