@@ -16,38 +16,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test exact CigarHut searches across live catalogue
+      - name: Inspect unresolved CigarHut products
         shell: bash
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
-          import { extractStockTargetsFromHtml, parseListingPage } from './src/stock.js';
-          const base='https://cigar-catalogue.psncodex.workers.dev';
-          const [html,state]=await Promise.all([
-            fetch(`${base}/?debug=${Date.now()}`).then(r=>r.text()),
-            fetch(`${base}/api/catalogue-overrides?debug=${Date.now()}`).then(r=>r.json())
-          ]);
-          const targets=extractStockTargetsFromHtml(html,state);
-          const rows=[];
-          for (const target of targets) for (const link of target.links) if(link.retailer==='CigarHut') rows.push({target,link});
-          const pathFor=url=>{const u=new URL(url);let p=decodeURIComponent(u.pathname).replace(/\/{2,}/g,'/');if(!p.endsWith('/'))p+='/';return p.toLowerCase();};
-          let unresolved=0, missing=0;
-          for (const {target,link} of rows) {
-            const slug=decodeURIComponent(new URL(link.url).pathname).split('/').filter(Boolean).pop().replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
-            const search=new URL('https://www.cigarhut.com.au/search.php'); search.searchParams.set('search_query',slug);
-            let parsed=null,status=0,len=0;
-            try {
-              const r=await fetch(search,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});
-              status=r.status;
-              const h=await r.text(); len=h.length;
-              const path=pathFor(link.url);
-              parsed=parseListingPage(h,new Set([path]),search.toString(),new Map([[path,{title:target.title,packagePrice:target.packagePrice,packageLabel:target.packageLabel}]])).get(path)||null;
-            } catch(e) { console.log('ERROR',target.key,e.message); }
-            if(!parsed || !['in','out'].includes(parsed.status)) unresolved++;
-            if(!Number.isFinite(Number(parsed?.price))) missing++;
-            console.log(JSON.stringify({key:target.key,http:status,len,parsed,url:link.url}));
-            await new Promise(r=>setTimeout(r,120));
+          import { detectAvailability, extractRetailerPrice } from './src/stock.js';
+          const cases=[
+            ['axe','https://www.cigarhut.com.au/alonso-menendez-axe-charutos-pack-of-5/','Alonso Menendez Axe Charutos',48],
+            ['nero','https://www.cigarhut.com.au/toscano-toscanello-nero-cioccolato/','Toscanello Nero Cioccolato',0]
+          ];
+          for(const [name,url,title,packagePrice] of cases){
+            const r=await fetch(url,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});
+            const h=await r.text();
+            console.log('DIRECT',name,r.status,r.url,'len',h.length,'avail',detectAvailability(h),'price',extractRetailerPrice(h,{title,packagePrice,packageLabel:''}),'title',h.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g,' ').trim());
+            for(const q of [title,name==='axe'?'axe charutos':'toscanello nero',name==='axe'?'alonso menendez':'nero cioccolato']){
+              const s=new URL('https://www.cigarhut.com.au/search.php');s.searchParams.set('search_query',q);
+              const sr=await fetch(s,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});const sh=await sr.text();
+              const links=[...sh.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>({href:m[1],text:m[2].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()})).filter(x=>/axe|charutos|toscanello|nero|cioccolato/i.test(x.href+' '+x.text)).slice(0,30);
+              console.log('SEARCH',name,JSON.stringify(q),sr.status,'matches',JSON.stringify(links));
+            }
           }
-          console.log(`SUMMARY rows=${rows.length} unresolved=${unresolved} missing=${missing}`);
-          if(unresolved || missing) process.exit(1);
           NODE
