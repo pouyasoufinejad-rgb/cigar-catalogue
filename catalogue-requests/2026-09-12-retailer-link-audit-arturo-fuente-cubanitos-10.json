@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-12-retailer-link-audit-arturo-fuente-cubanitos-10",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-cubanitos-%252d-pack-of-10-%252d-%284-1%7B47%7D2%22-x-32%29.html"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Retailer-link audit: replaced the Cigarworld Cubanitos single URL with the exact Pack of 10 product page. Cigarworld lists the pack at A$154.80; the former A$17.38 page was a single cigar and was invalid for this card."
+}
