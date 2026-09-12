@@ -1,0 +1,37 @@
+name: Apply stock prune fix
+
+on:
+  push:
+    branches:
+      - fix/prune-stale-stock-cache
+    paths:
+      - '.github/workflows/apply-stock-prune-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prune-stale-stock-cache
+      - name: Patch full refresh pruning
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('src/stock.js')
+          text=path.read_text()
+          old="""  const targets = extractStockTargetsFromHtml(html, state);\n  const cache = await readStockCache(env);\n  const results = { ...cache.results };\n  const meta = { lastRestockAt:Number(cache.meta.lastRestockAt) || 0, lastFullAt:Number(cache.meta.lastFullAt) || 0 };\n  const isFull = mode === 'full';\n"""
+          new="""  const targets = extractStockTargetsFromHtml(html, state);\n  const cache = await readStockCache(env);\n  const isFull = mode === 'full';\n  const targetKeys = new Set(targets.map(target => target.key));\n  const results = isFull\n    ? Object.fromEntries(Object.entries(cache.results).filter(([key]) => targetKeys.has(key)))\n    : { ...cache.results };\n  const meta = { lastRestockAt:Number(cache.meta.lastRestockAt) || 0, lastFullAt:Number(cache.meta.lastFullAt) || 0 };\n"""
+          if old not in text: raise SystemExit('runStockCheck cache anchor not found')
+          path.write_text(text.replace(old,new,1))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/stock.js
+          git commit -m 'Prune stale stock rows on full refresh'
+          git push origin HEAD:fix/prune-stale-stock-cache
