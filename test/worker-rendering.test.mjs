@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import {
+import worker, {
   applyStructuralOverridesToHtml,
   extractStockTargetsFromHtml,
   injectEntriesIntoHtml,
@@ -19,6 +19,54 @@ test('root catalogue HTML is routed through the Worker before assets', async () 
   assert.ok(Array.isArray(routes));
   assert.ok(routes.includes('/'), 'run_worker_first must include /');
   assert.ok(routes.includes('/index.html'), 'run_worker_first must include /index.html');
+});
+
+test('public catalogue JSON exposes current KV-backed entries without auth', async () => {
+  const liveState = {
+    version: 3,
+    updatedAt: '2026-09-13T00:00:00.000Z',
+    cards: {},
+    sections: {},
+    entries: {
+      'kv-only-test': {
+        key: 'kv-only-test',
+        brand: 'Test Brand',
+        title: 'KV-only cigar',
+        price: 12,
+        quality: 7,
+        strength: 6,
+        length: 4,
+        ring: 32,
+        rank: 1,
+        risk: 1
+      }
+    }
+  };
+  const env = {
+    CATALOGUE_STATE: {
+      async get(key) {
+        assert.equal(key, 'catalogue-overrides');
+        return JSON.stringify(liveState);
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        return new Response('asset fallback', { status: 200 });
+      }
+    }
+  };
+
+  const response = await worker.fetch(new Request('https://catalogue.test/catalogue.json'), env);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type') || '', /^application\/json\b/);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+
+  const payload = await response.json();
+  assert.equal(payload.updatedAt, liveState.updatedAt);
+  assert.equal(payload.entries['kv-only-test'].brand, 'Test Brand');
+  assert.equal(payload.entries['kv-only-test'].title, 'KV-only cigar');
+  assert.equal(payload.cards, undefined);
+  assert.equal(payload.sections, undefined);
 });
 
 test('KV-only dynamic entry is injected into catalogue HTML', () => {
