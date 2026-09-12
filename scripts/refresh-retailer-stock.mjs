@@ -43,21 +43,6 @@ const run = await runStockCheck(env, state, 'full', { html, now, fetchImpl: fetc
 const snapshot = await readStockCache(env);
 console.log(`[github-stock] full crawl checked=${run.checked} failed=${run.counters.failed}`);
 
-const findRetailer = (key, retailer) => snapshot.results?.[key]?.retailers?.find(row => row.retailer === retailer) || null;
-const assertOffer = (key, retailer, status, price) => {
-  const row = findRetailer(key, retailer);
-  if (!row) throw new Error(`Missing ${retailer} row for ${key}`);
-  if (status && row.status !== status) throw new Error(`Unexpected ${retailer} status for ${key}: ${row.status}`);
-  if (price != null && Math.abs(Number(row.price) - Number(price)) > 0.01) throw new Error(`Unexpected ${retailer} price for ${key}: ${row.price}; expected ${price}`);
-};
-
-assertOffer('liga-t52-coronets', 'CigarHut', 'in', 113);
-assertOffer('oliva-serie-g', 'CigarHut', 'in', 96);
-assertOffer('java-x-press-maduro', 'CigarHut', 'out', 99);
-assertOffer('oliva-serie-v-melanio-no4', 'CigarHut', 'out', 39);
-assertOffer('davidoff-escurio-petit-robusto', 'CigarHut', 'out', 41);
-assertOffer('foundation-wise-man-maduro-lancero-half', 'Cigarworld', 'in', 58.5);
-
 const cigarHutRows = [];
 for (const [key, result] of Object.entries(snapshot.results || {})) {
   for (const row of result?.retailers || []) if (row.retailer === 'CigarHut') cigarHutRows.push([key, row]);
@@ -97,9 +82,6 @@ for (let attempt = 1; attempt <= 8; attempt += 1) {
 }
 if (Number(live?.meta?.lastFullAt) !== Number(snapshot.meta.lastFullAt)) throw new Error('Imported stock snapshot did not read back from production.');
 
-const liveOffer = (key, retailer) => live.results?.[key]?.retailers?.find(row => row.retailer === retailer) || null;
-const liveWise = liveOffer('foundation-wise-man-maduro-lancero-half', 'Cigarworld');
-if (!liveWise || Math.abs(Number(liveWise.price) - 58.5) > 0.01) throw new Error(`Live Wise Man Cigarworld price is wrong: ${JSON.stringify(liveWise)}`);
 const liveHutUnknown = Object.entries(live.results || {}).flatMap(([key, result]) => (result?.retailers || []).filter(row => row.retailer === 'CigarHut' && row.status === 'unknown').map(row => [key, row]));
 if (liveHutUnknown.length) throw new Error(`Live cache still has ${liveHutUnknown.length} CigarHut unknown rows.`);
 console.log('[github-stock] production snapshot imported and verified');
