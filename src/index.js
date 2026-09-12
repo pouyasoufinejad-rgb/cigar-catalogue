@@ -530,6 +530,56 @@ export async function handleStock(request, env) {
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
 }
 
+const STOCK_IMPORT_RETAILERS = new Set(['CigarHut', 'Cigarworld', 'CigarBox', 'Firmin Cigars', 'The Index', 'Ubercigar']);
+const STOCK_IMPORT_STATUSES = new Set(['in', 'out', 'unknown', 'delisted']);
+
+function validateStockImport(payload) {
+  if (!isRecord(payload) || !isRecord(payload.results) || !isRecord(payload.meta)) return 'Stock snapshot must contain results and meta objects.';
+  for (const field of ['lastRestockAt', 'lastFullAt']) {
+    const value = Number(payload.meta[field]);
+    if (!Number.isFinite(value) || value < 0) return `Invalid stock meta field: ${field}.`;
+  }
+  for (const [key, result] of Object.entries(payload.results)) {
+    if (sanitiseKey(key) !== key || !isRecord(result)) return `Invalid stock result key: ${key}.`;
+    if (!STOCK_IMPORT_STATUSES.has(result.status) || !STOCK_IMPORT_STATUSES.has(result.lastAttemptStatus)) return `Invalid stock status for ${key}.`;
+    for (const field of ['checkedAt', 'lastAttemptAt']) {
+      const value = Number(result[field]);
+      if (!Number.isFinite(value) || value < 0) return `Invalid ${field} for ${key}.`;
+    }
+    const schema = Number(result.priceSchemaVersion);
+    if (!Number.isFinite(schema) || schema < 1) return `Invalid price schema for ${key}.`;
+    if (!Array.isArray(result.retailers)) return `Retailers must be an array for ${key}.`;
+    for (const row of result.retailers) {
+      if (!isRecord(row) || !STOCK_IMPORT_RETAILERS.has(row.retailer) || !STOCK_IMPORT_STATUSES.has(row.status)) return `Invalid retailer row for ${key}.`;
+      if (!safeHttpUrl(row.url)) return `Invalid retailer URL for ${key}.`;
+      if (own(row, 'price')) {
+        const price = Number(row.price);
+        if (!Number.isFinite(price) || price <= 0) return `Invalid retailer price for ${key}.`;
+      }
+    }
+  }
+  return '';
+}
+
+export async function handleStockImport(request, env) {
+  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, { status: 405, headers: { allow: 'POST' } });
+  const denied = await requireAdminWrite(request, env);
+  if (denied) return denied;
+  if (!env?.CATALOGUE_STATE) return json({ error: 'CATALOGUE_STATE KV binding is unavailable.' }, { status: 503 });
+  const body = await request.text();
+  if (new TextEncoder().encode(body).byteLength > MAX_STATE_BYTES) return json({ error: 'Stock snapshot is too large.' }, { status: 413 });
+  let payload;
+  try { payload = JSON.parse(body); }
+  catch (_) { return json({ error: 'Invalid JSON.' }, { status: 400 }); }
+  const error = validateStockImport(payload);
+  if (error) return json({ error }, { status: 400 });
+  await Promise.all([
+    env.CATALOGUE_STATE.put(STOCK_RESULTS_KEY, JSON.stringify(payload.results)),
+    env.CATALOGUE_STATE.put(STOCK_META_KEY, JSON.stringify(payload.meta))
+  ]);
+  return json({ ok: true, cards: Object.keys(payload.results).length, meta: payload.meta });
+}
+
 export async function handleStockCheck(request, env) {
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed.' }, { status: 405, headers: { allow: 'POST' } });
@@ -853,6 +903,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/api/catalogue-overrides') return handleState(request, env);
     if (url.pathname === '/api/stock') return handleStock(request, env);
+    if (url.pathname === '/api/stock/import') return handleStockImport(request, env);
     if (url.pathname === '/api/stock/check') return handleStockCheck(request, env);
 
     const entryMatch = url.pathname.match(/^\/api\/catalogue-entry\/([^/]+)$/);

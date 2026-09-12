@@ -1,0 +1,34 @@
+name: Refresh retailer stock from GitHub
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 2 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/index.js'
+      - 'src/stock.js'
+      - 'src/retailer-price.js'
+      - 'scripts/refresh-retailer-stock.mjs'
+      - '.github/workflows/refresh-retailer-stock.yml'
+      - 'wrangler.jsonc'
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+      CATALOGUE_URL: https://cigar-catalogue.psncodex.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Crawl retailers and import verified snapshot
+        run: node scripts/refresh-retailer-stock.mjs
