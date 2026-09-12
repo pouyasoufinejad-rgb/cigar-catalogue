@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-12-retailer-link-audit-toscanello-cioccolato",
+  "operation": "upsert-entry",
+  "key": "toscanello-nero-cioccolato",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/toscano-toscanello-aroma-cioccolato/"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Retailer-link audit: CigarHut redirects the old Nero Cioccolato URL to the current Toscanello Aroma Cioccolato page. Exact search confirms it is listed in stock at A$81."
+}
