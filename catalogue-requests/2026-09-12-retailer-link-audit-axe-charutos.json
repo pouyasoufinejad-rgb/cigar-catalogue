@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-12-retailer-link-audit-axe-charutos",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-axe-charutos",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/alonso-menendez-axe-charutos/"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Retailer-link audit: CigarHut moved Axe Charutos from the obsolete pack-of-5 URL to the current product URL. Exact CigarHut search confirms the product is listed at A$48."
+}
