@@ -21,9 +21,9 @@ test('root catalogue HTML is routed through the Worker before assets', async () 
   assert.ok(routes.includes('/index.html'), 'run_worker_first must include /index.html');
 });
 
-test('public catalogue JSON proxies to the live KV catalogue API', async () => {
+test('public catalogue JSON redirects to the live KV catalogue API', async () => {
   const redirects = await readFile(new URL('../public/_redirects', import.meta.url), 'utf8');
-  assert.match(redirects, /^\/catalogue\.json\s+\/api\/catalogue-overrides\s+200\s*$/m);
+  assert.match(redirects, /^\/catalogue\.json\s+\/api\/catalogue-overrides\s+302\s*$/m);
 
   const liveState = {
     version: 3,
