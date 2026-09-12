@@ -1,0 +1,54 @@
+name: Debug CigarHut crawl
+
+on:
+  push:
+    branches:
+      - debug/cigarhut-crawl
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare direct, search, curl and parser behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { parseListingPage, extractRetailerPrice, detectAvailability } from './src/stock.js';
+          const cases = [
+            ['liga-t52-coronets','https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/',113,'tin of 10'],
+            ['java-x-press-maduro','https://www.cigarhut.com.au/java-x-press-maduro/',99,'single cigar'],
+            ['oliva-serie-g','https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/',96,'tin of 5'],
+            ['liga-no9','https://www.cigarhut.com.au/liga-privada-no-9-short-panatela-oscuro/',37,'single cigar']
+          ];
+          const pathFor = url => { const u=new URL(url); let p=decodeURIComponent(u.pathname); if(!p.endsWith('/'))p+='/'; return p.toLowerCase(); };
+          for (const [key,url,packagePrice,packageLabel] of cases) {
+            console.log('\nCASE',key,url);
+            for (const ua of ['Cigar Catalogue Stock Checker/1.0','Mozilla/5.0']) {
+              const r=await fetch(url,{headers:{'user-agent':ua},redirect:'follow',cache:'no-store'});
+              const h=await r.text();
+              console.log('DIRECT',ua,'status',r.status,'len',h.length,'availability',detectAvailability(h),'price',extractRetailerPrice(h,{title:key,packagePrice,packageLabel}),'title',h.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g,' ').trim().slice(0,120));
+            }
+            const slug=decodeURIComponent(new URL(url).pathname).split('/').filter(Boolean).pop().replace(/[-_]+/g,' ');
+            const search=new URL('https://www.cigarhut.com.au/search.php'); search.searchParams.set('search_query',slug);
+            const sr=await fetch(search,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'});
+            const sh=await sr.text();
+            const path=pathFor(url);
+            const result=parseListingPage(sh,new Set([path]),search.toString(),new Map([[path,{title:key,packagePrice,packageLabel}]]));
+            console.log('SEARCH',sr.status,'len',sh.length,'url',search.toString(),'parsed',result.get(path),'contains exact path',sh.toLowerCase().includes(path));
+          }
+          NODE
+          echo '--- CURL CONTROL ---'
+          for url in \
+            'https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/' \
+            'https://www.cigarhut.com.au/search.php?search_query=liga%20privada%20t52%20coronets%20tins%2010%20cigars'; do
+            curl -L -sS -A 'Cigar Catalogue Stock Checker/1.0' -o /tmp/h -w 'curl status=%{http_code} bytes=%{size_download} final=%{url_effective}\n' "$url"
+            grep -oiE '<title[^>]*>[^<]*</title>|A?\$[0-9]+(\.[0-9]{1,2})?|sold out|out of stock|add to cart|choose options' /tmp/h | head -30 || true
+          done
