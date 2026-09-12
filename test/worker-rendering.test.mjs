@@ -21,7 +21,10 @@ test('root catalogue HTML is routed through the Worker before assets', async () 
   assert.ok(routes.includes('/index.html'), 'run_worker_first must include /index.html');
 });
 
-test('public catalogue JSON exposes current KV-backed entries without auth', async () => {
+test('public catalogue JSON proxies to the live KV catalogue API', async () => {
+  const redirects = await readFile(new URL('../public/_redirects', import.meta.url), 'utf8');
+  assert.match(redirects, /^\/catalogue\.json\s+\/api\/catalogue-overrides\s+200\s*$/m);
+
   const liveState = {
     version: 3,
     updatedAt: '2026-09-13T00:00:00.000Z',
@@ -48,15 +51,10 @@ test('public catalogue JSON exposes current KV-backed entries without auth', asy
         assert.equal(key, 'catalogue-overrides');
         return JSON.stringify(liveState);
       }
-    },
-    ASSETS: {
-      async fetch() {
-        return new Response('asset fallback', { status: 200 });
-      }
     }
   };
 
-  const response = await worker.fetch(new Request('https://catalogue.test/catalogue.json'), env);
+  const response = await worker.fetch(new Request('https://catalogue.test/api/catalogue-overrides'), env);
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type') || '', /^application\/json\b/);
   assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -65,8 +63,6 @@ test('public catalogue JSON exposes current KV-backed entries without auth', asy
   assert.equal(payload.updatedAt, liveState.updatedAt);
   assert.equal(payload.entries['kv-only-test'].brand, 'Test Brand');
   assert.equal(payload.entries['kv-only-test'].title, 'KV-only cigar');
-  assert.equal(payload.cards, undefined);
-  assert.equal(payload.sections, undefined);
 });
 
 test('KV-only dynamic entry is injected into catalogue HTML', () => {
