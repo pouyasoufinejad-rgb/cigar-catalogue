@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-12-deadwood-leather-rose-petite-corona-taster",
+  "operation": "upsert-entry",
+  "key": "deadwood-leather-rose-petite-corona",
+  "entry": {
+    "brand": "Deadwood by Drew Estate",
+    "title": "Leather Rose Petite Corona — Single",
+    "eyebrow": "Sweet, spicy dark-aromatic Petite Corona test",
+    "packagePrice": 29,
+    "packageLabel": "single cigar",
+    "price": 29,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 43,
+    "strength": 8,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 18,
+    "taster": true,
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium–high (projected)",
+      "Pairings: Espresso, dark chocolate, dark rum, cola (projected)",
+      "Occasion: Quick rich smoke, dessert smoke, aromatic benchmark"
+    ],
+    "summaryHtml": "<strong>Cedar, oak, white pepper, earth and pronounced sweetness</strong> make Leather Rose one of the darker, punchier aromatic Deadwood options. Drew Estate rates the line full-bodied, while the compact 4″ × 43 Petite Corona keeps the smoke short enough to work as a genuine taster rather than a long-format commitment. The Brazilian maduro wrapper over Indonesian binder and Nicaraguan filler should put it much closer to the catalogue’s preferred sweet, peppery and dark profile than most flavoured cigars. Untasted here, so Strength 8 and Quality 7 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. CigarHut currently lists the exact 4″ × 43 Leather Rose Petite Corona single at A$29, with Single / 10 Cigars / Box of 24 options.",
+    "productionLines": [
+      "Aromatic / sweet-tipped",
+      "Handmade in Nicaragua",
+      "Wrapper: Brazilian Maduro",
+      "Binder: Indonesian",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "4″ × 43 Petite Corona",
+      "Compact full-bodied aromatic taster"
+    ],
+    "smokeTime": "25–40 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/deadwood-leather-rose-petite-corona/"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Add Deadwood by Drew Estate Leather Rose Petite Corona as Taster rank 18. CigarHut currently lists the exact 4 x 43 single at A$29. Drew Estate identifies the Petite Corona as 4 x 43 and the Leather Rose profile as full-bodied with cedar, oak, white pepper, sweetness and earth; supporting retailer references identify Brazilian Maduro wrapper, Indonesian binder and Nicaraguan filler. Leave Flavour unrated until tasted."
+}
