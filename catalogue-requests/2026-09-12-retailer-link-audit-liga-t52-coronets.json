@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-12-retailer-link-audit-liga-t52-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-t52-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/",
+      "https://firmincigars.com.au/product/drew-estate-liga-privada-t52-coronets-single-cigar-nicaragua/"
+    ],
+    "priceChecked": "2026-09-12",
+    "stockChecked": "2026-09-12"
+  },
+  "note": "Retailer-link audit: removed Cigarworld's T52 Coronet single page from the Tin of 10 card. No current exact Cigarworld Coronet tin listing could be verified, so a single-cigar price must not be presented as the tin price."
+}
