@@ -1,4 +1,4 @@
-name: Debug retailer links
+name: Debug catalogue target keys
 
 on:
   push:
@@ -16,12 +16,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Audit current catalogue links and replacement products
+      - name: Find retailer-link target keys
         shell: bash
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
-          import { extractStockTargetsFromHtml, parseListingPage, extractRetailerPrice, detectAvailability } from './src/stock.js';
+          import { extractStockTargetsFromHtml } from './src/stock.js';
           const base='https://cigar-catalogue.psncodex.workers.dev';
           const nonce=Date.now();
           const [html,state]=await Promise.all([
@@ -29,34 +29,8 @@ jobs:
             fetch(`${base}/api/catalogue-overrides?audit=${nonce}`).then(r=>r.json())
           ]);
           const targets=extractStockTargetsFromHtml(html,state);
-          for(const key of ['alonso-menendez-axe-charutos','toscanello-nero-cioccolato','arturo-fuente-cubanitos','liga-t52-coronets']){
-            const t=targets.find(x=>x.key===key);
-            console.log('TARGET',key,JSON.stringify(t));
-          }
-
-          const replacements=[
-            ['axe','https://www.cigarhut.com.au/alonso-menendez-axe-charutos/','Alonso Menendez Axe Charutos',48,'pack of 5'],
-            ['nero','https://www.cigarhut.com.au/toscano-toscanello-aroma-cioccolato/','Toscanello Nero Cioccolato',81,'pack']
-          ];
-          for(const [name,url,title,packagePrice,packageLabel] of replacements){
-            const r=await fetch(url,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'}); const h=await r.text();
-            const path=new URL(url).pathname.toLowerCase();
-            const search=new URL('https://www.cigarhut.com.au/search.php'); search.searchParams.set('search_query',decodeURIComponent(path).split('/').filter(Boolean).pop().replace(/[-_]+/g,' '));
-            const sr=await fetch(search,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'}); const sh=await sr.text();
-            const parsed=parseListingPage(sh,new Set([path]),search.toString(),new Map([[path,{title,packagePrice,packageLabel}]])).get(path)||null;
-            console.log('REPLACEMENT',name,'direct',r.status,r.url,'availability',detectAvailability(h),'price',extractRetailerPrice(h,{title,packagePrice,packageLabel}),'search',JSON.stringify(parsed));
-          }
-
-          for(const [name,url,needle] of [
-            ['fuente','https://www.cigarworld.com.au/aud/categories/cigars/arturo-fuente-%28dominican%29/arturo-fuente-cigars-%28dominican-republic%29/','cubanitos'],
-            ['liga','https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/liga-privada/','t52']
-          ]){
-            const r=await fetch(url,{headers:{'user-agent':'Cigar Catalogue Stock Checker/1.0'},redirect:'follow',cache:'no-store'}); const h=await r.text();
-            const anchors=[...h.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].map(m=>{
-              const href=m[1].match(/href\s*=\s*["']([^"']+)/i)?.[1]||'';
-              const text=m[2].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-              return {href,text};
-            }).filter(x=>(x.href+' '+x.text).toLowerCase().includes(needle)).filter(x=>/product/i.test(x.href));
-            console.log('CIGARWORLD',name,JSON.stringify(anchors.slice(0,80)));
+          for(const t of targets){
+            const hay=(t.key+' '+t.title+' '+t.retailerLinks.join(' ')).toLowerCase();
+            if(/cubanito|t52|churchill.*petite|petite.*churchill/.test(hay)) console.log(JSON.stringify(t));
           }
           NODE
