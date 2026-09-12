@@ -9,6 +9,7 @@ import {
   retailerLabelForUrl,
   matchRetailerStatus,
   retailerPriceAttribution,
+  retailerPriceForRow,
   cardMatchesPersonalFilter,
   isCardExpanded
 } from '../public/catalogue-convenience.mjs';
@@ -123,6 +124,14 @@ test('retailer price attribution assigns the catalogue best available price to t
   assert.equal(retailerPriceAttribution(0, 'A$100 · pack of 10', 'A$10'), 'A$100 · pack of 10 · A$10 / stick');
   assert.equal(retailerPriceAttribution(1, 'A$100 · pack of 10', 'A$10'), '—');
   assert.equal(retailerPriceAttribution(2, 'A$100 · pack of 10', 'A$10'), '—');
+});
+
+test('Undercrown Maduro Coronets rows retain verified retailer prices while live stock cache prices are unavailable', () => {
+  const packageText = 'A$119 · tin of 10';
+  const perStickText = 'A$11.90';
+  assert.equal(retailerPriceForRow(null, 'https://www.theindexcigars.com.au/products/undercrown-maduro-coronet-tin-of-10', 'The Index', 0, packageText, perStickText), 'A$119');
+  assert.equal(retailerPriceForRow(null, 'https://www.cigarhut.com.au/undercrown-maduro-coronets/', 'CigarHut', 1, packageText, perStickText), 'A$110');
+  assert.equal(retailerPriceForRow(null, 'https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/undercrown/', 'Cigarworld', 2, packageText, perStickText), 'A$132');
 });
 
 test('retailer best-price rendering is owned by the main convenience module', async () => {
