@@ -639,7 +639,7 @@ async function recoverCigarhutListing(plan, link, fetchImpl) {
   return parseListingPage(page.html, new Set([path]), searchUrl, contexts).get(path) || null;
 }
 
-async function runProductPass(cardPlans, fetchImpl, counters) {
+async function runProductPass(cardPlans, fetchImpl, counters, options = {}) {
   const tasks = [];
   cardPlans.forEach(plan => {
     plan.links.forEach((link, linkIndex) => {
@@ -649,6 +649,42 @@ async function runProductPass(cardPlans, fetchImpl, counters) {
       tasks.push(async () => {
         let status = existing?.status || 'unknown';
         let price = positivePrice(existing?.price, 0) || previousRetailerPrice(plan, link, linkIndex);
+        if (link.retailer === 'CigarHut' && options.cigarHutExactSearch) {
+          let searchChecked = false;
+          try {
+            const recovered = await recoverCigarhutListing(plan, link, fetchImpl);
+            searchChecked = true;
+            if (recovered) {
+              if (['in','out'].includes(recovered.status)) status = recovered.status;
+              const recoveredPrice = positivePrice(recovered.price, 0);
+              if (recoveredPrice) price = recoveredPrice;
+              plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(positivePrice(price, 0) ? { price } : {}) };
+              if (status === 'unknown') counters.failed++;
+              else counters.productResolved++;
+              return;
+            }
+          } catch (_) {}
+
+          try {
+            const page = await fetchPage(link.url, fetchImpl, true);
+            if (page.targetStatus === 404) {
+              status = 'delisted';
+              price = null;
+              counters.delistingCandidates.set(plan.key, plan.title || plan.key);
+            } else if (searchChecked) {
+              status = 'out';
+              const currentPrice = extractRetailerPrice(page.html, plan);
+              if (currentPrice != null) price = currentPrice;
+            }
+          } catch (_) {
+            status = 'unknown';
+          }
+          plan.retailerResults[linkIndex] = { retailer:link.retailer, status, url:link.url, ...(positivePrice(price, 0) ? { price } : {}) };
+          if (status === 'unknown') counters.failed++;
+          else counters.productResolved++;
+          return;
+        }
+
         let directNotFound = false;
         try {
           const page = await fetchPage(link.url, fetchImpl, true);
@@ -749,8 +785,8 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
   }
 
   const counters = { sweepResolved:0, productResolved:0, failed:0, delistingCandidates:new Map() };
-  await runCategorySweep(plans, fetchImpl, counters);
-  await runProductPass(plans, fetchImpl, counters);
+  if (!options.cigarHutExactSearch) await runCategorySweep(plans, fetchImpl, counters);
+  await runProductPass(plans, fetchImpl, counters, options);
 
   const restocked = [];
   plans.forEach((plan, key) => {

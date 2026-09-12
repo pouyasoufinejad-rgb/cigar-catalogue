@@ -39,7 +39,7 @@ const kv = new MemoryKv({
 });
 const env = { CATALOGUE_STATE: kv };
 const now = Date.now();
-const run = await runStockCheck(env, state, 'full', { html, now, fetchImpl: fetch });
+const run = await runStockCheck(env, state, 'full', { html, now, fetchImpl: fetch, cigarHutExactSearch: true });
 const snapshot = await readStockCache(env);
 console.log(`[github-stock] full crawl checked=${run.checked} failed=${run.counters.failed}`);
 
