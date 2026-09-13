@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   recommendationRankCohort,
+  recommendationCohortForMainCard,
   textLooksFlavoured,
   recommendationFlavourCohortEligible,
   rankRecommendationRows,
@@ -23,6 +24,24 @@ test('recommendation cohorts use the 34 RG boundary and flavoured override', () 
   assert.equal(textLooksFlavoured('Wrapper: Maduro · Infused'), true);
   assert.equal(textLooksFlavoured('Flavoured'), true);
   assert.equal(textLooksFlavoured('Traditional long filler'), false);
+});
+
+test('every normal Recommendation card is classified by format even without Strength or Quality Gold', () => {
+  assert.equal(recommendationCohortForMainCard({
+    key: KFC_SWEET_PONIES,
+    ring: 32,
+    text: 'Flavoured / Sweetened'
+  }), 'coronets');
+  assert.equal(recommendationCohortForMainCard({
+    key: 'tabak-especial-cafecita-negra',
+    ring: 32,
+    text: 'Infused'
+  }), 'flavoured');
+  assert.equal(recommendationCohortForMainCard({
+    key: 'plain-petit',
+    ring: 40,
+    text: 'Traditional long filler'
+  }), 'petit-panatelas');
 });
 
 test('KFC Sweet Ponies is explicitly excluded from the infused/flavoured subsection', () => {
