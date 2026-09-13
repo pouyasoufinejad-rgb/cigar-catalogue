@@ -1,5 +1,5 @@
 import { ringGaugeForCard } from './catalogue-size-presentation.mjs';
-import { registerCatalogueStateTransform } from './catalogue-save-pipeline.mjs';
+import { registerCatalogueStateTransform, registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 
 export const RECOMMENDATION_SUBSECTIONS = Object.freeze([
   { key: 'coronets', title: 'Coronets', description: '34 ring gauge or lower' },
@@ -9,6 +9,8 @@ export const RECOMMENDATION_SUBSECTIONS = Object.freeze([
 
 const ROOT_ID = 'recommendation-format-subsections';
 const STYLE_ID = 'catalogue-recommendation-subsections-style';
+const STATE_API = '/api/catalogue-overrides';
+const RANK_INPUT_ID = 'catalogue-admin-rank';
 
 function finite(value, fallback = 0) {
   const number = Number(value);
@@ -39,7 +41,7 @@ export function rankRecommendationSubsections(rows = []) {
   for (const subsection of RECOMMENDATION_SUBSECTIONS) {
     eligible
       .filter(row => row.recommendationSubsection === subsection.key)
-      .sort((a, b) => finite(a.rank, Number.MAX_SAFE_INTEGER) - finite(b.rank, Number.MAX_SAFE_INTEGER))
+      .sort((a, b) => finite(a.recommendationRank, finite(a.rank, Number.MAX_SAFE_INTEGER)) - finite(b.recommendationRank, finite(b.rank, Number.MAX_SAFE_INTEGER)))
       .forEach((row, index) => ranks.set(row.key, index + 1));
   }
 
@@ -61,13 +63,6 @@ function isRecommendationTierCard(card) {
   if (!card || card.dataset?.archived === '1' || cardType(card) !== 'main') return false;
   return Boolean(card.closest?.('[data-tier-section="elite"], [data-tier-section="strong"]'))
     || Boolean(card.closest?.(`#${ROOT_ID}`));
-}
-
-function classifyCard(card) {
-  return recommendationSubsectionFor({
-    ring: ringGaugeForCard(card),
-    flavoured: isFlavouredCard(card)
-  });
 }
 
 function ensureStyle(root = document) {
@@ -108,7 +103,7 @@ function ensureRoot(root = document) {
 
 function updateRankVisual(card, rank) {
   const value = Math.max(1, Math.round(finite(rank, 1)));
-  card.dataset.rank = String(value);
+  card.dataset.recommendationRank = String(value);
   const rankflag = card.querySelector?.('.rankflag');
   const label = rankflag?.querySelector?.('span');
   const bold = rankflag?.querySelector?.('b');
@@ -117,59 +112,126 @@ function updateRankVisual(card, rank) {
   const eyebrow = card.querySelector?.('.eyebrow');
   if (eyebrow) {
     const text = eyebrow.textContent || '';
-    eyebrow.textContent = /^\s*No\.\s*\d+\s*[—-]\s*/i.test(text)
-      ? text.replace(/^\s*No\.\s*\d+\s*[—-]\s*/i, `No. ${value} — `)
-      : `No. ${value} — ${text.replace(/^\s*(?:T|H)?\d+\s*[—-]\s*/i, '')}`;
+    const tail = text.replace(/^\s*(?:No\.\s*)?(?:T|H)?\d+\s*[—-]\s*/i, '');
+    eyebrow.textContent = `No. ${value} — ${tail}`;
   }
+}
+
+function cardRows(root = document) {
+  return Array.from(root.querySelectorAll?.('article.card[data-key]') || [])
+    .filter(isRecommendationTierCard)
+    .map(card => ({
+      key: card.dataset.key,
+      rank: finite(card.dataset.globalRecommendationRank, finite(card.dataset.rank, 9999)),
+      recommendationRank: finite(card.dataset.recommendationRank, 0) || undefined,
+      ring: ringGaugeForCard(card),
+      flavoured: isFlavouredCard(card),
+      catalogueType: cardType(card),
+      archived: card.dataset.archived === '1',
+      card
+    }));
+}
+
+function applyRanksAndGrouping(root = document) {
+  const container = ensureRoot(root);
+  if (!container) return 0;
+  const ranked = rankRecommendationSubsections(cardRows(root));
+  const byKey = new Map(ranked.map(row => [row.key, row]));
+
+  for (const row of ranked) {
+    const card = row.card;
+    if (!card.dataset.globalRecommendationRank) card.dataset.globalRecommendationRank = card.dataset.rank || String(row.rank || 1);
+    card.dataset.recommendationSubsection = row.recommendationSubsection;
+    updateRankVisual(card, row.subsectionRank);
+    const grid = container.querySelector(`[data-recommendation-grid="${row.recommendationSubsection}"]`);
+    if (grid) grid.appendChild(card);
+  }
+
+  for (const subsection of RECOMMENDATION_SUBSECTIONS) {
+    const group = container.querySelector(`[data-recommendation-subsection="${subsection.key}"]`);
+    const grid = container.querySelector(`[data-recommendation-grid="${subsection.key}"]`);
+    const cards = Array.from(grid?.querySelectorAll?.('article.card[data-key]') || [])
+      .sort((a, b) => finite(a.dataset.recommendationRank, 9999) - finite(b.dataset.recommendationRank, 9999));
+    cards.forEach(card => grid.appendChild(card));
+    if (group) group.hidden = cards.length === 0;
+  }
+
+  root.querySelector?.('[data-tier-section="elite"]')?.classList.add('recommendation-format-hidden');
+  root.querySelector?.('[data-tier-section="strong"]')?.classList.add('recommendation-format-hidden');
+  return byKey.size;
 }
 
 export function syncRecommendationSubsections(root = document) {
   if (!root?.querySelectorAll) return 0;
   ensureStyle(root);
-  const container = ensureRoot(root);
-  if (!container) return 0;
+  return applyRanksAndGrouping(root);
+}
 
-  const cards = Array.from(root.querySelectorAll('article.card[data-key]')).filter(isRecommendationTierCard);
-  const rows = cards.map(card => ({
-    key: card.dataset.key,
-    rank: finite(card.dataset.rank, 9999),
-    ring: ringGaugeForCard(card),
-    flavoured: isFlavouredCard(card),
-    catalogueType: cardType(card),
-    archived: card.dataset.archived === '1'
-  }));
-  const ranked = rankRecommendationSubsections(rows);
-  const byKey = new Map(ranked.map(row => [row.key, row]));
+function selectedCard(root = document) {
+  const key = root.getElementById?.('catalogue-v139-key')?.value
+    || root.getElementById?.('catalogue-admin-card')?.value
+    || '';
+  if (!key || key.startsWith('__')) return null;
+  return Array.from(root.querySelectorAll?.('article.card[data-key]') || []).find(card => card.dataset.key === key) || null;
+}
 
-  for (const card of cards) {
-    const row = byKey.get(card.dataset.key);
-    if (!row) continue;
-    card.dataset.recommendationSubsection = row.recommendationSubsection;
-    updateRankVisual(card, row.subsectionRank);
-    const grid = container.querySelector(`[data-recommendation-grid="${row.recommendationSubsection}"]`);
-    if (grid && card.parentElement !== grid) grid.appendChild(card);
+function syncEditorRank(root = document) {
+  const card = selectedCard(root);
+  const input = root.getElementById?.(RANK_INPUT_ID);
+  if (!card || !input || !card.dataset.recommendationSubsection) return;
+  input.value = card.dataset.recommendationRank || '1';
+  const group = card.dataset.recommendationSubsection;
+  const count = Array.from(root.querySelectorAll?.(`#${ROOT_ID} article.card[data-recommendation-subsection="${group}"]`) || []).length;
+  input.max = String(Math.max(1, count));
+}
+
+async function hydrateSavedRanks(root = document) {
+  try {
+    const response = await fetch(`${STATE_API}?recommendation_subsections=1`, { cache: 'no-store' });
+    if (!response.ok) return false;
+    const state = await response.json();
+    const cards = state?.cards && typeof state.cards === 'object' ? state.cards : {};
+    root.querySelectorAll?.('article.card[data-key]').forEach(card => {
+      const saved = cards[card.dataset.key];
+      if (!saved) return;
+      if (finite(saved.recommendationRank, 0) > 0) card.dataset.recommendationRank = String(Math.round(saved.recommendationRank));
+    });
+    syncRecommendationSubsections(root);
+    syncEditorRank(root);
+    return true;
+  } catch (_) {
+    return false;
   }
-
-  RECOMMENDATION_SUBSECTIONS.forEach(section => {
-    const group = container.querySelector(`[data-recommendation-subsection="${section.key}"]`);
-    const count = group?.querySelectorAll?.('article.card[data-key]')?.length || 0;
-    if (group) group.hidden = count === 0;
-  });
-  root.querySelector?.('[data-tier-section="elite"]')?.classList.add('recommendation-format-hidden');
-  root.querySelector?.('[data-tier-section="strong"]')?.classList.add('recommendation-format-hidden');
-  return cards.length;
 }
 
 function patchRanks(payload, root = document) {
   if (!payload || typeof payload !== 'object' || !root?.querySelectorAll) return payload;
   const cards = payload.cards && typeof payload.cards === 'object' ? payload.cards : {};
   const updates = { ...cards };
-  Array.from(root.querySelectorAll(`#${ROOT_ID} article.card[data-key]`)).forEach(card => {
-    updates[card.dataset.key] = {
-      ...(updates[card.dataset.key] && typeof updates[card.dataset.key] === 'object' ? updates[card.dataset.key] : {}),
-      rank: Math.max(1, Math.round(finite(card.dataset.rank, 1)))
-    };
-  });
+  const rows = cardRows(root);
+  const chosen = selectedCard(root);
+  const rankInput = root.getElementById?.(RANK_INPUT_ID);
+
+  for (const subsection of RECOMMENDATION_SUBSECTIONS) {
+    const cohort = rows
+      .filter(row => (row.card.dataset.recommendationSubsection || recommendationSubsectionFor(row)) === subsection.key)
+      .sort((a, b) => finite(a.recommendationRank, finite(a.rank, 9999)) - finite(b.recommendationRank, finite(b.rank, 9999)));
+    if (chosen?.dataset?.recommendationSubsection === subsection.key && rankInput) {
+      const index = cohort.findIndex(row => row.key === chosen.dataset.key);
+      if (index >= 0) {
+        const [row] = cohort.splice(index, 1);
+        const target = Math.max(0, Math.min(cohort.length, Math.round(finite(rankInput.value, 1)) - 1));
+        cohort.splice(target, 0, row);
+      }
+    }
+    cohort.forEach((row, index) => {
+      updates[row.key] = {
+        ...(updates[row.key] && typeof updates[row.key] === 'object' ? updates[row.key] : {}),
+        rank: Math.max(1, Math.round(finite(row.card.dataset.globalRecommendationRank, row.rank || 1))),
+        recommendationRank: index + 1
+      };
+    });
+  }
   return { ...payload, cards: updates };
 }
 
@@ -179,6 +241,7 @@ function scheduleSync(root = document) {
   refreshTimer = setTimeout(() => {
     refreshTimer = 0;
     syncRecommendationSubsections(root);
+    syncEditorRank(root);
   }, 0);
 }
 
@@ -186,14 +249,20 @@ export function installRecommendationSubsections(root = document) {
   if (typeof document === 'undefined' || !root) return;
   const start = () => {
     syncRecommendationSubsections(root);
-    registerCatalogueStateTransform('recommendation-subsections', 35, payload => patchRanks(payload, root));
+    hydrateSavedRanks(root);
+    registerCatalogueStateTransform('recommendation-subsections', 90, payload => patchRanks(payload, root));
+    registerCatalogueStateResponseListener('recommendation-subsections', event => {
+      if (event?.method === 'PUT') setTimeout(() => hydrateSavedRanks(root), 0);
+    });
+    root.getElementById?.('catalogue-admin-card')?.addEventListener('change', () => setTimeout(() => syncEditorRank(root), 0));
+    root.getElementById?.('catalogue-admin-toggle')?.addEventListener('click', () => setTimeout(() => syncEditorRank(root), 0));
     if (typeof MutationObserver !== 'undefined' && root.body) {
       const observer = new MutationObserver(() => scheduleSync(root));
       observer.observe(root.body, {
         subtree: true,
         childList: true,
         attributes: true,
-        attributeFilter: ['data-rank', 'data-taster', 'data-catalogue-type', 'data-archived', 'data-visual-ring']
+        attributeFilter: ['data-rank', 'data-taster', 'data-catalogue-type', 'data-archived', 'data-visual-ring', 'data-recommendation-rank']
       });
     }
   };
