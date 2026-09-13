@@ -8,6 +8,7 @@ on:
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
+      - 'scripts/publish-live-maintenance-request.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -20,6 +21,7 @@ on:
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
+      - 'scripts/publish-live-maintenance-request.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -109,6 +111,11 @@ jobs:
               echo "::error::Refusing unexpected request path: ${request}"
               exit 1
             fi
+            operation="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(String(p.operation||""));' "${request}")"
             echo "Publishing ${request} from current live Worker state"
-            node scripts/publish-live-catalogue-request.mjs "${request}"
+            if [[ "${operation}" == "bulk-maintenance" ]]; then
+              node scripts/publish-live-maintenance-request.mjs "${request}"
+            else
+              node scripts/publish-live-catalogue-request.mjs "${request}"
+            fi
           done
