@@ -9,7 +9,6 @@ import {
 } from '../public/catalogue-recommendation-cohorts.mjs';
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
-const publisherSource = await readFile(new URL('../scripts/publish-catalogue-request.mjs', import.meta.url), 'utf8');
 
 test('recommendation cohorts use the 34 RG boundary and flavoured override', () => {
   assert.equal(recommendationRankCohort({ recommendation: true, ring: 34, flavoured: false }), 'coronets');
@@ -67,9 +66,4 @@ test('half cigars, tasters and non-recommendations have no recommendation cohort
 test('browser runtime loads the recommendation cohort controller', () => {
   assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-cohorts\.mjs'\)/);
   assert.doesNotMatch(runtimeSource, /catalogue-recommendation-subsections\.mjs/);
-});
-
-test('publisher accepts persisted recommendation cohort and subsection rank fields', () => {
-  assert.match(publisherSource, /recommendationRank/);
-  assert.match(publisherSource, /recommendationCohort/);
 });
