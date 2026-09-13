@@ -9,6 +9,7 @@ import {
 } from '../public/catalogue-recommendation-cohorts.mjs';
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+const cohortSource = await readFile(new URL('../public/catalogue-recommendation-cohorts.mjs', import.meta.url), 'utf8');
 
 test('recommendation cohorts use the 34 RG boundary and flavoured override', () => {
   assert.equal(recommendationRankCohort({ recommendation: true, ring: 34, flavoured: false }), 'coronets');
@@ -66,4 +67,9 @@ test('half cigars, tasters and non-recommendations have no recommendation cohort
 test('browser runtime loads the recommendation cohort controller', () => {
   assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-cohorts\.mjs'\)/);
   assert.doesNotMatch(runtimeSource, /catalogue-recommendation-subsections\.mjs/);
+});
+
+test('recommendation rank rendering leaves editable eyebrow copy untouched', () => {
+  assert.doesNotMatch(cohortSource, /querySelector\?\.\(['"]\.eyebrow['"]\)/);
+  assert.match(cohortSource, /dataset\.recommendationRank/);
 });
