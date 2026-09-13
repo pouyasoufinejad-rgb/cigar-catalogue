@@ -103,18 +103,13 @@ function ensureRoot(root = document) {
 
 function updateRankVisual(card, rank) {
   const value = Math.max(1, Math.round(finite(rank, 1)));
-  card.dataset.recommendationRank = String(value);
+  const next = String(value);
+  if (card.dataset.recommendationRank !== next) card.dataset.recommendationRank = next;
   const rankflag = card.querySelector?.('.rankflag');
   const label = rankflag?.querySelector?.('span');
   const bold = rankflag?.querySelector?.('b');
   if (label) label.textContent = 'No.';
-  if (bold) bold.textContent = String(value);
-  const eyebrow = card.querySelector?.('.eyebrow');
-  if (eyebrow) {
-    const text = eyebrow.textContent || '';
-    const tail = text.replace(/^\s*(?:No\.\s*)?(?:T|H)?\d+\s*[—-]\s*/i, '');
-    eyebrow.textContent = `No. ${value} — ${tail}`;
-  }
+  if (bold) bold.textContent = next;
 }
 
 function cardRows(root = document) {
