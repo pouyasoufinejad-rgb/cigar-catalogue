@@ -178,6 +178,7 @@ export function reclassifyRecommendationCards(root = document) {
   let moved = 0;
   root.querySelectorAll('article.card[data-key]').forEach(card => {
     if (card.dataset.archived === '1' || catalogueType(card) !== 'main' || isUnavailableCard(card)) return;
+    if (card.dataset.recommendationSubsection) return;
     if (!rankSortActive && card.dataset.dynamicEntry !== '1') return;
     const destination = recommendationDestinationForCard(card);
     const target = destinationGrid(root, destination);
