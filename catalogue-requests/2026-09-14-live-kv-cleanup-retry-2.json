@@ -1,0 +1,38 @@
+{
+  "id": "2026-09-14-live-kv-cleanup-retry-2",
+  "operation": "bulk-maintenance",
+  "tasterOrder": [
+    "la-flor-dominicana-double-ligero-chiselito-maduro",
+    "cao-eileens-dream-corona",
+    "daniel-marshall-red-label-petit-corona",
+    "arturo-fuente-exquisitos-maduro"
+  ],
+  "scanPracticalInlineStyles": true,
+  "cadenceFixKeys": [
+    "liga-privada-unico-l40-lancero",
+    "cao-brazilia-lambada",
+    "tatiana-classic-night-cap",
+    "aj-fernandez-last-call-maduro-flaquitas",
+    "rocky-patel-disciple-half-corona"
+  ],
+  "practicalLineSets": {
+    "tatiana-dolce-vanilla": ["Single", "Cut", "Fragile", "Lenient Cadence"],
+    "foundation-wise-man-maduro-lancero-half": ["Two Half-Sticks", "Cut before smoking", "Fragile"]
+  },
+  "productionNormaliseKeys": ["montecristo-short"],
+  "stringReplacements": {
+    "blackened-m81-coronets": {
+      "summaryHtml": [
+        {"from": "black pepprr", "to": "black pepper"},
+        {"from": "arguably offering arguably stronger construction", "to": "offering arguably stronger construction"}
+      ]
+    },
+    "kfc-ponies-sweets": {
+      "title": [
+        {"from": "* Kentucky Fire Cured Sweets Ponies — Tin of 10", "to": "Kentucky Fire Cured Sweets Ponies — Tin of 10"}
+      ]
+    }
+  },
+  "scanEyebrowRankPrefixes": true,
+  "note": "Second retry after numbered taster cohort validation was corrected to preserve rankless taster metadata without treating those cards as ranked cohort members."
+}
