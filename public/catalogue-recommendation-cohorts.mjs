@@ -43,10 +43,18 @@ export function textLooksFlavoured(value) {
   return /\b(?:flavou?red|flavored|infused)\b/i.test(String(value || ''));
 }
 
-export function recommendationFlavourCohortEligible({ key = '', text = '' } = {}) {
+export function recommendationFlavourCohortEligible({
+  key = '',
+  text = '',
+  productionText = null,
+  explicitFlavoured = null
+} = {}) {
   const normalisedKey = String(key || '').trim().toLowerCase();
   if (FLAVOURED_COHORT_EXCLUDED_KEYS.has(normalisedKey)) return false;
-  return textLooksFlavoured(text);
+  if (explicitFlavoured === true) return true;
+  if (explicitFlavoured === false) return false;
+  const structuredText = productionText == null ? text : productionText;
+  return textLooksFlavoured(structuredText);
 }
 
 export function recommendationRankCohort({ recommendation = false, ring = 0, flavoured = false } = {}) {
@@ -57,16 +65,26 @@ export function recommendationRankCohort({ recommendation = false, ring = 0, fla
   return gauge <= 34 ? 'coronets' : 'petit-panatelas';
 }
 
-export function recommendationCohortForMainCard({ key = '', ring = 0, text = '' } = {}) {
+export function recommendationCohortForMainCard({
+  key = '',
+  ring = 0,
+  text = '',
+  productionText = null,
+  explicitFlavoured = null
+} = {}) {
   return recommendationRankCohort({
     recommendation: true,
     ring,
-    flavoured: recommendationFlavourCohortEligible({ key, text })
+    flavoured: recommendationFlavourCohortEligible({ key, text, productionText, explicitFlavoured })
   });
 }
 
 function rowSortRank(row) {
-  return optionalPositiveRank(row?.recommendationRank) ?? positiveRank(row?.legacyRank);
+  const persistedCohort = String(row?.persistedCohort || '').trim();
+  const scopedRank = !persistedCohort || persistedCohort === row?.cohort
+    ? optionalPositiveRank(row?.recommendationRank)
+    : null;
+  return scopedRank ?? positiveRank(row?.legacyRank);
 }
 
 export function rankRecommendationRows(rows = [], { selectedKey = '', selectedRank = null } = {}) {
@@ -128,14 +146,19 @@ function ringFromCard(card, source = {}) {
   return match ? finite(match[1], 0) : 0;
 }
 
-function flavourTextForCard(card, source = {}) {
-  return [
+function productionTextForCard(card, source = {}) {
+  const sourceText = [
     ...(Array.isArray(source.productionLines) ? source.productionLines : []),
-    source.productionHtml || '',
-    source.title || '',
-    source.eyebrow || '',
-    card?.textContent || ''
-  ].join(' ');
+    source.productionHtml || ''
+  ].join(' ').trim();
+  if (sourceText) return sourceText;
+  return String(card?.querySelector?.('.artmeta-left')?.textContent || '');
+}
+
+function explicitFlavouredForSource(source = {}) {
+  if (typeof source.flavoured === 'boolean') return source.flavoured;
+  if (typeof source.infused === 'boolean') return source.infused;
+  return null;
 }
 
 function isUnavailable(card, source = {}) {
@@ -158,13 +181,16 @@ function cardInfo(card, state = persistedState) {
   const cohort = recommendationCohortForMainCard({
     key,
     ring: ringFromCard(card, source),
-    text: flavourTextForCard(card, source)
+    productionText: productionTextForCard(card, source),
+    explicitFlavoured: explicitFlavouredForSource(source)
   });
   if (!cohort) return null;
+  const persistedCohort = COHORTS.includes(source.recommendationCohort) ? source.recommendationCohort : '';
   return {
     key,
     card,
     cohort,
+    persistedCohort,
     recommendationRank: optionalPositiveRank(source.recommendationRank),
     legacyRank: positiveRank(card?.dataset?.rank ?? source.rank)
   };
@@ -381,7 +407,6 @@ export function installRecommendationCohorts() {
   const start = () => {
     refreshRecommendationCohorts(document);
     document.getElementById('catalogue-admin-card')?.addEventListener('change', () => setTimeout(scheduleRefresh, 0));
-    document.getElementById('catalogue-admin-rank')?.addEventListener('change', scheduleRefresh);
     if (typeof MutationObserver !== 'undefined' && document.body) {
       const observer = new MutationObserver(scheduleRefresh);
       observer.observe(document.body, {
