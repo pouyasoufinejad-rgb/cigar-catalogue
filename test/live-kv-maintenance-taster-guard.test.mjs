@@ -2,12 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildMaintenanceMutation } from '../scripts/publish-live-maintenance-request.mjs';
+import {
+  suppressRanklessTasterCohortMarkers,
+  suppressRanklessTasterStateMarkers,
+  restoreRanklessTasterStateMarkers
+} from '../scripts/publish-live-maintenance-ranked-request.mjs';
 
 function cardTag(key, attrs = '') {
   return `<article class="card" data-key="${key}" ${attrs}></article>`;
 }
 
-test('rankless taster-flag cards in KV are not members of the numbered taster cohort', () => {
+test('rankless taster-flag cards in KV are hidden only from numbered taster validation', () => {
   const order = [
     'la-flor-dominicana-double-ligero-chiselito-maduro',
     'cao-eileens-dream-corona',
@@ -37,13 +42,20 @@ test('rankless taster-flag cards in KV are not members of the numbered taster co
     cardTag('tabak-especial-colada-oscuro', 'data-taster="1" data-catalogue-type="taster"')
   ].join('');
 
-  const result = buildMaintenanceMutation(state, html, {
+  const suppressed = suppressRanklessTasterStateMarkers(state);
+  const filteredHtml = suppressRanklessTasterCohortMarkers(html);
+  const result = buildMaintenanceMutation(suppressed.state, filteredHtml, {
     operation: 'bulk-maintenance',
     tasterOrder: order
   });
 
   assert.deepEqual(order.map(key => result.state.cards[key].rank), [1, 2, 3, 4]);
-  for (const key of ['cao-moontrance-tubos', 'deadwood-leather-rose-petite-corona', 'isla-del-sol-maduro-gran-corona', 'tabak-especial-colada-oscuro']) {
-    assert.equal('rank' in result.state.cards[key], false);
+  const restored = restoreRanklessTasterStateMarkers(result.state, suppressed.markers);
+  for (const key of ['cao-moontrance-tubos', 'deadwood-leather-rose-petite-corona', 'isla-del-sol-maduro-gran-corona']) {
+    assert.equal(restored.cards[key].taster, true);
+    assert.equal('rank' in restored.cards[key], false);
   }
+  assert.equal(restored.cards['tabak-especial-colada-oscuro'].taster, true);
+  assert.equal(restored.cards['tabak-especial-colada-oscuro'].catalogueType, 'taster');
+  assert.equal('rank' in restored.cards['tabak-especial-colada-oscuro'], false);
 });
