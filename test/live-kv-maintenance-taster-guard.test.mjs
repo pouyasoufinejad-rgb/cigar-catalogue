@@ -2,13 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildMaintenanceMutation } from '../scripts/publish-live-maintenance-request.mjs';
-import { suppressRanklessTasterCohortMarkers } from '../scripts/publish-live-maintenance-ranked-request.mjs';
+import {
+  suppressRanklessTasterCohortMarkers,
+  suppressRanklessTasterStateMarkers,
+  restoreRanklessTasterStateMarkers
+} from '../scripts/publish-live-maintenance-ranked-request.mjs';
 
 function cardTag(key, attrs = '') {
   return `<article class="card" data-key="${key}" ${attrs}></article>`;
 }
 
-test('rankless taster-flag cards are not members of the ranked taster cohort', () => {
+test('rankless taster-flag cards in KV are hidden only from numbered taster validation', () => {
   const order = [
     'la-flor-dominicana-double-ligero-chiselito-maduro',
     'cao-eileens-dream-corona',
@@ -18,7 +22,13 @@ test('rankless taster-flag cards are not members of the ranked taster cohort', (
   const state = {
     version: 3,
     sections: {},
-    cards: Object.fromEntries(order.map((key, index) => [key, { taster: true, rank: [1, 3, 4, 6][index] }])),
+    cards: {
+      ...Object.fromEntries(order.map((key, index) => [key, { taster: true, rank: [1, 3, 4, 6][index] }])),
+      'cao-moontrance-tubos': { taster: true },
+      'deadwood-leather-rose-petite-corona': { taster: true },
+      'isla-del-sol-maduro-gran-corona': { taster: true },
+      'tabak-especial-colada-oscuro': { taster: true, catalogueType: 'taster' }
+    },
     entries: {}
   };
   const html = [
@@ -32,16 +42,20 @@ test('rankless taster-flag cards are not members of the ranked taster cohort', (
     cardTag('tabak-especial-colada-oscuro', 'data-taster="1" data-catalogue-type="taster"')
   ].join('');
 
+  const suppressed = suppressRanklessTasterStateMarkers(state);
   const filteredHtml = suppressRanklessTasterCohortMarkers(html);
-  assert.match(filteredHtml, /la-flor-dominicana-double-ligero-chiselito-maduro[^>]*data-taster="1"[^>]*data-rank="1"/);
-  assert.match(filteredHtml, /cao-moontrance-tubos[^>]*data-taster="0"/);
-  assert.match(filteredHtml, /tabak-especial-colada-oscuro[^>]*data-catalogue-type="main"/);
-
-  const result = buildMaintenanceMutation(state, filteredHtml, {
+  const result = buildMaintenanceMutation(suppressed.state, filteredHtml, {
     operation: 'bulk-maintenance',
     tasterOrder: order
   });
 
   assert.deepEqual(order.map(key => result.state.cards[key].rank), [1, 2, 3, 4]);
-  assert.equal(result.state.cards['cao-moontrance-tubos'], undefined);
+  const restored = restoreRanklessTasterStateMarkers(result.state, suppressed.markers);
+  for (const key of ['cao-moontrance-tubos', 'deadwood-leather-rose-petite-corona', 'isla-del-sol-maduro-gran-corona']) {
+    assert.equal(restored.cards[key].taster, true);
+    assert.equal('rank' in restored.cards[key], false);
+  }
+  assert.equal(restored.cards['tabak-especial-colada-oscuro'].taster, true);
+  assert.equal(restored.cards['tabak-especial-colada-oscuro'].catalogueType, 'taster');
+  assert.equal('rank' in restored.cards['tabak-especial-colada-oscuro'], false);
 });
