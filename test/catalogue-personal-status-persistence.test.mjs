@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import worker from '../src/index.js';
+import worker from '../src/worker.js';
+import { mergeRemoteStatuses } from '../public/catalogue-personal-status-persistence.mjs';
 
-const convenienceUrl = new URL('../public/catalogue-convenience.mjs', import.meta.url);
+const persistenceUrl = new URL('../public/catalogue-personal-status-persistence.mjs', import.meta.url);
+const runtimeUrl = new URL('../public/catalogue-runtime.mjs', import.meta.url);
 
 function memoryKv(seed = {}) {
   const values = new Map(Object.entries(seed));
@@ -80,11 +82,34 @@ test('personal status API requires admin auth for writes and persists normalised
   });
 });
 
-test('convenience UI hydrates and persists personal statuses through the dedicated API', async () => {
-  const source = await readFile(convenienceUrl, 'utf8');
-  assert.match(source, /const PERSONAL_STATUS_API = ['"]\/api\/personal-statuses['"]/);
-  assert.match(source, /cigar-catalogue-admin-token/);
-  assert.match(source, /fetch\(PERSONAL_STATUS_API/);
-  assert.match(source, /method\s*:\s*['"]PUT['"]/);
-  assert.match(source, /loadPersonalStatuses/);
+test('remote personal statuses override matching local cards while preserving unsynced local cards', () => {
+  const merged = mergeRemoteStatuses({
+    viewMode: 'compact',
+    statuses: {
+      one: { owned: true, tried: false, want: false, rebuy: false },
+      localOnly: { owned: false, tried: true, want: false, rebuy: false }
+    }
+  }, {
+    one: { owned: false, tried: true, want: true, rebuy: false }
+  });
+
+  assert.equal(merged.viewMode, 'compact');
+  assert.deepEqual(merged.statuses.one, { owned: false, tried: true, want: true, rebuy: false });
+  assert.deepEqual(merged.statuses.localonly, { owned: false, tried: true, want: false, rebuy: false });
+});
+
+test('browser runtime hydrates durable statuses before loading the convenience UI', async () => {
+  const persistenceSource = await readFile(persistenceUrl, 'utf8');
+  const runtimeSource = await readFile(runtimeUrl, 'utf8');
+
+  assert.match(persistenceSource, /const PERSONAL_STATUS_API = ['"]\/api\/personal-statuses['"]/);
+  assert.match(persistenceSource, /cigar-catalogue-admin-token/);
+  assert.match(persistenceSource, /fetchImpl\(PERSONAL_STATUS_API/);
+  assert.match(persistenceSource, /method\s*:\s*['"]PUT['"]/);
+  assert.match(persistenceSource, /loadPersonalStatuses/);
+
+  const persistenceIndex = runtimeSource.indexOf("await import('./catalogue-personal-status-persistence.mjs')");
+  const convenienceIndex = runtimeSource.indexOf("import('./catalogue-convenience.mjs')");
+  assert.ok(persistenceIndex >= 0);
+  assert.ok(convenienceIndex > persistenceIndex);
 });
