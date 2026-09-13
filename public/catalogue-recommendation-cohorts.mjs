@@ -39,10 +39,6 @@ function positiveRank(value, fallback = Number.MAX_SAFE_INTEGER) {
   return optionalPositiveRank(value) ?? fallback;
 }
 
-function own(object, key) {
-  return Object.prototype.hasOwnProperty.call(object || {}, key);
-}
-
 export function textLooksFlavoured(value) {
   return /\b(?:flavou?red|flavored|infused)\b/i.test(String(value || ''));
 }
@@ -59,6 +55,14 @@ export function recommendationRankCohort({ recommendation = false, ring = 0, fla
   const gauge = finite(ring, 0);
   if (gauge <= 0) return '';
   return gauge <= 34 ? 'coronets' : 'petit-panatelas';
+}
+
+export function recommendationCohortForMainCard({ key = '', ring = 0, text = '' } = {}) {
+  return recommendationRankCohort({
+    recommendation: true,
+    ring,
+    flavoured: recommendationFlavourCohortEligible({ key, text })
+  });
 }
 
 function rowSortRank(row) {
@@ -113,21 +117,6 @@ function catalogueType(card, source = {}) {
   return 'main';
 }
 
-function scoreNode(card, label) {
-  return Array.from(card?.querySelectorAll?.('.rating') || []).find(node =>
-    node.querySelector?.(':scope > span')?.textContent?.trim().toLowerCase() === label
-  ) || null;
-}
-
-function recommendationFromCard(card, source = {}) {
-  if (own(source, 'strength') || own(source, 'quality')) {
-    const strength = own(source, 'strength') ? finite(source.strength) : 0;
-    const quality = own(source, 'quality') ? finite(source.quality) : 0;
-    if (strength || quality) return strength >= 7 || quality >= 7;
-  }
-  return Boolean(scoreNode(card, 'strength')?.classList?.contains('gold') || scoreNode(card, 'quality')?.classList?.contains('gold'));
-}
-
 function ringFromCard(card, source = {}) {
   const sourceRing = finite(source.ring, 0);
   if (sourceRing > 0) return sourceRing;
@@ -139,18 +128,14 @@ function ringFromCard(card, source = {}) {
   return match ? finite(match[1], 0) : 0;
 }
 
-function flavouredFromCard(card, source = {}) {
-  const sourceText = [
+function flavourTextForCard(card, source = {}) {
+  return [
     ...(Array.isArray(source.productionLines) ? source.productionLines : []),
     source.productionHtml || '',
     source.title || '',
     source.eyebrow || '',
     card?.textContent || ''
   ].join(' ');
-  return recommendationFlavourCohortEligible({
-    key: card?.dataset?.key || source.key || '',
-    text: sourceText
-  });
 }
 
 function isUnavailable(card, source = {}) {
@@ -170,11 +155,10 @@ function cardInfo(card, state = persistedState) {
   if (!key) return null;
   const source = mergedSourceForKey(key, state);
   if (catalogueType(card, source) !== 'main' || isUnavailable(card, source)) return null;
-  const recommendation = recommendationFromCard(card, source);
-  const cohort = recommendationRankCohort({
-    recommendation,
+  const cohort = recommendationCohortForMainCard({
+    key,
     ring: ringFromCard(card, source),
-    flavoured: flavouredFromCard(card, source)
+    text: flavourTextForCard(card, source)
   });
   if (!cohort) return null;
   return {
@@ -280,6 +264,11 @@ function syncEditorRank(root = document, ranked = null) {
   }
 }
 
+function refreshLegacyGroupVisibility() {
+  const refresh = globalThis?.window?.refreshGroupVisibility;
+  if (typeof refresh === 'function') refresh();
+}
+
 export function refreshRecommendationCohorts(root = document, state = persistedState, options = {}) {
   if (!root?.querySelectorAll || refreshing) return 0;
   const grids = ensureRecommendationSections(root);
@@ -315,6 +304,7 @@ export function refreshRecommendationCohorts(root = document, state = persistedS
     }
 
     syncEditorRank(root, ranked);
+    refreshLegacyGroupVisibility();
     return rows.length;
   } finally {
     refreshing = false;
