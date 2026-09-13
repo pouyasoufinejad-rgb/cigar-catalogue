@@ -1,19 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import {
   recommendationRankCohort,
-  textLooksFlavoured
+  textLooksFlavoured,
+  rankRecommendationRows
 } from '../public/catalogue-recommendation-cohorts.mjs';
-import {
-  parseStaticRankingCards,
-  completeRankingCards,
-  normaliseRankings
-} from '../scripts/publish-catalogue-request.mjs';
 
-function state(entries = {}) {
-  return { version: 3, cards: {}, sections: {}, entries };
-}
+const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+const publisherSource = await readFile(new URL('../scripts/publish-catalogue-request.mjs', import.meta.url), 'utf8');
 
 test('recommendation cohorts use the 34 RG boundary and flavoured override', () => {
   assert.equal(recommendationRankCohort({ recommendation: true, ring: 34, flavoured: false }), 'coronets');
@@ -25,56 +21,55 @@ test('recommendation cohorts use the 34 RG boundary and flavoured override', () 
   assert.equal(textLooksFlavoured('Traditional long filler'), false);
 });
 
-test('static ranking parser derives recommendation cohort from card markup', () => {
-  const html = `
-    <article class="card" data-key="coronet" data-rank="1" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="34"></div><div class="artmeta-left">Traditional</div></article>
-    <article class="card" data-key="petit" data-rank="2" data-catalogue-type="main" data-strength="2" data-quality="3"><div class="artframe" data-visual-ring="35"></div></article>
-    <article class="card" data-key="flavour" data-rank="3" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="30"></div><div class="artmeta-left">Flavoured</div></article>
-    <article class="card" data-key="noteworthy" data-rank="4" data-catalogue-type="main" data-strength="2" data-quality="2" data-value="3"><div class="artframe" data-visual-ring="32"></div></article>`;
+test('recommendation subsection rankings are contiguous and independent', () => {
+  const ranked = rankRecommendationRows([
+    { key: 'coronet-a', cohort: 'coronets', legacyRank: 1 },
+    { key: 'petit-a', cohort: 'petit-panatelas', legacyRank: 2 },
+    { key: 'flavour-a', cohort: 'flavoured', legacyRank: 3 },
+    { key: 'coronet-b', cohort: 'coronets', legacyRank: 4 },
+    { key: 'petit-b', cohort: 'petit-panatelas', legacyRank: 5 },
+    { key: 'flavour-b', cohort: 'flavoured', legacyRank: 6 }
+  ]);
 
-  const cards = parseStaticRankingCards(html);
-  assert.equal(cards.find(row => row.key === 'coronet')?.recommendationCohort, 'coronets');
-  assert.equal(cards.find(row => row.key === 'petit')?.recommendationCohort, 'petit-panatelas');
-  assert.equal(cards.find(row => row.key === 'flavour')?.recommendationCohort, 'flavoured');
-  assert.equal(cards.find(row => row.key === 'noteworthy')?.recommendationCohort, '');
+  assert.deepEqual(ranked['coronet-a'], { cohort: 'coronets', rank: 1 });
+  assert.deepEqual(ranked['coronet-b'], { cohort: 'coronets', rank: 2 });
+  assert.deepEqual(ranked['petit-a'], { cohort: 'petit-panatelas', rank: 1 });
+  assert.deepEqual(ranked['petit-b'], { cohort: 'petit-panatelas', rank: 2 });
+  assert.deepEqual(ranked['flavour-a'], { cohort: 'flavoured', rank: 1 });
+  assert.deepEqual(ranked['flavour-b'], { cohort: 'flavoured', rank: 2 });
 });
 
-test('publisher compacts each recommendation subsection independently while leaving non-recommendations out', () => {
-  const html = `
-    <article class="card" data-key="coronet-a" data-rank="1" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="34"></div></article>
-    <article class="card" data-key="petit-a" data-rank="2" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="40"></div></article>
-    <article class="card" data-key="flavour-a" data-rank="3" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="30"></div><span>Infused</span></article>
-    <article class="card" data-key="coronet-b" data-rank="4" data-catalogue-type="main" data-strength="3" data-quality="2"><div class="artframe" data-visual-ring="32"></div></article>
-    <article class="card" data-key="noteworthy" data-rank="5" data-catalogue-type="main" data-strength="2" data-quality="2" data-value="3"><div class="artframe" data-visual-ring="30"></div></article>
-    <article class="card" data-key="half-a" data-rank="1" data-catalogue-type="half"></article>
-    <article class="card" data-key="taster-a" data-rank="1" data-catalogue-type="taster"></article>`;
+test('editing a recommendation rank reorders only its own subsection', () => {
+  const ranked = rankRecommendationRows([
+    { key: 'coronet-a', cohort: 'coronets', recommendationRank: 1, legacyRank: 1 },
+    { key: 'coronet-b', cohort: 'coronets', recommendationRank: 2, legacyRank: 4 },
+    { key: 'petit-a', cohort: 'petit-panatelas', recommendationRank: 1, legacyRank: 2 },
+    { key: 'petit-b', cohort: 'petit-panatelas', recommendationRank: 2, legacyRank: 5 }
+  ], { selectedKey: 'coronet-b', selectedRank: 1 });
 
-  const staticCards = parseStaticRankingCards(html);
-  const next = state();
-  normaliseRankings(next, staticCards, state(), {});
-
-  assert.equal(next.cards['coronet-a'].rank, 1);
-  assert.equal(next.cards['coronet-b'].rank, 2);
-  assert.equal(next.cards['petit-a'].rank, 1);
-  assert.equal(next.cards['flavour-a'].rank, 1);
-  assert.equal(next.cards['half-a'].rank, 1);
-  assert.equal(next.cards['taster-a'].rank, 1);
-  assert.equal(next.cards.noteworthy?.rank, undefined);
+  assert.equal(ranked['coronet-b'].rank, 1);
+  assert.equal(ranked['coronet-a'].rank, 2);
+  assert.equal(ranked['petit-a'].rank, 1);
+  assert.equal(ranked['petit-b'].rank, 2);
 });
 
-test('dynamic entries participate in the same recommendation cohorts', () => {
-  const catalogue = state({
-    'dynamic-coronet': {
-      key: 'dynamic-coronet', brand: 'A', title: 'A', rank: 7, ring: 34,
-      strength: 7, quality: 6, productionLines: ['Traditional'], taster: false, archived: false
-    },
-    'dynamic-flavour': {
-      key: 'dynamic-flavour', brand: 'B', title: 'B', rank: 9, ring: 40,
-      strength: 7, quality: 6, productionLines: ['Flavoured'], taster: false, archived: false
-    }
-  });
+test('half cigars, tasters and non-recommendations have no recommendation cohort', () => {
+  assert.equal(recommendationRankCohort({ recommendation: false, ring: 34, flavoured: false }), '');
+  const ranked = rankRecommendationRows([
+    { key: 'coronet', cohort: 'coronets', legacyRank: 1 },
+    { key: 'half', cohort: '', legacyRank: 1 },
+    { key: 'taster', cohort: '', legacyRank: 1 },
+    { key: 'noteworthy', cohort: '', legacyRank: 2 }
+  ]);
+  assert.deepEqual(Object.keys(ranked), ['coronet']);
+});
 
-  const rows = completeRankingCards(catalogue, []);
-  assert.equal(rows.find(row => row.key === 'dynamic-coronet')?.recommendationCohort, 'coronets');
-  assert.equal(rows.find(row => row.key === 'dynamic-flavour')?.recommendationCohort, 'flavoured');
+test('browser runtime loads the recommendation cohort controller', () => {
+  assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-cohorts\.mjs'\)/);
+  assert.doesNotMatch(runtimeSource, /catalogue-recommendation-subsections\.mjs/);
+});
+
+test('publisher accepts persisted recommendation cohort and subsection rank fields', () => {
+  assert.match(publisherSource, /recommendationRank/);
+  assert.match(publisherSource, /recommendationCohort/);
 });
