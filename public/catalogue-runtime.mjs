@@ -1,4 +1,5 @@
 if (typeof document !== 'undefined') {
+  await import('./catalogue-personal-status-persistence.mjs');
   import('./catalogue-direct-edit.mjs');
   import('./catalogue-direct-persistence.mjs');
   import('./catalogue-flavour.mjs');
