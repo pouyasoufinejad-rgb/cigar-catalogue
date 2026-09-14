@@ -7,11 +7,11 @@ if (typeof document !== 'undefined') {
   import('./catalogue-legacy-copy.mjs');
   import('./catalogue-size-presentation.mjs');
   import('./catalogue-presentation.mjs');
-  import('./catalogue-recommendation-subsections.mjs?v=20260914-v4');
+  await import('./catalogue-convenience.mjs?v=20260914-v5');
+  await import('./catalogue-recommendation-subsections.mjs?v=20260914-v5');
   import('./catalogue-half-cohort.mjs');
   import('./catalogue-structure-editor.mjs?v=20260914-v4');
   import('./catalogue-editor-behaviour.mjs');
-  import('./catalogue-convenience.mjs');
   import('./catalogue-retailer-price-fallbacks.mjs');
   import('./catalogue-convenience-refinements.mjs');
 }
