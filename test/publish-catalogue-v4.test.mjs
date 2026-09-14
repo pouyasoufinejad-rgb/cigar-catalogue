@@ -188,6 +188,43 @@ test('v4 explicit move from Recommendation to Half uses destination position and
   assert.equal(written.cards.t1.rank, 1);
 });
 
+test('v4 explicit move from Half to Recommendation compacts Half and inserts in requested subsection', async () => {
+  const state = v4State({
+    cards: {
+      a: { catalogueType: 'main', archived: false, rank: 8 },
+      b: { catalogueType: 'main', archived: false, rank: 2 },
+      h1: { catalogueType: 'half', archived: false, rank: 1 },
+      h2: { catalogueType: 'half', archived: false, rank: 2 },
+      t1: { catalogueType: 'taster', taster: true, archived: false, rank: 1 }
+    },
+    recommendationSubsections: [
+      { id: 'coronets', name: 'Coronets', description: '', entryKeys: ['a'] },
+      { id: 'petit-panatelas', name: 'Petit Panatelas', description: '', entryKeys: ['b'] },
+      { id: 'flavoured', name: 'Infused / Flavoured', description: '', entryKeys: [] }
+    ]
+  });
+  let written;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: json(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => { written = JSON.parse(options.body); return json({ ok: true }); } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => json({ ...state, ...written }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=h1`, response: new Response('<article class="card" data-key="h1"></article>', { status: 200 }) }
+  ];
+
+  await publishRequestDocument({
+    operation: 'upsert-entry', key: 'h1', entry: {},
+    destination: { type: 'main', subsectionId: 'coronets', position: 2 }
+  }, {
+    fetchImpl: router(routes), baseUrl: BASE, token: TOKEN, includeStaticCatalogue: false, sleep: async () => {}
+  });
+
+  assert.deepEqual(written.recommendationSubsections[0].entryKeys, ['a', 'h1']);
+  assert.equal(written.cards.h1.catalogueType, 'main');
+  assert.equal('rank' in written.cards.h1, false);
+  assert.equal(written.cards.h2.rank, 1);
+  assert.equal(written.cards.t1.rank, 1);
+});
+
 test('v4 destination schema is explicit and validated', () => {
   assert.throws(() => validateRequest({ operation: 'upsert-entry', key: 'a', entry: {}, destination: { type: 'main', position: 1 } }), /subsectionId/);
   const request = validateRequest({ operation: 'upsert-entry', key: 'a', entry: {}, destination: { type: 'main', subsectionId: 'coronets', position: 2 } });
