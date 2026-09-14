@@ -28,7 +28,9 @@ export async function verifyLiveCodeReady(options = {}) {
   ]);
 
   if (!renderer.includes('recommendationSubsections')) throw new Error('Live Recommendation renderer is not the v4 renderer.');
-  if (!renderer.includes('catalogue-recommendation-subsection')) throw new Error('Live Recommendation renderer is missing dedicated subsection containers.');
+  if (!renderer.includes('data-recommendation-subsection') || !renderer.includes('recommendation-subsection-grid')) {
+    throw new Error('Live Recommendation renderer is missing dedicated subsection containers.');
+  }
   if (!editor.includes('catalogue-admin-recommendation-subsection')) throw new Error('Live editor is missing the Recommendation subsection selector.');
   if (!editor.includes('catalogue-admin-subsection-manager')) throw new Error('Live editor is missing subsection management controls.');
   if (!structure.includes('CATALOGUE_STATE_VERSION = 4')) throw new Error('Live structure engine is not v4.');
