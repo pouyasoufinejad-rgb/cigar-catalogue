@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+const workerCore = await readFile(new URL('../src/index-core.js', import.meta.url), 'utf8');
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const ASSET_VERSION = '20260914-v4';
 
-test('catalogue HTML cache-busts the top-level runtime module', () => {
-  assert.match(html, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
+test('Worker injects a cache-busted top-level runtime module', () => {
+  assert.match(workerCore, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
 });
 
 test('runtime cache-busts imported modules so stale pre-v4 code cannot survive a reload', () => {
