@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const workerCore = await readFile(new URL('../src/index-core.js', import.meta.url), 'utf8');
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
-const ASSET_VERSION = '20260914-v8';
+const ASSET_VERSION = '20260914-v9';
 
 test('Worker injects a cache-busted top-level runtime module', () => {
   assert.match(workerCore, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
