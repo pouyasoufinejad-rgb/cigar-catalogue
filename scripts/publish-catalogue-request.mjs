@@ -196,6 +196,9 @@ export async function completeRankingCards(repoRoot, state, includeStaticCatalog
   for (const [key, override] of Object.entries(state.cards || {})) {
     cards[key] = { ...(cards[key] || {}), ...stripDerivedCardValue(override) };
   }
+  for (const card of Object.values(cards)) {
+    if (card?.archived) delete card.rank;
+  }
   return cards;
 }
 
