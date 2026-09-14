@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { prepareV4StructuralPayload } from '../public/catalogue-structure-editor.mjs';
+import { stripLegacyRecommendationRanks } from '../public/catalogue-recommendation-subsections.mjs';
 
 const rendererSource = await readFile(new URL('../public/catalogue-recommendation-subsections.mjs', import.meta.url), 'utf8');
 
@@ -29,7 +30,7 @@ const rows = [
 ];
 
 test('v4 Recommendation reorder removes legacy global main ranks while preserving unrelated fields', () => {
-  const payload = prepareV4StructuralPayload({
+  const structured = prepareV4StructuralPayload({
     payload: {
       version: 3,
       cards: {
@@ -48,6 +49,7 @@ test('v4 Recommendation reorder removes legacy global main ranks while preservin
     wantsArchived: false,
     now: '2026-09-14T10:00:00Z'
   });
+  const payload = stripLegacyRecommendationRanks(structured);
 
   assert.deepEqual(payload.recommendationSubsections[0].entryKeys, ['b', 'a']);
   assert.deepEqual(payload.recommendationSubsections[1].entryKeys, ['c']);
