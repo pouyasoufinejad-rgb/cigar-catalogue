@@ -89,12 +89,20 @@ export function updateRecommendationRankVisual(card, rankInput) {
   if (value && value.textContent !== next) value.textContent = next;
 }
 
-function cardUnavailable(card, source = {}) {
-  const stock = String(source.stockPin || source.stock || card?.dataset?.stockPin || card?.dataset?.stock || '').trim().toLowerCase();
-  return stock === 'out'
-    || stock === 'delisted'
-    || card?.classList?.contains?.('is-unavailable')
-    || Boolean(card?.closest?.('.unavailable-grid'));
+function effectiveStockStatus(card, source = {}) {
+  const pin = String(source.stockPin ?? card?.dataset?.stockPin ?? '').trim().toLowerCase();
+  if (pin === 'in' || pin === 'out' || pin === 'hold') return pin;
+  return String(source.stock ?? card?.dataset?.stock ?? 'unknown').trim().toLowerCase() || 'unknown';
+}
+
+export function recommendationCardUnavailable(card, source = {}) {
+  const stock = effectiveStockStatus(card, source);
+  return stock === 'out' || stock === 'delisted';
+}
+
+export function prepareRecommendationCardForActiveGrid(card) {
+  card?.classList?.remove?.('hidden', 'is-unavailable');
+  return card;
 }
 
 function documentFor(root) {
@@ -213,8 +221,12 @@ export function renderRecommendationSubsections(state = persistedState, root = d
           delete card.dataset.recommendationCohort;
         }
         updateRecommendationRankVisual(card, index + 1);
-        if (!cardUnavailable(card, source) && grid && card.parentElement !== grid) grid.appendChild(card);
-        if (!cardUnavailable(card, source)) visible += 1;
+        const unavailable = recommendationCardUnavailable(card, source);
+        if (!unavailable && grid && card.parentElement !== grid) {
+          prepareRecommendationCardForActiveGrid(card);
+          grid.appendChild(card);
+        }
+        if (!unavailable) visible += 1;
       });
       section.classList?.toggle?.('hidden', visible === 0);
     });

@@ -6,10 +6,12 @@ import {
   legacyRecommendationCohortForCard,
   buildLegacyRecommendationSubsections
 } from '../public/catalogue-recommendation-legacy.mjs';
-import {
+import * as recommendationRenderer from '../public/catalogue-recommendation-subsections.mjs';
+
+const {
   recommendationSubsectionsForState,
   updateRecommendationRankVisual
-} from '../public/catalogue-recommendation-subsections.mjs';
+} = recommendationRenderer;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const rendererSource = await readFile(new URL('../public/catalogue-recommendation-subsections.mjs', import.meta.url), 'utf8');
@@ -56,7 +58,7 @@ test('v3 compatibility classifies only before explicit v4 state exists', () => {
     key: 'kfc-ponies-sweets', catalogueType: 'main', ring: 32, productionText: 'Flavoured / Sweetened'
   }), 'coronets');
   assert.equal(legacyRecommendationCohortForCard({
-    key: 'half', catalogueType: 'half', ring: 32, productionText: 'Traditional'
+    key: 'half', catalogueType: 'half', ring: 34, productionText: 'Traditional'
   }), '');
 });
 
@@ -105,4 +107,28 @@ test('rank visual writes only the rank flag and never the editable eyebrow', () 
   assert.equal(card.dataset.recommendationRank, '2');
   assert.equal(eyebrowText, 'Sublime small-format powerhouse');
   assert.equal(eyebrowWrites, 0);
+});
+
+test('current stock state overrides a stale unavailable-grid DOM location', () => {
+  assert.equal(typeof recommendationRenderer.recommendationCardUnavailable, 'function');
+  const card = {
+    dataset: { stockPin: 'auto', stock: 'in' },
+    classList: { contains: () => false },
+    closest(selector) { return selector === '.unavailable-grid' ? { id: 'old-unavailable-grid' } : null; }
+  };
+  assert.equal(recommendationRenderer.recommendationCardUnavailable(card, {}), false);
+});
+
+test('relocating an available Recommendation card clears stale unavailable visibility classes', () => {
+  assert.equal(typeof recommendationRenderer.prepareRecommendationCardForActiveGrid, 'function');
+  const classes = new Set(['card', 'hidden', 'is-unavailable']);
+  const card = {
+    classList: {
+      remove(...names) { names.forEach(name => classes.delete(name)); }
+    }
+  };
+  recommendationRenderer.prepareRecommendationCardForActiveGrid(card);
+  assert.equal(classes.has('hidden'), false);
+  assert.equal(classes.has('is-unavailable'), false);
+  assert.equal(classes.has('card'), true);
 });
