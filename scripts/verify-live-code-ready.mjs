@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 
-const ASSET_VERSION = '20260914-v7';
+const ASSET_VERSION = '20260914-v8';
 
 async function fetchText(fetchImpl, url, label) {
   const response = await fetchImpl(url, { method: 'GET', cache: 'no-store' });
@@ -32,7 +32,7 @@ export async function verifyLiveCodeReady(options = {}) {
   ]);
 
   if (!html.includes(`/catalogue-runtime.mjs?v=${ASSET_VERSION}`)) {
-    throw new Error('Live catalogue HTML is missing the v7 runtime bootstrap.');
+    throw new Error('Live catalogue HTML is missing the v8 runtime bootstrap.');
   }
   for (const moduleName of [
     'catalogue-convenience.mjs',
@@ -40,7 +40,7 @@ export async function verifyLiveCodeReady(options = {}) {
     'catalogue-structure-editor.mjs'
   ]) {
     if (!runtime.includes(`./${moduleName}?v=${ASSET_VERSION}`)) {
-      throw new Error(`Live catalogue runtime is missing the v7 ${moduleName} import.`);
+      throw new Error(`Live catalogue runtime is missing the v8 ${moduleName} import.`);
     }
   }
 
