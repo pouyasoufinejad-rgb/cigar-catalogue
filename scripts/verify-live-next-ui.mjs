@@ -31,6 +31,9 @@ export async function verifyLiveNextUi(options = {}) {
 
   if (!html.includes('catalogue-runtime.mjs')) throw new Error('Live catalogue HTML is missing the runtime bootstrap.');
   if ((html.match(/article class=["']card["']/g) || []).length < 10) throw new Error('Live catalogue HTML no longer contains the static catalogue seed inventory.');
+  if (!html.includes('Jax smoking a cigar with laughing skeletons behind him') || !html.includes('header-illustration')) {
+    throw new Error('Live catalogue HTML is missing the retained Jax and the Skeletons header artwork.');
+  }
 
   for (const marker of [
     "catalogue-next-ui.mjs?v=20260915-next1",
@@ -74,13 +77,14 @@ export async function verifyLiveNextUi(options = {}) {
     ok:true,
     stateVersion:Number(state.version),
     recommendationSubsections:names,
-    joyaSubsection:'coronets'
+    joyaSubsection:'coronets',
+    jaxHeader:true
   };
 }
 
 async function main() {
   const result = await verifyLiveNextUi();
-  console.log(`Rebuilt catalogue UI verified live; state v${result.stateVersion}; Joya Black is in ${result.joyaSubsection}.`);
+  console.log(`Rebuilt catalogue UI verified live; Jax header retained; state v${result.stateVersion}; Joya Black is in ${result.joyaSubsection}.`);
 }
 
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';
