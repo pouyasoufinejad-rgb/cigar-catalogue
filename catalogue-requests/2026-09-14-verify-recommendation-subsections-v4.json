@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-14-verify-recommendation-subsections-v4",
+  "operation": "update-recommendation-subsections",
+  "recommendationSubsections": [
+    {
+      "id": "coronets",
+      "name": "Coronets",
+      "description": "34 ring gauge or lower.",
+      "entryKeys": [
+        "davidoff-primeros-escurio",
+        "davidoff-primeros-nicaragua-maduro",
+        "davidoff-escurio",
+        "liga-privada-no-9-coronets",
+        "undercrown-maduro-coronets",
+        "blackened-m81-coronets",
+        "ashton-aged-maduro-esquire",
+        "blackened-s84-shade-to-black-coronets",
+        "joya-black-cigarillo",
+        "joya-antano-1970-cigarillo",
+        "kfc-ponies-sweets",
+        "kfc-ponies",
+        "partagas-serie-club-10",
+        "davidoff-nicaragua-mini-cigarillos",
+        "arturo-fuente-cubanitos-10",
+        "alonso-menendez-gold-cigarillo",
+        "montecristo-short"
+      ]
+    },
+    {
+      "id": "petit-panatelas",
+      "name": "Petit Panatelas",
+      "description": "35 ring gauge or higher.",
+      "entryKeys": [
+        "rocky-patel-sun-grown-juniors",
+        "alonso-menendez-axe-charutos",
+        "oliva-serie-g-maduro-special-g",
+        "davidoff-winston-churchill-petite-panatela"
+      ]
+    },
+    {
+      "id": "flavoured",
+      "name": "Infused / Flavoured",
+      "description": "Infused and flavoured recommendation cigars.",
+      "entryKeys": [
+        "isla-del-sol-maduro-coronets",
+        "tabak-especial-cafecita-negra",
+        "cao-bella-vanilla",
+        "toscanello-nero-cioccolato",
+        "cao-moontrance",
+        "tatiana-mini-vanilla"
+      ]
+    }
+  ],
+  "note": "Idempotent live read-back verification after fixing archived static rank inheritance in the v4 publisher."
+}
