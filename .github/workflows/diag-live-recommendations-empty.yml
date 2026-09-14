@@ -7,25 +7,38 @@ on:
       - '.github/workflows/diag-live-recommendations-empty.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect runtime cache path and headers
+        with:
+          fetch-depth: 0
+      - name: Patch cache-busted runtime reference on fix branch
         shell: bash
         run: |
           set -euo pipefail
-          BASE='https://cigar-catalogue.psncodex.workers.dev'
-          echo '--- runtime references in source ---'
-          grep -oE '<script[^>]+catalogue-runtime[^>]*>' public/index.html || true
-          echo '--- live HTML runtime references ---'
-          curl -fsS -H 'Cache-Control: no-cache' "$BASE/?diag=cache-$(date +%s)" | grep -oE '<script[^>]+catalogue-runtime[^>]*>' || true
-          echo '--- HTML headers ---'
-          curl -fsSI "$BASE/?diag=cache-headers" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
-          echo '--- runtime headers ---'
-          curl -fsSI "$BASE/catalogue-runtime.mjs" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
-          echo '--- recommendation module headers ---'
-          curl -fsSI "$BASE/catalogue-recommendation-subsections.mjs" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
+          git fetch origin fix/recommendation-runtime-cache-bust
+          git checkout -B fix/recommendation-runtime-cache-bust origin/fix/recommendation-runtime-cache-bust
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('public/index.html')
+          text = path.read_text()
+          old = 'src="/catalogue-runtime.mjs"'
+          new = 'src="/catalogue-runtime.mjs?v=20260914-v4"'
+          if old in text:
+              text = text.replace(old, new, 1)
+              path.write_text(text)
+          elif new not in text:
+              raise SystemExit('Expected catalogue runtime script reference not found.')
+          PY
+          grep -oE '<script[^>]+catalogue-runtime[^>]*>' public/index.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- public/index.html; then
+            git add public/index.html
+            git commit -m "Fix stale Recommendation runtime cache"
+            git push origin HEAD:fix/recommendation-runtime-cache-bust
+          fi
