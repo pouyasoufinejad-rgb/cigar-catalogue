@@ -40,7 +40,19 @@ function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20
         import('./catalogue-structure-editor.mjs?v=${runtimeVersion}');
       `, { status: 200 });
     }
-    if (href.includes('catalogue-recommendation-subsections.mjs')) return new Response('const recommendationSubsections = true; const attr="data-recommendation-subsection"; const grid="recommendation-subsection-grid";', { status: 200 });
+    if (href.includes('catalogue-recommendation-subsections.mjs')) {
+      return new Response(`
+        const recommendationSubsections = true;
+        const attr = 'data-recommendation-subsection';
+        const grid = 'recommendation-subsection-grid';
+        head.className = 'section-head recommendation-subsection-head';
+        doc.createElement('h2');
+        const RANK_CLEANUP_TRANSFORM = 'recommendation-v4-rank-cleanup';
+        function stripLegacyRecommendationRanks() {}
+        history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+      `, { status: 200 });
+    }
     if (href.includes('catalogue-structure-editor.mjs')) return new Response('const a="catalogue-admin-recommendation-subsection"; const b="catalogue-admin-subsection-manager";', { status: 200 });
     if (href.includes('catalogue-structure.mjs')) return new Response('export const CATALOGUE_STATE_VERSION = 4;', { status: 200 });
     if (href.includes('/api/catalogue-overrides')) return new Response(JSON.stringify(state), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -56,7 +68,7 @@ test('code readiness accepts the real dedicated v4 Recommendation subsection mar
 
 test('code readiness rejects a stale v6 bootstrap and runtime chain', async () => {
   await assert.rejects(
-    verifyLiveCodeReady({ fetchImpl: fakeFetch({ runtimeVersion: '20260914-v5' }), baseUrl: BASE }),
+    verifyLiveCodeReady({ fetchImpl: fakeFetch({ runtimeVersion: '20260914-v6' }), baseUrl: BASE }),
     /v7 runtime bootstrap/i
   );
 });
