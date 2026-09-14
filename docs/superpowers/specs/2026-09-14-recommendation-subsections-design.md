@@ -32,6 +32,7 @@ The rebuild must make Recommendation subsections behave as true independent coho
 - Reclassifying entries continuously based on ring gauge, flavour wording, or other cigar metadata.
 - Turning Recommendation subsections into top-level catalogue types.
 - Merging Half-Cigar or Taster into Recommendation subsection logic.
+- Renaming the existing internal `main` catalogue type throughout the codebase. In this rebuild, `main` remains the compatibility/storage representation of the user-facing Recommendation type.
 
 ## Chosen Architecture
 
@@ -43,6 +44,7 @@ Conceptual state:
 
 ```json
 {
+  "version": 4,
   "recommendationSubsections": [
     {
       "id": "coronets",
@@ -74,7 +76,7 @@ This deliberately avoids a separate `recommendationRank` field because duplicate
 
 The save layer must enforce these invariants atomically:
 
-1. Every active Recommendation entry belongs to exactly one Recommendation subsection.
+1. Every active Recommendation (`catalogueType: main`) entry belongs to exactly one Recommendation subsection.
 2. No active entry key may appear more than once across Recommendation subsection lists.
 3. Half-Cigar and Taster entries may not appear in Recommendation subsection lists.
 4. Archived entries may not appear in an active Recommendation subsection list.
@@ -82,16 +84,18 @@ The save layer must enforce these invariants atomically:
 6. Subsection IDs are stable identifiers and are not changed by renaming the subsection.
 7. Empty subsections are valid and persist across reloads.
 8. A subsection containing entries cannot be deleted until its entries are moved or archived.
+9. User-facing Recommendation maps to the existing internal `main` type. No parallel `recommendation` type value is introduced.
 
 Invalid state must fail the save instead of being silently normalised into an ambiguous result.
 
 ## State Model
 
-The catalogue state remains a single authoritative KV document. The Recommendation subsection structure should live in a dedicated top-level field such as `recommendationSubsections`, rather than being encoded in per-card prose, DOM structure, or inferred metadata.
+The catalogue state remains a single authoritative KV document. This change increments the persisted state schema from version 3 to version 4. Version 4 adds a dedicated top-level `recommendationSubsections` array rather than encoding Recommendation membership in per-card prose, DOM structure, or inferred metadata.
 
 The state normaliser must:
 
-- accept the new field;
+- accept version 4 and `recommendationSubsections`;
+- continue to read version 3 during the migration/rollback window;
 - sanitise subsection IDs, names, descriptions, and entry key arrays;
 - preserve empty subsections;
 - reject duplicate subsection IDs;
@@ -100,6 +104,8 @@ The state normaliser must:
 - avoid manufacturing new membership from ring gauge or flavour metadata once explicit subsection state exists.
 
 Per-card legacy `rank`, `recommendationCohort`, and `recommendationRank` may be read only for migration/compatibility as needed. They are not authoritative for Recommendation display order after migration.
+
+Subsection IDs are generated as unique sanitised identifiers when a subsection is created. They are not directly editable afterward. Display names remain freely editable.
 
 ## Recommendation Membership Engine
 
@@ -119,15 +125,17 @@ Create one focused Recommendation subsection state module with pure functions fo
 
 This module owns Recommendation membership and ordering. DOM controllers and editor code consume it rather than reimplementing ordering rules.
 
+For position changes, the API/editor uses one-based positions. Moving within a subsection accepts positions `1..N`; inserting into a destination subsection accepts `1..N+1`, where `N` is the destination size before insertion. Any other requested position is rejected rather than silently clamped.
+
 ## Relationship to Half-Cigar and Taster
 
-Half-Cigar and Taster remain distinct catalogue types and keep their own compact rankings and visual prefixes (`H1`, `H2`, and `T1`, `T2`).
+Half-Cigar and Taster remain distinct catalogue types and keep their own compact rankings and visual prefixes (`H1`, `H2`, and `T1`, `T2`). The existing internal `main` type is the Recommendation type for compatibility.
 
 Cross-type moves must be coordinated centrally so source and destination state update together:
 
 - Recommendation -> Half-Cigar: remove from Recommendation subsection list, then insert into Half-Cigar rank position.
 - Recommendation -> Taster: remove from Recommendation subsection list, then insert into Taster rank position.
-- Half-Cigar/Taster -> Recommendation: remove/compact the source cohort, then insert into the chosen Recommendation subsection and position.
+- Half-Cigar/Taster -> Recommendation: remove/compact the source cohort, set the entry to internal `main`, then insert into the chosen Recommendation subsection and position.
 - Any active type -> Archive: remove from its active ranking structure and preserve archive metadata.
 - Archive -> Recommendation/Half-Cigar/Taster: require an explicit destination and position, then insert atomically.
 
@@ -144,6 +152,8 @@ For an active entry, show a catalogue type control:
 - Recommendation
 - Half-Cigar
 - Taster
+
+The Recommendation UI value maps to internal `main`; this is a presentation label, not a new storage type.
 
 When `Recommendation` is selected, show:
 
@@ -209,7 +219,7 @@ Migration is one-time and conservative.
 3. Preserve the currently intended relative order of entries in each existing subsection.
 4. Existing inferred rules (ring gauge/flavour) may be used only to fill gaps where live explicit state does not already determine membership.
 5. Preserve all unrelated card and entry fields byte-for-byte where practical.
-6. Write the new subsection structure only after the production code can read it.
+6. Write the new version 4 subsection structure only after the production code can read both version 3 and version 4.
 7. Verify live KV read-back and production rendering after migration.
 
 After migration, automatic membership inference is disabled for normal runtime/editor behaviour.
@@ -220,13 +230,13 @@ The previous PR #76 seed-only strategy is superseded by this design and must not
 
 To avoid a code/state mismatch:
 
-1. Implement and test backwards-compatible code that can read old state and new subsection state.
+1. Implement and test backwards-compatible code that can read version 3 state and version 4 subsection state.
 2. Deploy the code to Cloudflare.
 3. Confirm production is running the new compatible code.
-4. Run the one-time live-state migration to create explicit Recommendation subsection structures.
+4. Run the one-time live-state migration to version 4 and create explicit Recommendation subsection structures.
 5. Read back live KV.
 6. Verify the production UI and editor against the migrated state.
-7. Remove obsolete fallback/inference code only when migration verification proves it is no longer needed, or keep narrowly scoped read compatibility if required for rollback safety.
+7. Remove obsolete fallback/inference code only when migration verification proves it is no longer needed, or keep narrowly scoped version 3 read compatibility if required for rollback safety.
 
 Catalogue publication and code deployment remain separate concerns. Do not treat a Git merge as proof that production frontend code has deployed.
 
@@ -239,7 +249,7 @@ Structural saves should reject and report:
 - an active Recommendation with no subsection;
 - archived/Half/Taster entries present in Recommendation lists;
 - target subsection that does not exist;
-- out-of-range requested positions after normalisation rules are applied;
+- a move position outside the explicit one-based valid range;
 - deletion of a non-empty subsection.
 
 The editor should leave the current catalogue untouched when structural validation fails.
@@ -273,6 +283,9 @@ Required regression coverage:
 21. Half-Cigar and Taster ranks remain independent and contiguous.
 22. Migration preserves unrelated catalogue fields.
 23. Live migration tooling verifies read-back before reporting success.
+24. Version 3 can be read safely during the migration window and version 4 persists explicit subsection state.
+25. User-facing Recommendation continues to map to internal `main` without introducing a conflicting type value.
+26. Invalid one-based move/insert positions are rejected without state mutation.
 
 ## Acceptance Criteria
 
