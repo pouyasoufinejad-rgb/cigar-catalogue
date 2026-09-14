@@ -9,6 +9,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-presentation.mjs');
   import('./catalogue-recommendation-subsections.mjs');
   import('./catalogue-half-cohort.mjs');
+  import('./catalogue-structure-editor.mjs');
   import('./catalogue-editor-behaviour.mjs');
   import('./catalogue-convenience.mjs');
   import('./catalogue-retailer-price-fallbacks.mjs');
