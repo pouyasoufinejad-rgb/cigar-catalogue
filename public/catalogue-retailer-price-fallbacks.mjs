@@ -62,8 +62,3 @@ export function initVerifiedRetailerPriceFallbacks() {
     observer.observe(document.body, { childList:true, subtree:true });
   }
 }
-
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initVerifiedRetailerPriceFallbacks, { once:true });
-  else initVerifiedRetailerPriceFallbacks();
-}
