@@ -58,6 +58,7 @@ jobs:
                   updated = updated.replace('the v7 runtime', 'the v8 runtime')
                   updated = updated.replace('missing the v7 runtime', 'missing the v8 runtime')
                   updated = updated.replace('missing the v7 ', 'missing the v8 ')
+                  updated = updated.replace('v7 runtime bootstrap', 'v8 runtime bootstrap')
                   if updated != source:
                       path.write_text(updated, encoding='utf-8')
           PY
