@@ -7,37 +7,95 @@ on:
       - '.github/workflows/diag-live-recommendations-empty.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
+    env:
+      BASE: https://fix-recommendation-runtime-cache-bust-cigar-catalogue.psncodex.workers.dev
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Patch Worker runtime injection on fix branch
+      - name: Verify preview bootstrap and state
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin fix/recommendation-runtime-cache-bust
-          git checkout -B fix/recommendation-runtime-cache-bust origin/fix/recommendation-runtime-cache-bust
+          curl -fsS -H 'Cache-Control: no-cache' "$BASE/?diag=preview-$(date +%s)" > /tmp/initial.html
+          grep -q 'catalogue-runtime.mjs?v=20260914-v4' /tmp/initial.html
+          curl -fsS -H 'Cache-Control: no-cache' "$BASE/api/catalogue-overrides?diag=preview-$(date +%s)" > /tmp/state.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const state = JSON.parse(fs.readFileSync('/tmp/state.json','utf8'));
+          const sections = state.recommendationSubsections || [];
+          const keys = sections.flatMap(s => s.entryKeys || []);
+          if (state.version !== 4) throw new Error(`Expected state v4, got ${state.version}`);
+          if (sections.length !== 3) throw new Error(`Expected 3 Recommendation subsections, got ${sections.length}`);
+          if (keys.length !== 27) throw new Error(`Expected 27 Recommendation entries, got ${keys.length}`);
+          console.log(`STATE ${state.version} SUBS ${sections.length} ENTRIES ${keys.length}`);
+          NODE
+      - name: Render preview in fresh headless Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo '::error::No Chrome/Chromium binary found on runner.'
+            exit 1
+          fi
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=12000 --dump-dom "$BASE/?diag=browser-$(date +%s)" > /tmp/rendered.html
+          grep -q 'data-recommendation-subsections-root="1"' /tmp/rendered.html
+          grep -q 'data-recommendation-subsection="coronets"' /tmp/rendered.html
+          grep -q 'data-recommendation-subsection="petit-panatelas"' /tmp/rendered.html
+          grep -q 'data-recommendation-subsection="flavoured"' /tmp/rendered.html
+      - name: Verify every Recommendation entry is rendered or unavailable
+        shell: bash
+        run: |
+          set -euo pipefail
           python - <<'PY'
-          from pathlib import Path
-          path = Path('src/index-core.js')
-          text = path.read_text()
-          old = "const script = '<script type=\"module\" src=\"/catalogue-runtime.mjs\"></script>';"
-          new = "const script = '<script type=\"module\" src=\"/catalogue-runtime.mjs?v=20260914-v4\"></script>';"
-          if text.count(old) != 1:
-              if new in text:
-                  raise SystemExit(0)
-              raise SystemExit('Expected runtime bootstrap string was not found exactly once.')
-          path.write_text(text.replace(old, new, 1))
+          import json
+          from html.parser import HTMLParser
+
+          state = json.load(open('/tmp/state.json'))
+          expected = set(k for s in state['recommendationSubsections'] for k in s['entryKeys'])
+
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.stack=[]
+                  self.placements={}
+                  self.section_counts={}
+              def handle_starttag(self, tag, attrs):
+                  a=dict(attrs)
+                  classes=set(a.get('class','').split())
+                  subsection=a.get('data-recommendation-subsection')
+                  inherited_subsection=next((x['subsection'] for x in reversed(self.stack) if x.get('subsection')), None)
+                  inherited_unavailable=any(x.get('unavailable') for x in self.stack)
+                  ctx={
+                      'tag':tag,
+                      'subsection': subsection or inherited_subsection,
+                      'unavailable': inherited_unavailable or ('unavailable-grid' in classes)
+                  }
+                  self.stack.append(ctx)
+                  if tag == 'article' and 'card' in classes and a.get('data-key'):
+                      key=a['data-key']
+                      place='unavailable' if ctx['unavailable'] else (ctx['subsection'] or 'other')
+                      self.placements[key]=place
+                      if ctx['subsection'] and not ctx['unavailable']:
+                          self.section_counts[ctx['subsection']]=self.section_counts.get(ctx['subsection'],0)+1
+              def handle_endtag(self, tag):
+                  for i in range(len(self.stack)-1,-1,-1):
+                      if self.stack[i]['tag']==tag:
+                          del self.stack[i:]
+                          return
+
+          p=Parser(); p.feed(open('/tmp/rendered.html', encoding='utf8').read())
+          missing=sorted(k for k in expected if p.placements.get(k) not in {'coronets','petit-panatelas','flavoured','unavailable'})
+          if missing:
+              raise SystemExit('Missing Recommendation placements: '+', '.join(missing))
+          visible=sum(p.section_counts.values())
+          unavailable=sum(1 for k in expected if p.placements.get(k)=='unavailable')
+          print('VISIBLE_BY_SECTION', json.dumps(p.section_counts, sort_keys=True))
+          print('VISIBLE_TOTAL', visible, 'UNAVAILABLE', unavailable, 'EXPECTED_TOTAL', len(expected))
+          if visible + unavailable != len(expected):
+              raise SystemExit('Recommendation inventory does not reconcile in rendered DOM')
           PY
-          git diff --check
-          grep -n 'catalogue-runtime.mjs' src/index-core.js | head
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/index-core.js
-          git commit -m "Fix stale Recommendation runtime bootstrap"
-          git push origin HEAD:fix/recommendation-runtime-cache-bust
