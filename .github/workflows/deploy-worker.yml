@@ -45,6 +45,8 @@ jobs:
           node-version: '22'
       - name: Run tests
         run: npm test
+      - name: Probe current production for v4-compatible code
+        run: node scripts/verify-live-code-ready.mjs
 
   deploy:
     name: Deploy and verify Worker
