@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 
-const ASSET_VERSION = '20260914-v8';
+const ASSET_VERSION = '20260914-v10';
 
 async function fetchText(fetchImpl, url, label) {
   const response = await fetchImpl(url, { method: 'GET', cache: 'no-store' });

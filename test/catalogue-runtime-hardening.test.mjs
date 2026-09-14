@@ -38,7 +38,7 @@ test('Worker HTML transform injects the cache-busted runtime bootstrap exactly o
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v8"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v10"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });

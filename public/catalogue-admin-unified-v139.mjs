@@ -1,4 +1,9 @@
 import { deriveValue } from './catalogue-value.mjs';
+import {
+  reorderCatalogueCohorts,
+  normaliseCatalogueType,
+  catalogueTypeForRow
+} from './catalogue-half-cohort.mjs';
 
 export function sanitiseKey(value) {
   return String(value || '')
@@ -83,7 +88,8 @@ export function buildStructuralOverride(input) {
     length: Math.max(0, finiteNumber(input.length)),
     ring: Math.max(0, Math.round(finiteNumber(input.ring))),
     risk: Math.max(1, Math.min(3, Math.round(finiteNumber(input.risk, 1)))),
-    taster: Boolean(input.taster),
+    catalogueType: normaliseCatalogueType(input.catalogueType, Boolean(input.taster)),
+    taster: normaliseCatalogueType(input.catalogueType, Boolean(input.taster)) === 'taster',
     retailerLinks: parseRetailerUrls(input.retailerText || ''),
     smokeTime: String(input.smokeTime || '').trim()
   };
@@ -154,59 +160,19 @@ export function buildSavePlan({ state, key, dynamic, structural, editorial, sect
   return { statePayload, entryPayload };
 }
 
-export function reorderCohortOverrides(cards, existingCards, options) {
-  const key = options.key;
-  const targetTaster = Boolean(options.taster);
-  const wantsArchived = Boolean(options.wantsArchived);
-  const targetRank = Math.max(1, Math.round(finiteNumber(options.targetRank, 1)));
-  const now = String(options.now || new Date().toISOString());
-  const updates = {};
-  const rows = Array.isArray(cards) ? cards.map(item => ({ ...item })) : [];
-  const selected = rows.find(item => item.key === key);
-  if (!selected) return updates;
-  const originalRank = Math.max(1, Math.round(finiteNumber(selected.rank, 1)));
-  const existing = existingCards && existingCards[key] && typeof existingCards[key] === 'object' ? existingCards[key] : {};
-
-  // Renumber the selected card's old active cohort if it is moving cohort or becoming archived.
-  const oldTaster = Boolean(selected.taster);
-  if (!selected.archived && (wantsArchived || oldTaster !== targetTaster)) {
-    const oldCohort = rows
-      .filter(item => item.key !== key && !item.archived && Boolean(item.taster) === oldTaster)
-      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
-    oldCohort.forEach((item, index) => { updates[item.key] = mergeCardOverride(existingCards?.[item.key], { rank: index + 1 }); });
-  }
-
-  if (wantsArchived) {
-    updates[key] = mergeCardOverride(existing, {
-      archived: true,
-      archivedAt: existing.archivedAt || now,
-      archivedRank: existing.archivedRank || originalRank,
-      taster: targetTaster
-    });
-    return updates;
-  }
-
-  const targetCohort = rows
-    .filter(item => item.key !== key && !item.archived && Boolean(item.taster) === targetTaster)
-    .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
-  const insertionIndex = Math.max(0, Math.min(targetCohort.length, targetRank - 1));
-  targetCohort.splice(insertionIndex, 0, { ...selected, taster: targetTaster, archived: false, key });
-  targetCohort.forEach((item, index) => {
-    const base = existingCards?.[item.key] || {};
-    updates[item.key] = mergeCardOverride(base, {
-      rank: index + 1,
-      ...(item.key === key ? { archived: false, archivedAt: '', taster: targetTaster } : {})
-    });
-  });
-  return updates;
-}
-
 export function rankingUpdatesForSave(cards, existingCards, options = {}) {
   const targetCatalogueType = String(options.targetCatalogueType || '').trim().toLowerCase();
   const explicitRecommendation = targetCatalogueType === 'main'
     && (Number(options.stateVersion) >= 4 || Array.isArray(options.recommendationSubsections));
   if (explicitRecommendation) return {};
-  return reorderCohortOverrides(cards, existingCards, options);
+  // Main, Half-Cigar and Taster are three independent cohorts, each ranked from
+  // 1. The legacy reorder only knew a taster boolean, so Half-Cigars counted as
+  // Recommendations and consumed positions in the Recommendation sequence,
+  // leaving gaps like 1, 2, 4, 6, 8 after any move.
+  return reorderCatalogueCohorts(cards, existingCards, {
+    ...options,
+    targetType: normaliseCatalogueType(options.targetCatalogueType, Boolean(options.taster))
+  });
 }
 
 export function actionFromTarget(target) {
@@ -338,7 +304,7 @@ function structuralMarkup() {
 <div class="catalogue-admin-subhead v139-only">Product &amp; purchase</div>
 <div class="catalogue-admin-grid v139-only" id="catalogue-v139-structure-grid">
   <div class="catalogue-admin-field wide"><label for="catalogue-v139-key">Entry key</label><input id="catalogue-v139-key" type="text" maxlength="96"><small class="catalogue-admin-derived">Generated for new entries. Existing keys cannot be changed.</small></div>
-  <div class="catalogue-admin-field"><label for="catalogue-v139-type">Catalogue type</label><select id="catalogue-v139-type"><option value="main">Recommendation</option><option value="taster">Taster</option></select></div>
+  <div class="catalogue-admin-field"><label for="catalogue-v139-type">Catalogue type</label><select id="catalogue-v139-type"><option value="main">Recommendation</option><option value="half">Half-Cigar</option><option value="taster">Taster</option></select></div>
   <div class="catalogue-admin-field"><label for="catalogue-v139-risk">Risk</label><select id="catalogue-v139-risk"><option value="1">Low</option><option value="2">Moderate</option><option value="3">High</option></select></div>
   <div class="catalogue-admin-field"><label for="catalogue-v139-brand">Brand</label><input id="catalogue-v139-brand" type="text"></div>
   <div class="catalogue-admin-field"><label for="catalogue-v139-title">Product / vitola title</label><input id="catalogue-v139-title" type="text"></div>
@@ -385,12 +351,16 @@ function selectedCard() {
   return key && !key.startsWith('__v139_') ? document.querySelector(`article.card[data-key="${CSS.escape(key)}"]`) : null;
 }
 function currentCardRows() {
-  return Array.from(document.querySelectorAll('article.card[data-key]')).map(card => ({
-    key: card.dataset.key,
-    rank: Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1))),
-    taster: card.dataset.taster === '1',
-    archived: card.dataset.archived === '1'
-  }));
+  return Array.from(document.querySelectorAll('article.card[data-key]')).map(card => {
+    const catalogueType = normaliseCatalogueType(card.dataset.catalogueType, card.dataset.taster === '1');
+    return {
+      key: card.dataset.key,
+      rank: Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1))),
+      catalogueType,
+      taster: catalogueType === 'taster',
+      archived: card.dataset.archived === '1'
+    };
+  });
 }
 function existingStructureFromCard(card) {
   if (!card) return {};
@@ -918,7 +888,8 @@ function updateRankMax() {
   const card = selectedCard();
   const rankInput = q('catalogue-admin-rank');
   if (!card || !rankInput) return;
-  const activeCount = currentCardRows().filter(row => !row.archived && row.taster === (card.dataset.taster === '1')).length;
+  const cardType = normaliseCatalogueType(card.dataset.catalogueType, card.dataset.taster === '1');
+  const activeCount = currentCardRows().filter(row => !row.archived && catalogueTypeForRow(row) === cardType).length;
   const archived = q('catalogue-admin-section')?.value === 'archived';
   rankInput.max = String(activeCount + (archived ? 0 : (card.dataset.archived === '1' ? 1 : 0)));
 }
@@ -944,7 +915,7 @@ function populateStructuralFields() {
   const data = effectiveStructure(card, stateForBrowser);
   setField('catalogue-v139-key', card.dataset.key);
   q('catalogue-v139-key').readOnly = true;
-  setField('catalogue-v139-type', data.taster ? 'taster' : 'main');
+  setField('catalogue-v139-type', normaliseCatalogueType(data.catalogueType ?? card.dataset.catalogueType, data.taster));
   setField('catalogue-v139-risk', data.risk || 1);
   setField('catalogue-v139-brand', data.brand || '');
   setField('catalogue-v139-title', data.title || '');
@@ -1008,7 +979,7 @@ function structuralFromFields(existingImageUrl = '') {
     length: q('catalogue-v139-length').value,
     ring: q('catalogue-v139-ring').value,
     risk: q('catalogue-v139-risk').value,
-    taster: q('catalogue-v139-type').value === 'taster',
+    catalogueType: q('catalogue-v139-type').value,
     retailerText: q('catalogue-v139-retailers').value,
     smokeTime: q('catalogue-v139-smoke-time').value,
     existingImageUrl
@@ -1054,8 +1025,11 @@ function addDraftOption(label) {
   const option = document.createElement('option'); option.value = '__v139_draft__'; option.dataset.v139Draft = '1'; option.textContent = label;
   select.prepend(option); select.value = option.value;
 }
-function nextRankFor(taster) {
-  return currentCardRows().filter(row => !row.archived && row.taster === Boolean(taster)).reduce((max, row) => Math.max(max, row.rank), 0) + 1;
+function nextRankFor(type) {
+  const targetType = normaliseCatalogueType(type, type === true);
+  return currentCardRows()
+    .filter(row => !row.archived && catalogueTypeForRow(row) === targetType)
+    .reduce((max, row) => Math.max(max, row.rank), 0) + 1;
 }
 function beginNew(duplicate = false) {
   const card = selectedCard();
@@ -1066,13 +1040,14 @@ function beginNew(duplicate = false) {
   draftSourceEditorial = sourceEditorial;
   addDraftOption(duplicate ? 'New · duplicate draft' : 'New · blank entry');
   const structural = sourceStructure ? { ...sourceStructure, title: `${sourceStructure.title} Copy`, imageUrl: '' } : {
-    brand:'', title:'', packagePrice:0, packageLabel:'single cigar', price:0, country:'', length:0, ring:0, risk:1, taster:false, retailerLinks:[], smokeTime:'', imageUrl:''
+    brand:'', title:'', packagePrice:0, packageLabel:'single cigar', price:0, country:'', length:0, ring:0, risk:1, catalogueType:'main', taster:false, retailerLinks:[], smokeTime:'', imageUrl:''
   };
-  const editorial = sourceEditorial ? { ...sourceEditorial, archived:false, archivedAt:'', archivedRank:null, rank:nextRankFor(Boolean(structural.taster)) } : {
-    archived:false, stockPin:'auto', rank:nextRankFor(false), strength:5, quality:5, size:'bronze', laurel:'auto', experienceTags:[], eyebrow:'', summaryHtml:'', noteHtml:'', productionHtml:'', practicalHtml:''
+  const draftType = normaliseCatalogueType(structural.catalogueType, Boolean(structural.taster));
+  const editorial = sourceEditorial ? { ...sourceEditorial, archived:false, archivedAt:'', archivedRank:null, rank:nextRankFor(draftType) } : {
+    archived:false, stockPin:'auto', rank:nextRankFor('main'), strength:5, quality:5, size:'bronze', laurel:'auto', experienceTags:[], eyebrow:'', summaryHtml:'', noteHtml:'', productionHtml:'', practicalHtml:''
   };
   setField('catalogue-v139-key', duplicate ? sanitiseKey(`${structural.brand}-${structural.title}`) : ''); q('catalogue-v139-key').readOnly = false;
-  setField('catalogue-v139-type', structural.taster ? 'taster':'main'); setField('catalogue-v139-risk', structural.risk || 1); setField('catalogue-v139-brand', structural.brand || ''); setField('catalogue-v139-title', structural.title || '');
+  setField('catalogue-v139-type', draftType); setField('catalogue-v139-risk', structural.risk || 1); setField('catalogue-v139-brand', structural.brand || ''); setField('catalogue-v139-title', structural.title || '');
   setField('catalogue-v139-package-price', structural.packagePrice || 0); setField('catalogue-v139-package-label', structural.packageLabel || 'single cigar'); setField('catalogue-v139-price', structural.price || 0); setField('catalogue-v139-country', structural.country || '');
   setField('catalogue-v139-length', structural.length || 0); setField('catalogue-v139-ring', structural.ring || 0); setField('catalogue-v139-retailers', Array.isArray(structural.retailerLinks) ? structural.retailerLinks.join('\n') : ''); setField('catalogue-v139-smoke-time', structural.smokeTime || '');
   q('catalogue-v139-image').value = ''; q('catalogue-v139-image-note').textContent = duplicate ? 'Choose an image for the copy. The source image is not duplicated automatically.' : 'Choose PNG/JPEG/WebP now or add one later.';
@@ -1123,7 +1098,8 @@ async function saveUnified() {
     const priorArchivedAt = selected?.dataset.archivedAt || priorSaved.archivedAt || '';
     const priorArchivedRank = priorSaved.archivedRank || (selected?.dataset.archived === '1' ? Number(q('catalogue-admin-rank').value) : null);
     let rows = currentCardRows();
-    if (modeForBrowser !== 'edit') rows = [...rows, { key, rank: nextRankFor(structural.taster), taster: structural.taster, archived:false }];
+    const targetType = normaliseCatalogueType(structural.catalogueType, structural.taster);
+    if (modeForBrowser !== 'edit') rows = [...rows, { key, rank: nextRankFor(targetType), catalogueType: targetType, taster: targetType === 'taster', archived:false }];
     const rankUpdates = rankingUpdatesForSave(rows, stateForBrowser.cards, {
       key,
       taster: structural.taster,
@@ -1207,7 +1183,7 @@ function onCardSelectionChanged() {
   setTimeout(populateSelectedFields, 0);
 }
 function onTypeChanged() {
-  if (modeForBrowser === 'new' || modeForBrowser === 'duplicate') setField('catalogue-admin-rank', nextRankFor(q('catalogue-v139-type').value === 'taster'));
+  if (modeForBrowser === 'new' || modeForBrowser === 'duplicate') setField('catalogue-admin-rank', nextRankFor(q('catalogue-v139-type').value));
 }
 function openEditor() {
   const modal = q('catalogue-admin');

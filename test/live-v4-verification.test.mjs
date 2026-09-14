@@ -6,7 +6,7 @@ import { verifyLiveRecommendationV4 } from '../scripts/verify-live-recommendatio
 
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 
-function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v8' } = {}) {
+function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v10' } = {}) {
   const state = {
     version,
     cards: {

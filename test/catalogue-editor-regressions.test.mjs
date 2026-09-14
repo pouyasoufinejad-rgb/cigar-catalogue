@@ -43,7 +43,7 @@ test('Edit catalogue opens the full editor instead of the old inline direct-edit
 test('full catalogue editor uses the full viewport and explicitly opens at its own top', () => {
   assert.match(fullscreenSource, /catalogue-admin-panel\{[^}]*width:100vw[^}]*max-width:none/s);
   assert.match(fullscreenSource, /scrollTop\s*=\s*0/);
-  assert.match(loaderSource, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
+  assert.match(loaderSource, /catalogue-editor-fullscreen\.mjs\?v=20260914-v10/);
 });
 
 test('public Legend and Benchmarks disclosures are closed when editing starts', () => {

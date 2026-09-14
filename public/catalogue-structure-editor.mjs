@@ -420,7 +420,16 @@ function syncRankBounds(root = document) {
   if (!rank) return;
   const key = selectedKey(root);
   const row = structuralRowForSelected(root);
-  if (type === 'main') {
+  // Rank means "position within a subsection" only while the v4 subsection
+  // pipeline owns Recommendation ranking (see transformStatePayload, which bails
+  // out unless persistedState carries recommendationSubsections, and
+  // rankingUpdatesForSave, which only defers for v4 state). On legacy v3 state
+  // rank means "rank within the cohort"; pinning the field to the subsection
+  // model there set max=1 and forced value=1, so no Recommendation could be
+  // reordered at all.
+  const subsectionsOwnRanking = Number(persistedState.version) >= 4
+    && Array.isArray(persistedState.recommendationSubsections);
+  if (type === 'main' && subsectionsOwnRanking) {
     const subsectionId = subsectionSelect(root)?.value || '';
     const section = draftSubsections.find(item => item.id === subsectionId);
     const location = key ? recommendationLocation(draftSubsections, key) : null;

@@ -46,7 +46,7 @@ test('legacy direct editor is retired from the browser chain while verified pers
   assert.match(runtimeModule, /typeof document !== 'undefined'/);
   assert.doesNotMatch(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
   assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
-  assert.match(runtimeModule, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
+  assert.match(runtimeModule, /catalogue-editor-fullscreen\.mjs\?v=20260914-v10/);
 });
 
 test('direct save verifies layout fields by reading KV back', () => {

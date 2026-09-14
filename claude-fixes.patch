@@ -1,0 +1,559 @@
+From 374052422ff7240ac08d2a3593edda8b2853da06 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 14 Sep 2026 16:07:10 +0000
+Subject: [PATCH] Fix Recommendation rank editing and cohort independence
+
+The rank field was pinned to max=1 for Recommendations on legacy v3 state,
+because the subsection rank model applied even when no subsections own
+ranking. Gate it on persistedState actually carrying recommendationSubsections.
+
+Route the legacy save path through reorderCatalogueCohorts so Main, Half-Cigar
+and Taster rank independently. Half-Cigars were consuming positions in the
+Recommendation sequence, leaving gaps like 1, 2, 4, 6, 8 after any move.
+
+Write catalogueType from the editor, offer Half-Cigar in the static type
+select, drop the dead max=28 attribute, and remove the superseded
+reorderCohortOverrides.
+---
+ public/catalogue-admin-unified-v139.mjs       | 110 ++++++--------
+ public/catalogue-runtime.mjs                  |   8 +-
+ public/catalogue-structure-editor.mjs         |  11 +-
+ public/index.html                             |   2 +-
+ scripts/verify-live-code-ready.mjs            |   2 +-
+ src/index-core.js                             |   2 +-
+ test/catalogue-editor-cohort-rank.test.mjs    | 137 ++++++++++++++++++
+ test/catalogue-editor-regressions.test.mjs    |   2 +-
+ ...e-recommendation-page-composition.test.mjs |  10 +-
+ test/catalogue-runtime-hardening.test.mjs     |   2 +-
+ test/direct-card-edit.test.mjs                |   2 +-
+ test/live-v4-verification.test.mjs            |   2 +-
+ test/runtime-cache-bust.test.mjs              |   4 +-
+ 13 files changed, 208 insertions(+), 86 deletions(-)
+ create mode 100644 test/catalogue-editor-cohort-rank.test.mjs
+
+diff --git a/public/catalogue-admin-unified-v139.mjs b/public/catalogue-admin-unified-v139.mjs
+index 395df9c..b7187c6 100644
+--- a/public/catalogue-admin-unified-v139.mjs
++++ b/public/catalogue-admin-unified-v139.mjs
+@@ -1,4 +1,9 @@
+ import { deriveValue } from './catalogue-value.mjs';
++import {
++  reorderCatalogueCohorts,
++  normaliseCatalogueType,
++  catalogueTypeForRow
++} from './catalogue-half-cohort.mjs';
+ 
+ export function sanitiseKey(value) {
+   return String(value || '')
+@@ -83,7 +88,8 @@ export function buildStructuralOverride(input) {
+     length: Math.max(0, finiteNumber(input.length)),
+     ring: Math.max(0, Math.round(finiteNumber(input.ring))),
+     risk: Math.max(1, Math.min(3, Math.round(finiteNumber(input.risk, 1)))),
+-    taster: Boolean(input.taster),
++    catalogueType: normaliseCatalogueType(input.catalogueType, Boolean(input.taster)),
++    taster: normaliseCatalogueType(input.catalogueType, Boolean(input.taster)) === 'taster',
+     retailerLinks: parseRetailerUrls(input.retailerText || ''),
+     smokeTime: String(input.smokeTime || '').trim()
+   };
+@@ -154,59 +160,19 @@ export function buildSavePlan({ state, key, dynamic, structural, editorial, sect
+   return { statePayload, entryPayload };
+ }
+ 
+-export function reorderCohortOverrides(cards, existingCards, options) {
+-  const key = options.key;
+-  const targetTaster = Boolean(options.taster);
+-  const wantsArchived = Boolean(options.wantsArchived);
+-  const targetRank = Math.max(1, Math.round(finiteNumber(options.targetRank, 1)));
+-  const now = String(options.now || new Date().toISOString());
+-  const updates = {};
+-  const rows = Array.isArray(cards) ? cards.map(item => ({ ...item })) : [];
+-  const selected = rows.find(item => item.key === key);
+-  if (!selected) return updates;
+-  const originalRank = Math.max(1, Math.round(finiteNumber(selected.rank, 1)));
+-  const existing = existingCards && existingCards[key] && typeof existingCards[key] === 'object' ? existingCards[key] : {};
+-
+-  // Renumber the selected card's old active cohort if it is moving cohort or becoming archived.
+-  const oldTaster = Boolean(selected.taster);
+-  if (!selected.archived && (wantsArchived || oldTaster !== targetTaster)) {
+-    const oldCohort = rows
+-      .filter(item => item.key !== key && !item.archived && Boolean(item.taster) === oldTaster)
+-      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
+-    oldCohort.forEach((item, index) => { updates[item.key] = mergeCardOverride(existingCards?.[item.key], { rank: index + 1 }); });
+-  }
+-
+-  if (wantsArchived) {
+-    updates[key] = mergeCardOverride(existing, {
+-      archived: true,
+-      archivedAt: existing.archivedAt || now,
+-      archivedRank: existing.archivedRank || originalRank,
+-      taster: targetTaster
+-    });
+-    return updates;
+-  }
+-
+-  const targetCohort = rows
+-    .filter(item => item.key !== key && !item.archived && Boolean(item.taster) === targetTaster)
+-    .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
+-  const insertionIndex = Math.max(0, Math.min(targetCohort.length, targetRank - 1));
+-  targetCohort.splice(insertionIndex, 0, { ...selected, taster: targetTaster, archived: false, key });
+-  targetCohort.forEach((item, index) => {
+-    const base = existingCards?.[item.key] || {};
+-    updates[item.key] = mergeCardOverride(base, {
+-      rank: index + 1,
+-      ...(item.key === key ? { archived: false, archivedAt: '', taster: targetTaster } : {})
+-    });
+-  });
+-  return updates;
+-}
+-
+ export function rankingUpdatesForSave(cards, existingCards, options = {}) {
+   const targetCatalogueType = String(options.targetCatalogueType || '').trim().toLowerCase();
+   const explicitRecommendation = targetCatalogueType === 'main'
+     && (Number(options.stateVersion) >= 4 || Array.isArray(options.recommendationSubsections));
+   if (explicitRecommendation) return {};
+-  return reorderCohortOverrides(cards, existingCards, options);
++  // Main, Half-Cigar and Taster are three independent cohorts, each ranked from
++  // 1. The legacy reorder only knew a taster boolean, so Half-Cigars counted as
++  // Recommendations and consumed positions in the Recommendation sequence,
++  // leaving gaps like 1, 2, 4, 6, 8 after any move.
++  return reorderCatalogueCohorts(cards, existingCards, {
++    ...options,
++    targetType: normaliseCatalogueType(options.targetCatalogueType, Boolean(options.taster))
++  });
+ }
+ 
+ export function actionFromTarget(target) {
+@@ -338,7 +304,7 @@ function structuralMarkup() {
+ <div class="catalogue-admin-subhead v139-only">Product &amp; purchase</div>
+ <div class="catalogue-admin-grid v139-only" id="catalogue-v139-structure-grid">
+   <div class="catalogue-admin-field wide"><label for="catalogue-v139-key">Entry key</label><input id="catalogue-v139-key" type="text" maxlength="96"><small class="catalogue-admin-derived">Generated for new entries. Existing keys cannot be changed.</small></div>
+-  <div class="catalogue-admin-field"><label for="catalogue-v139-type">Catalogue type</label><select id="catalogue-v139-type"><option value="main">Recommendation</option><option value="taster">Taster</option></select></div>
++  <div class="catalogue-admin-field"><label for="catalogue-v139-type">Catalogue type</label><select id="catalogue-v139-type"><option value="main">Recommendation</option><option value="half">Half-Cigar</option><option value="taster">Taster</option></select></div>
+   <div class="catalogue-admin-field"><label for="catalogue-v139-risk">Risk</label><select id="catalogue-v139-risk"><option value="1">Low</option><option value="2">Moderate</option><option value="3">High</option></select></div>
+   <div class="catalogue-admin-field"><label for="catalogue-v139-brand">Brand</label><input id="catalogue-v139-brand" type="text"></div>
+   <div class="catalogue-admin-field"><label for="catalogue-v139-title">Product / vitola title</label><input id="catalogue-v139-title" type="text"></div>
+@@ -385,12 +351,16 @@ function selectedCard() {
+   return key && !key.startsWith('__v139_') ? document.querySelector(`article.card[data-key="${CSS.escape(key)}"]`) : null;
+ }
+ function currentCardRows() {
+-  return Array.from(document.querySelectorAll('article.card[data-key]')).map(card => ({
+-    key: card.dataset.key,
+-    rank: Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1))),
+-    taster: card.dataset.taster === '1',
+-    archived: card.dataset.archived === '1'
+-  }));
++  return Array.from(document.querySelectorAll('article.card[data-key]')).map(card => {
++    const catalogueType = normaliseCatalogueType(card.dataset.catalogueType, card.dataset.taster === '1');
++    return {
++      key: card.dataset.key,
++      rank: Math.max(1, Math.round(finiteNumber(card.dataset.rank, 1))),
++      catalogueType,
++      taster: catalogueType === 'taster',
++      archived: card.dataset.archived === '1'
++    };
++  });
+ }
+ function existingStructureFromCard(card) {
+   if (!card) return {};
+@@ -918,7 +888,8 @@ function updateRankMax() {
+   const card = selectedCard();
+   const rankInput = q('catalogue-admin-rank');
+   if (!card || !rankInput) return;
+-  const activeCount = currentCardRows().filter(row => !row.archived && row.taster === (card.dataset.taster === '1')).length;
++  const cardType = normaliseCatalogueType(card.dataset.catalogueType, card.dataset.taster === '1');
++  const activeCount = currentCardRows().filter(row => !row.archived && catalogueTypeForRow(row) === cardType).length;
+   const archived = q('catalogue-admin-section')?.value === 'archived';
+   rankInput.max = String(activeCount + (archived ? 0 : (card.dataset.archived === '1' ? 1 : 0)));
+ }
+@@ -944,7 +915,7 @@ function populateStructuralFields() {
+   const data = effectiveStructure(card, stateForBrowser);
+   setField('catalogue-v139-key', card.dataset.key);
+   q('catalogue-v139-key').readOnly = true;
+-  setField('catalogue-v139-type', data.taster ? 'taster' : 'main');
++  setField('catalogue-v139-type', normaliseCatalogueType(data.catalogueType ?? card.dataset.catalogueType, data.taster));
+   setField('catalogue-v139-risk', data.risk || 1);
+   setField('catalogue-v139-brand', data.brand || '');
+   setField('catalogue-v139-title', data.title || '');
+@@ -1008,7 +979,7 @@ function structuralFromFields(existingImageUrl = '') {
+     length: q('catalogue-v139-length').value,
+     ring: q('catalogue-v139-ring').value,
+     risk: q('catalogue-v139-risk').value,
+-    taster: q('catalogue-v139-type').value === 'taster',
++    catalogueType: q('catalogue-v139-type').value,
+     retailerText: q('catalogue-v139-retailers').value,
+     smokeTime: q('catalogue-v139-smoke-time').value,
+     existingImageUrl
+@@ -1054,8 +1025,11 @@ function addDraftOption(label) {
+   const option = document.createElement('option'); option.value = '__v139_draft__'; option.dataset.v139Draft = '1'; option.textContent = label;
+   select.prepend(option); select.value = option.value;
+ }
+-function nextRankFor(taster) {
+-  return currentCardRows().filter(row => !row.archived && row.taster === Boolean(taster)).reduce((max, row) => Math.max(max, row.rank), 0) + 1;
++function nextRankFor(type) {
++  const targetType = normaliseCatalogueType(type, type === true);
++  return currentCardRows()
++    .filter(row => !row.archived && catalogueTypeForRow(row) === targetType)
++    .reduce((max, row) => Math.max(max, row.rank), 0) + 1;
+ }
+ function beginNew(duplicate = false) {
+   const card = selectedCard();
+@@ -1066,13 +1040,14 @@ function beginNew(duplicate = false) {
+   draftSourceEditorial = sourceEditorial;
+   addDraftOption(duplicate ? 'New · duplicate draft' : 'New · blank entry');
+   const structural = sourceStructure ? { ...sourceStructure, title: `${sourceStructure.title} Copy`, imageUrl: '' } : {
+-    brand:'', title:'', packagePrice:0, packageLabel:'single cigar', price:0, country:'', length:0, ring:0, risk:1, taster:false, retailerLinks:[], smokeTime:'', imageUrl:''
++    brand:'', title:'', packagePrice:0, packageLabel:'single cigar', price:0, country:'', length:0, ring:0, risk:1, catalogueType:'main', taster:false, retailerLinks:[], smokeTime:'', imageUrl:''
+   };
+-  const editorial = sourceEditorial ? { ...sourceEditorial, archived:false, archivedAt:'', archivedRank:null, rank:nextRankFor(Boolean(structural.taster)) } : {
+-    archived:false, stockPin:'auto', rank:nextRankFor(false), strength:5, quality:5, size:'bronze', laurel:'auto', experienceTags:[], eyebrow:'', summaryHtml:'', noteHtml:'', productionHtml:'', practicalHtml:''
++  const draftType = normaliseCatalogueType(structural.catalogueType, Boolean(structural.taster));
++  const editorial = sourceEditorial ? { ...sourceEditorial, archived:false, archivedAt:'', archivedRank:null, rank:nextRankFor(draftType) } : {
++    archived:false, stockPin:'auto', rank:nextRankFor('main'), strength:5, quality:5, size:'bronze', laurel:'auto', experienceTags:[], eyebrow:'', summaryHtml:'', noteHtml:'', productionHtml:'', practicalHtml:''
+   };
+   setField('catalogue-v139-key', duplicate ? sanitiseKey(`${structural.brand}-${structural.title}`) : ''); q('catalogue-v139-key').readOnly = false;
+-  setField('catalogue-v139-type', structural.taster ? 'taster':'main'); setField('catalogue-v139-risk', structural.risk || 1); setField('catalogue-v139-brand', structural.brand || ''); setField('catalogue-v139-title', structural.title || '');
++  setField('catalogue-v139-type', draftType); setField('catalogue-v139-risk', structural.risk || 1); setField('catalogue-v139-brand', structural.brand || ''); setField('catalogue-v139-title', structural.title || '');
+   setField('catalogue-v139-package-price', structural.packagePrice || 0); setField('catalogue-v139-package-label', structural.packageLabel || 'single cigar'); setField('catalogue-v139-price', structural.price || 0); setField('catalogue-v139-country', structural.country || '');
+   setField('catalogue-v139-length', structural.length || 0); setField('catalogue-v139-ring', structural.ring || 0); setField('catalogue-v139-retailers', Array.isArray(structural.retailerLinks) ? structural.retailerLinks.join('\n') : ''); setField('catalogue-v139-smoke-time', structural.smokeTime || '');
+   q('catalogue-v139-image').value = ''; q('catalogue-v139-image-note').textContent = duplicate ? 'Choose an image for the copy. The source image is not duplicated automatically.' : 'Choose PNG/JPEG/WebP now or add one later.';
+@@ -1123,7 +1098,8 @@ async function saveUnified() {
+     const priorArchivedAt = selected?.dataset.archivedAt || priorSaved.archivedAt || '';
+     const priorArchivedRank = priorSaved.archivedRank || (selected?.dataset.archived === '1' ? Number(q('catalogue-admin-rank').value) : null);
+     let rows = currentCardRows();
+-    if (modeForBrowser !== 'edit') rows = [...rows, { key, rank: nextRankFor(structural.taster), taster: structural.taster, archived:false }];
++    const targetType = normaliseCatalogueType(structural.catalogueType, structural.taster);
++    if (modeForBrowser !== 'edit') rows = [...rows, { key, rank: nextRankFor(targetType), catalogueType: targetType, taster: targetType === 'taster', archived:false }];
+     const rankUpdates = rankingUpdatesForSave(rows, stateForBrowser.cards, {
+       key,
+       taster: structural.taster,
+@@ -1207,7 +1183,7 @@ function onCardSelectionChanged() {
+   setTimeout(populateSelectedFields, 0);
+ }
+ function onTypeChanged() {
+-  if (modeForBrowser === 'new' || modeForBrowser === 'duplicate') setField('catalogue-admin-rank', nextRankFor(q('catalogue-v139-type').value === 'taster'));
++  if (modeForBrowser === 'new' || modeForBrowser === 'duplicate') setField('catalogue-admin-rank', nextRankFor(q('catalogue-v139-type').value));
+ }
+ function openEditor() {
+   const modal = q('catalogue-admin');
+diff --git a/public/catalogue-runtime.mjs b/public/catalogue-runtime.mjs
+index 1724c2f..6dc2af8 100644
+--- a/public/catalogue-runtime.mjs
++++ b/public/catalogue-runtime.mjs
+@@ -6,12 +6,12 @@ if (typeof document !== 'undefined') {
+   import('./catalogue-legacy-copy.mjs');
+   import('./catalogue-size-presentation.mjs');
+   import('./catalogue-presentation.mjs');
+-  await import('./catalogue-convenience.mjs?v=20260914-v8');
+-  await import('./catalogue-recommendation-subsections.mjs?v=20260914-v8');
++  await import('./catalogue-convenience.mjs?v=20260914-v10');
++  await import('./catalogue-recommendation-subsections.mjs?v=20260914-v10');
+   import('./catalogue-half-cohort.mjs');
+-  import('./catalogue-structure-editor.mjs?v=20260914-v8');
++  import('./catalogue-structure-editor.mjs?v=20260914-v10');
+   import('./catalogue-editor-behaviour.mjs');
+-  import('./catalogue-editor-fullscreen.mjs?v=20260914-v9');
++  import('./catalogue-editor-fullscreen.mjs?v=20260914-v10');
+   import('./catalogue-retailer-price-fallbacks.mjs');
+   import('./catalogue-convenience-refinements.mjs');
+ }
+diff --git a/public/catalogue-structure-editor.mjs b/public/catalogue-structure-editor.mjs
+index 8546525..fdc680b 100644
+--- a/public/catalogue-structure-editor.mjs
++++ b/public/catalogue-structure-editor.mjs
+@@ -420,7 +420,16 @@ function syncRankBounds(root = document) {
+   if (!rank) return;
+   const key = selectedKey(root);
+   const row = structuralRowForSelected(root);
+-  if (type === 'main') {
++  // Rank means "position within a subsection" only while the v4 subsection
++  // pipeline owns Recommendation ranking (see transformStatePayload, which bails
++  // out unless persistedState carries recommendationSubsections, and
++  // rankingUpdatesForSave, which only defers for v4 state). On legacy v3 state
++  // rank means "rank within the cohort"; pinning the field to the subsection
++  // model there set max=1 and forced value=1, so no Recommendation could be
++  // reordered at all.
++  const subsectionsOwnRanking = Number(persistedState.version) >= 4
++    && Array.isArray(persistedState.recommendationSubsections);
++  if (type === 'main' && subsectionsOwnRanking) {
+     const subsectionId = subsectionSelect(root)?.value || '';
+     const section = draftSubsections.find(item => item.id === subsectionId);
+     const location = key ? recommendationLocation(draftSubsections, key) : null;
+diff --git a/public/index.html b/public/index.html
+index a4c8f20..c5c121a 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -2012,7 +2012,7 @@ document.querySelectorAll('.freshness').forEach(row=>{
+ Tabak Especial Colada Oscuro — Single</option><option value="cao-bella-vanilla-petit-corona">T10 · CAOBella Vanilla Petit Corona — Single</option><option value="cao-moontrance-tubos">T11 · CAO Moontrance Tubos — Single</option><option value="partagas-serie-puritos">Archived · PartagásSerie Puritos — Pack of 5</option><option value="montecristo-joyitas">Archived · MontecristoJoyitas — Single</option><option value="punch-mini-20-tin">Archived · PunchMini 20 Tin</option><option value="romeo-y-julieta-mini-10">Archived · Romeo y JulietaMini 10</option><option value="montecristo-club">Archived · MontecristoClub 10</option><option value="romeo-y-julieta-puritos">Archived · Romeo y JulietaPuritos</option></select></div>
+       <div class="catalogue-admin-field"><label for="catalogue-admin-section">Section</label><select id="catalogue-admin-section"><option value="active">Active catalogue</option><option value="archived">Archived</option></select></div>
+       <div class="catalogue-admin-field"><label for="catalogue-admin-stock">Manual stock</label><select id="catalogue-admin-stock"><option value="auto">Automatic checker</option><option value="in">Available</option><option value="out">Unavailable</option><option value="hold">Hold / unresolved</option></select></div>
+-      <div class="catalogue-admin-field"><label for="catalogue-admin-rank">Rank</label><input id="catalogue-admin-rank" type="number" min="1" step="1" max="28"></div>
++      <div class="catalogue-admin-field"><label for="catalogue-admin-rank">Rank</label><input id="catalogue-admin-rank" type="number" min="1" step="1"></div>
+       <div class="catalogue-admin-field"><label for="catalogue-admin-strength">Strength /10</label><input id="catalogue-admin-strength" type="number" min="1" max="10" step="1"></div>
+       <div class="catalogue-admin-field"><label for="catalogue-admin-quality">Quality /10</label><input id="catalogue-admin-quality" type="number" min="1" max="10" step="1"></div>
+       <div class="catalogue-admin-field"><label for="catalogue-admin-value">Value /10 (automatic)</label><input id="catalogue-admin-value" type="number" min="1" max="10" step="1" readonly=""><small class="catalogue-admin-derived" id="catalogue-admin-value-detail">Q9 benchmark A$22 · A$10.90 ÷ A$22 = 0.50×</small></div>
+diff --git a/scripts/verify-live-code-ready.mjs b/scripts/verify-live-code-ready.mjs
+index 03b6b41..2e4a4a6 100644
+--- a/scripts/verify-live-code-ready.mjs
++++ b/scripts/verify-live-code-ready.mjs
+@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
+ import { resolve } from 'node:path';
+ import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
+ 
+-const ASSET_VERSION = '20260914-v8';
++const ASSET_VERSION = '20260914-v10';
+ 
+ async function fetchText(fetchImpl, url, label) {
+   const response = await fetchImpl(url, { method: 'GET', cache: 'no-store' });
+diff --git a/src/index-core.js b/src/index-core.js
+index d4dfb56..afd5ce3 100644
+--- a/src/index-core.js
++++ b/src/index-core.js
+@@ -876,7 +876,7 @@ export function injectEntriesIntoHtml(html, entries) {
+ export function injectRuntimeBootstrap(html) {
+   const source = String(html || '');
+   if (/catalogue-runtime\.mjs/i.test(source)) return source;
+-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=20260914-v8"></script>';
++  const script = '<script type="module" src="/catalogue-runtime.mjs?v=20260914-v10"></script>';
+   const closeBody = source.lastIndexOf('</body>');
+   if (closeBody < 0) return `${source}${script}`;
+   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
+diff --git a/test/catalogue-editor-cohort-rank.test.mjs b/test/catalogue-editor-cohort-rank.test.mjs
+new file mode 100644
+index 0000000..755dcc4
+--- /dev/null
++++ b/test/catalogue-editor-cohort-rank.test.mjs
+@@ -0,0 +1,137 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFile } from 'node:fs/promises';
++
++import { rankingUpdatesForSave, buildStructuralOverride } from '../public/catalogue-admin-unified-v139.mjs';
++
++const adminSource = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
++const structureSource = await readFile(new URL('../public/catalogue-structure-editor.mjs', import.meta.url), 'utf8');
++
++const MAIN = 'main';
++const HALF = 'half';
++const TASTER = 'taster';
++
++function rows(...specs) {
++  return specs.map(([key, catalogueType, rank]) => ({
++    key,
++    catalogueType,
++    taster: catalogueType === TASTER,
++    rank,
++    archived: false
++  }));
++}
++
++test('Half-Cigars do not consume positions in the Recommendation sequence', () => {
++  // Before: the save path knew only a taster boolean, so half-cigars ranked
++  // alongside recommendations and a move left gaps like 1, 2, 4, 6, 8.
++  const updates = rankingUpdatesForSave(
++    rows(
++      ['main-1', MAIN, 1], ['half-1', HALF, 1], ['main-2', MAIN, 2],
++      ['half-2', HALF, 2], ['main-3', MAIN, 3], ['main-4', MAIN, 4]
++    ),
++    {},
++    { key: 'main-4', targetCatalogueType: MAIN, stateVersion: 3, targetRank: 2, now: '2026-09-14T00:00:00.000Z' }
++  );
++
++  const mainRanks = ['main-1', 'main-4', 'main-2', 'main-3'].map(k => updates[k]?.rank);
++  assert.deepEqual(mainRanks, [1, 2, 3, 4], 'the Recommendation cohort must stay contiguous from 1');
++  assert.equal(updates['half-1'], undefined, 'a Recommendation move must not rewrite Half-Cigar ranks');
++  assert.equal(updates['half-2'], undefined);
++});
++
++test('each cohort is ranked independently of the others', () => {
++  const source = rows(
++    ['main-1', MAIN, 1], ['main-2', MAIN, 2],
++    ['half-1', HALF, 1],
++    ['taster-1', TASTER, 1], ['taster-2', TASTER, 2]
++  );
++  const updates = rankingUpdatesForSave(source, {}, {
++    key: 'taster-2', targetCatalogueType: TASTER, stateVersion: 3, targetRank: 1, now: '2026-09-14T00:00:00.000Z'
++  });
++  assert.equal(updates['taster-2'].rank, 1);
++  assert.equal(updates['taster-1'].rank, 2);
++  assert.equal(updates['main-1'], undefined, 'a taster move must not touch Recommendations');
++  assert.equal(updates['half-1'], undefined, 'a taster move must not touch Half-Cigars');
++});
++
++test('moving a Recommendation into the Half-Cigar cohort closes the gap it leaves', () => {
++  const updates = rankingUpdatesForSave(
++    rows(['main-1', MAIN, 1], ['main-2', MAIN, 2], ['main-3', MAIN, 3], ['half-1', HALF, 1]),
++    {},
++    { key: 'main-2', targetCatalogueType: HALF, stateVersion: 3, targetRank: 1, now: '2026-09-14T00:00:00.000Z' }
++  );
++  assert.equal(updates['main-1'].rank, 1);
++  assert.equal(updates['main-3'].rank, 2, 'main-3 moves up into the vacated slot');
++  assert.equal(updates['main-2'].rank, 1);
++  assert.equal(updates['main-2'].catalogueType, HALF);
++  assert.equal(updates['half-1'].rank, 2);
++});
++
++test('v4 Recommendation rank edits still defer to the subsection pipeline', () => {
++  const updates = rankingUpdatesForSave(
++    rows(['main-1', MAIN, 1], ['main-2', MAIN, 2]),
++    {},
++    { key: 'main-2', targetCatalogueType: MAIN, stateVersion: 4, targetRank: 1, now: '2026-09-14T00:00:00.000Z' }
++  );
++  assert.deepEqual(updates, {}, 'the v4 gate must be preserved');
++});
++
++test('structural overrides carry catalogueType, with taster kept as a legacy mirror', () => {
++  const half = buildStructuralOverride({ brand: 'Toscano', title: 'Antico', catalogueType: HALF });
++  assert.equal(half.catalogueType, HALF);
++  assert.equal(half.taster, false);
++
++  const taster = buildStructuralOverride({ brand: 'Oliva', title: 'Serie O', catalogueType: TASTER });
++  assert.equal(taster.catalogueType, TASTER);
++  assert.equal(taster.taster, true);
++
++  const legacy = buildStructuralOverride({ brand: 'Cohiba', title: 'Short', taster: true });
++  assert.equal(legacy.catalogueType, TASTER, 'legacy taster:true still resolves to the taster cohort');
++
++  assert.equal(buildStructuralOverride({ brand: 'Liga', title: 'No. 9' }).catalogueType, MAIN);
++});
++
++test('legacy v3 state ranks Recommendations by cohort, not by subsection position', () => {
++  // With no subsections in KV the subsection branch set max=1 and forced
++  // value=1, so the rank field rejected every other number.
++  const guard = structureSource.match(/const subsectionsOwnRanking[\s\S]{0,160}?if \(type === 'main' && subsectionsOwnRanking\)/);
++  assert.ok(guard, 'the subsection rank model must be gated on subsections actually owning ranking');
++  assert.match(structureSource, /Number\(persistedState\.version\) >= 4/);
++  assert.match(structureSource, /Array\.isArray\(persistedState\.recommendationSubsections\)/);
++});
++
++test('the editor offers all three catalogue types without waiting for a runtime patch', () => {
++  const select = adminSource.match(/<select id="catalogue-v139-type">.*?<\/select>/s);
++  assert.ok(select, 'catalogue type select must exist in the editor markup');
++  for (const value of [MAIN, HALF, TASTER]) {
++    assert.match(select[0], new RegExp(`value="${value}"`), `type select must offer ${value}`);
++  }
++});
++
++test('the editor resolves a three-way catalogue type from card data', () => {
++  assert.match(adminSource, /normaliseCatalogueType\(card\.dataset\.catalogueType/);
++  assert.equal(
++    /taster: card\.dataset\.taster === '1',\s*archived/.test(adminSource),
++    false,
++    'currentCardRows must not collapse the cohort to a boolean'
++  );
++  assert.equal(
++    /export function reorderCohortOverrides/.test(adminSource),
++    false,
++    'the superseded two-cohort reorder must not linger as a second implementation'
++  );
++});
++
++test('the three copies of normaliseCatalogueType have not drifted apart', async () => {
++  const modules = ['catalogue-half-cohort', 'catalogue-editor-behaviour', 'catalogue-structure'];
++  const bodies = [];
++  for (const name of modules) {
++    const source = await readFile(new URL(`../public/${name}.mjs`, import.meta.url), 'utf8');
++    const fn = source.match(/export function normaliseCatalogueType[\s\S]*?\n\}/);
++    assert.ok(fn, `${name} must define normaliseCatalogueType`);
++    bodies.push(fn[0].replace(/\s+/g, ' ').trim());
++  }
++  for (let i = 1; i < bodies.length; i += 1) {
++    assert.equal(bodies[i], bodies[0], `${modules[i]} has drifted from ${modules[0]}`);
++  }
++});
+diff --git a/test/catalogue-editor-regressions.test.mjs b/test/catalogue-editor-regressions.test.mjs
+index e64354f..df4a6d6 100644
+--- a/test/catalogue-editor-regressions.test.mjs
++++ b/test/catalogue-editor-regressions.test.mjs
+@@ -43,7 +43,7 @@ test('Edit catalogue opens the full editor instead of the old inline direct-edit
+ test('full catalogue editor uses the full viewport and explicitly opens at its own top', () => {
+   assert.match(fullscreenSource, /catalogue-admin-panel\{[^}]*width:100vw[^}]*max-width:none/s);
+   assert.match(fullscreenSource, /scrollTop\s*=\s*0/);
+-  assert.match(loaderSource, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
++  assert.match(loaderSource, /catalogue-editor-fullscreen\.mjs\?v=20260914-v10/);
+ });
+ 
+ test('public Legend and Benchmarks disclosures are closed when editing starts', () => {
+diff --git a/test/catalogue-recommendation-page-composition.test.mjs b/test/catalogue-recommendation-page-composition.test.mjs
+index 6284f31..73dfad9 100644
+--- a/test/catalogue-recommendation-page-composition.test.mjs
++++ b/test/catalogue-recommendation-page-composition.test.mjs
+@@ -30,12 +30,12 @@ test('Recommendation renderer refreshes explicitly after legacy sort and filter
+ });
+ 
+ test('runtime installs convenience navigation before Recommendation subsections so the toolbar remains above the grids', () => {
+-  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v8'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v8'\)/);
++  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v10'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v10'\)/);
+ });
+ 
+ test('the production bootstrap and changed catalogue module URLs are versioned together for the composition fix', () => {
+-  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v8/);
+-  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v8/);
+-  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v8/);
+-  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v8/);
++  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v10/);
++  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v10/);
++  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v10/);
++  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v10/);
+ });
+diff --git a/test/catalogue-runtime-hardening.test.mjs b/test/catalogue-runtime-hardening.test.mjs
+index 1c42a60..74ea935 100644
+--- a/test/catalogue-runtime-hardening.test.mjs
++++ b/test/catalogue-runtime-hardening.test.mjs
+@@ -38,7 +38,7 @@ test('Worker HTML transform injects the cache-busted runtime bootstrap exactly o
+   const once = worker.injectRuntimeBootstrap(original);
+   const twice = worker.injectRuntimeBootstrap(once);
+ 
+-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v8"><\/script><\/body>/);
++  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v10"><\/script><\/body>/);
+   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
+   assert.equal(twice, once);
+ });
+diff --git a/test/direct-card-edit.test.mjs b/test/direct-card-edit.test.mjs
+index d4fd0ec..3e5b488 100644
+--- a/test/direct-card-edit.test.mjs
++++ b/test/direct-card-edit.test.mjs
+@@ -46,7 +46,7 @@ test('legacy direct editor is retired from the browser chain while verified pers
+   assert.match(runtimeModule, /typeof document !== 'undefined'/);
+   assert.doesNotMatch(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
+   assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
+-  assert.match(runtimeModule, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
++  assert.match(runtimeModule, /catalogue-editor-fullscreen\.mjs\?v=20260914-v10/);
+ });
+ 
+ test('direct save verifies layout fields by reading KV back', () => {
+diff --git a/test/live-v4-verification.test.mjs b/test/live-v4-verification.test.mjs
+index a654da4..70448a2 100644
+--- a/test/live-v4-verification.test.mjs
++++ b/test/live-v4-verification.test.mjs
+@@ -6,7 +6,7 @@ import { verifyLiveRecommendationV4 } from '../scripts/verify-live-recommendatio
+ 
+ const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
+ 
+-function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v8' } = {}) {
++function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v10' } = {}) {
+   const state = {
+     version,
+     cards: {
+diff --git a/test/runtime-cache-bust.test.mjs b/test/runtime-cache-bust.test.mjs
+index 32d5b13..c24f090 100644
+--- a/test/runtime-cache-bust.test.mjs
++++ b/test/runtime-cache-bust.test.mjs
+@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
+ 
+ const workerCore = await readFile(new URL('../src/index-core.js', import.meta.url), 'utf8');
+ const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+-const ASSET_VERSION = '20260914-v8';
++const ASSET_VERSION = '20260914-v10';
+ 
+ test('Worker injects a cache-busted top-level runtime module', () => {
+   assert.match(workerCore, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
+@@ -14,5 +14,5 @@ test('runtime keeps structural modules on the deployed v8 chain and cache-busts
+   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-convenience\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
+   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-recommendation-subsections\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
+   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-structure-editor\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
+-  assert.match(runtime, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
++  assert.match(runtime, /catalogue-editor-fullscreen\.mjs\?v=20260914-v10/);
+ });
+-- 
+2.43.0
+

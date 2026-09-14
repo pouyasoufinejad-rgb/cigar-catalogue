@@ -30,12 +30,12 @@ test('Recommendation renderer refreshes explicitly after legacy sort and filter 
 });
 
 test('runtime installs convenience navigation before Recommendation subsections so the toolbar remains above the grids', () => {
-  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v8'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v8'\)/);
+  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v10'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v10'\)/);
 });
 
 test('the production bootstrap and changed catalogue module URLs are versioned together for the composition fix', () => {
-  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v8/);
-  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v8/);
-  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v8/);
-  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v8/);
+  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v10/);
+  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v10/);
+  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v10/);
+  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v10/);
 });
