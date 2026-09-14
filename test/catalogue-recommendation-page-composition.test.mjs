@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const rendererSource = await readFile(new URL('../public/catalogue-recommendation-subsections.mjs', import.meta.url), 'utf8');
+const convenienceSource = await readFile(new URL('../public/catalogue-convenience.mjs', import.meta.url), 'utf8');
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const workerSource = await readFile(new URL('../src/index-core.js', import.meta.url), 'utf8');
 
@@ -28,7 +29,13 @@ test('Recommendation renderer refreshes explicitly after legacy sort and filter 
   assert.match(rendererSource, /querySelectorAll\?\.\(['"]\.toggle button['"]\)|querySelectorAll\(['"]\.toggle button['"]\)/);
 });
 
-test('the production bootstrap and Recommendation module URLs are versioned together for the composition fix', () => {
+test('convenience navigation anchors before Recommendation subsections regardless of module load order', () => {
+  assert.match(convenienceSource, /data-recommendation-subsections-root/);
+  assert.match(convenienceSource, /recommendationRoot\s*\|\|\s*cards/);
+});
+
+test('the production bootstrap and changed Recommendation and convenience module URLs are versioned together for the composition fix', () => {
   assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v5/);
   assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v5/);
+  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v5/);
 });
