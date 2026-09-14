@@ -1,0 +1,57 @@
+name: Diagnose live Recommendation regression
+
+on:
+  push:
+    branches: [diag/live-recommendations-empty]
+    paths:
+      - '.github/workflows/diag-live-recommendations-empty.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect live Recommendation state and render inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -H 'Cache-Control: no-cache' 'https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?diag=1' -o /tmp/state.json
+          curl -fsS -H 'Cache-Control: no-cache' 'https://cigar-catalogue.psncodex.workers.dev/?diag=1' -o /tmp/live.html
+          node <<'NODE'
+          const fs = require('fs');
+          const state = JSON.parse(fs.readFileSync('/tmp/state.json','utf8'));
+          const html = fs.readFileSync('/tmp/live.html','utf8');
+          console.log('STATE_VERSION', state.version);
+          const subs = Array.isArray(state.recommendationSubsections) ? state.recommendationSubsections : [];
+          console.log('SUBSECTION_COUNT', subs.length);
+          for (const sub of subs) {
+            console.log(`SUBSECTION ${sub.id} | ${sub.name} | count=${(sub.entryKeys||[]).length}`);
+            for (const key of sub.entryKeys || []) {
+              const card = state.cards?.[key] || {};
+              const entry = state.entries?.[key] || {};
+              const escaped = key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+              const m = html.match(new RegExp(`<article\\b[^>]*data-key=["']${escaped}["'][^>]*>`, 'i'));
+              const tag = m?.[0] || '';
+              const attr = name => tag.match(new RegExp(`\\b${name}=["']([^"']*)["']`, 'i'))?.[1] || '';
+              console.log(JSON.stringify({
+                key,
+                html: Boolean(tag),
+                htmlType: attr('data-catalogue-type'),
+                htmlTaster: attr('data-taster'),
+                htmlArchived: attr('data-archived'),
+                htmlRank: attr('data-rank'),
+                cardType: card.catalogueType ?? null,
+                cardTaster: card.taster ?? null,
+                cardArchived: card.archived ?? null,
+                entryType: entry.catalogueType ?? null,
+                entryTaster: entry.taster ?? null,
+                entryArchived: entry.archived ?? null
+              }));
+            }
+          }
+          console.log('LIVE_MODULE', html.includes('/catalogue-recommendation-subsections.mjs'));
+          console.log('LEGACY_MODULE', html.includes('/catalogue-recommendation-cohorts.mjs'));
+          NODE
