@@ -1,5 +1,6 @@
-import { sizeRating } from './catalogue-size-rules.mjs';
+import { sizeRatingForRing } from './catalogue-size-rules.mjs';
 import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
+import { verifiedRetailerPriceFallback } from './catalogue-retailer-price-fallbacks.mjs';
 
 const STORAGE_KEY = 'cigar-catalogue-convenience-v1';
 const ROOT_ID = 'catalogue-next-root';
@@ -166,7 +167,7 @@ function correctCanonicalSizeAndLaurel(card) {
   const key=card.dataset.key||'';
   const source=currentStateForKey(key);
   const {ring}=sizeFromCard(card);
-  const canonical=sizeRating(ring);
+  const canonical=sizeRatingForRing(ring);
   const sizeNode=[...(card.querySelectorAll?.('.catalogue-next-rating')||[])].find(node=>String(node.querySelector('span')?.textContent||'').trim()==='Size');
   if (sizeNode) {
     sizeNode.classList.remove('gold','silver','bronze');
@@ -189,7 +190,7 @@ function correctCanonicalSizeAndLaurel(card) {
       if (flavour>=7) golds++;
       if (canonical.tier==='gold') golds++;
       if (value>=7) golds++;
-      if (golds>=4 || (!quality || quality<7) && hasQualityAwardException(key) && golds>=3) award='gem';
+      if (golds>=4 || ((!quality || quality<7) && hasQualityAwardException(key) && golds>=3)) award='gem';
       else if (golds>=3) award='crown';
       else award='none';
     }
@@ -238,7 +239,8 @@ function decorateRetailers(card) {
     const label=retailerLabel(url);
     const offer=retailerOfferFor(result,url,label);
     const status=['in','out','delisted'].includes(offer?.status)?offer.status:'unknown';
-    return `<div class="catalogue-next-retailer-row"><span>${escapeHtml(label)}</span><span class="status ${status}">${escapeHtml(statusText(status))}</span><span class="price">${escapeHtml(priceText(offer?.price))}</span><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open ↗</a></div>`;
+    const price=offer?.price ?? verifiedRetailerPriceFallback(url);
+    return `<div class="catalogue-next-retailer-row"><span>${escapeHtml(label)}</span><span class="status ${status}">${escapeHtml(statusText(status))}</span><span class="price">${escapeHtml(priceText(price))}</span><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open ↗</a></div>`;
   }).join('');
   if (!links.length) matrix.remove();
 }
@@ -383,6 +385,13 @@ function scheduleRefresh(root) {
   refreshTimer=setTimeout(()=>refreshAll(root),0);
 }
 
+function mutationChangesCatalogueCards(mutations=[]) {
+  return mutations.some(mutation=>[...(mutation.addedNodes||[]),...(mutation.removedNodes||[])].some(node=>{
+    if (node?.nodeType!==1) return false;
+    return Boolean(node.matches?.('.catalogue-next-card') || node.querySelector?.('.catalogue-next-card'));
+  }));
+}
+
 async function loadRemoteData() {
   const [stock,state]=await Promise.all([
     fetch(`${STOCK_API}?next_convenience=1`,{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})),
@@ -459,7 +468,7 @@ async function installNextConvenience() {
   await loadRemoteData();
   refreshAll(root);
   observer?.disconnect?.();
-  observer=new MutationObserver(()=>{if(!decorating)scheduleRefresh(root);});
+  observer=new MutationObserver(mutations=>{if(!decorating && mutationChangesCatalogueCards(mutations)) scheduleRefresh(root);});
   observer.observe(root,{childList:true,subtree:true});
 }
 
