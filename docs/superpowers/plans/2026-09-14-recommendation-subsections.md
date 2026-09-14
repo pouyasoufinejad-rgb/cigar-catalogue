@@ -2,97 +2,86 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the glitch-prone inferred Recommendation ranking overlay with first-class editable Recommendation subsections whose ordered entry lists are authoritative, while preserving independent Half-Cigar/Taster cohorts and adding safe cross-cohort/archive moves.
+**Goal:** Replace the inferred Recommendation ranking overlay with first-class editable Recommendation subsections whose ordered entry lists are authoritative, while preserving independent Half-Cigar/Taster cohorts and safe archive restoration.
 
-**Architecture:** Add one shared pure structural state engine that owns Recommendation subsection schema, membership, ordering, and cross-type moves. The Worker, browser editor, renderer, and GitHub publication tooling all consume that same model. Production code remains backward-compatible with v3 state until a separately audited one-time migration writes v4 `recommendationSubsections`; after v4 exists, no runtime Recommendation membership or ordering may fall back to ring gauge, flavour text, or legacy global rank.
+**Architecture:** One shared pure structural state engine owns Recommendation subsection schema, membership, ordering, and cross-type moves. The Worker, unified editor, Recommendation renderer, and GitHub catalogue publisher all consume that model. Production code remains backward-compatible with v3 until a separately audited follow-up migration writes v4 `recommendationSubsections`; once v4 exists, runtime Recommendation membership/order never falls back to ring gauge, flavour text, or global `rank`.
 
-**Tech Stack:** Vanilla ES modules, Node.js 22 test runner, Cloudflare Workers/KV, Wrangler, browser DOM APIs, GitHub Actions publication workflow.
+**Tech Stack:** Vanilla ES modules, Node.js 22 `node:test`, Cloudflare Workers/KV, Wrangler, browser DOM APIs, GitHub Actions.
 
 **Spec:** `docs/superpowers/specs/2026-09-14-recommendation-subsections-design.md`
 
 ## Global Constraints
 
-- Explicit Recommendation subsection storage uses catalogue state version `4`.
-- Internal catalogue type `main` remains the compatibility representation of Recommendation; do not create a fourth catalogue type.
-- Recommendation subsection array order is subsection display order.
-- Each subsection `entryKeys` array order is authoritative local Recommendation order; visible rank is derived from list position, never independently persisted.
-- Every non-archived Recommendation entry must belong to exactly one Recommendation subsection after v4 migration.
-- Half-Cigar and Taster remain distinct top-level cohorts with their existing `H1…` and `T1…` visual semantics.
-- Recommendation edits must not renumber Half-Cigar/Taster unless the edited entry explicitly moves into or out of that cohort.
+- Explicit Recommendation subsection storage uses state version `4`.
+- Internal catalogue type `main` remains Recommendation. Do not create a fourth top-level type.
+- `recommendationSubsections` array order is subsection display order.
+- Each subsection `entryKeys` order is authoritative local Recommendation order. Rank is `index + 1`, never separately persisted.
+- Every non-archived Recommendation entry belongs to exactly one subsection after migration.
+- Half-Cigar and Taster remain independent `H1…` and `T1…` cohorts.
+- Recommendation edits never renumber Half/Taster unless the edited entry explicitly moves into/out of that cohort.
 - Subsection IDs remain stable across rename/description edits.
-- A non-empty subsection cannot be deleted.
-- Stock state must never mutate stored Recommendation subsection membership or list order. If existing unavailable presentation temporarily renders a card elsewhere, its structural membership/position remains intact for restoration.
-- Preserve unrelated cigar fields, prose, ratings, prices, images, retailer data, eyebrow copy, Value logic, and established catalogue exceptions.
-- Production code must be deployed before the live v4 migration request is published.
-- A merge is not proof of Cloudflare deployment. Verify deployed code, live KV read-back, and production rendering separately.
-- PR #76 (`Persist independent recommendation subsection ranks`) is superseded and must not be merged.
-
----
+- Non-empty subsections cannot be deleted.
+- Stock changes never mutate stored Recommendation membership/order.
+- Preserve unrelated cigar prose, ratings, prices, images, retailer data, eyebrow copy, Value logic, and catalogue exceptions.
+- Deploy compatible code before publishing the v4 migration.
+- Git merge is not deployment proof. Verify Cloudflare code, KV read-back, and production rendering separately.
+- PR #76 is superseded and must not be merged.
 
 ## File Structure
 
-### New focused modules
+**Create**
+- `public/catalogue-structure.mjs`: pure v4 structure engine.
+- `public/catalogue-recommendation-legacy.mjs`: side-effect-free v3 compatibility classification only.
+- `public/catalogue-recommendation-subsections.mjs`: explicit-state Recommendation renderer/controller.
+- `scripts/build-recommendation-subsections-migration.mjs`: read-only migration-request builder.
+- `test/catalogue-structure.test.mjs`
+- `test/catalogue-state-v4.test.mjs`
+- `test/catalogue-recommendation-subsections.test.mjs`
+- `test/recommendation-subsection-migration.test.mjs`
 
-- `public/catalogue-structure.mjs` — pure v4 catalogue structure engine: subsection schema/validation, Recommendation list operations, Half/Taster compaction, and atomic cross-type/archive moves.
-- `public/catalogue-recommendation-subsections.mjs` — browser Recommendation renderer/controller driven by explicit v4 state, with a v3-only compatibility fallback.
-- `public/catalogue-recommendation-legacy.mjs` — side-effect-free copy of only the old v3 classification logic needed for compatibility/migration; never authoritative when v4 explicit state exists.
-- `scripts/build-recommendation-subsections-migration.mjs` — read-only migration builder that derives the initial explicit lists from current live state/production data and outputs an auditable request document.
-- `test/catalogue-structure.test.mjs` — pure structural engine tests.
-- `test/catalogue-state-v4.test.mjs` — Worker v3/v4 persistence and validation tests.
-- `test/catalogue-recommendation-subsections.test.mjs` — v4 renderer/controller contract tests.
-- `test/recommendation-subsection-migration.test.mjs` — migration builder tests.
+**Modify**
+- `src/index.js`
+- `public/catalogue-admin-unified-v139.mjs`
+- `public/catalogue-half-cohort.mjs`
+- `public/catalogue-runtime.mjs`
+- `scripts/publish-catalogue-request.mjs`
+- `.github/workflows/publish-catalogue.yml`
+- affected tests: `catalogue-recommendation-cohorts`, `catalogue-recommendation-subsection-regressions`, `catalogue-editor-regressions`, `half-cigar-cohort`, `half-cigar-ui-regression`, `catalogue-save-pipeline`, `publish-catalogue-request`, `publisher-half-cohort`, `publisher-live-ranking-source`, `full-catalogue-rank-normalisation`, `eyebrow-rank-regression`.
 
-### Existing files to modify
+**Reference only**
+- `public/catalogue-save-pipeline.mjs`: retain generic plumbing unless tests prove a concrete change is necessary; do not add structural ownership here.
+- `scripts/publish-live-catalogue-request.mjs`: existing wrapper already delegates to `publish-catalogue-request.mjs`; no new structural logic belongs here.
 
-- `src/index.js` — preserve/read/write v4 state, validate subsection shape, never downgrade v4 during entry writes.
-- `public/catalogue-admin-unified-v139.mjs` — add subsection controls/manager, retain `recommendationSubsections` in browser state, and use one atomic structural save calculation.
-- `public/catalogue-half-cohort.mjs` — keep H/T visual/UI helpers but remove competing structural save-transform ownership.
-- `public/catalogue-runtime.mjs` — load the new Recommendation renderer instead of `catalogue-recommendation-cohorts.mjs`.
-- `public/catalogue-save-pipeline.mjs` — keep generic response-listener plumbing; structural correctness must no longer depend on competing Half/Recommendation transforms.
-- `scripts/publish-catalogue-request.mjs` — preserve v4 state on every publication, support explicit Recommendation subsection structure updates/destinations, and use shared structural logic for archive/unarchive/type moves.
-- `scripts/publish-live-catalogue-request.mjs` — only adjust if needed to accept/describe the new request operation; do not create a second structural implementation.
-- `.github/workflows/publish-catalogue.yml` — include new migration-builder path in verification triggers if the builder is added outside already-covered `scripts/publish-catalogue-request.mjs`.
-- `test/catalogue-recommendation-cohorts.test.mjs` — replace tests that assert inferred runtime architecture with v3-compatibility-only tests, or delete after equivalent coverage exists.
-- `test/catalogue-recommendation-subsection-regressions.test.mjs` — rewrite around explicit v4 membership/rank stability.
-- `test/catalogue-editor-regressions.test.mjs` — add subsection editor/archive restoration contracts.
-- `test/half-cigar-cohort.test.mjs` and `test/half-cigar-ui-regression.test.mjs` — assert H/T remain independent but no longer own the save transform.
-- `test/catalogue-save-pipeline.test.mjs` — prove structural edits are not being chained through competing rank transforms.
-- `test/publish-catalogue-request.test.mjs`, `test/publisher-half-cohort.test.mjs`, `test/publisher-live-ranking-source.test.mjs`, `test/full-catalogue-rank-normalisation.test.mjs` — update publisher invariants for v4.
-
-### Files to retire after replacement is proven
-
-- `public/catalogue-recommendation-cohorts.mjs` — remove from runtime and delete once pure legacy classification has moved to `catalogue-recommendation-legacy.mjs` and all tests point at the new architecture.
+**Delete after replacement coverage passes**
+- `public/catalogue-recommendation-cohorts.mjs`
 
 ---
 
-### Task 1: Build the shared structural state engine
+### Task 1: Shared structural state engine
 
 **Files:**
 - Create: `public/catalogue-structure.mjs`
 - Create: `test/catalogue-structure.test.mjs`
-- Reference: `public/catalogue-half-cohort.mjs`
-- Reference: `docs/superpowers/specs/2026-09-14-recommendation-subsections-design.md`
 
-**Interfaces:**
-- Produces:
-  - `CATALOGUE_STATE_VERSION = 4`
-  - `normaliseCatalogueType(value, taster = false) -> 'main' | 'half' | 'taster'`
-  - `validateRecommendationSubsectionsShape(input) -> RecommendationSubsection[]` or throws
-  - `recommendationMembership(subsections) -> Record<entryKey, { subsectionId, position }>`
-  - `recommendationLocation(subsections, key) -> { subsectionId, position } | null`
-  - `addRecommendationSubsection(subsections, { id, name, description, index }) -> RecommendationSubsection[]`
-  - `updateRecommendationSubsection(subsections, { id, name, description }) -> RecommendationSubsection[]`
-  - `reorderRecommendationSubsections(subsections, { id, targetIndex }) -> RecommendationSubsection[]`
-  - `deleteRecommendationSubsection(subsections, id) -> RecommendationSubsection[]` or throws if non-empty
-  - `moveRecommendationEntry(subsections, { key, targetSubsectionId, targetPosition }) -> RecommendationSubsection[]`
-  - `removeRecommendationEntry(subsections, key) -> RecommendationSubsection[]`
-  - `assertRecommendationInventory({ subsections, activeRecommendationKeys, forbiddenKeys }) -> true` or throws
-  - `applyCatalogueStructuralChange({ cards, recommendationSubsections, key, targetType, targetSubsectionId, targetPosition, wantsArchived, now }) -> { cards, recommendationSubsections }`
-- Consumes no DOM and performs no network I/O.
+**Produces**
 
-- [ ] **Step 1: Write failing subsection schema/invariant tests**
+```js
+export const CATALOGUE_STATE_VERSION = 4;
+export function normaliseCatalogueType(value, taster = false) {}
+export function validateRecommendationSubsectionsShape(input) {}
+export function recommendationMembership(subsections) {}
+export function recommendationLocation(subsections, key) {}
+export function addRecommendationSubsection(subsections, input) {}
+export function updateRecommendationSubsection(subsections, input) {}
+export function reorderRecommendationSubsections(subsections, input) {}
+export function deleteRecommendationSubsection(subsections, id) {}
+export function moveRecommendationEntry(subsections, input) {}
+export function removeRecommendationEntry(subsections, key) {}
+export function assertRecommendationInventory(input) {}
+export function applyCatalogueStructuralChange(input) {}
+```
 
-Add tests covering duplicate subsection IDs, duplicate entry membership, stable rename IDs, empty-section persistence, non-empty delete rejection, and exact list ordering:
+- [ ] **Step 1: Write failing shape/list tests**
 
 ```js
 import test from 'node:test';
@@ -110,7 +99,7 @@ const base = [
   { id: 'petit-panatelas', name: 'Petit Panatelas', description: '35 ring gauge or higher.', entryKeys: ['c'] }
 ];
 
-test('subsection order and entry order are authoritative', () => {
+test('entry order is authoritative', () => {
   const moved = moveRecommendationEntry(base, {
     key: 'b', targetSubsectionId: 'petit-panatelas', targetPosition: 1
   });
@@ -121,7 +110,7 @@ test('subsection order and entry order are authoritative', () => {
   });
 });
 
-test('rename preserves stable subsection id and membership', () => {
+test('rename preserves id and members', () => {
   const next = updateRecommendationSubsection(base, {
     id: 'coronets', name: 'Small Formats', description: 'Edited'
   });
@@ -129,80 +118,75 @@ test('rename preserves stable subsection id and membership', () => {
   assert.deepEqual(next[0].entryKeys, ['a', 'b']);
 });
 
-test('duplicate active Recommendation membership is rejected', () => {
+test('duplicate membership is rejected', () => {
   assert.throws(() => validateRecommendationSubsectionsShape([
     { id: 'one', name: 'One', description: '', entryKeys: ['a'] },
     { id: 'two', name: 'Two', description: '', entryKeys: ['a'] }
   ]), /duplicate.*a/i);
 });
 
-test('non-empty subsection cannot be deleted', () => {
+test('non-empty section cannot be deleted', () => {
   assert.throws(() => deleteRecommendationSubsection(base, 'coronets'), /not empty/i);
 });
 ```
 
-- [ ] **Step 2: Run the focused test and confirm the module is missing**
-
-Run:
+- [ ] **Step 2: Verify failure**
 
 ```bash
 node --test test/catalogue-structure.test.mjs
 ```
 
-Expected: FAIL because `public/catalogue-structure.mjs` does not yet exist.
+Expected: FAIL because the module does not exist.
 
-- [ ] **Step 3: Implement strict subsection shape validation and pure list operations**
+- [ ] **Step 3: Implement strict shape/list functions**
 
-Use a stable subsection ID rule that allows the existing IDs and future generated IDs:
+Use this ID/key validation and immutable cloning:
 
 ```js
 const SUBSECTION_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
-
-export const CATALOGUE_STATE_VERSION = 4;
+const ENTRY_KEY = /^[a-z0-9][a-z0-9_-]{0,95}$/;
 
 export function validateRecommendationSubsectionsShape(input) {
   if (!Array.isArray(input)) throw new Error('recommendationSubsections must be an array.');
-  const subsectionIds = new Set();
-  const entryKeys = new Set();
+  const ids = new Set();
+  const members = new Set();
   return input.map(raw => {
     const id = String(raw?.id || '').trim().toLowerCase();
     const name = String(raw?.name || '').trim();
     const description = String(raw?.description || '').trim();
     if (!SUBSECTION_ID.test(id)) throw new Error(`Invalid Recommendation subsection id: ${id || '(missing)'}.`);
     if (!name) throw new Error(`Recommendation subsection "${id}" requires a name.`);
-    if (subsectionIds.has(id)) throw new Error(`Duplicate Recommendation subsection id: ${id}.`);
-    subsectionIds.add(id);
+    if (ids.has(id)) throw new Error(`Duplicate Recommendation subsection id: ${id}.`);
+    ids.add(id);
     if (!Array.isArray(raw?.entryKeys)) throw new Error(`Recommendation subsection "${id}" requires entryKeys.`);
-    const keys = raw.entryKeys.map(value => String(value || '').trim()).filter(Boolean);
-    for (const key of keys) {
-      if (entryKeys.has(key)) throw new Error(`Duplicate Recommendation entry membership: ${key}.`);
-      entryKeys.add(key);
+    const entryKeys = raw.entryKeys.map(value => String(value || '').trim().toLowerCase());
+    for (const key of entryKeys) {
+      if (!ENTRY_KEY.test(key)) throw new Error(`Invalid Recommendation entry key: ${key || '(missing)'}.`);
+      if (members.has(key)) throw new Error(`Duplicate Recommendation entry membership: ${key}.`);
+      members.add(key);
     }
-    return { id, name, description, entryKeys: keys };
+    return { id, name, description, entryKeys };
   });
 }
 ```
 
-Keep functions immutable: clone arrays/objects, never mutate caller-owned input.
+`moveRecommendationEntry` must require integer `targetPosition` in `1..destinationLength + 1`; reject out-of-range input instead of silently clamping.
 
-- [ ] **Step 4: Add failing cross-type/archive tests**
-
-Cover Recommendation -> Half, Recommendation -> Taster, Half/Taster -> Recommendation, archive removal, archive restore with explicit destination, and independence of unrelated cohorts:
+- [ ] **Step 4: Write failing cross-type/archive tests**
 
 ```js
-test('Recommendation to Half removes subsection membership and compacts only Half destination', () => {
-  const cards = {
-    rec: { catalogueType: 'main', archived: false, rank: 99 },
-    h1: { catalogueType: 'half', archived: false, rank: 1 },
-    t1: { catalogueType: 'taster', taster: true, archived: false, rank: 1 }
-  };
+test('Recommendation -> Half removes Recommendation membership only', () => {
   const result = applyCatalogueStructuralChange({
-    cards,
-    recommendationSubsections: [{ id: 'coronets', name: 'Coronets', description: '', entryKeys: ['rec'] }],
-    key: 'rec',
-    targetType: 'half',
-    targetPosition: 2,
-    wantsArchived: false,
+    cards: {
+      rec: { catalogueType: 'main', archived: false, rank: 99 },
+      h1: { catalogueType: 'half', archived: false, rank: 1 },
+      t1: { catalogueType: 'taster', taster: true, archived: false, rank: 1 }
+    },
+    recommendationSubsections: [
+      { id: 'coronets', name: 'Coronets', description: '', entryKeys: ['rec'] }
+    ],
+    key: 'rec', targetType: 'half', targetPosition: 2,
+    targetSubsectionId: '', wantsArchived: false,
     now: '2026-09-14T12:00:00Z'
   });
   assert.deepEqual(result.recommendationSubsections[0].entryKeys, []);
@@ -211,39 +195,76 @@ test('Recommendation to Half removes subsection membership and compacts only Hal
   assert.equal(result.cards.t1.rank, 1);
 });
 
-test('restore to Recommendation requires an explicit subsection', () => {
+test('archive -> Recommendation requires subsection destination', () => {
   assert.throws(() => applyCatalogueStructuralChange({
     cards: { rec: { catalogueType: 'main', archived: true } },
-    recommendationSubsections: [{ id: 'coronets', name: 'Coronets', description: '', entryKeys: [] }],
-    key: 'rec', targetType: 'main', targetPosition: 1, wantsArchived: false
+    recommendationSubsections: [
+      { id: 'coronets', name: 'Coronets', description: '', entryKeys: [] }
+    ],
+    key: 'rec', targetType: 'main', targetSubsectionId: '',
+    targetPosition: 1, wantsArchived: false
   }), /subsection/i);
 });
 ```
 
-- [ ] **Step 5: Implement the atomic structural move function**
+- [ ] **Step 5: Implement atomic structural moves**
 
-Rules inside `applyCatalogueStructuralChange`:
+Use this exact control flow:
 
 ```js
-// Pseudocode-level contract, implemented as ordinary JS:
-// 1. validate/clone subsection state and card map
-// 2. remove key from any Recommendation list
-// 3. compact source Half/Taster only when key leaves one of those cohorts
-// 4. if wantsArchived: mark archived and do not insert into any active structure
-// 5. if targetType === 'main': require existing targetSubsectionId and insert at 1-based targetPosition
-// 6. if targetType === 'half' or 'taster': insert into that cohort at 1-based targetPosition and compact that cohort
-// 7. write catalogueType/taster/archive metadata for the moved key
-// 8. never compact or rewrite legacy main/global rank to represent Recommendation order
+export function applyCatalogueStructuralChange(input) {
+  const cards = Object.fromEntries(
+    Object.entries(input.cards || {}).map(([key, value]) => [key, { ...(value || {}) }])
+  );
+  let subsections = validateRecommendationSubsectionsShape(input.recommendationSubsections || []);
+  const key = String(input.key || '').trim();
+  const current = { ...(cards[key] || {}) };
+  const sourceType = normaliseCatalogueType(current.catalogueType, current.taster);
+  const targetType = normaliseCatalogueType(input.targetType, input.targetType === 'taster');
+
+  subsections = removeRecommendationEntry(subsections, key);
+  if (sourceType === 'half' || sourceType === 'taster') {
+    compactNumberedCohort(cards, sourceType, key);
+  }
+
+  if (input.wantsArchived) {
+    cards[key] = {
+      ...current,
+      catalogueType: targetType,
+      taster: targetType === 'taster',
+      archived: true,
+      archivedAt: current.archivedAt || input.now || new Date().toISOString()
+    };
+    delete cards[key].rank;
+    return { cards, recommendationSubsections: subsections };
+  }
+
+  if (targetType === 'main') {
+    subsections = moveRecommendationEntry(subsections, {
+      key,
+      targetSubsectionId: input.targetSubsectionId,
+      targetPosition: input.targetPosition
+    });
+    cards[key] = { ...current, catalogueType: 'main', taster: false, archived: false, archivedAt: '' };
+    return { cards, recommendationSubsections: subsections };
+  }
+
+  insertIntoNumberedCohort(cards, {
+    key,
+    type: targetType,
+    position: input.targetPosition,
+    card: { ...current, catalogueType: targetType, taster: targetType === 'taster', archived: false, archivedAt: '' }
+  });
+  return { cards, recommendationSubsections: subsections };
+}
 ```
 
-Clamp insertion only to the valid inclusive range `1..(destinationLength + 1)`. Reject `0`, negative, non-numeric, and wildly out-of-range positions rather than silently choosing a different destination.
+Implement private `compactNumberedCohort` and `insertIntoNumberedCohort` in the same file. They operate only on Half/Taster in v4 and never use main/global rank to represent Recommendation order.
 
-- [ ] **Step 6: Add inventory-level invariant tests**
-
-Test exact active Recommendation completeness and forbidden membership:
+- [ ] **Step 6: Add inventory invariant tests**
 
 ```js
-test('inventory requires every active Recommendation exactly once', () => {
+test('every active Recommendation must appear exactly once', () => {
   assert.throws(() => assertRecommendationInventory({
     subsections: [{ id: 'coronets', name: 'Coronets', description: '', entryKeys: ['a'] }],
     activeRecommendationKeys: ['a', 'b'],
@@ -251,7 +272,7 @@ test('inventory requires every active Recommendation exactly once', () => {
   }), /missing.*b/i);
 });
 
-test('Half/Taster/archived keys are forbidden from Recommendation lists', () => {
+test('Half/Taster/archived keys are forbidden', () => {
   assert.throws(() => assertRecommendationInventory({
     subsections: [{ id: 'coronets', name: 'Coronets', description: '', entryKeys: ['half-a'] }],
     activeRecommendationKeys: [],
@@ -260,66 +281,54 @@ test('Half/Taster/archived keys are forbidden from Recommendation lists', () => 
 });
 ```
 
-- [ ] **Step 7: Run the structural engine tests**
-
-Run:
+- [ ] **Step 7: Verify and commit**
 
 ```bash
 node --test test/catalogue-structure.test.mjs test/half-cigar-cohort.test.mjs
-```
-
-Expected: PASS.
-
-- [ ] **Step 8: Commit**
-
-```bash
 git add public/catalogue-structure.mjs test/catalogue-structure.test.mjs
 git commit -m "feat: add catalogue structural state engine"
 ```
 
 ---
 
-### Task 2: Add backward-compatible v4 Worker state persistence
+### Task 2: Backward-compatible v4 Worker state
 
 **Files:**
-- Modify: `src/index.js` around `normaliseState`, `mergeState`, `hasMeaningfulState`, `handleState`, and `handleEntry`
+- Modify: `src/index.js` (`normaliseState`, `mergeState`, `hasMeaningfulState`, `handleState`, `handleEntry`)
 - Create: `test/catalogue-state-v4.test.mjs`
-- Reuse: `public/catalogue-structure.mjs`
 
-**Interfaces:**
-- Consumes `CATALOGUE_STATE_VERSION` and `validateRecommendationSubsectionsShape`.
-- Produces Worker state that remains v3 when the stored state has no explicit subsection structure, and becomes/stays v4 when `recommendationSubsections` exists.
-- A v4 entry PUT/DELETE must not downgrade the enclosing state back to version 3.
+**Consumes:** `CATALOGUE_STATE_VERSION`, `validateRecommendationSubsectionsShape`, `removeRecommendationEntry`.
 
-- [ ] **Step 1: Write failing v3/v4 state tests**
+- [ ] **Step 1: Write failing v3/v4 tests**
 
 ```js
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normaliseState, mergeState } from '../src/index.js';
 
-test('legacy v3 state stays readable before migration', () => {
+test('v3 remains v3 before explicit migration', () => {
   const state = normaliseState({ version: 3, cards: {}, sections: {}, entries: {} });
   assert.equal(state.version, 3);
-  assert.equal(Object.prototype.hasOwnProperty.call(state, 'recommendationSubsections'), false);
+  assert.equal('recommendationSubsections' in state, false);
 });
 
-test('v4 state round-trips explicit Recommendation subsections', () => {
-  const input = {
-    version: 4,
-    cards: {}, sections: {}, entries: {},
+test('v4 round-trips explicit subsections', () => {
+  const source = {
+    version: 4, cards: {}, sections: {}, entries: {},
     recommendationSubsections: [
       { id: 'coronets', name: 'Coronets', description: '', entryKeys: ['a'] }
     ]
   };
-  assert.deepEqual(normaliseState(input).recommendationSubsections, input.recommendationSubsections);
-  assert.equal(normaliseState(input).version, 4);
+  assert.deepEqual(normaliseState(source).recommendationSubsections, source.recommendationSubsections);
+  assert.equal(normaliseState(source).version, 4);
 });
 
-test('merging an ordinary edit into v4 preserves subsection state', () => {
+test('ordinary merge into v4 preserves subsection state', () => {
   const existing = {
     version: 4, cards: {}, sections: {}, entries: {},
-    recommendationSubsections: [{ id: 'coronets', name: 'Coronets', description: '', entryKeys: ['a'] }]
+    recommendationSubsections: [
+      { id: 'coronets', name: 'Coronets', description: '', entryKeys: ['a'] }
+    ]
   };
   const merged = mergeState(existing, { cards: { a: { quality: 9 } } });
   assert.equal(merged.version, 4);
@@ -327,124 +336,99 @@ test('merging an ordinary edit into v4 preserves subsection state', () => {
 });
 ```
 
-- [ ] **Step 2: Run and confirm current version-3 hardcoding fails**
-
-Run:
+- [ ] **Step 2: Verify current hardcoded version fails**
 
 ```bash
 node --test test/catalogue-state-v4.test.mjs
 ```
 
-Expected: FAIL because `src/index.js` currently forces `version: 3` and drops the new field.
+Expected: FAIL because current state normalization forces v3 and drops the field.
 
-- [ ] **Step 3: Import and preserve explicit subsection state without auto-migrating v3**
-
-Implement `normaliseState` with this compatibility rule:
+- [ ] **Step 3: Implement v3/v4 normalization without implicit migration**
 
 ```js
-const hasExplicitRecommendationStructure = Object.prototype.hasOwnProperty.call(raw, 'recommendationSubsections');
-const recommendationSubsections = hasExplicitRecommendationStructure
-  ? validateRecommendationSubsectionsShape(raw.recommendationSubsections)
-  : undefined;
-
+const explicit = Object.prototype.hasOwnProperty.call(raw, 'recommendationSubsections');
 const output = {
-  version: hasExplicitRecommendationStructure ? CATALOGUE_STATE_VERSION : 3,
+  version: explicit ? CATALOGUE_STATE_VERSION : 3,
   updatedAt: text(raw.updatedAt),
   cards: normaliseCardOverrides(raw.cards),
   sections: record(raw.sections),
   entries
 };
-if (hasExplicitRecommendationStructure) output.recommendationSubsections = recommendationSubsections;
+if (explicit) {
+  output.recommendationSubsections = validateRecommendationSubsectionsShape(raw.recommendationSubsections);
+}
 return output;
 ```
 
-Do not manufacture v4 state from v3 on GET. The migration remains an explicit later operation.
+`mergeState` preserves existing explicit arrays when incoming omits them, and validates/replaces them when incoming includes them.
 
-- [ ] **Step 4: Make `mergeState` preserve v4 and validate explicit writes**
+- [ ] **Step 4: Prevent entry PUT/DELETE from downgrading v4**
 
-If incoming state contains `recommendationSubsections`, validate and write it. If incoming omits it but existing is v4, preserve existing. If both omit it, remain v3. Reject malformed explicit arrays before `writeState`.
-
-- [ ] **Step 5: Prevent `handleEntry` from downgrading state**
-
-Replace hardcoded `state.version = 3` with version preservation:
+Use:
 
 ```js
-state.version = Array.isArray(state.recommendationSubsections)
-  ? CATALOGUE_STATE_VERSION
-  : 3;
+state.version = Array.isArray(state.recommendationSubsections) ? 4 : 3;
 ```
 
-Deleting an entry from a v4 state must also remove the key from Recommendation subsection arrays before write, or reject deletion if the entry remains structurally referenced. Prefer explicit removal using `removeRecommendationEntry` so no dangling key can persist.
+Before deleting an entry from v4, remove the key from explicit Recommendation lists. Do not leave dangling membership.
 
-- [ ] **Step 6: Return actual version from `handleState`**
+- [ ] **Step 5: Return actual state version and reject malformed explicit arrays before KV write**
 
-Change the PUT response from hardcoded `version: 3` to `version: merged.version`, and include `recommendationSubsections: merged.recommendationSubsections?.length ?? 0` as a count only, not the full payload.
+`handleState` response uses `version: merged.version`. Add a Worker-handler test with a KV stub whose `put` count remains zero when duplicate membership is submitted.
 
-- [ ] **Step 7: Add invalid-v4 write regression**
-
-Test duplicate membership causes a 400-class validation failure before KV mutation. Use the existing Worker test KV stub pattern from `test/worker-rendering.test.mjs`.
-
-- [ ] **Step 8: Run Worker-focused tests**
-
-Run:
+- [ ] **Step 6: Verify and commit**
 
 ```bash
 node --test test/catalogue-state-v4.test.mjs test/worker-rendering.test.mjs test/stock-import.test.mjs
-```
-
-Expected: PASS.
-
-- [ ] **Step 9: Commit**
-
-```bash
 git add src/index.js test/catalogue-state-v4.test.mjs
 git commit -m "feat: persist catalogue v4 subsection state"
 ```
 
 ---
 
-### Task 3: Replace the inferred Recommendation overlay with an explicit-state renderer
+### Task 3: Explicit Recommendation renderer with v3-only fallback
 
 **Files:**
 - Create: `public/catalogue-recommendation-legacy.mjs`
 - Create: `public/catalogue-recommendation-subsections.mjs`
 - Modify: `public/catalogue-runtime.mjs`
-- Delete after replacement tests pass: `public/catalogue-recommendation-cohorts.mjs`
-- Create: `test/catalogue-recommendation-subsections.test.mjs`
-- Modify/replace: `test/catalogue-recommendation-cohorts.test.mjs`
+- Modify: `test/catalogue-recommendation-cohorts.test.mjs`
 - Modify: `test/catalogue-recommendation-subsection-regressions.test.mjs`
 - Modify: `test/eyebrow-rank-regression.test.mjs`
-
-**Interfaces:**
-- `catalogue-recommendation-legacy.mjs` produces only pure v3 helpers such as `legacyRecommendationCohortForCard(fields)` and `buildLegacyRecommendationSubsections(rows)`.
-- `catalogue-recommendation-subsections.mjs` consumes API state and DOM cards; explicit v4 state is authoritative.
-- Exports `renderRecommendationSubsections(state, root = document)` and `updateRecommendationRankVisual(card, rank)` for direct unit testing.
+- Create: `test/catalogue-recommendation-subsections.test.mjs`
+- Delete after coverage passes: `public/catalogue-recommendation-cohorts.mjs`
 
 - [ ] **Step 1: Write failing runtime contract tests**
-
-Replace assertions that the runtime loads `catalogue-recommendation-cohorts.mjs` with:
 
 ```js
 assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs/);
 assert.doesNotMatch(runtimeSource, /catalogue-recommendation-cohorts\.mjs/);
+assert.doesNotMatch(rendererSource, /data-tier-section=["']elite["']/);
+assert.doesNotMatch(rendererSource, /data-tier-section=["']strong["']/);
+assert.doesNotMatch(rendererSource, /data-noteworthy-section=["']neither["']/);
 ```
 
-Add source-contract assertions that the new renderer does not reference `data-tier-section="elite"`, `data-tier-section="strong"`, or `data-noteworthy-section="neither"` as destination containers.
+- [ ] **Step 2: Extract side-effect-free legacy classification only**
 
-- [ ] **Step 2: Extract side-effect-free v3 compatibility classification**
+`catalogue-recommendation-legacy.mjs` keeps the current v3 semantics needed before migration:
 
-Move only these old semantics into `catalogue-recommendation-legacy.mjs`:
+```js
+export function legacyRecommendationCohortForCard(fields) {
+  if (fields.catalogueType && fields.catalogueType !== 'main') return '';
+  if (fields.archived) return '';
+  if (legacyFlavoured(fields) && fields.key !== 'kfc-ponies-sweets') return 'flavoured';
+  const ring = Number(fields.ring);
+  if (!Number.isFinite(ring) || ring <= 0) return '';
+  return ring <= 34 ? 'coronets' : 'petit-panatelas';
+}
+```
 
-- flavoured/infused detection from structured production metadata;
-- KFC Sweet Ponies exclusion;
-- `<=34` ring -> Coronets, `>=35` -> Petit Panatelas when not flavoured;
-- legacy ordering by prior Recommendation rank if present, otherwise legacy/global rank.
+Also expose `buildLegacyRecommendationSubsections(rows)` which sorts each legacy group by matching legacy `recommendationRank`, otherwise global rank. It has no DOM/network/save side effects.
 
-Do not register save transforms, response listeners, MutationObservers, or DOM movement in this file.
+- [ ] **Step 3: Implement real v4 subsection containers**
 
-- [ ] **Step 3: Implement explicit v4 section creation/rendering**
-
-For each persisted subsection, create a dedicated container identified by stable ID, for example:
+For each explicit subsection create/update:
 
 ```html
 <section class="recommendation-subsection" data-recommendation-subsection="coronets">
@@ -456,141 +440,75 @@ For each persisted subsection, create a dedicated container identified by stable
 </section>
 ```
 
-Do not clone/relabel Elite/Strong/Noteworthy sections.
+Never relabel/reuse legacy Elite/Strong/Noteworthy containers.
 
-- [ ] **Step 4: Render explicit card order and a single Recommendation number owner**
-
-For v4 state:
+- [ ] **Step 4: Render only from persisted array order in v4**
 
 ```js
-for (const subsection of state.recommendationSubsections) {
-  subsection.entryKeys.forEach((key, index) => {
-    const card = root.querySelector(`article.card[data-key="${CSS.escape(key)}"]`);
-    if (!card) return;
-    // Existing unavailable presentation may choose a different visible container,
-    // but do not change structural membership/order because of stock.
-    card.dataset.recommendationSubsection = subsection.id;
-    card.dataset.recommendationPosition = String(index + 1);
-    updateRecommendationRankVisual(card, index + 1);
-    // Move into subsection grid only when the card is eligible for the normal active Recommendation presentation.
-  });
+export function updateRecommendationRankVisual(card, rank) {
+  const flag = card?.querySelector?.('.rankflag');
+  if (!flag) return;
+  const label = flag.querySelector('span');
+  const value = flag.querySelector('b');
+  if (label) label.textContent = 'No.';
+  if (value) value.textContent = String(rank);
+}
+
+export function renderRecommendationSubsections(state, root = document) {
+  const explicit = state?.version >= 4 && Array.isArray(state?.recommendationSubsections);
+  const subsections = explicit
+    ? state.recommendationSubsections
+    : buildLegacyRecommendationSubsections(rowsFromDomAndState(root, state));
+  // ensure dedicated section DOM, then iterate entryKeys in order.
+  // v4 branch never calls legacy classification.
+  return subsections;
 }
 ```
 
-`updateRecommendationRankVisual` changes only `.rankflag span` and `.rankflag b`. It must never write `.eyebrow`.
+The implementation may respect existing unavailable-card presentation, but stock must not edit persisted list membership/order.
 
-- [ ] **Step 5: Add the v3-only compatibility fallback**
+- [ ] **Step 5: Remove mutation-driven classification and save transforms**
 
-When state has no explicit `recommendationSubsections` and `version < 4`, derive ephemeral sections with the legacy helper. This fallback is display-only:
+The new module may refresh when API state changes or a dynamic card node appears. It must not observe ring/flavour/prose attributes to recompute membership and must not register `recommendation-subsection-ranks` or any other structural PUT transform.
 
-- it does not write `recommendationCohort`;
-- it does not write `recommendationRank`;
-- it does not PUT state;
-- it does not register a save transform;
-- it stops being used immediately once v4 explicit state is present.
+- [ ] **Step 6: Add explicit-membership regressions**
 
-- [ ] **Step 6: Remove mutation-driven reclassification**
+Test Joya Black explicitly assigned to Coronets stays there even when its text contains `full-flavoured`. Test reload preserves array order and rank numbers. Test rank rendering never writes `.eyebrow`.
 
-Do not carry forward observers that watch ring/flavour/prose attributes and reorder cards. Refresh only on explicit state hydration/change and necessary dynamic-entry DOM insertion. If a narrow observer is needed to notice a newly inserted card node, it may trigger a render from the already-persisted structure but must never recompute membership.
-
-- [ ] **Step 7: Add Joya Black and stock-stability regressions**
-
-```js
-test('v4 explicit membership overrides all flavour/ring inference', () => {
-  const state = {
-    version: 4,
-    recommendationSubsections: [
-      { id: 'coronets', name: 'Coronets', description: '', entryKeys: ['joya-black'] },
-      { id: 'flavoured', name: 'Infused / Flavoured', description: '', entryKeys: [] }
-    ]
-  };
-  // Render fixture whose prose contains "full-flavoured".
-  // Assert joya-black remains under coronets and displays No. 1.
-});
-
-test('stock changes do not mutate persisted Recommendation membership', () => {
-  // Render same explicit state before/after data-stock changes.
-  // Assert state/list ordering is unchanged and no inferred move occurs.
-});
-```
-
-- [ ] **Step 8: Run renderer regressions**
-
-Run:
+- [ ] **Step 7: Switch runtime, delete obsolete overlay, verify, commit**
 
 ```bash
 node --test \
   test/catalogue-recommendation-subsections.test.mjs \
   test/catalogue-recommendation-subsection-regressions.test.mjs \
+  test/catalogue-recommendation-cohorts.test.mjs \
   test/eyebrow-rank-regression.test.mjs \
   test/catalogue-runtime-hardening.test.mjs
-```
-
-Expected: PASS.
-
-- [ ] **Step 9: Switch runtime import and remove obsolete overlay file/tests**
-
-Update `public/catalogue-runtime.mjs` to import only the new renderer. Delete `public/catalogue-recommendation-cohorts.mjs` after all legacy classification tests have been transferred to the pure legacy helper tests.
-
-- [ ] **Step 10: Commit**
-
-```bash
+git rm public/catalogue-recommendation-cohorts.mjs
 git add public/catalogue-runtime.mjs public/catalogue-recommendation-legacy.mjs \
-  public/catalogue-recommendation-subsections.mjs \
-  test/catalogue-recommendation-subsections.test.mjs \
+  public/catalogue-recommendation-subsections.mjs test/catalogue-recommendation-subsections.test.mjs \
   test/catalogue-recommendation-subsection-regressions.test.mjs \
   test/catalogue-recommendation-cohorts.test.mjs test/eyebrow-rank-regression.test.mjs
-git rm public/catalogue-recommendation-cohorts.mjs
 git commit -m "refactor: render explicit recommendation subsections"
 ```
 
 ---
 
-### Task 4: Centralize editor structural moves and add subsection management
+### Task 4: Unified editor owns structural moves and subsection management
 
 **Files:**
 - Modify: `public/catalogue-admin-unified-v139.mjs`
 - Modify: `public/catalogue-half-cohort.mjs`
-- Modify only if response-listener support needs a small adjustment: `public/catalogue-save-pipeline.mjs`
 - Modify: `test/catalogue-editor-regressions.test.mjs`
 - Modify: `test/half-cigar-cohort.test.mjs`
 - Modify: `test/half-cigar-ui-regression.test.mjs`
 - Modify: `test/catalogue-save-pipeline.test.mjs`
 
-**Interfaces:**
-- Consumes `applyCatalogueStructuralChange`, subsection CRUD helpers, and explicit v4 subsection state.
-- Editor state shape becomes:
+**Consumes:** shared structure engine. Half module remains a visual/helper module, not a second structural save owner.
 
-```js
-{
-  version: 3 | 4,
-  cards: {},
-  sections: {},
-  entries: {},
-  recommendationSubsections?: []
-}
-```
+- [ ] **Step 1: Write failing editor state/markup tests**
 
-- `buildSavePlan(...)` must include `recommendationSubsections` whenever state is v4.
-- Half module retains visual helpers such as `rankDisplayForType` and `updateCardRankVisual`, but no longer registers a structural state transform.
-
-- [ ] **Step 1: Write failing editor markup/state tests**
-
-Assert the unified editor contains:
-
-```text
-Catalogue type: Recommendation | Half-Cigar | Taster
-Recommendation subsection select
-Recommendation local position input
-Manage Recommendation subsections control
-Archive restore destination controls
-```
-
-Also assert `loadStateForBrowser` preserves `payload.version` and `payload.recommendationSubsections` instead of reconstructing `{ version: 3, cards, sections, entries }`.
-
-- [ ] **Step 2: Add explicit controls to `structuralMarkup()`**
-
-Use stable IDs so tests and behavior are deterministic:
+Require:
 
 ```html
 <select id="catalogue-admin-type">
@@ -603,22 +521,32 @@ Use stable IDs so tests and behavior are deterministic:
 <div id="catalogue-admin-subsection-manager"></div>
 ```
 
-Do not rely on Half-Cigar code injecting an option after load; the core editor now knows all three top-level types.
+Assert browser state preserves `payload.version` and `payload.recommendationSubsections`.
 
-- [ ] **Step 3: Populate Recommendation subsection and position from explicit state**
+- [ ] **Step 2: Make the core editor natively know all three types**
 
-When selected type is `main`, use `recommendationLocation(stateForBrowser.recommendationSubsections, key)` to select the subsection and position. Hide/disable the subsection select for Half/Taster.
+Remove reliance on Half-Cigar injecting its option later. For `main`, show subsection selector and local position. For Half/Taster, hide subsection selector and use H/T local position.
 
-For archived cards, show restoration destination fields instead of guessing from `archivedRank`.
+- [ ] **Step 3: Populate selected Recommendation location from explicit state**
 
-- [ ] **Step 4: Replace the global/taster-only reorder calculation**
+```js
+const location = recommendationLocation(stateForBrowser.recommendationSubsections || [], key);
+if (location) {
+  q('catalogue-admin-recommendation-subsection').value = location.subsectionId;
+  q('catalogue-admin-rank').value = String(location.position);
+}
+```
 
-Retire `reorderCohortOverrides()` as the source of structural truth in `saveUnified()`. Build one move request and call the shared engine:
+Archived cards show destination controls; do not silently restore from stale `archivedRank`.
+
+- [ ] **Step 4: Replace `reorderCohortOverrides()` as structural truth**
+
+In `saveUnified()` calculate once:
 
 ```js
 const structuralResult = applyCatalogueStructuralChange({
   cards: effectiveCardRowsAsMap(),
-  recommendationSubsections: stateForBrowser.recommendationSubsections,
+  recommendationSubsections: stateForBrowser.recommendationSubsections || [],
   key,
   targetType: structural.catalogueType,
   targetSubsectionId: structural.catalogueType === 'main'
@@ -630,26 +558,15 @@ const structuralResult = applyCatalogueStructuralChange({
 });
 ```
 
-Merge only changed structural card overrides back into the state payload. Editorial fields remain merge-preserving.
+Merge only calculated structural changes plus editorial fields into the outgoing state.
 
-- [ ] **Step 5: Make archive restoration explicit**
+- [ ] **Step 5: Implement subsection CRUD/reorder manager**
 
-On unarchive, require a destination before save:
-
-- Recommendation requires subsection + 1-based local position;
-- Half-Cigar requires H position;
-- Taster requires T position.
-
-Do not restore from stale `archivedRank` unless the user explicitly chooses that same destination position in the UI.
-
-- [ ] **Step 6: Add subsection manager CRUD/reorder UI**
-
-Render each subsection row with editable `name`, `description`, and Move Up/Move Down/Delete controls. Add an `Add subsection` control that creates a generated stable ID once:
+Generate an ID only at creation:
 
 ```js
 function generatedSubsectionId(name, existingIds) {
-  const base = String(name || 'subsection')
-    .toLowerCase()
+  const base = String(name || 'subsection').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'subsection';
   let id = base;
@@ -659,11 +576,17 @@ function generatedSubsectionId(name, existingIds) {
 }
 ```
 
-Rename never regenerates the ID. Delete calls `deleteRecommendationSubsection`; non-empty deletion displays the thrown message and leaves state untouched.
+Manager supports create, edit name, edit description, Move Up, Move Down, Delete. Rename never changes ID. Delete calls `deleteRecommendationSubsection` and surfaces its error without state mutation.
 
-- [ ] **Step 7: Validate complete active Recommendation inventory before PUT**
+- [ ] **Step 6: Require explicit restore destinations**
 
-Use DOM/effective rows to compute:
+- Recommendation: subsection + position.
+- Half: H position.
+- Taster: T position.
+
+No archive restore guesses a destination from `archivedRank`.
+
+- [ ] **Step 7: Validate complete effective inventory before PUT**
 
 ```js
 const activeRecommendationKeys = rows
@@ -673,44 +596,21 @@ const forbiddenKeys = rows
   .filter(row => row.archived || row.catalogueType !== 'main')
   .map(row => row.key);
 assertRecommendationInventory({
-  subsections: nextRecommendationSubsections,
+  subsections: structuralResult.recommendationSubsections,
   activeRecommendationKeys,
   forbiddenKeys
 });
 ```
 
-This is the browser save-layer completeness check the Worker cannot perform for static HTML cards it does not own in KV.
+This browser-level check covers static cards the Worker cannot infer from KV alone.
 
-- [ ] **Step 8: Remove Half-Cigar structural transform registration**
+- [ ] **Step 8: Remove Half-Cigar structural transform ownership**
 
-`catalogue-half-cohort.mjs` may retain:
+Keep H/T visual helpers and section rendering, but remove Half’s `registerCatalogueStateTransform` structural reranker. Recommendation and Half must not both mutate the same PUT payload after `saveUnified()`.
 
-- type normalization compatibility helpers if other modules still import them;
-- H/T visual rendering;
-- separate Half section rendering if still needed.
+- [ ] **Step 9: Add regressions and verify**
 
-It must stop registering a PUT transform that independently reranks state after the unified editor already calculated the structural result.
-
-- [ ] **Step 9: Prove the save pipeline no longer has competing structural owners**
-
-Update `test/catalogue-save-pipeline.test.mjs` to assert Recommendation and Half modules do not register overlapping structural transforms. Generic response listeners remain allowed.
-
-- [ ] **Step 10: Add move/rename/archive UI regressions**
-
-Cover:
-
-- Coronet #2 -> Flavoured #1 compacts only those two subsection lists;
-- subsection rename retains ID/membership;
-- subsection reorder does not alter entry order;
-- archive removes membership;
-- archive -> Recommendation requires subsection;
-- archive -> Half/Taster works;
-- Recommendation move does not alter H/T ranks;
-- eyebrow copy remains untouched.
-
-- [ ] **Step 11: Run editor/cohort tests**
-
-Run:
+Cover Recommendation subsection move, rename, reorder, create empty, reject non-empty delete, archive, explicit restore, Recommendation -> Half/Taster and reverse, independent H/T ranks, untouched eyebrow.
 
 ```bash
 node --test \
@@ -721,129 +621,91 @@ node --test \
   test/catalogue-structure.test.mjs
 ```
 
-Expected: PASS.
-
-- [ ] **Step 12: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add public/catalogue-admin-unified-v139.mjs public/catalogue-half-cohort.mjs \
-  public/catalogue-save-pipeline.mjs test/catalogue-editor-regressions.test.mjs \
-  test/half-cigar-cohort.test.mjs test/half-cigar-ui-regression.test.mjs \
-  test/catalogue-save-pipeline.test.mjs
+  test/catalogue-editor-regressions.test.mjs test/half-cigar-cohort.test.mjs \
+  test/half-cigar-ui-regression.test.mjs test/catalogue-save-pipeline.test.mjs
 git commit -m "feat: manage recommendation subsections in editor"
 ```
 
 ---
 
-### Task 5: Make GitHub catalogue publication v4-safe
+### Task 5: Make catalogue publication v4-safe
 
 **Files:**
 - Modify: `scripts/publish-catalogue-request.mjs`
-- Modify if needed: `scripts/publish-live-catalogue-request.mjs`
 - Modify: `.github/workflows/publish-catalogue.yml`
 - Modify: `test/publish-catalogue-request.test.mjs`
 - Modify: `test/publisher-half-cohort.test.mjs`
 - Modify: `test/publisher-live-ranking-source.test.mjs`
 - Modify: `test/full-catalogue-rank-normalisation.test.mjs`
 
-**Interfaces:**
-- Reuse `public/catalogue-structure.mjs`; do not copy structural algorithms into the publisher.
-- Add request operation `update-recommendation-subsections` accepting a complete validated `recommendationSubsections` array.
-- Add optional `destination` for structural upsert/unarchive moves:
+**New request surface:**
 
 ```json
 {
-  "type": "main",
-  "subsectionId": "coronets",
-  "position": 3
+  "operation": "update-recommendation-subsections",
+  "recommendationSubsections": []
 }
 ```
 
-Half/Taster destinations use `{ "type": "half", "position": 2 }` or `{ "type": "taster", "position": 4 }`.
+For structural upsert/unarchive:
 
-- [ ] **Step 1: Write failing publisher preservation test**
-
-Simulate a live v4 GET, publish a non-structural quality edit, and assert the PUT still contains the exact same `recommendationSubsections` array and `version: 4`.
-
-```js
-test('ordinary publication preserves v4 subsection structure byte-for-byte', async () => {
-  // mock GET returns v4 state + subsections
-  // publish quality-only upsert
-  // inspect PUT body
-  assert.equal(putBody.version, 4);
-  assert.deepEqual(putBody.recommendationSubsections, liveState.recommendationSubsections);
-});
+```json
+{ "destination": { "type": "main", "subsectionId": "coronets", "position": 3 } }
 ```
 
-- [ ] **Step 2: Update `normaliseStateShape` and `putState`**
+Half/Taster use `{ "type": "half", "position": 2 }` or `{ "type": "taster", "position": 4 }`.
 
-Stop hardcoding version 3:
+- [ ] **Step 1: Write failing v4-preservation test**
+
+Mock live v4 GET, publish a quality-only edit, inspect PUT body:
+
+```js
+assert.equal(putBody.version, 4);
+assert.deepEqual(putBody.recommendationSubsections, liveState.recommendationSubsections);
+```
+
+- [ ] **Step 2: Preserve version/subsections in publisher state shape and PUT**
 
 ```js
 const explicit = Array.isArray(input.recommendationSubsections);
 return {
   version: explicit ? 4 : 3,
   cards,
-  sections: ...,
-  entries: ...,
-  ...(explicit ? { recommendationSubsections: validateRecommendationSubsectionsShape(input.recommendationSubsections) } : {})
+  sections: isRecord(input.sections) ? clone(input.sections) : {},
+  entries: isRecord(input.entries) ? clone(input.entries) : {},
+  ...(explicit ? {
+    recommendationSubsections: validateRecommendationSubsectionsShape(input.recommendationSubsections)
+  } : {})
 };
 ```
 
-`putState` must send `recommendationSubsections` whenever present.
+`putState` sends the field whenever present. It never writes `{ version: 3 }` over v4.
 
-- [ ] **Step 3: Stop global main-rank normalization from representing Recommendation order in v4**
+- [ ] **Step 3: Stop treating global main rank as Recommendation order in v4**
 
-For v4 state, `normaliseRankings` and `assertRankingInvariant` should compact/validate only Half-Cigar and Taster numeric cohorts. Legacy `main` rank may remain as compatibility data but must not be used to derive or verify Recommendation ordering.
+When state is v4, numeric compaction/invariant checks cover only `half` and `taster`. Keep current `main` behavior only for v3 compatibility.
 
-Keep v3 behavior unchanged before migration.
+- [ ] **Step 4: Add `update-recommendation-subsections` validation/publication**
 
-- [ ] **Step 4: Add `update-recommendation-subsections` request validation**
+No key is required. Validate the full array, construct effective static+dynamic inventory using existing `completeRankingCards`, call `assertRecommendationInventory`, PUT v4 state, GET read-back, and `assert.deepEqual` the complete array.
 
-Extend `SUPPORTED_OPERATIONS` and validate:
-
-```js
-if (operation === 'update-recommendation-subsections') {
-  request.recommendationSubsections = validateRecommendationSubsectionsShape(input.recommendationSubsections);
-}
-```
-
-The operation has no `key` requirement. It reads the effective current catalogue inventory, calls `assertRecommendationInventory`, writes the full v4 structure, reads back, and deep-compares the complete array.
-
-- [ ] **Step 5: Make archive/unarchive/upsert use explicit structural destinations under v4**
+- [ ] **Step 5: Route structural archive/unarchive/upsert through the shared engine in v4**
 
 Rules:
+- non-structural edit preserves current membership without destination;
+- new active `main` requires explicit Recommendation destination;
+- unarchive requires explicit destination;
+- type move requires explicit destination;
+- archive removes active structural membership;
+- no v4 operation invokes legacy ring/flavour inference.
 
-- quality/price/prose-only update to an existing card preserves existing membership and does not require `destination`;
-- new active `main` entry requires `destination.type = 'main'`, valid subsection ID, and position;
-- unarchive under v4 always requires an explicit destination;
-- moving catalogue type requires destination;
-- archive removes the key from Recommendation list or compacts H/T via shared engine;
-- no operation may re-add Recommendation membership by ring/flavour inference.
+- [ ] **Step 6: Update tests/workflow and verify**
 
-- [ ] **Step 6: Verify publisher completeness against effective static + dynamic inventory**
-
-Reuse the existing `completeRankingCards(...)` path to construct effective catalogue rows, then derive `activeRecommendationKeys` and `forbiddenKeys` for `assertRecommendationInventory`. This is the publication-path counterpart to the browser editor completeness guard.
-
-- [ ] **Step 7: Update publisher regressions**
-
-Add tests for:
-
-- v4 quality edit preserves subsection arrays;
-- v4 archive removes Recommendation membership;
-- v4 unarchive without destination fails;
-- v4 unarchive into chosen subsection/position succeeds;
-- Half/Taster requests keep H/T compact and do not touch Recommendation order;
-- v3 publication remains usable before migration;
-- no v4 publisher code calls legacy Recommendation inference.
-
-- [ ] **Step 8: Add new migration-builder path to workflow triggers**
-
-Add `scripts/build-recommendation-subsections-migration.mjs` to both PR and push `paths` lists so any change to migration generation code runs `npm test`. The workflow does not need a special publish branch: generated JSON still goes through `publish-live-catalogue-request.mjs`.
-
-- [ ] **Step 9: Run publisher tests**
-
-Run:
+Add workflow path for `scripts/build-recommendation-subsections-migration.mjs` under both PR and push triggers.
 
 ```bash
 node --test \
@@ -853,163 +715,96 @@ node --test \
   test/full-catalogue-rank-normalisation.test.mjs
 ```
 
-Expected: PASS.
-
-- [ ] **Step 10: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/publish-catalogue-request.mjs scripts/publish-live-catalogue-request.mjs \
-  .github/workflows/publish-catalogue.yml test/publish-catalogue-request.test.mjs \
-  test/publisher-half-cohort.test.mjs test/publisher-live-ranking-source.test.mjs \
-  test/full-catalogue-rank-normalisation.test.mjs
+git add scripts/publish-catalogue-request.mjs .github/workflows/publish-catalogue.yml \
+  test/publish-catalogue-request.test.mjs test/publisher-half-cohort.test.mjs \
+  test/publisher-live-ranking-source.test.mjs test/full-catalogue-rank-normalisation.test.mjs
 git commit -m "feat: publish catalogue v4 structure safely"
 ```
 
 ---
 
-### Task 6: Build an auditable one-time migration request
+### Task 6: Read-only migration builder, without live migration request on the code PR
 
 **Files:**
 - Create: `scripts/build-recommendation-subsections-migration.mjs`
 - Create: `test/recommendation-subsection-migration.test.mjs`
-- Create during execution after reading current live state: `catalogue-requests/2026-09-14-migrate-recommendation-subsections.json`
-- Reuse: `public/catalogue-recommendation-legacy.mjs`
-- Reuse: `public/catalogue-structure.mjs`
 
-**Interfaces:**
-- Builder is read-only. It may GET live `/api/catalogue-overrides` and production HTML, but it must never PUT.
-- Output is a standard request document:
-
-```json
-{
-  "id": "2026-09-14-migrate-recommendation-subsections",
-  "operation": "update-recommendation-subsections",
-  "recommendationSubsections": [
-    { "id": "coronets", "name": "Coronets", "description": "34 ring gauge or lower.", "entryKeys": [] },
-    { "id": "petit-panatelas", "name": "Petit Panatelas", "description": "35 ring gauge or higher.", "entryKeys": [] },
-    { "id": "flavoured", "name": "Infused / Flavoured", "description": "Infused and flavoured recommendation cigars.", "entryKeys": [] }
-  ],
-  "note": "One-time migration from legacy inferred Recommendation subsections to explicit v4 structure."
-}
-```
+**Critical rollout rule:** Do **not** commit `catalogue-requests/2026-09-14-migrate-recommendation-subsections.json` on the implementation PR. The current GitHub workflow automatically publishes changed request JSON on `main`, which would race ahead of manual Cloudflare code deployment. The request is generated again and committed only on the separate post-deployment migration branch in Task 8.
 
 - [ ] **Step 1: Write fixture-driven migration tests**
 
-Cover:
+Cover matching legacy `recommendationRank`, fallback global rank, 34/35 ring boundary, structured flavoured/infused classification, KFC exclusion, Half/Taster/archive exclusion, stock not erasing structural assignment, and exactly-once active Recommendation inventory.
 
-- persisted legacy `recommendationRank` wins over global rank only for the matching legacy cohort;
-- otherwise global rank supplies relative order;
-- 34 RG maps to Coronets, 35 RG maps to Petit Panatelas;
-- structured flavoured/infused maps to Flavoured;
-- KFC Sweet Ponies stays out of Flavoured;
-- Half/Taster/archived entries are excluded;
-- stock/unavailable status does not erase structural assignment from the generated explicit list;
-- every active Recommendation key appears exactly once.
-
-- [ ] **Step 2: Implement migration input parsing as pure helpers**
-
-Export a testable function:
+- [ ] **Step 2: Implement pure builder**
 
 ```js
 export function buildMigrationRequest({ rows }) {
-  const subsections = buildLegacyRecommendationSubsections(rows);
+  const recommendationSubsections = buildLegacyRecommendationSubsections(rows);
   assertRecommendationInventory({
-    subsections,
-    activeRecommendationKeys: rows.filter(row => !row.archived && row.catalogueType === 'main').map(row => row.key),
-    forbiddenKeys: rows.filter(row => row.archived || row.catalogueType !== 'main').map(row => row.key)
+    subsections: recommendationSubsections,
+    activeRecommendationKeys: rows
+      .filter(row => !row.archived && row.catalogueType === 'main')
+      .map(row => row.key),
+    forbiddenKeys: rows
+      .filter(row => row.archived || row.catalogueType !== 'main')
+      .map(row => row.key)
   });
   return {
     id: '2026-09-14-migrate-recommendation-subsections',
     operation: 'update-recommendation-subsections',
-    recommendationSubsections: subsections,
+    recommendationSubsections,
     note: 'One-time migration from legacy inferred Recommendation subsections to explicit v4 structure.'
   };
 }
 ```
 
-The CLI layer loads live state/production rows and prints JSON. It must not publish.
+CLI fetches live state/production HTML and prints JSON only. It has no token requirement and no PUT code.
 
-- [ ] **Step 3: Run migration tests**
-
-Run:
-
-```bash
-node --test test/recommendation-subsection-migration.test.mjs
-```
-
-Expected: PASS.
-
-- [ ] **Step 4: Generate the real migration request from current live state**
-
-Only during implementation execution, after Tasks 1-5 pass:
+- [ ] **Step 3: Generate a temporary candidate for review, not a repository request**
 
 ```bash
 node scripts/build-recommendation-subsections-migration.mjs \
-  > catalogue-requests/2026-09-14-migrate-recommendation-subsections.json
+  > /tmp/recommendation-subsections-migration.json
 ```
 
-Do not publish it yet.
+Review current Coronets, Petit Panatelas, and Infused/Flavoured arrays, especially Joya Black, KFC Sweet Ponies, BLACKENED M81 Coronets, and current Petit Panatela entries. Confirm no Half/Taster/archived key appears.
 
-- [ ] **Step 5: Review the generated membership manually before commit**
-
-Check all three initial sections and compare the generated relative order to current production behavior. Specifically inspect known sensitive examples such as Joya Black, KFC Sweet Ponies, BLACKENED M81 Coronets, and current Petit Panatela entries. Confirm no Half/Taster/archived key appears.
-
-- [ ] **Step 6: Add a request-shape regression for the generated file**
-
-Test imports/reads the generated JSON and calls `validateRequest`, then asserts the membership invariant against the current repository catalogue inventory fixture.
-
-- [ ] **Step 7: Commit migration builder and request, but do not merge/publish until compatible code is ready**
+- [ ] **Step 4: Verify and commit builder/tests only**
 
 ```bash
+node --test test/recommendation-subsection-migration.test.mjs
 git add scripts/build-recommendation-subsections-migration.mjs \
-  test/recommendation-subsection-migration.test.mjs \
-  catalogue-requests/2026-09-14-migrate-recommendation-subsections.json
-git commit -m "chore: prepare recommendation subsection migration"
+  test/recommendation-subsection-migration.test.mjs
+git commit -m "chore: add recommendation subsection migration builder"
 ```
 
 ---
 
-### Task 7: Full integration regression and obsolete-code audit
+### Task 7: Full integration regression and obsolete-owner audit
 
-**Files:**
-- Potentially modify any tests listed above only to resolve genuine integration issues.
-- Do not add unrelated refactors.
+**Files:** existing implementation/test files only; no unrelated refactor.
 
-**Interfaces:**
-- Entire repository test suite must pass under Node 22.
-- No runtime code may write `recommendationRank` or `recommendationCohort` as authoritative v4 state.
-- No v4 Recommendation render/save path may fall back to global `rank`.
-
-- [ ] **Step 1: Search for obsolete Recommendation rank/cohort ownership**
-
-Run:
+- [ ] **Step 1: Audit old Recommendation rank/cohort ownership**
 
 ```bash
 grep -R "recommendationRank\|recommendationCohort\|catalogue-recommendation-cohorts" \
   public src scripts test --exclude-dir=node_modules
 ```
 
-Expected remaining matches are limited to:
+Allowed matches: v3 compatibility/migration helpers, tests proving v4 ignores legacy fields, deprecation comments. Any v4 runtime writer/order dependency is a failure.
 
-- v3 compatibility/migration code in `catalogue-recommendation-legacy.mjs`;
-- tests explicitly proving legacy data is ignored after v4 migration;
-- comments/docstrings identifying deprecated fields.
-
-Any runtime v4 write or renderer dependency is a failure.
-
-- [ ] **Step 2: Search for competing structural save transforms**
-
-Run:
+- [ ] **Step 2: Audit competing structural transforms**
 
 ```bash
 grep -R "registerCatalogueStateTransform" public --include='*.mjs'
 ```
 
-Expected: no Recommendation or Half structural reranker registers a transform. If unrelated transforms exist, leave them untouched.
+Neither Recommendation nor Half may register a structural reranker. Leave unrelated transforms untouched.
 
-- [ ] **Step 3: Run the complete test suite**
-
-Run:
+- [ ] **Step 3: Run full tests**
 
 ```bash
 npm test
@@ -1017,178 +812,111 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 4: Run a local Wrangler smoke check**
-
-Start locally:
+- [ ] **Step 4: Local Wrangler smoke check**
 
 ```bash
 npm run dev
 ```
 
-Verify manually against local state fixtures or dev KV:
+Verify v3 compatibility rendering, v4 fixture rendering, subsection rename/add/reorder, cross-subsection move, archive restore to Recommendation/Half/Taster, reload persistence, untouched eyebrow, independent H/T numbering. Stop the dev server afterwards.
 
-1. v3 catalogue loads using compatibility rendering;
-2. v4 fixture loads explicit subsection names/order;
-3. editor can rename/add/reorder subsection;
-4. move card between subsections;
-5. archive and restore to Recommendation/Half/Taster;
-6. reload preserves the exact state;
-7. eyebrow text is unchanged;
-8. H/T numbering remains independent.
-
-Stop the dev server after verification.
-
-- [ ] **Step 5: Inspect diff for unrelated catalogue-data changes**
-
-Run:
+- [ ] **Step 5: Diff audit and integration commit**
 
 ```bash
-git diff main...HEAD -- public src scripts test catalogue-requests .github/workflows
+git diff main...HEAD -- public src scripts test .github/workflows
 ```
 
-Confirm no incidental prose, rating, price, image, retailer, Value, or unrelated cigar metadata edits.
-
-- [ ] **Step 6: Commit any integration-only fixes**
+Confirm no unrelated cigar data changed. If integration fixes were necessary:
 
 ```bash
-git add public src scripts test .github/workflows catalogue-requests
+git add public src scripts test .github/workflows
 git commit -m "test: harden recommendation subsection rebuild"
 ```
 
-Skip this commit if no changes were needed.
-
 ---
 
-### Task 8: PR, staged deployment, live migration, and production verification
+### Task 8: PR, staged code deployment, separate migration PR, and live verification
 
-**Files/Systems:**
-- Implementation branch/PR for this rebuild
-- Superseded PR #76
-- Cloudflare Worker deployment
-- Live `catalogue-overrides` KV
-- `catalogue-requests/2026-09-14-migrate-recommendation-subsections.json`
+**Systems:** implementation branch/PR, PR #76, Cloudflare deployment, live KV, follow-up migration branch/PR.
 
-**Interfaces:**
-- Code deployment and catalogue publication are separate gates.
-- Migration publication is allowed only after production code is proven v3/v4-compatible.
+- [ ] **Step 1: Close PR #76 unmerged after the new implementation branch exists**
 
-- [ ] **Step 1: Close superseded PR #76 once the new implementation branch exists**
+Comment that the per-card seed model was superseded by the approved first-class ordered subsection architecture, then close it.
 
-Close PR #76 with a short note that its per-card `recommendationCohort`/`recommendationRank` seed model was superseded by the approved first-class ordered subsection architecture. Do not merge it.
+- [ ] **Step 2: Open/review implementation PR and pass CI**
 
-- [ ] **Step 2: Push/open the rebuild PR and wait for CI**
+PR describes v4 arrays, shared structural engine, editor manager/cross-type moves, v3 compatibility fallback, v4-safe publisher, and separate migration gate. Confirm GitHub `npm test` passes.
 
-PR description must summarize:
+- [ ] **Step 3: Merge code-only PR**
 
-- explicit v4 subsection arrays;
-- single structural state engine;
-- editor subsection manager and cross-type moves;
-- v3 compatibility fallback;
-- v4-safe publisher;
-- separate live migration gate.
+The implementation PR must contain no migration request JSON. Inspect diff for unrelated catalogue data before merge.
 
-Confirm `npm test` GitHub Actions job passes.
+- [ ] **Step 4: Deploy compatible code manually**
 
-- [ ] **Step 3: Review the implementation PR before merge**
-
-Inspect changed files and confirm no unrelated catalogue data changed. Verify the migration request is present but understand that its automatic publication on merge must not occur before code deployment.
-
-Because the current workflow publishes changed `catalogue-requests/*.json` on push to `main`, do **not** merge a commit containing the live migration request until the compatible Worker/frontend code is already deployed. Use one of these safe sequences:
-
-1. Preferred: merge/deploy compatible code first without the migration request, then land the migration request in a second small PR; or
-2. If keeping one development branch, split the migration request into a follow-up branch/PR before merge.
-
-Do not rely on workflow ordering between Worker deployment and catalogue-request publication.
-
-- [ ] **Step 4: Merge compatible code without publishing the migration request**
-
-After CI and review, merge the code portion to `main`.
-
-- [ ] **Step 5: Deploy the compatible code to Cloudflare**
-
-Run from updated `main`:
+From updated `main`:
 
 ```bash
 npm run deploy
 ```
 
-Capture Wrangler’s successful deployment output/version.
+Capture successful Wrangler deployment output/version.
 
-- [ ] **Step 6: Verify production is running the new compatible renderer before migration**
+- [ ] **Step 5: Verify production compatibility before touching KV schema**
 
-Check production assets/module source or another deterministic build marker and confirm:
+Confirm production `catalogue-runtime.mjs` loads `catalogue-recommendation-subsections.mjs`, existing v3 live state still renders, and editor loads. Confirm live API is still v3/no explicit `recommendationSubsections`. If any check fails, stop.
 
-- `catalogue-runtime.mjs` loads `catalogue-recommendation-subsections.mjs`;
-- old v3 live state still renders correctly through compatibility fallback;
-- editor still opens and loads state;
-- no live state has been migrated yet.
+- [ ] **Step 6: Create migration branch from deployed `main` and regenerate against current live state**
 
-If any of these checks fail, stop. Do not publish v4 state.
-
-- [ ] **Step 7: Land the migration request in a separate small PR**
-
-The migration PR should contain only the audited request JSON plus any request-specific regression test needed for that final generated content. Re-run CI and inspect the exact `entryKeys` arrays.
-
-- [ ] **Step 8: Merge the migration request and observe the catalogue publication workflow**
-
-The GitHub Action should call the v4-safe publisher, write explicit `recommendationSubsections`, read back the live state, and verify the full array.
-
-If publication fails, do not manually patch around the invariant. Diagnose the mismatch and fix the request/tooling.
-
-- [ ] **Step 9: Verify live KV read-back**
-
-GET:
-
-```text
-https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?verify=1
+```bash
+git switch -c migrate/recommendation-subsections-v4
+node scripts/build-recommendation-subsections-migration.mjs \
+  > catalogue-requests/2026-09-14-migrate-recommendation-subsections.json
 ```
 
-Confirm:
+Do not reuse a stale pre-deployment candidate. Inspect all `entryKeys` arrays and run:
+
+```bash
+node --test test/recommendation-subsection-migration.test.mjs test/publish-catalogue-request.test.mjs
+```
+
+- [ ] **Step 7: Commit/open/merge the small migration PR**
+
+```bash
+git add catalogue-requests/2026-09-14-migrate-recommendation-subsections.json
+git commit -m "chore: migrate recommendation subsections to v4"
+```
+
+The PR should contain the request JSON only unless a request-specific regression fixture is strictly required. Merge only after inspection.
+
+- [ ] **Step 8: Observe publication workflow and require successful read-back**
+
+The GitHub Action must use the v4-safe publisher, write explicit subsections, GET live state again, and deep-compare the complete structure. Do not manually bypass an invariant failure.
+
+- [ ] **Step 9: Verify live API**
+
+GET `https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?verify=1` and confirm:
 
 - `version === 4`;
-- all expected subsection IDs/names/descriptions exist;
-- each active Recommendation key appears exactly once;
-- no Half/Taster/archived key appears;
-- array order matches the audited migration request;
-- unrelated card/entry fields remain intact.
+- expected subsection IDs/names/descriptions;
+- every active Recommendation exactly once;
+- no Half/Taster/archived key in Recommendation arrays;
+- ordering equals audited request;
+- unrelated cards/entries intact.
 
-- [ ] **Step 10: Verify production rendering and editor behavior after migration**
+- [ ] **Step 10: Verify production behavior**
 
-In production verify:
-
-1. Recommendation subsection order matches v4 state.
-2. Each subsection numbering is contiguous `No. 1..N` and independent.
-3. Reload does not reset or reshuffle ranks.
-4. Joya Black remains in its explicit subsection regardless of prose wording.
-5. Rename a subsection and reload: stable ID/membership/order persist.
-6. Create an empty subsection and reload: it persists.
-7. Reorder subsections and reload: order persists without changing cigar order.
-8. Move one entry between two Recommendation subsections: only source/destination orders change.
-9. Archive a Recommendation: it disappears from the active list and remaining local positions compact.
-10. Restore an archived entry to a chosen Recommendation subsection/position.
-11. Restore/move a test entry to Half-Cigar/Taster and verify only that destination cohort compacts.
-12. Eyebrow copy is unchanged.
+Check independent contiguous `No. 1..N` per subsection, stable reloads, Joya Black explicit placement, rename persistence, empty-section creation persistence, subsection reorder, entry move between subsections, archive compaction, explicit restore to Recommendation, move/restore to Half/Taster without unrelated rank changes, and unchanged eyebrows.
 
 Use a reversible low-risk entry for live structural smoke tests and restore its original state before completion.
 
-- [ ] **Step 11: Run final full verification from updated `main`**
+- [ ] **Step 11: Final verification from updated `main`**
 
 ```bash
 npm test
 ```
 
-Expected: PASS after the live migration request has merged.
+Expected: PASS.
 
-- [ ] **Step 12: Report completion only with evidence**
+- [ ] **Step 12: Completion evidence**
 
-Completion report must include:
-
-- implementation PR/merge commit;
-- successful CI result;
-- Cloudflare deployment confirmation;
-- migration publication workflow confirmation;
-- live API version/read-back result;
-- production UI verification result;
-- confirmation PR #76 was closed unmerged.
-
-Do not say the rebuild is complete if any one of those gates is missing.
+Report completion only with implementation PR/merge commit, passing CI, Cloudflare deployment confirmation, migration publication success, live API v4 read-back, production UI/editor verification, and confirmation PR #76 closed unmerged.
