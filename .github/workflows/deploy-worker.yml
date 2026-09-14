@@ -21,6 +21,7 @@ on:
       - 'scripts/verify-live-code-ready.mjs'
       - 'scripts/verify-live-recommendation-v4.mjs'
       - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'test/**'
       - 'wrangler.jsonc'
       - 'package.json'
   workflow_dispatch:
@@ -45,7 +46,7 @@ jobs:
           node-version: '22'
       - name: Run tests
         run: npm test
-      - name: Probe configured Cloudflare credential names
+      - name: Probe configured Cloudflare credential aliases
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -79,6 +80,21 @@ jobs:
               echo "${name}=absent"
             fi
           done
+      - name: Enumerate configured secret and variable names only
+        shell: bash
+        env:
+          ALL_SECRETS_JSON: ${{ toJSON(secrets) }}
+          ALL_VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const secrets = JSON.parse(process.env.ALL_SECRETS_JSON || '{}');
+          const vars = JSON.parse(process.env.ALL_VARS_JSON || '{}');
+          console.log('Configured secret names:');
+          for (const name of Object.keys(secrets).sort()) console.log(`SECRET_NAME=${name}`);
+          console.log('Configured repository variable names:');
+          for (const name of Object.keys(vars).sort()) console.log(`VAR_NAME=${name}`);
+          NODE
       - name: Probe current production for v4-compatible code
         run: node scripts/verify-live-code-ready.mjs
 
