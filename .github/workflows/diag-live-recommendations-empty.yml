@@ -14,42 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect computed Recommendation visibility
+      - name: Inspect runtime cache path and headers
         shell: bash
         run: |
           set -euo pipefail
           BASE='https://cigar-catalogue.psncodex.workers.dev'
-          curl -fsS -H 'Cache-Control: no-cache' "$BASE/api/catalogue-overrides?diag=3" -o /tmp/state.json
-          node -e "const s=require('/tmp/state.json'); console.log('STATE',s.version,'SUBS',s.recommendationSubsections?.length,'ENTRIES',s.recommendationSubsections?.reduce((n,x)=>n+x.entryKeys.length,0))"
-          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          "$CHROME" --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-diag "$BASE/?diag=computed-$(date +%s)" >/tmp/chrome.out 2>/tmp/chrome.err &
-          CHROME_PID=$!
-          trap 'kill $CHROME_PID 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:9222/json/list >/tmp/pages.json && break || sleep 1; done
-          sleep 8
-          node <<'NODE'
-          const pages = require('/tmp/pages.json');
-          const page = pages.find(p => p.type === 'page');
-          if (!page) throw new Error('No Chrome page target');
-          const ws = new WebSocket(page.webSocketDebuggerUrl);
-          let id = 0;
-          const pending = new Map();
-          ws.onmessage = e => {
-            const m = JSON.parse(e.data);
-            if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
-          };
-          function send(method, params={}) { return new Promise(resolve => { const n=++id; pending.set(n,resolve); ws.send(JSON.stringify({id:n,method,params})); }); }
-          ws.onopen = async () => {
-            const expression = `(() => {
-              const root=document.querySelector('[data-recommendation-subsections-root]');
-              const info=n=>{if(!n)return null;const s=getComputedStyle(n);const r=n.getBoundingClientRect();return {tag:n.tagName,id:n.id,cls:n.className,display:s.display,visibility:s.visibility,opacity:s.opacity,width:r.width,height:r.height,top:r.top,left:r.left};};
-              const chain=[];for(let n=root;n;n=n.parentElement)chain.push(info(n));
-              const sections=[...document.querySelectorAll('[data-recommendation-subsection]')].map(s=>({id:s.dataset.recommendationSubsection,info:info(s),cards:s.querySelectorAll('article.card').length,visibleCards:[...s.querySelectorAll('article.card')].filter(c=>{const x=getComputedStyle(c),r=c.getBoundingClientRect();return x.display!=='none'&&x.visibility!=='hidden'&&r.width>0&&r.height>0}).length}));
-              const sample=['davidoff-primeros-escurio','blackened-m81-coronets','joya-black-cigarillo','rocky-patel-sun-grown-juniors','cao-bella-vanilla'].map(k=>{const c=document.querySelector('article.card[data-key="'+k+'"]');return {key:k,info:info(c),parent:info(c?.parentElement),section:c?.closest('[data-recommendation-subsection]')?.dataset?.recommendationSubsection||null};});
-              return {ready:document.readyState,root:info(root),chain,sections,sample,sort:document.querySelector('#sort')?.value||null};
-            })()`;
-            const res=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
-            console.log(JSON.stringify(res.result.result.value,null,2));
-            ws.close();
-          };
-          NODE
+          echo '--- runtime references in source ---'
+          grep -oE '<script[^>]+catalogue-runtime[^>]*>' public/index.html || true
+          echo '--- live HTML runtime references ---'
+          curl -fsS -H 'Cache-Control: no-cache' "$BASE/?diag=cache-$(date +%s)" | grep -oE '<script[^>]+catalogue-runtime[^>]*>' || true
+          echo '--- HTML headers ---'
+          curl -fsSI "$BASE/?diag=cache-headers" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
+          echo '--- runtime headers ---'
+          curl -fsSI "$BASE/catalogue-runtime.mjs" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
+          echo '--- recommendation module headers ---'
+          curl -fsSI "$BASE/catalogue-recommendation-subsections.mjs" | grep -Ei '^(cache-control|etag|age|cf-cache-status|last-modified|content-type):' || true
