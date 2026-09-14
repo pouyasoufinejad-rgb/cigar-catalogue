@@ -4,6 +4,7 @@ import { buildLegacyRecommendationSubsections } from './catalogue-recommendation
 
 const STATE_API = '/api/catalogue-overrides';
 const ROOT_ATTRIBUTE = 'data-recommendation-subsections-root';
+const STYLE_ID = 'catalogue-recommendation-subsections-style-v5';
 let persistedState = { version: 3, cards: {}, entries: {} };
 let refreshTimer = 0;
 let refreshing = false;
@@ -97,30 +98,66 @@ function cardUnavailable(card, source = {}) {
     || Boolean(card?.closest?.('.unavailable-grid'));
 }
 
+function cardVisibleInCurrentView(card, source = {}) {
+  if (cardUnavailable(card, source)) return false;
+  if (card?.classList?.contains?.('hidden')) return false;
+  if (card?.dataset?.personalFilterHidden === '1') return false;
+  return true;
+}
+
 function documentFor(root) {
   if (root?.createElement) return root;
   return root?.ownerDocument || globalThis.document || null;
 }
 
+function ensureStyles(doc) {
+  if (!doc?.createElement || doc.getElementById?.(STYLE_ID)) return;
+  const style = doc.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+.recommendation-subsections{margin:18px 0 4px}
+.recommendation-subsections.hidden{display:none!important}
+.recommendation-subsection{margin-top:34px}
+.recommendation-subsection:first-child{margin-top:10px}
+.recommendation-subsection.hidden{display:none!important}
+.recommendation-subsection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 0 16px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.recommendation-subsection-head h3{margin:0;color:var(--ink);font:700 18px/1.15 Georgia,serif;letter-spacing:.045em;text-transform:uppercase}
+.recommendation-subsection-head p{margin:0;max-width:560px;color:var(--muted);font:11px/1.45 system-ui,sans-serif;text-align:right}
+.recommendation-subsection-grid{margin-top:0}
+@media(max-width:700px){
+  .recommendation-subsections{margin-top:14px}
+  .recommendation-subsection{margin-top:28px}
+  .recommendation-subsection-head{display:block;margin-bottom:13px;padding-bottom:8px}
+  .recommendation-subsection-head h3{font-size:16px}
+  .recommendation-subsection-head p{margin-top:5px;text-align:left}
+}`;
+  (doc.head || doc.documentElement)?.appendChild?.(style);
+}
+
 function ensureRoot(root = document) {
-  const existing = root?.querySelector?.(`[${ROOT_ATTRIBUTE}]`);
-  if (existing) return existing;
   const doc = documentFor(root);
   if (!doc?.createElement) return null;
+  ensureStyles(doc);
 
-  const mount = doc.createElement('div');
-  mount.setAttribute(ROOT_ATTRIBUTE, '1');
-  mount.className = 'recommendation-subsections';
+  const tierStack = root?.querySelector?.('#cards');
+  let mount = root?.querySelector?.(`[${ROOT_ATTRIBUTE}]`);
+  if (!mount) {
+    mount = doc.createElement('div');
+    mount.setAttribute(ROOT_ATTRIBUTE, '1');
+    mount.className = 'recommendation-subsections';
+  }
 
-  const firstCard = root?.querySelector?.('article.card[data-key]');
-  const firstSection = firstCard?.closest?.('section');
-  if (firstSection?.parentElement?.insertBefore) {
-    firstSection.parentElement.insertBefore(mount, firstSection);
+  if (tierStack?.parentElement?.insertBefore) {
+    if (mount.parentElement !== tierStack.parentElement || mount.nextElementSibling !== tierStack) {
+      tierStack.parentElement.insertBefore(mount, tierStack);
+    }
     return mount;
   }
 
-  const parent = root?.querySelector?.('main') || root?.body || root?.documentElement || root;
-  parent?.appendChild?.(mount);
+  if (!mount.parentElement) {
+    const parent = root?.querySelector?.('main') || root?.body || root?.documentElement || root;
+    parent?.appendChild?.(mount);
+  }
   return mount;
 }
 
@@ -134,8 +171,8 @@ function ensureSubsectionNode(mount, subsection) {
     section.className = 'recommendation-subsection';
     section.setAttribute('data-recommendation-subsection', subsection.id);
     const head = doc.createElement('div');
-    head.className = 'section-head';
-    const heading = doc.createElement('h2');
+    head.className = 'recommendation-subsection-head';
+    const heading = doc.createElement('h3');
     const description = doc.createElement('p');
     const grid = doc.createElement('div');
     grid.className = 'grid recommendation-subsection-grid';
@@ -145,10 +182,13 @@ function ensureSubsectionNode(mount, subsection) {
     section.appendChild(head);
     section.appendChild(grid);
   }
-  const heading = section.querySelector?.('.section-head h2');
-  const description = section.querySelector?.('.section-head p');
+  const heading = section.querySelector?.('.recommendation-subsection-head h3');
+  const description = section.querySelector?.('.recommendation-subsection-head p');
   if (heading) heading.textContent = subsection.name;
-  if (description) description.textContent = subsection.description;
+  if (description) {
+    description.textContent = subsection.description;
+    description.classList?.toggle?.('hidden', !String(subsection.description || '').trim());
+  }
   return section;
 }
 
@@ -178,6 +218,10 @@ function refreshLegacyGroupVisibility() {
   if (typeof refresh === 'function') refresh();
 }
 
+function sortControlFor(root) {
+  return root?.getElementById?.('sort') || root?.querySelector?.('#sort') || null;
+}
+
 export function renderRecommendationSubsections(state = persistedState, root = document) {
   if (!root?.querySelectorAll || refreshing) return 0;
   const rows = rowsFromDomAndState(root, state);
@@ -185,10 +229,18 @@ export function renderRecommendationSubsections(state = persistedState, root = d
   const mount = ensureRoot(root);
   if (!mount) return 0;
 
+  const activeKeys = new Set(subsections.flatMap(section => section.entryKeys));
+  const sortControl = sortControlFor(root);
+  if (sortControl?.value && sortControl.value !== 'rank') {
+    mount.classList?.add?.('hidden');
+    refreshLegacyGroupVisibility();
+    return activeKeys.size;
+  }
+
   refreshing = true;
   try {
+    mount.classList?.remove?.('hidden');
     const cardMap = cardsByKey(root);
-    const activeKeys = new Set(subsections.flatMap(section => section.entryKeys));
     clearStaleRecommendationData(root, activeKeys);
 
     const desiredIds = new Set(subsections.map(section => section.id));
@@ -197,6 +249,7 @@ export function renderRecommendationSubsections(state = persistedState, root = d
       if (!desiredIds.has(id)) section.remove?.();
     });
 
+    let visibleTotal = 0;
     subsections.forEach(subsection => {
       const section = ensureSubsectionNode(mount, subsection);
       if (!section) return;
@@ -214,11 +267,13 @@ export function renderRecommendationSubsections(state = persistedState, root = d
         }
         updateRecommendationRankVisual(card, index + 1);
         if (!cardUnavailable(card, source) && grid && card.parentElement !== grid) grid.appendChild(card);
-        if (!cardUnavailable(card, source)) visible += 1;
+        if (cardVisibleInCurrentView(card, source)) visible += 1;
       });
+      visibleTotal += visible;
       section.classList?.toggle?.('hidden', visible === 0);
     });
 
+    mount.classList?.toggle?.('hidden', visibleTotal === 0);
     refreshLegacyGroupVisibility();
     return activeKeys.size;
   } finally {
@@ -247,16 +302,23 @@ function acceptState(state) {
   scheduleRefresh();
 }
 
+function installControlRefreshHooks() {
+  const sort = document.getElementById?.('sort');
+  const secondary = document.getElementById?.('sort-secondary');
+  sort?.addEventListener?.('change', scheduleRefresh);
+  secondary?.addEventListener?.('change', scheduleRefresh);
+  Array.from(document.querySelectorAll?.('.toggle button') || []).forEach(button => {
+    button.addEventListener?.('click', scheduleRefresh);
+  });
+}
+
 export function installRecommendationSubsections() {
   if (typeof document === 'undefined') return;
   registerCatalogueStateResponseListener('recommendation-subsections', event => acceptState(event?.state));
 
   const start = () => {
+    installControlRefreshHooks();
     renderRecommendationSubsections(persistedState, document);
-    if (typeof MutationObserver !== 'undefined' && document.body) {
-      const observer = new MutationObserver(scheduleRefresh);
-      observer.observe(document.body, { subtree: true, childList: true });
-    }
     fetch(`${STATE_API}?recommendation_subsections=1`, { cache: 'no-store' })
       .then(response => response.ok ? response.json() : null)
       .then(acceptState)
