@@ -23,7 +23,7 @@ test('Undercrown Maduro Coronets keeps verified retailer prices when the live st
 
 test('runtime loads the targeted retailer-price fallback after the convenience matrix', async () => {
   const source = await readFile(runtimeUrl, 'utf8');
-  const convenience = source.indexOf("import('./catalogue-convenience.mjs')");
+  const convenience = source.indexOf('catalogue-convenience.mjs');
   const fallback = source.indexOf("import('./catalogue-retailer-price-fallbacks.mjs')");
   assert.ok(convenience >= 0, 'convenience module should still load');
   assert.ok(fallback > convenience, 'fallback should load after the retailer matrix module');
