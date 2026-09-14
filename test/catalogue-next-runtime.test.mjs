@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+const executableRuntime = runtime
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/^\s*\/\/.*$/gm, '');
 
 test('runtime cuts over to the rebuilt catalogue surface', () => {
-  assert.match(runtime, /catalogue-next-ui\.mjs\?v=20260915-next1/);
+  assert.match(executableRuntime, /catalogue-next-ui\.mjs\?v=20260915-next1/);
 });
 
-test('runtime retires browser modules that own competing catalogue editors and layouts', () => {
+test('runtime does not execute browser modules that own competing catalogue editors and layouts', () => {
   for (const retired of [
     'catalogue-convenience.mjs',
     'catalogue-recommendation-subsections.mjs',
@@ -21,12 +24,12 @@ test('runtime retires browser modules that own competing catalogue editors and l
     'catalogue-size-presentation.mjs',
     'catalogue-presentation.mjs',
     'catalogue-convenience-refinements.mjs'
-  ]) assert.doesNotMatch(runtime, new RegExp(retired.replaceAll('.', '\\.') ));
+  ]) assert.doesNotMatch(executableRuntime, new RegExp(retired.replaceAll('.', '\\.') ));
 });
 
 test('personal status hydration remains available before the rebuilt UI installs', () => {
-  const personal = runtime.indexOf('catalogue-personal-status-persistence.mjs');
-  const next = runtime.indexOf('catalogue-next-ui.mjs');
+  const personal = executableRuntime.indexOf('catalogue-personal-status-persistence.mjs');
+  const next = executableRuntime.indexOf('catalogue-next-ui.mjs');
   assert.ok(personal >= 0 && next > personal);
-  assert.match(runtime, /await import\('\.\/catalogue-personal-status-persistence\.mjs'/);
+  assert.match(executableRuntime, /await import\('\.\/catalogue-personal-status-persistence\.mjs'/);
 });
