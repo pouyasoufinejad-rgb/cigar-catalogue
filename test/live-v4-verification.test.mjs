@@ -33,7 +33,7 @@ function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
 
   return async url => {
     const href = String(url);
-    if (href.includes('catalogue-recommendation-subsections.mjs')) return new Response('const recommendationSubsections = true; const x="catalogue-recommendation-subsection";', { status: 200 });
+    if (href.includes('catalogue-recommendation-subsections.mjs')) return new Response('const recommendationSubsections = true; const attr="data-recommendation-subsection"; const grid="recommendation-subsection-grid";', { status: 200 });
     if (href.includes('catalogue-structure-editor.mjs')) return new Response('const a="catalogue-admin-recommendation-subsection"; const b="catalogue-admin-subsection-manager";', { status: 200 });
     if (href.includes('catalogue-structure.mjs')) return new Response('export const CATALOGUE_STATE_VERSION = 4;', { status: 200 });
     if (href.includes('/api/catalogue-overrides')) return new Response(JSON.stringify(state), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -42,7 +42,7 @@ function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
   };
 }
 
-test('code readiness accepts compatible v4 code while state is still v3', async () => {
+test('code readiness accepts the real dedicated v4 Recommendation subsection markers while state is still v3', async () => {
   const result = await verifyLiveCodeReady({ fetchImpl: fakeFetch({ version: 3 }), baseUrl: BASE });
   assert.deepEqual(result, { ok: true, stateVersion: 3 });
 });
