@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 
+const ASSET_VERSION = '20260914-v6';
+
 async function fetchText(fetchImpl, url, label) {
   const response = await fetchImpl(url, { method: 'GET', cache: 'no-store' });
   if (!response.ok) throw new Error(`${label} failed with HTTP ${response.status}.`);
@@ -20,12 +22,27 @@ export async function verifyLiveCodeReady(options = {}) {
   if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable.');
   const baseUrl = String(options.baseUrl || DEFAULT_BASE_URL).replace(/\/$/, '');
 
-  const [renderer, editor, structure, state] = await Promise.all([
+  const [html, runtime, renderer, editor, structure, state] = await Promise.all([
+    fetchText(fetchImpl, `${baseUrl}/?verify=runtime-v6`, 'Catalogue HTML'),
+    fetchText(fetchImpl, `${baseUrl}/catalogue-runtime.mjs?v=${ASSET_VERSION}`, 'Catalogue runtime'),
     fetchText(fetchImpl, `${baseUrl}/catalogue-recommendation-subsections.mjs?verify=v4`, 'Recommendation renderer'),
     fetchText(fetchImpl, `${baseUrl}/catalogue-structure-editor.mjs?verify=v4`, 'Structure editor'),
     fetchText(fetchImpl, `${baseUrl}/catalogue-structure.mjs?verify=v4`, 'Structure engine'),
     fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=v4-code`, 'Catalogue state')
   ]);
+
+  if (!html.includes(`/catalogue-runtime.mjs?v=${ASSET_VERSION}`)) {
+    throw new Error('Live catalogue HTML is missing the v6 runtime bootstrap.');
+  }
+  for (const moduleName of [
+    'catalogue-convenience.mjs',
+    'catalogue-recommendation-subsections.mjs',
+    'catalogue-structure-editor.mjs'
+  ]) {
+    if (!runtime.includes(`./${moduleName}?v=${ASSET_VERSION}`)) {
+      throw new Error(`Live catalogue runtime is missing the v6 ${moduleName} import.`);
+    }
+  }
 
   if (!renderer.includes('recommendationSubsections')) throw new Error('Live Recommendation renderer is not the v4 renderer.');
   if (!renderer.includes('data-recommendation-subsection') || !renderer.includes('recommendation-subsection-grid')) {
@@ -41,7 +58,7 @@ export async function verifyLiveCodeReady(options = {}) {
 
 async function main() {
   const result = await verifyLiveCodeReady();
-  console.log(`Live v4-compatible code verified; catalogue state version is ${result.stateVersion}.`);
+  console.log(`Live v6 runtime and v4-compatible code verified; catalogue state version is ${result.stateVersion}.`);
 }
 
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';

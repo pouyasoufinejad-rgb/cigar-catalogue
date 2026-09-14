@@ -6,7 +6,7 @@ import { verifyLiveRecommendationV4 } from '../scripts/verify-live-recommendatio
 
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 
-function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
+function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v6' } = {}) {
   const state = {
     version,
     cards: {
@@ -25,7 +25,7 @@ function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
       ]
     } : {})
   };
-  const html = `
+  const html = `<script type="module" src="/catalogue-runtime.mjs?v=${runtimeVersion}"></script>
     <article class="card" data-key="joya-black" data-catalogue-type="main" data-rank="4"><div class="artframe" data-visual-ring="32"></div><div class="artmeta-left">Wrapper: Mexico</div></article>
     <article class="card" data-key="kfc-ponies-sweets" data-catalogue-type="main" data-rank="2"><div class="artframe" data-visual-ring="32"></div><div class="artmeta-left">Wrapper: USA</div></article>
     <article class="card" data-key="h1" data-catalogue-type="half" data-rank="1"><div class="artframe" data-visual-ring="50"></div></article>
@@ -33,6 +33,13 @@ function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
 
   return async url => {
     const href = String(url);
+    if (href.includes('catalogue-runtime.mjs')) {
+      return new Response(`
+        await import('./catalogue-convenience.mjs?v=${runtimeVersion}');
+        await import('./catalogue-recommendation-subsections.mjs?v=${runtimeVersion}');
+        import('./catalogue-structure-editor.mjs?v=${runtimeVersion}');
+      `, { status: 200 });
+    }
     if (href.includes('catalogue-recommendation-subsections.mjs')) return new Response('const recommendationSubsections = true; const attr="data-recommendation-subsection"; const grid="recommendation-subsection-grid";', { status: 200 });
     if (href.includes('catalogue-structure-editor.mjs')) return new Response('const a="catalogue-admin-recommendation-subsection"; const b="catalogue-admin-subsection-manager";', { status: 200 });
     if (href.includes('catalogue-structure.mjs')) return new Response('export const CATALOGUE_STATE_VERSION = 4;', { status: 200 });
@@ -45,6 +52,13 @@ function fakeFetch({ version = 4, joyaSection = 'coronets' } = {}) {
 test('code readiness accepts the real dedicated v4 Recommendation subsection markers while state is still v3', async () => {
   const result = await verifyLiveCodeReady({ fetchImpl: fakeFetch({ version: 3 }), baseUrl: BASE });
   assert.deepEqual(result, { ok: true, stateVersion: 3 });
+});
+
+test('code readiness rejects a stale v5 bootstrap and runtime chain', async () => {
+  await assert.rejects(
+    verifyLiveCodeReady({ fetchImpl: fakeFetch({ runtimeVersion: '20260914-v5' }), baseUrl: BASE }),
+    /v6 runtime bootstrap/i
+  );
 });
 
 test('final verifier requires state v4 and validates inventory plus Joya placement', async () => {
