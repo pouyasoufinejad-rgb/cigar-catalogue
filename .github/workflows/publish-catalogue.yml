@@ -10,6 +10,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
+      - 'scripts/seed-live-recommendation-ranks.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -24,6 +25,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
+      - 'scripts/seed-live-recommendation-ranks.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -115,7 +117,9 @@ jobs:
             fi
             operation="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(String(p.operation||""));' "${request}")"
             echo "Publishing ${request} from current live Worker state"
-            if [[ "${operation}" == "bulk-maintenance" ]]; then
+            if [[ "${operation}" == "seed-recommendation-ranks" ]]; then
+              node scripts/seed-live-recommendation-ranks.mjs "${request}"
+            elif [[ "${operation}" == "bulk-maintenance" ]]; then
               node scripts/publish-live-maintenance-ranked-request.mjs "${request}"
             else
               node scripts/publish-live-catalogue-request.mjs "${request}"
