@@ -59,7 +59,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Wait for compatible v4 code to be live
+      - name: Wait for v6 runtime and compatible v4 code to be live
         shell: bash
         run: |
           set -euo pipefail
@@ -69,7 +69,7 @@ jobs:
             fi
             sleep 6
           done
-          echo "::error::Cloudflare Workers Build did not expose compatible v4 code."
+          echo "::error::Cloudflare Workers Build did not expose the v6 runtime and compatible v4 code."
           exit 1
       - name: Build fresh read-only migration candidate from deployed production
         shell: bash
