@@ -79,9 +79,9 @@ export function moveRankedCohort(rowsInput = [], keyInput, targetIndexInput = 0,
   const [selected] = cohort.splice(selectedIndex, 1);
   const targetIndex = Math.max(0, Math.min(cohort.length, Math.round(Number(targetIndexInput) || 0)));
   cohort.splice(targetIndex, 0, selected);
-
-  const ranks = new Map(cohort.map((row, index) => [String(row.key || ''), index + 1]));
-  return rows.map(row => ranks.has(String(row.key || '')) ? { ...row, rank: ranks.get(String(row.key || '')) } : row);
+  const ordered = cohort.map((row, index) => ({ ...row, rank: index + 1 }));
+  const queue = [...ordered];
+  return rows.map(row => (!row.archived && catalogueTypeOf(row) === type) ? queue.shift() : row);
 }
 
 export function mergeSparseCardPatch(stateInput = {}, keyInput, patchInput = {}) {
@@ -100,8 +100,9 @@ export function mergeSparseCardPatch(stateInput = {}, keyInput, patchInput = {})
 
 const EDITABLE_FIELDS = new Set([
   'brand', 'title', 'eyebrow', 'summaryHtml', 'noteHtml', 'packagePrice', 'packageLabel', 'price',
-  'country', 'length', 'ring', 'strength', 'quality', 'risk', 'stockPin', 'catalogueType', 'taster',
-  'retailerLinks', 'smokeTime', 'experienceTags', 'productionHtml', 'practicalHtml', 'rank', 'archived', 'laurel'
+  'country', 'length', 'ring', 'strength', 'flavour', 'quality', 'risk', 'stockPin', 'catalogueType', 'taster',
+  'retailerLinks', 'smokeTime', 'experienceTags', 'productionHtml', 'practicalHtml', 'rank', 'archived', 'laurel',
+  'imageScale', 'imageObjectPosition'
 ]);
 
 export function editablePatch(fieldInput, value, source = {}) {
@@ -111,6 +112,11 @@ export function editablePatch(fieldInput, value, source = {}) {
 
   if (field === 'rank') return { rank: Math.max(1, Math.round(Number(value) || 1)) };
   if (field === 'archived' || field === 'taster') return { [field]: Boolean(value) };
+  if (field === 'flavour') {
+    if (value === '' || value === null || value === undefined) return { flavour: null };
+    return { flavour: Math.max(1, Math.min(10, Math.round(Number(value) || 1))) };
+  }
+  if (field === 'imageScale') return { imageScale: Math.max(0.35, Math.min(2.5, Number(value) || 1)) };
   if (['packagePrice', 'price', 'length', 'ring', 'strength', 'quality', 'risk'].includes(field)) {
     const number = Number(value);
     return { [field]: Number.isFinite(number) ? number : Number(source?.[field]) || 0 };
