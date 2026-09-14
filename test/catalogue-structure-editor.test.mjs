@@ -104,7 +104,8 @@ test('runtime loads structural editor integration', () => {
 });
 
 test('structural editor owns one save transform and exposes Recommendation subsection controls', () => {
-  assert.match(structureEditorSource, /registerCatalogueStateTransform\(['"]catalogue-v4-structure['"]/);
+  assert.match(structureEditorSource, /const STRUCTURE_TRANSFORM = ['"]catalogue-v4-structure['"]/);
+  assert.match(structureEditorSource, /registerCatalogueStateTransform\(STRUCTURE_TRANSFORM,\s*90/);
   assert.match(structureEditorSource, /catalogue-admin-recommendation-subsection/);
   assert.match(structureEditorSource, /catalogue-admin-subsection-manager/);
   assert.match(structureEditorSource, /Recommendation subsections/);
