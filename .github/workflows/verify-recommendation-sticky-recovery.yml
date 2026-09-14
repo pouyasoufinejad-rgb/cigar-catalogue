@@ -1,0 +1,74 @@
+name: Verify Recommendation sticky-state recovery
+
+on:
+  push:
+    branches: [fix/recommendations-production-regression]
+    paths:
+      - '.github/workflows/verify-recommendation-sticky-recovery.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reproduce and recover stale unavailable Recommendation state
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://fix-recommendations-production-regression-cigar-catalogue.psncodex.workers.dev'
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$CHROME" --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-rec "$BASE/?sticky-regression=$(date +%s)" >/tmp/chrome.out 2>/tmp/chrome.err &
+          CHROME_PID=$!
+          trap 'kill $CHROME_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:9222/json/list >/tmp/pages.json && break || sleep 1; done
+          sleep 8
+          node <<'NODE'
+          const pages = require('/tmp/pages.json');
+          const page = pages.find(p => p.type === 'page');
+          if (!page) throw new Error('No Chrome page target');
+          const ws = new WebSocket(page.webSocketDebuggerUrl);
+          let id = 0;
+          const pending = new Map();
+          ws.onmessage = e => {
+            const m = JSON.parse(e.data);
+            if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
+          };
+          function send(method, params={}) { return new Promise(resolve => { const n=++id; pending.set(n,resolve); ws.send(JSON.stringify({id:n,method,params})); }); }
+          ws.onopen = async () => {
+            const expression = `(async () => {
+              const key='blackened-m81-coronets';
+              const card=document.querySelector('article.card[data-key="'+key+'"]');
+              const unavailable=document.querySelector('.unavailable-grid');
+              if(!card||!unavailable) return {ok:false,reason:'missing card or unavailable grid'};
+              const state=await fetch('/api/catalogue-overrides?sticky-regression=1',{cache:'no-store'}).then(r=>r.json());
+              state.cards=state.cards||{};
+              state.cards[key]={...(state.cards[key]||{}),stockPin:'in',stock:'in',archived:false,catalogueType:'main',taster:false};
+              unavailable.appendChild(card);
+              card.classList.add('hidden','is-unavailable');
+              card.dataset.stockPin='auto';
+              card.dataset.stock='in';
+              const mod=await import('/catalogue-recommendation-subsections.mjs?sticky-regression='+Date.now());
+              mod.renderRecommendationSubsections(state,document);
+              const style=getComputedStyle(card), rect=card.getBoundingClientRect();
+              return {
+                ok: card.parentElement?.id==='recommendation-subsection-coronets-cards' && !card.classList.contains('hidden') && !card.classList.contains('is-unavailable') && style.display!=='none' && rect.width>0 && rect.height>0,
+                parent:card.parentElement?.id||'',
+                hidden:card.classList.contains('hidden'),
+                unavailable:card.classList.contains('is-unavailable'),
+                display:style.display,
+                width:rect.width,
+                height:rect.height,
+                stateVersion:state.version,
+                subsectionCount:state.recommendationSubsections?.length||0
+              };
+            })()`;
+            const res=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+            const value=res.result.result.value;
+            console.log(JSON.stringify(value,null,2));
+            ws.close();
+            if(!value?.ok) process.exitCode=1;
+          };
+          NODE
