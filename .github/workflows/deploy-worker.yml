@@ -21,6 +21,7 @@ on:
       - 'scripts/verify-live-code-ready.mjs'
       - 'scripts/verify-live-recommendation-v4.mjs'
       - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'test/**'
       - 'wrangler.jsonc'
       - 'package.json'
   workflow_dispatch:
