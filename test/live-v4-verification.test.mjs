@@ -6,7 +6,7 @@ import { verifyLiveRecommendationV4 } from '../scripts/verify-live-recommendatio
 
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 
-function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v7' } = {}) {
+function fakeFetch({ version = 4, joyaSection = 'coronets', runtimeVersion = '20260914-v8' } = {}) {
   const state = {
     version,
     cards: {
@@ -69,7 +69,7 @@ test('code readiness accepts the real dedicated v4 Recommendation subsection mar
 test('code readiness rejects a stale v6 bootstrap and runtime chain', async () => {
   await assert.rejects(
     verifyLiveCodeReady({ fetchImpl: fakeFetch({ runtimeVersion: '20260914-v6' }), baseUrl: BASE }),
-    /v7 runtime bootstrap/i
+    /v8 runtime bootstrap/i
   );
 });
 

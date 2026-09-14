@@ -201,6 +201,14 @@ export function reorderCohortOverrides(cards, existingCards, options) {
   return updates;
 }
 
+export function rankingUpdatesForSave(cards, existingCards, options = {}) {
+  const targetCatalogueType = String(options.targetCatalogueType || '').trim().toLowerCase();
+  const explicitRecommendation = targetCatalogueType === 'main'
+    && (Number(options.stateVersion) >= 4 || Array.isArray(options.recommendationSubsections));
+  if (explicitRecommendation) return {};
+  return reorderCohortOverrides(cards, existingCards, options);
+}
+
 export function actionFromTarget(target) {
   const button = target?.closest?.('[data-catalogue-v139-action]');
   return button?.dataset?.catalogueV139Action || '';
@@ -1116,8 +1124,15 @@ async function saveUnified() {
     const priorArchivedRank = priorSaved.archivedRank || (selected?.dataset.archived === '1' ? Number(q('catalogue-admin-rank').value) : null);
     let rows = currentCardRows();
     if (modeForBrowser !== 'edit') rows = [...rows, { key, rank: nextRankFor(structural.taster), taster: structural.taster, archived:false }];
-    const rankUpdates = reorderCohortOverrides(rows, stateForBrowser.cards, {
-      key, taster: structural.taster, wantsArchived, targetRank: q('catalogue-admin-rank').value, now:new Date().toISOString()
+    const rankUpdates = rankingUpdatesForSave(rows, stateForBrowser.cards, {
+      key,
+      taster: structural.taster,
+      wantsArchived,
+      targetRank: q('catalogue-admin-rank').value,
+      now: new Date().toISOString(),
+      stateVersion: stateForBrowser.version,
+      recommendationSubsections: stateForBrowser.recommendationSubsections,
+      targetCatalogueType: q('catalogue-v139-type').value
     });
     const cardsWithRanks = { ...stateForBrowser.cards, ...rankUpdates };
     const rankState = rankUpdates[key] || {};
