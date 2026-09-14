@@ -7,16 +7,37 @@ on:
       - '.github/workflows/diag-live-recommendations-empty.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Locate runtime injection source
+        with:
+          fetch-depth: 0
+      - name: Patch Worker runtime injection on fix branch
         shell: bash
         run: |
           set -euo pipefail
-          grep -R -n --exclude-dir=node_modules --exclude='*.map' 'catalogue-runtime\.mjs' src public scripts .github || true
-          grep -R -n --exclude-dir=node_modules --exclude='*.map' 'runtimeScript\|catalogue-runtime' src/index-core.js src/index.js || true
+          git fetch origin fix/recommendation-runtime-cache-bust
+          git checkout -B fix/recommendation-runtime-cache-bust origin/fix/recommendation-runtime-cache-bust
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/index-core.js')
+          text = path.read_text()
+          old = "const script = '<script type=\"module\" src=\"/catalogue-runtime.mjs\"></script>';"
+          new = "const script = '<script type=\"module\" src=\"/catalogue-runtime.mjs?v=20260914-v4\"></script>';"
+          if text.count(old) != 1:
+              if new in text:
+                  raise SystemExit(0)
+              raise SystemExit('Expected runtime bootstrap string was not found exactly once.')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+          grep -n 'catalogue-runtime.mjs' src/index-core.js | head
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/index-core.js
+          git commit -m "Fix stale Recommendation runtime bootstrap"
+          git push origin HEAD:fix/recommendation-runtime-cache-bust
