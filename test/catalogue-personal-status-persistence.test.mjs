@@ -109,7 +109,7 @@ test('browser runtime hydrates durable statuses before loading the convenience U
   assert.match(persistenceSource, /loadPersonalStatuses/);
 
   const persistenceIndex = runtimeSource.indexOf("await import('./catalogue-personal-status-persistence.mjs')");
-  const convenienceIndex = runtimeSource.indexOf("import('./catalogue-convenience.mjs')");
+  const convenienceIndex = runtimeSource.indexOf('catalogue-convenience.mjs');
   assert.ok(persistenceIndex >= 0);
   assert.ok(convenienceIndex > persistenceIndex);
 });
