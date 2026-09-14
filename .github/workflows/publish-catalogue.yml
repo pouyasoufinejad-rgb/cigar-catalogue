@@ -11,6 +11,8 @@ on:
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
       - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'scripts/verify-live-code-ready.mjs'
+      - 'scripts/verify-live-recommendation-v4.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -26,6 +28,8 @@ on:
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
       - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'scripts/verify-live-code-ready.mjs'
+      - 'scripts/verify-live-recommendation-v4.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -88,7 +92,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Publish requests sequentially
+      - name: Publish requests sequentially and verify v4 migration
         shell: bash
         run: |
           set -euo pipefail
@@ -122,6 +126,7 @@ jobs:
             exit 1
           fi
 
+          needs_v4_verify=false
           for request in "${files[@]}"; do
             if [[ ! "${request}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
               echo "::error::Refusing unexpected request path: ${request}"
@@ -134,4 +139,11 @@ jobs:
             else
               node scripts/publish-live-catalogue-request.mjs "${request}"
             fi
+            if [[ "${operation}" == "update-recommendation-subsections" ]]; then
+              needs_v4_verify=true
+            fi
           done
+
+          if [[ "${needs_v4_verify}" == "true" ]]; then
+            node scripts/verify-live-recommendation-v4.mjs
+          fi

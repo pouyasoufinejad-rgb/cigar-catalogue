@@ -1,0 +1,89 @@
+name: Deploy catalogue Worker
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deploy-worker.yml'
+      - 'public/**'
+      - 'src/**'
+      - 'scripts/verify-live-code-ready.mjs'
+      - 'scripts/verify-live-recommendation-v4.mjs'
+      - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'test/**'
+      - 'wrangler.jsonc'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-worker.yml'
+      - 'public/**'
+      - 'src/**'
+      - 'scripts/verify-live-code-ready.mjs'
+      - 'scripts/verify-live-recommendation-v4.mjs'
+      - 'scripts/build-recommendation-subsections-migration.mjs'
+      - 'wrangler.jsonc'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Test Worker deploy candidate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    name: Deploy and verify Worker
+    needs: verify
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deploy dependency
+        run: npm install --no-audit --no-fund
+      - name: Require Cloudflare API token
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+            echo "::error::CLOUDFLARE_API_TOKEN repository secret is not configured."
+            exit 1
+          fi
+      - name: Deploy Worker and assets
+        run: npm run deploy
+      - name: Verify compatible v4 code is live before state migration
+        run: node scripts/verify-live-code-ready.mjs
+      - name: Build fresh read-only migration candidate from deployed production
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/build-recommendation-subsections-migration.mjs | tee recommendation-subsections-migration-candidate.json
+      - name: Upload post-deploy migration candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: recommendation-subsections-migration-candidate-post-deploy
+          path: recommendation-subsections-migration-candidate.json
+          retention-days: 1
+          if-no-files-found: error
