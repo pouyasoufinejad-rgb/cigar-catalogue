@@ -50,7 +50,7 @@ test('Half-Cigar, Taster and archived entries are excluded from legacy Recommend
 });
 
 test('browser runtime uses the explicit subsection controller', () => {
-  assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-subsections\.mjs'\)/);
+  assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-subsections\.mjs(?:\?v=[^']+)?'\)/);
   assert.doesNotMatch(runtimeSource, /catalogue-recommendation-cohorts\.mjs/);
 });
 

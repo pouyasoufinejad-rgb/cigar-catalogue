@@ -29,7 +29,7 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
   }
 });
 
-test('Worker HTML transform injects the runtime bootstrap exactly once', async () => {
+test('Worker HTML transform injects the cache-busted runtime bootstrap exactly once', async () => {
   const worker = await import('../src/index.js');
   assert.equal(typeof worker.injectRuntimeBootstrap, 'function');
 
@@ -37,7 +37,7 @@ test('Worker HTML transform injects the runtime bootstrap exactly once', async (
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v4"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });
