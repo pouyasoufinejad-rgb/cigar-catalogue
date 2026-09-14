@@ -105,7 +105,7 @@ test('successful catalogue GET notifies listeners from a clone without consuming
   assert.equal(events[0].state.cards.one.rank, 1);
 });
 
-test('only the shared save pipeline wraps fetch and only the v4 structure editor owns catalogue structure', async () => {
+test('only the shared save pipeline wraps fetch and v4 structure owns placement before targeted rank cleanup', async () => {
   const pipelineSource = await readFile(new URL('../public/catalogue-save-pipeline.mjs', import.meta.url), 'utf8');
   const flavourSource = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
   const halfSource = await readFile(new URL('../public/catalogue-half-cohort.mjs', import.meta.url), 'utf8');
@@ -119,7 +119,8 @@ test('only the shared save pipeline wraps fetch and only the v4 structure editor
 
   assert.match(flavourSource, /registerCatalogueStateTransform/);
   assert.doesNotMatch(halfSource, /registerCatalogueStateTransform/);
-  assert.doesNotMatch(recommendationSource, /registerCatalogueStateTransform/);
   assert.match(structureSource, /registerCatalogueStateTransform\(STRUCTURE_TRANSFORM,\s*90/);
   assert.match(structureSource, /const STRUCTURE_TRANSFORM = ['"]catalogue-v4-structure['"]/);
+  assert.match(recommendationSource, /registerCatalogueStateTransform\(RANK_CLEANUP_TRANSFORM,\s*95/);
+  assert.match(recommendationSource, /const RANK_CLEANUP_TRANSFORM = ['"]recommendation-v4-rank-cleanup['"]/);
 });

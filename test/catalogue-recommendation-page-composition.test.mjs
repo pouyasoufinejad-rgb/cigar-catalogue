@@ -12,10 +12,11 @@ test('Recommendation subsections mount inside the existing Ranked Recommendation
   assert.doesNotMatch(rendererSource, /firstSection\.parentElement\.insertBefore\(mount,\s*firstSection\)/);
 });
 
-test('Recommendation subsection headings use dedicated subsection markup and spacing instead of top-level section headings', () => {
-  assert.match(rendererSource, /recommendation-subsection-head/);
-  assert.match(rendererSource, /recommendation-subsection\s*\{[^}]*margin-top:/s);
-  assert.doesNotMatch(rendererSource, /head\.className\s*=\s*['"]section-head['"]/);
+test('Recommendation subsection headings reuse the same section-head typography as Half-Cigar and Tasters', () => {
+  assert.match(rendererSource, /head\.className\s*=\s*['"]section-head recommendation-subsection-head['"]/);
+  assert.match(rendererSource, /createElement\(['"]h2['"]\)/);
+  assert.doesNotMatch(rendererSource, /recommendation-subsection-head h3[^}]*Georgia/s);
+  assert.doesNotMatch(rendererSource, /recommendation-subsection-head p[^}]*system-ui/s);
 });
 
 test('Recommendation renderer does not observe and rerender on every body child mutation', () => {
@@ -29,12 +30,12 @@ test('Recommendation renderer refreshes explicitly after legacy sort and filter 
 });
 
 test('runtime installs convenience navigation before Recommendation subsections so the toolbar remains above the grids', () => {
-  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v6'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v6'\)/);
+  assert.match(runtimeSource, /await import\('\.\/catalogue-convenience\.mjs\?v=20260914-v7'\)[\s\S]*await import\('\.\/catalogue-recommendation-subsections\.mjs\?v=20260914-v7'\)/);
 });
 
 test('the production bootstrap and changed catalogue module URLs are versioned together for the composition fix', () => {
-  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v6/);
-  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v6/);
-  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v6/);
-  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v6/);
+  assert.match(workerSource, /catalogue-runtime\.mjs\?v=20260914-v7/);
+  assert.match(runtimeSource, /catalogue-recommendation-subsections\.mjs\?v=20260914-v7/);
+  assert.match(runtimeSource, /catalogue-convenience\.mjs\?v=20260914-v7/);
+  assert.match(runtimeSource, /catalogue-structure-editor\.mjs\?v=20260914-v7/);
 });

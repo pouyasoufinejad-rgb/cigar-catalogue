@@ -41,9 +41,10 @@ test('v4 placement overrides all old inferred and saved subsection metadata', ()
   assert.deepEqual(result, explicit);
 });
 
-test('new renderer has no editor-rank mutation listener or structural save transform', async () => {
+test('renderer has no editor-rank mutation listener and only the targeted v4 rank cleanup transform', async () => {
   const source = await readFile(rendererSourceUrl, 'utf8');
   assert.doesNotMatch(source, /catalogue-admin-rank[^\n]*addEventListener/);
-  assert.doesNotMatch(source, /registerCatalogueStateTransform/);
   assert.doesNotMatch(source, /recommendation-subsection-ranks/);
+  assert.match(source, /RANK_CLEANUP_TRANSFORM\s*=\s*['"]recommendation-v4-rank-cleanup['"]/);
+  assert.match(source, /registerCatalogueStateTransform\(RANK_CLEANUP_TRANSFORM,\s*95/);
 });
