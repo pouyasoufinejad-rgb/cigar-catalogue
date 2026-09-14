@@ -12,17 +12,18 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     env:
-      BASE: https://fix-recommendation-runtime-cache-bust-cigar-catalogue.psncodex.workers.dev
+      BASE: https://cigar-catalogue.psncodex.workers.dev
     steps:
       - uses: actions/checkout@v4
-      - name: Verify preview bootstrap and state
+      - name: Verify production bootstrap and v4 state
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS -H 'Cache-Control: no-cache' "$BASE/?diag=preview-$(date +%s)" > /tmp/initial.html
+          curl -fsS -H 'Cache-Control: no-cache' "$BASE/?diag=prod-$(date +%s)" > /tmp/initial.html
           grep -q 'catalogue-runtime.mjs?v=20260914-v4' /tmp/initial.html
-          curl -fsS -H 'Cache-Control: no-cache' "$BASE/api/catalogue-overrides?diag=preview-$(date +%s)" > /tmp/state.json
+          curl -fsS -H 'Cache-Control: no-cache' "$BASE/api/catalogue-overrides?diag=prod-$(date +%s)" > /tmp/state.json
           node - <<'NODE'
           const fs = require('fs');
           const state = JSON.parse(fs.readFileSync('/tmp/state.json','utf8'));
@@ -33,7 +34,7 @@ jobs:
           if (keys.length !== 27) throw new Error(`Expected 27 Recommendation entries, got ${keys.length}`);
           console.log(`STATE ${state.version} SUBS ${sections.length} ENTRIES ${keys.length}`);
           NODE
-      - name: Render preview in fresh headless Chrome
+      - name: Verify production DOM in a fresh browser session
         shell: bash
         run: |
           set -euo pipefail
@@ -42,60 +43,86 @@ jobs:
             echo '::error::No Chrome/Chromium binary found on runner.'
             exit 1
           fi
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=12000 --dump-dom "$BASE/?diag=browser-$(date +%s)" > /tmp/rendered.html
-          grep -q 'data-recommendation-subsections-root="1"' /tmp/rendered.html
-          grep -q 'data-recommendation-subsection="coronets"' /tmp/rendered.html
-          grep -q 'data-recommendation-subsection="petit-panatelas"' /tmp/rendered.html
-          grep -q 'data-recommendation-subsection="flavoured"' /tmp/rendered.html
-      - name: Verify every Recommendation entry is rendered or unavailable
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json
-          from html.parser import HTMLParser
-
-          state = json.load(open('/tmp/state.json'))
-          expected = set(k for s in state['recommendationSubsections'] for k in s['entryKeys'])
-
-          class Parser(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.stack=[]
-                  self.placements={}
-                  self.section_counts={}
-              def handle_starttag(self, tag, attrs):
-                  a=dict(attrs)
-                  classes=set(a.get('class','').split())
-                  subsection=a.get('data-recommendation-subsection')
-                  inherited_subsection=next((x['subsection'] for x in reversed(self.stack) if x.get('subsection')), None)
-                  inherited_unavailable=any(x.get('unavailable') for x in self.stack)
-                  ctx={
-                      'tag':tag,
-                      'subsection': subsection or inherited_subsection,
-                      'unavailable': inherited_unavailable or ('unavailable-grid' in classes)
-                  }
-                  self.stack.append(ctx)
-                  if tag == 'article' and 'card' in classes and a.get('data-key'):
-                      key=a['data-key']
-                      place='unavailable' if ctx['unavailable'] else (ctx['subsection'] or 'other')
-                      self.placements[key]=place
-                      if ctx['subsection'] and not ctx['unavailable']:
-                          self.section_counts[ctx['subsection']]=self.section_counts.get(ctx['subsection'],0)+1
-              def handle_endtag(self, tag):
-                  for i in range(len(self.stack)-1,-1,-1):
-                      if self.stack[i]['tag']==tag:
-                          del self.stack[i:]
-                          return
-
-          p=Parser(); p.feed(open('/tmp/rendered.html', encoding='utf8').read())
-          missing=sorted(k for k in expected if p.placements.get(k) not in {'coronets','petit-panatelas','flavoured','unavailable'})
-          if missing:
-              raise SystemExit('Missing Recommendation placements: '+', '.join(missing))
-          visible=sum(p.section_counts.values())
-          unavailable=sum(1 for k in expected if p.placements.get(k)=='unavailable')
-          print('VISIBLE_BY_SECTION', json.dumps(p.section_counts, sort_keys=True))
-          print('VISIBLE_TOTAL', visible, 'UNAVAILABLE', unavailable, 'EXPECTED_TOTAL', len(expected))
-          if visible + unavailable != len(expected):
-              raise SystemExit('Recommendation inventory does not reconcile in rendered DOM')
-          PY
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=/tmp/catalogue-chrome about:blank >/tmp/chrome.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill $CHROME_PID 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          BASE="$BASE" timeout 60s node - <<'NODE'
+          const base = process.env.BASE;
+          const targets = await fetch('http://127.0.0.1:9222/json').then(r => r.json());
+          const target = targets.find(t => t.type === 'page');
+          if (!target?.webSocketDebuggerUrl) throw new Error('Chrome DevTools page target unavailable');
+          const ws = new WebSocket(target.webSocketDebuggerUrl);
+          await new Promise((resolve, reject) => {
+            ws.addEventListener('open', resolve, { once: true });
+            ws.addEventListener('error', reject, { once: true });
+          });
+          let nextId = 1;
+          const pending = new Map();
+          ws.addEventListener('message', event => {
+            const msg = JSON.parse(event.data);
+            if (!msg.id || !pending.has(msg.id)) return;
+            const { resolve, reject } = pending.get(msg.id);
+            pending.delete(msg.id);
+            if (msg.error) reject(new Error(JSON.stringify(msg.error)));
+            else resolve(msg.result);
+          });
+          const call = (method, params = {}) => new Promise((resolve, reject) => {
+            const id = nextId++;
+            pending.set(id, { resolve, reject });
+            ws.send(JSON.stringify({ id, method, params }));
+          });
+          await call('Page.enable');
+          await call('Runtime.enable');
+          await call('Page.navigate', { url: `${base}/?diag=fresh-browser-${Date.now()}` });
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          const expression = `(async () => {
+            const state = await fetch('/api/catalogue-overrides?diag=browser-' + Date.now(), {cache:'no-store'}).then(r => r.json());
+            const sections = state.recommendationSubsections || [];
+            const expected = sections.flatMap(s => s.entryKeys || []);
+            const sectionCounts = {};
+            for (const s of sections) {
+              const node = document.querySelector('[data-recommendation-subsection="' + CSS.escape(s.id) + '"]');
+              sectionCounts[s.id] = node ? node.querySelectorAll('article.card[data-key]').length : -1;
+            }
+            const placements = {};
+            for (const key of expected) {
+              const card = document.querySelector('article.card[data-key="' + CSS.escape(key) + '"]');
+              if (!card) { placements[key] = 'missing'; continue; }
+              const subsection = card.closest('[data-recommendation-subsection]');
+              if (subsection) placements[key] = subsection.getAttribute('data-recommendation-subsection');
+              else if (card.closest('.unavailable-grid') || card.closest('#unavailable-section')) placements[key] = 'unavailable';
+              else placements[key] = 'other';
+            }
+            const allowed = new Set([...sections.map(s => s.id), 'unavailable']);
+            const missing = expected.filter(k => !allowed.has(placements[k]));
+            const visibleSections = sections.map(s => ({
+              id:s.id,
+              hidden: document.querySelector('[data-recommendation-subsection="' + CSS.escape(s.id) + '"]')?.classList.contains('hidden') ?? true,
+              count: sectionCounts[s.id]
+            }));
+            return {
+              version: state.version,
+              subsectionCount: sections.length,
+              expectedCount: expected.length,
+              rootPresent: !!document.querySelector('[data-recommendation-subsections-root="1"]'),
+              sectionCounts,
+              visibleSections,
+              missing,
+              bootstrap: [...document.scripts].map(s => s.src).find(src => src.includes('catalogue-runtime.mjs')) || ''
+            };
+          })()`;
+          const evaluated = await call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+          const result = evaluated?.result?.value;
+          console.log(JSON.stringify(result, null, 2));
+          if (!result) throw new Error('No browser verification result');
+          if (result.version !== 4 || result.subsectionCount !== 3 || result.expectedCount !== 27) throw new Error('Live state mismatch in browser');
+          if (!result.rootPresent) throw new Error('Recommendation subsection root missing from live DOM');
+          if (!result.bootstrap.includes('catalogue-runtime.mjs?v=20260914-v4')) throw new Error('Browser did not load the cache-busted runtime');
+          if (result.missing.length) throw new Error(`Recommendation entries missing from rendered placement: ${result.missing.join(', ')}`);
+          if (result.visibleSections.filter(s => !s.hidden && s.count > 0).length < 2) throw new Error('Recommendation subsections did not render visibly');
+          ws.close();
+          NODE
