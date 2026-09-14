@@ -616,8 +616,8 @@ function updateDynamicStructure(nextEntry, card, structural) {
 }
 
 async function verifyV4State(fetchImpl, baseUrl, repoRoot, includeStaticCatalogue, state, label) {
-  assertRankingInvariant(state.cards, label, state.version);
   const effective = await completeRankingCards(repoRoot, state, includeStaticCatalogue);
+  assertRankingInvariant(effective, label, state.version);
   assertV4Inventory(state, effective, label);
   return effective;
 }
