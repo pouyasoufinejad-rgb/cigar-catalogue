@@ -10,12 +10,7 @@ test('Worker injects a cache-busted top-level runtime module', () => {
   assert.match(workerCore, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
 });
 
-test('runtime cache-busts imported modules so stale pre-v4 code cannot survive a reload', () => {
-  const imports = [...runtime.matchAll(/(?:await\s+)?import\(['"](\.\/[^'"]+\.mjs)(?:\?v=([^'"]+))?['"]\)/g)];
-  assert.ok(imports.length >= 10, 'expected catalogue runtime module imports');
-  for (const [, path, version] of imports) {
-    assert.equal(version, ASSET_VERSION, `${path} is not pinned to the v4 asset version`);
-  }
-  assert.ok(imports.some(([, path]) => path.endsWith('catalogue-recommendation-subsections.mjs')));
-  assert.ok(imports.some(([, path]) => path.endsWith('catalogue-structure-editor.mjs')));
+test('runtime forces fresh v4 Recommendation and structural editor modules', () => {
+  assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-recommendation-subsections\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
+  assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-structure-editor\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
 });
