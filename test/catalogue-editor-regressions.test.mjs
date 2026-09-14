@@ -10,6 +10,7 @@ try {
 }
 const loaderSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
+const adminSource = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
 test('Half-Cigar remains selected when legacy editor code programmatically writes Recommendation', () => {
   assert.ok(behaviour, 'catalogue editor behaviour module must load');
@@ -33,6 +34,15 @@ test('opening the full catalogue editor resets its scroll container to the top',
   const modal = { querySelector: selector => selector === '.catalogue-admin-panel' ? panel : null };
   behaviour.resetAdminEditorScroll(modal);
   assert.equal(panel.scrollTop, 0);
+});
+
+test('Edit catalogue opens the full editor instead of the old inline direct-edit mode', () => {
+  assert.doesNotMatch(loaderSource, /import\(['"]\.\/catalogue-direct-edit\.mjs['"]\)/);
+});
+
+test('full catalogue editor uses the full viewport and explicitly opens at its own top', () => {
+  assert.match(adminSource, /\.catalogue-admin-panel\{[^}]*width:100vw[^}]*max-width:none/s);
+  assert.match(adminSource, /querySelector\(['"]\.catalogue-admin-panel['"]\)[\s\S]*?scrollTop\s*=\s*0/s);
 });
 
 test('public Legend and Benchmarks disclosures are closed when editing starts', () => {
