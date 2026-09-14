@@ -1,13 +1,19 @@
-import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
+import {
+  registerCatalogueStateResponseListener,
+  registerCatalogueStateTransform
+} from './catalogue-save-pipeline.mjs';
 import { validateRecommendationSubsectionsShape } from './catalogue-structure.mjs';
 import { buildLegacyRecommendationSubsections } from './catalogue-recommendation-legacy.mjs';
 
 const STATE_API = '/api/catalogue-overrides';
 const ROOT_ATTRIBUTE = 'data-recommendation-subsections-root';
-const STYLE_ID = 'catalogue-recommendation-subsections-style-v5';
+const STYLE_ID = 'catalogue-recommendation-subsections-style-v7';
+const RANK_CLEANUP_TRANSFORM = 'recommendation-v4-rank-cleanup';
 let persistedState = { version: 3, cards: {}, entries: {} };
 let refreshTimer = 0;
 let refreshing = false;
+let initialStateAccepted = false;
+let resetTopAfterRefresh = false;
 
 function finite(value, fallback = 0) {
   const number = Number(value);
@@ -78,6 +84,27 @@ export function recommendationSubsectionsForState(state = {}, legacyRows = []) {
   return buildLegacyRecommendationSubsections(legacyRows);
 }
 
+export function stripLegacyRecommendationRanks(payload = {}) {
+  if (Number(payload?.version) < 4 || !Array.isArray(payload?.recommendationSubsections)) return payload;
+  const subsections = validateRecommendationSubsectionsShape(payload.recommendationSubsections);
+  const cards = payload?.cards && typeof payload.cards === 'object' ? payload.cards : {};
+  let nextCards = cards;
+  let changed = false;
+
+  for (const subsection of subsections) {
+    for (const key of subsection.entryKeys) {
+      const card = cards[key];
+      if (!card || typeof card !== 'object' || !Object.prototype.hasOwnProperty.call(card, 'rank')) continue;
+      if (!changed) nextCards = { ...cards };
+      nextCards[key] = { ...card };
+      delete nextCards[key].rank;
+      changed = true;
+    }
+  }
+
+  return changed ? { ...payload, cards: nextCards } : payload;
+}
+
 export function updateRecommendationRankVisual(card, rankInput) {
   const rank = Number(rankInput);
   if (!card || !Number.isInteger(rank) || rank < 1) return;
@@ -120,16 +147,10 @@ function ensureStyles(doc) {
 .recommendation-subsection{margin-top:34px}
 .recommendation-subsection:first-child{margin-top:10px}
 .recommendation-subsection.hidden{display:none!important}
-.recommendation-subsection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 0 16px;padding:0 0 10px;border-bottom:1px solid var(--line)}
-.recommendation-subsection-head h3{margin:0;color:var(--ink);font:700 18px/1.15 Georgia,serif;letter-spacing:.045em;text-transform:uppercase}
-.recommendation-subsection-head p{margin:0;max-width:560px;color:var(--muted);font:11px/1.45 system-ui,sans-serif;text-align:right}
 .recommendation-subsection-grid{margin-top:0}
 @media(max-width:700px){
   .recommendation-subsections{margin-top:14px}
   .recommendation-subsection{margin-top:28px}
-  .recommendation-subsection-head{display:block;margin-bottom:13px;padding-bottom:8px}
-  .recommendation-subsection-head h3{font-size:16px}
-  .recommendation-subsection-head p{margin-top:5px;text-align:left}
 }`;
   (doc.head || doc.documentElement)?.appendChild?.(style);
 }
@@ -171,8 +192,8 @@ function ensureSubsectionNode(mount, subsection) {
     section.className = 'recommendation-subsection';
     section.setAttribute('data-recommendation-subsection', subsection.id);
     const head = doc.createElement('div');
-    head.className = 'recommendation-subsection-head';
-    const heading = doc.createElement('h3');
+    head.className = 'section-head recommendation-subsection-head';
+    const heading = doc.createElement('h2');
     const description = doc.createElement('p');
     const grid = doc.createElement('div');
     grid.className = 'grid recommendation-subsection-grid';
@@ -182,7 +203,7 @@ function ensureSubsectionNode(mount, subsection) {
     section.appendChild(head);
     section.appendChild(grid);
   }
-  const heading = section.querySelector?.('.recommendation-subsection-head h3');
+  const heading = section.querySelector?.('.recommendation-subsection-head h2');
   const description = section.querySelector?.('.recommendation-subsection-head p');
   if (heading) heading.textContent = subsection.name;
   if (description) {
@@ -281,16 +302,44 @@ export function renderRecommendationSubsections(state = persistedState, root = d
   }
 }
 
-function scheduleRefresh() {
+function canResetInitialScroll(target = globalThis?.window) {
+  return Boolean(target && !String(target.location?.hash || ''));
+}
+
+function prepareInitialScrollReset(target = globalThis?.window) {
+  if (!canResetInitialScroll(target)) return false;
+  try {
+    if (target.history && 'scrollRestoration' in target.history) target.history.scrollRestoration = 'manual';
+  } catch (_) {}
+  return true;
+}
+
+function restoreInitialTop(target = globalThis?.window) {
+  if (!canResetInitialScroll(target) || typeof target.scrollTo !== 'function') return false;
+  target.scrollTo(0, 0);
+  if (typeof target.requestAnimationFrame === 'function') {
+    target.requestAnimationFrame(() => target.requestAnimationFrame(() => target.scrollTo(0, 0)));
+  }
+  return true;
+}
+
+function scheduleRefresh(resetInitialTop = false) {
+  if (resetInitialTop) resetTopAfterRefresh = true;
   if (refreshTimer || typeof document === 'undefined') return;
   refreshTimer = setTimeout(() => {
     refreshTimer = 0;
     renderRecommendationSubsections(persistedState, document);
+    if (resetTopAfterRefresh) {
+      resetTopAfterRefresh = false;
+      restoreInitialTop(globalThis?.window);
+    }
   }, 0);
 }
 
 function acceptState(state) {
   if (!state || typeof state !== 'object') return;
+  const firstState = !initialStateAccepted;
+  initialStateAccepted = true;
   persistedState = {
     version: Number(state.version) || 3,
     cards: state.cards && typeof state.cards === 'object' ? state.cards : {},
@@ -299,7 +348,7 @@ function acceptState(state) {
       ? { recommendationSubsections: state.recommendationSubsections }
       : {})
   };
-  scheduleRefresh();
+  scheduleRefresh(firstState);
 }
 
 function installControlRefreshHooks() {
@@ -314,6 +363,8 @@ function installControlRefreshHooks() {
 
 export function installRecommendationSubsections() {
   if (typeof document === 'undefined') return;
+  prepareInitialScrollReset(globalThis?.window);
+  registerCatalogueStateTransform(RANK_CLEANUP_TRANSFORM, 95, payload => stripLegacyRecommendationRanks(payload));
   registerCatalogueStateResponseListener('recommendation-subsections', event => acceptState(event?.state));
 
   const start = () => {
