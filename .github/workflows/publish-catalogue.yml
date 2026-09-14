@@ -10,6 +10,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
+      - 'scripts/build-recommendation-subsections-migration.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -24,6 +25,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/publish-live-maintenance-request.mjs'
       - 'scripts/publish-live-maintenance-ranked-request.mjs'
+      - 'scripts/build-recommendation-subsections-migration.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -55,6 +57,18 @@ jobs:
           node-version: '22'
       - name: Run tests
         run: npm test
+      - name: Build read-only Recommendation migration candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/build-recommendation-subsections-migration.mjs | tee recommendation-subsections-migration-candidate.json
+      - name: Upload Recommendation migration candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: recommendation-subsections-migration-candidate
+          path: recommendation-subsections-migration-candidate.json
+          retention-days: 1
+          if-no-files-found: error
 
   publish:
     name: Publish changed catalogue requests

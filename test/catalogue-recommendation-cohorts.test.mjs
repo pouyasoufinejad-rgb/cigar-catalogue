@@ -3,129 +3,57 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import {
-  recommendationRankCohort,
-  recommendationCohortForMainCard,
-  textLooksFlavoured,
-  recommendationFlavourCohortEligible,
-  rankRecommendationRows,
-  preserveGlobalRanksForRecommendationEdit
-} from '../public/catalogue-recommendation-cohorts.mjs';
+  legacyTextLooksFlavoured,
+  legacyRecommendationCohortForCard,
+  buildLegacyRecommendationSubsections
+} from '../public/catalogue-recommendation-legacy.mjs';
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
-const cohortSource = await readFile(new URL('../public/catalogue-recommendation-cohorts.mjs', import.meta.url), 'utf8');
+const legacySource = await readFile(new URL('../public/catalogue-recommendation-legacy.mjs', import.meta.url), 'utf8');
 
-const KFC_SWEET_PONIES = 'kfc-ponies-sweets';
-
-test('recommendation cohorts use the 34 RG boundary and flavoured override', () => {
-  assert.equal(recommendationRankCohort({ recommendation: true, ring: 34, flavoured: false }), 'coronets');
-  assert.equal(recommendationRankCohort({ recommendation: true, ring: 35, flavoured: false }), 'petit-panatelas');
-  assert.equal(recommendationRankCohort({ recommendation: true, ring: 26, flavoured: true }), 'flavoured');
-  assert.equal(recommendationRankCohort({ recommendation: false, ring: 32, flavoured: false }), '');
-  assert.equal(textLooksFlavoured('Wrapper: Maduro · Infused'), true);
-  assert.equal(textLooksFlavoured('Flavoured'), true);
-  assert.equal(textLooksFlavoured('Traditional long filler'), false);
+test('legacy compatibility keeps the 34/35 boundary and structured flavoured override', () => {
+  assert.equal(legacyRecommendationCohortForCard({ key: 'a', catalogueType: 'main', ring: 34, productionText: 'Traditional' }), 'coronets');
+  assert.equal(legacyRecommendationCohortForCard({ key: 'b', catalogueType: 'main', ring: 35, productionText: 'Traditional' }), 'petit-panatelas');
+  assert.equal(legacyRecommendationCohortForCard({ key: 'c', catalogueType: 'main', ring: 26, productionText: 'Infused' }), 'flavoured');
+  assert.equal(legacyTextLooksFlavoured('Wrapper: Maduro · Infused'), true);
+  assert.equal(legacyTextLooksFlavoured('Traditional long filler'), false);
 });
 
-test('every normal Recommendation card is classified by format even without Strength or Quality Gold', () => {
-  assert.equal(recommendationCohortForMainCard({
-    key: KFC_SWEET_PONIES,
-    ring: 32,
-    text: 'Flavoured / Sweetened'
+test('KFC Sweet Ponies keeps its legacy explicit flavour exclusion', () => {
+  assert.equal(legacyRecommendationCohortForCard({
+    key: 'kfc-ponies-sweets', catalogueType: 'main', ring: 32, productionText: 'Flavoured / Sweetened'
   }), 'coronets');
-  assert.equal(recommendationCohortForMainCard({
-    key: 'tabak-especial-cafecita-negra',
-    ring: 32,
-    text: 'Infused'
-  }), 'flavoured');
-  assert.equal(recommendationCohortForMainCard({
-    key: 'plain-petit',
-    ring: 40,
-    text: 'Traditional long filler'
-  }), 'petit-panatelas');
 });
 
-test('KFC Sweet Ponies is explicitly excluded from the infused/flavoured subsection', () => {
-  assert.equal(recommendationFlavourCohortEligible({
-    key: KFC_SWEET_PONIES,
-    text: 'Flavoured / Sweetened'
-  }), false);
-  assert.equal(recommendationFlavourCohortEligible({
-    key: 'tabak-especial-dark-roast',
-    text: 'Infused'
-  }), true);
-  assert.equal(recommendationRankCohort({ recommendation: true, ring: 32, flavoured: false }), 'coronets');
+test('legacy builder derives contiguous independent entry lists without mutating global ranks', () => {
+  const rows = [
+    { key: 'coronet-a', catalogueType: 'main', ring: 34, productionText: 'Traditional', legacyRank: 1 },
+    { key: 'petit-a', catalogueType: 'main', ring: 35, productionText: 'Traditional', legacyRank: 2 },
+    { key: 'flavour-a', catalogueType: 'main', ring: 32, productionText: 'Infused', legacyRank: 3 },
+    { key: 'coronet-b', catalogueType: 'main', ring: 34, productionText: 'Traditional', legacyRank: 4 }
+  ];
+  const sections = buildLegacyRecommendationSubsections(rows);
+  assert.deepEqual(sections.find(section => section.id === 'coronets').entryKeys, ['coronet-a', 'coronet-b']);
+  assert.deepEqual(sections.find(section => section.id === 'petit-panatelas').entryKeys, ['petit-a']);
+  assert.deepEqual(sections.find(section => section.id === 'flavoured').entryKeys, ['flavour-a']);
+  assert.deepEqual(rows.map(row => row.legacyRank), [1, 2, 3, 4]);
 });
 
-test('recommendation subsection rankings are contiguous and independent', () => {
-  const ranked = rankRecommendationRows([
-    { key: 'coronet-a', cohort: 'coronets', legacyRank: 1 },
-    { key: 'petit-a', cohort: 'petit-panatelas', legacyRank: 2 },
-    { key: 'flavour-a', cohort: 'flavoured', legacyRank: 3 },
-    { key: 'coronet-b', cohort: 'coronets', legacyRank: 4 },
-    { key: 'petit-b', cohort: 'petit-panatelas', legacyRank: 5 },
-    { key: 'flavour-b', cohort: 'flavoured', legacyRank: 6 }
+test('Half-Cigar, Taster and archived entries are excluded from legacy Recommendation migration', () => {
+  const sections = buildLegacyRecommendationSubsections([
+    { key: 'main', catalogueType: 'main', ring: 34, productionText: 'Traditional', legacyRank: 1 },
+    { key: 'half', catalogueType: 'half', ring: 34, productionText: 'Traditional', legacyRank: 1 },
+    { key: 'taster', catalogueType: 'taster', ring: 34, productionText: 'Traditional', legacyRank: 1 },
+    { key: 'archived', catalogueType: 'main', archived: true, ring: 34, productionText: 'Traditional', legacyRank: 1 }
   ]);
-
-  assert.deepEqual(ranked['coronet-a'], { cohort: 'coronets', rank: 1 });
-  assert.deepEqual(ranked['coronet-b'], { cohort: 'coronets', rank: 2 });
-  assert.deepEqual(ranked['petit-a'], { cohort: 'petit-panatelas', rank: 1 });
-  assert.deepEqual(ranked['petit-b'], { cohort: 'petit-panatelas', rank: 2 });
-  assert.deepEqual(ranked['flavour-a'], { cohort: 'flavoured', rank: 1 });
-  assert.deepEqual(ranked['flavour-b'], { cohort: 'flavoured', rank: 2 });
+  assert.deepEqual(sections.find(section => section.id === 'coronets').entryKeys, ['main']);
 });
 
-test('editing a recommendation rank reorders only its own subsection', () => {
-  const ranked = rankRecommendationRows([
-    { key: 'coronet-a', cohort: 'coronets', recommendationRank: 1, legacyRank: 1 },
-    { key: 'coronet-b', cohort: 'coronets', recommendationRank: 2, legacyRank: 4 },
-    { key: 'petit-a', cohort: 'petit-panatelas', recommendationRank: 1, legacyRank: 2 },
-    { key: 'petit-b', cohort: 'petit-panatelas', recommendationRank: 2, legacyRank: 5 }
-  ], { selectedKey: 'coronet-b', selectedRank: 1 });
-
-  assert.equal(ranked['coronet-b'].rank, 1);
-  assert.equal(ranked['coronet-a'].rank, 2);
-  assert.equal(ranked['petit-a'].rank, 1);
-  assert.equal(ranked['petit-b'].rank, 2);
+test('browser runtime uses the explicit subsection controller', () => {
+  assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-subsections\.mjs'\)/);
+  assert.doesNotMatch(runtimeSource, /catalogue-recommendation-cohorts\.mjs/);
 });
 
-test('local recommendation rank edits preserve the legacy global ranks', () => {
-  const preserved = preserveGlobalRanksForRecommendationEdit({
-    'coronet-a': { rank: 1, quality: 8 },
-    'coronet-b': { rank: 2, quality: 7 },
-    'unrelated': { rank: 3, quality: 6 }
-  }, {
-    'coronet-a': 9,
-    'coronet-b': 12
-  });
-
-  assert.equal(preserved['coronet-a'].rank, 9);
-  assert.equal(preserved['coronet-b'].rank, 12);
-  assert.equal(preserved.unrelated.rank, 3);
-  assert.equal(preserved['coronet-a'].quality, 8);
-});
-
-test('the infused/flavoured cohort reuses the old existing subsection instead of cloning another one', () => {
-  assert.match(cohortSource, /data-noteworthy-section=[\\"']neither[\\"']/);
-  assert.doesNotMatch(cohortSource, /cloneNode\s*\(/);
-});
-
-test('half cigars, tasters and non-recommendations have no recommendation cohort', () => {
-  assert.equal(recommendationRankCohort({ recommendation: false, ring: 34, flavoured: false }), '');
-  const ranked = rankRecommendationRows([
-    { key: 'coronet', cohort: 'coronets', legacyRank: 1 },
-    { key: 'half', cohort: '', legacyRank: 1 },
-    { key: 'taster', cohort: '', legacyRank: 1 },
-    { key: 'noteworthy', cohort: '', legacyRank: 2 }
-  ]);
-  assert.deepEqual(Object.keys(ranked), ['coronet']);
-});
-
-test('browser runtime loads the recommendation cohort controller', () => {
-  assert.match(runtimeSource, /import\('\.\/catalogue-recommendation-cohorts\.mjs'\)/);
-  assert.doesNotMatch(runtimeSource, /catalogue-recommendation-subsections\.mjs/);
-});
-
-test('recommendation rank rendering leaves editable eyebrow copy untouched', () => {
-  assert.doesNotMatch(cohortSource, /querySelector\?\.\(['\"]\.eyebrow['\"]\)/);
-  assert.match(cohortSource, /dataset\.recommendationRank/);
+test('legacy compatibility module has no DOM, network or save-transform ownership', () => {
+  assert.doesNotMatch(legacySource, /document|MutationObserver|fetch\s*\(|registerCatalogueStateTransform/);
 });

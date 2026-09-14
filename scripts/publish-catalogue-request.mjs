@@ -3,12 +3,27 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import {
+  CATALOGUE_STATE_VERSION,
+  normaliseCatalogueType,
+  validateRecommendationSubsectionsShape,
+  assertRecommendationInventory,
+  applyCatalogueStructuralChange
+} from '../public/catalogue-structure.mjs';
 
 export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'replace-image', 'update-sections']);
+export const SUPPORTED_OPERATIONS = new Set([
+  'upsert-entry',
+  'archive-entry',
+  'unarchive-entry',
+  'replace-image',
+  'update-sections',
+  'update-recommendation-subsections'
+]);
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
+const SUBSECTION_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 const CARD_EDITORIAL_FIELDS = new Set([
   'archived', 'archivedAt', 'archivedRank', 'stockPin', 'rank', 'strength', 'quality', 'flavour', 'size', 'laurel',
@@ -94,15 +109,19 @@ function stripDerivedCardValue(card) {
   return output;
 }
 
-function normaliseStateShape(value) {
+export function normaliseStateShape(value) {
   const input = isRecord(value) ? value : {};
   const cards = {};
   for (const [key, card] of Object.entries(isRecord(input.cards) ? input.cards : {})) cards[key] = stripDerivedCardValue(card);
+  const explicit = Array.isArray(input.recommendationSubsections);
   return {
-    version: 3,
+    version: explicit ? CATALOGUE_STATE_VERSION : 3,
     cards,
     sections: isRecord(input.sections) ? clone(input.sections) : {},
-    entries: isRecord(input.entries) ? clone(input.entries) : {}
+    entries: isRecord(input.entries) ? clone(input.entries) : {},
+    ...(explicit ? {
+      recommendationSubsections: validateRecommendationSubsectionsShape(input.recommendationSubsections)
+    } : {})
   };
 }
 
@@ -112,14 +131,11 @@ function htmlAttribute(tag, name) {
 }
 
 function catalogueType(card) {
-  const explicit = String(card?.catalogueType || '').trim().toLowerCase();
-  if (explicit === 'half' || explicit === 'half-cigar' || explicit === 'halfcigar') return 'half';
-  if (explicit === 'taster' || Boolean(card?.taster)) return 'taster';
-  return 'main';
+  return normaliseCatalogueType(card?.catalogueType, Boolean(card?.taster));
 }
 
 function applyCatalogueType(card, typeInput) {
-  const type = catalogueType({ catalogueType: typeInput, taster: typeInput === 'taster' });
+  const type = normaliseCatalogueType(typeInput, typeInput === 'taster');
   return { ...card, catalogueType: type, taster: type === 'taster' };
 }
 
@@ -161,7 +177,7 @@ function rankingCardFromEntry(entry) {
   return card;
 }
 
-async function completeRankingCards(repoRoot, state, includeStaticCatalogue) {
+export async function completeRankingCards(repoRoot, state, includeStaticCatalogue) {
   const cards = {};
 
   if (includeStaticCatalogue) {
@@ -241,26 +257,29 @@ function rankNumber(card) {
   return Number.isFinite(value) && value >= 1 ? Math.round(value) : Number.MAX_SAFE_INTEGER;
 }
 
-function normaliseRankings(cardsInput) {
+export function normaliseRankings(cardsInput, version = 3) {
   const cards = {};
   for (const [key, value] of Object.entries(cardsInput || {})) {
     let card = stripDerivedCardValue(value);
     card = applyCatalogueType(card, catalogueType(card));
     if (card.archived) {
-      const archivedRank = Number(card.archivedRank);
-      const activeRank = rankNumber(card);
-      if ((!Number.isFinite(archivedRank) || archivedRank < 1) && activeRank !== Number.MAX_SAFE_INTEGER) {
-        card.archivedRank = activeRank;
+      if (version < CATALOGUE_STATE_VERSION) {
+        const archivedRank = Number(card.archivedRank);
+        const activeRank = rankNumber(card);
+        if ((!Number.isFinite(archivedRank) || archivedRank < 1) && activeRank !== Number.MAX_SAFE_INTEGER) {
+          card.archivedRank = activeRank;
+        }
       }
       delete card.rank;
     }
     cards[key] = card;
   }
 
-  for (const type of ['main', 'half', 'taster']) {
+  const types = version >= CATALOGUE_STATE_VERSION ? ['half', 'taster'] : ['main', 'half', 'taster'];
+  for (const type of types) {
     const cohort = Object.entries(cards)
       .filter(([, card]) => !card.archived && catalogueType(card) === type)
-      .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
+      .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]) || a[0].localeCompare(b[0]));
     cohort.forEach(([key], index) => {
       cards[key] = { ...cards[key], rank: index + 1, catalogueType: type, taster: type === 'taster' };
     });
@@ -269,14 +288,15 @@ function normaliseRankings(cardsInput) {
   return cards;
 }
 
-function assertRankingInvariant(cardsInput, label) {
+export function assertRankingInvariant(cardsInput, label, version = 3) {
   const cards = cardsInput || {};
   for (const [key, card] of Object.entries(cards)) {
     if (card?.archived && Object.prototype.hasOwnProperty.call(card, 'rank')) {
       throw new Error(`${label} contains active rank on archived card "${key}".`);
     }
   }
-  for (const type of ['main', 'half', 'taster']) {
+  const types = version >= CATALOGUE_STATE_VERSION ? ['half', 'taster'] : ['main', 'half', 'taster'];
+  for (const type of types) {
     const ranks = Object.values(cards)
       .filter(card => !card?.archived && catalogueType(card) === type)
       .map(card => rankNumber(card))
@@ -288,7 +308,7 @@ function assertRankingInvariant(cardsInput, label) {
 }
 
 function reorderForTarget(cardsInput, key, targetCard, nowString) {
-  const cards = normaliseRankings(cardsInput);
+  const cards = normaliseRankings(cardsInput, 3);
   const existing = cards[key] || {};
   const oldArchived = Boolean(existing.archived);
   const oldType = catalogueType(existing);
@@ -297,9 +317,7 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
   const targetType = catalogueType(targetCard);
   const requestedRank = Math.max(1, Math.round(Number(targetCard.rank) || (Number.isFinite(oldRank) ? oldRank : 1)));
 
-  if (oldArchived && !targetArchived) {
-    // The card rejoins the requested active cohort below.
-  } else if (!oldArchived && (targetArchived || oldType !== targetType || requestedRank !== oldRank)) {
+  if (!oldArchived && (targetArchived || oldType !== targetType || requestedRank !== oldRank)) {
     const oldCohort = Object.entries(cards)
       .filter(([otherKey, card]) => otherKey !== key && !card.archived && catalogueType(card) === oldType)
       .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
@@ -317,7 +335,7 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
     }, targetType);
     delete archivedCard.rank;
     cards[key] = archivedCard;
-    return normaliseRankings(cards);
+    return normaliseRankings(cards, 3);
   }
 
   const cohort = Object.entries(cards)
@@ -334,7 +352,7 @@ function reorderForTarget(cardsInput, key, targetCard, nowString) {
       taster: targetType === 'taster'
     };
   });
-  return normaliseRankings(cards);
+  return normaliseRankings(cards, 3);
 }
 
 function validateImage(image, required) {
@@ -350,12 +368,26 @@ function validateImage(image, required) {
   return { path, mimeType };
 }
 
+function validateDestination(value) {
+  if (value === undefined || value === null) return null;
+  if (!isRecord(value)) throw new Error('destination must be an object.');
+  const type = normaliseCatalogueType(value.type, value.type === 'taster');
+  const position = Number(value.position);
+  if (!Number.isInteger(position) || position < 1) throw new Error('destination.position must be a positive integer.');
+  const subsectionId = String(value.subsectionId || '').trim().toLowerCase();
+  if (type === 'main' && !SUBSECTION_ID.test(subsectionId)) {
+    throw new Error('Recommendation destination requires a valid subsectionId.');
+  }
+  return { type, subsectionId: type === 'main' ? subsectionId : '', position };
+}
+
 export function validateRequest(input) {
   if (!isRecord(input)) throw new Error('Publication request must be a JSON object.');
   const operation = String(input.operation || '').trim();
   if (!SUPPORTED_OPERATIONS.has(operation)) throw new Error(`Unsupported operation: ${operation || '(missing)'}.`);
-  const key = operation === 'update-sections' ? '' : safeKey(input.key);
-  if (operation !== 'update-sections' && !key) throw new Error('Invalid catalogue key.');
+  const keyless = operation === 'update-sections' || operation === 'update-recommendation-subsections';
+  const key = keyless ? '' : safeKey(input.key);
+  if (!keyless && !key) throw new Error('Invalid catalogue key.');
   const entry = isRecord(input.entry) ? clone(input.entry) : {};
   if (operation === 'upsert-entry' && !isRecord(input.entry)) throw new Error('upsert-entry requires an entry object.');
   const sections = isRecord(input.sections) ? clone(input.sections) : {};
@@ -366,6 +398,9 @@ export function validateRequest(input) {
       throw new Error('update-sections only accepts string legendHtml and benchmarksHtml fields.');
     }
   }
+  const recommendationSubsections = operation === 'update-recommendation-subsections'
+    ? validateRecommendationSubsectionsShape(input.recommendationSubsections)
+    : null;
   const image = validateImage(input.image, operation === 'replace-image');
   return {
     id: String(input.id || '').trim(),
@@ -373,6 +408,8 @@ export function validateRequest(input) {
     key,
     entry,
     sections,
+    recommendationSubsections,
+    destination: validateDestination(input.destination),
     image,
     note: String(input.note || '').trim()
   };
@@ -423,10 +460,18 @@ async function putEntry(fetchImpl, baseUrl, token, key, entry) {
 }
 
 async function putState(fetchImpl, baseUrl, token, state) {
+  const body = {
+    version: state.version,
+    cards: state.cards,
+    sections: state.sections,
+    ...(Array.isArray(state.recommendationSubsections)
+      ? { recommendationSubsections: state.recommendationSubsections }
+      : {})
+  };
   return fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, {
     method: 'PUT',
     headers: buildHeaders(token, { 'content-type': 'application/json' }),
-    body: JSON.stringify({ version: 3, cards: state.cards, sections: state.sections })
+    body: JSON.stringify(body)
   }, 'Catalogue state write', token);
 }
 
@@ -459,6 +504,124 @@ function ensureNewDynamicMinimum(entry) {
   }
 }
 
+function assertV4Inventory(state, effectiveCards, label) {
+  if (state.version < CATALOGUE_STATE_VERSION || !Array.isArray(state.recommendationSubsections)) return;
+  const rows = Object.entries(effectiveCards || {}).map(([key, card]) => ({
+    key,
+    catalogueType: catalogueType(card),
+    archived: Boolean(card?.archived)
+  }));
+  try {
+    assertRecommendationInventory({
+      subsections: state.recommendationSubsections,
+      activeRecommendationKeys: rows.filter(row => !row.archived && row.catalogueType === 'main').map(row => row.key),
+      forbiddenKeys: rows.filter(row => row.archived || row.catalogueType !== 'main').map(row => row.key)
+    });
+  } catch (error) {
+    throw new Error(`${label}: ${error.message}`);
+  }
+}
+
+function structuralSnapshot(card) {
+  const type = catalogueType(card);
+  return {
+    catalogueType: type,
+    taster: type === 'taster',
+    archived: Boolean(card?.archived),
+    archivedAt: String(card?.archivedAt || ''),
+    rank: !card?.archived && (type === 'half' || type === 'taster') ? Number(card?.rank) || null : null
+  };
+}
+
+function mergeStructuralResultIntoStateCards(stateCardsInput, beforeCards, afterCards, selectedKey) {
+  const stateCards = { ...(stateCardsInput || {}) };
+  const keys = new Set([...Object.keys(beforeCards || {}), ...Object.keys(afterCards || {})]);
+  for (const key of keys) {
+    const before = beforeCards?.[key] || {};
+    const after = afterCards?.[key] || {};
+    const changed = key === selectedKey
+      || JSON.stringify(structuralSnapshot(before)) !== JSON.stringify(structuralSnapshot(after));
+    if (!changed) continue;
+
+    const type = catalogueType(after);
+    const next = {
+      ...(stateCards[key] || {}),
+      catalogueType: type,
+      taster: type === 'taster',
+      archived: Boolean(after.archived),
+      archivedAt: String(after.archivedAt || '')
+    };
+    if (!after.archived && (type === 'half' || type === 'taster')) next.rank = Number(after.rank) || 1;
+    else delete next.rank;
+    stateCards[key] = next;
+  }
+  return stateCards;
+}
+
+function requireDestination(request, reason) {
+  if (!request.destination) throw new Error(`${reason} requires an explicit destination.`);
+  return request.destination;
+}
+
+function structuralIntentForV4(request, exists, existingCard, nextCard) {
+  const sourceType = existingCard ? catalogueType(existingCard) : null;
+  const desiredType = request.destination?.type || catalogueType(nextCard);
+  const sourceArchived = Boolean(existingCard?.archived);
+  const targetArchived = Boolean(nextCard?.archived);
+
+  if (request.operation === 'archive-entry') {
+    return { structural: true, wantsArchived: true, targetType: sourceType || desiredType, destination: null };
+  }
+  if (request.operation === 'unarchive-entry') {
+    const destination = requireDestination(request, 'Unarchive');
+    return { structural: true, wantsArchived: false, targetType: destination.type, destination };
+  }
+  if (request.operation !== 'upsert-entry') return { structural: false };
+
+  if (Object.prototype.hasOwnProperty.call(request.entry, 'rank') && !request.destination) {
+    throw new Error('v4 structural position changes require an explicit destination.');
+  }
+  if (!exists && !targetArchived) {
+    const destination = requireDestination(request, 'New active entry');
+    return { structural: true, wantsArchived: false, targetType: destination.type, destination };
+  }
+  if (!exists && targetArchived) {
+    return { structural: true, wantsArchived: true, targetType: desiredType, destination: null };
+  }
+  if (sourceArchived && !targetArchived) {
+    const destination = requireDestination(request, 'Archive restore');
+    return { structural: true, wantsArchived: false, targetType: destination.type, destination };
+  }
+  if (!sourceArchived && targetArchived) {
+    return { structural: true, wantsArchived: true, targetType: sourceType || desiredType, destination: null };
+  }
+  if (request.destination) {
+    return { structural: true, wantsArchived: false, targetType: request.destination.type, destination: request.destination };
+  }
+  if (sourceType && desiredType !== sourceType) {
+    throw new Error('Catalogue type changes in v4 require an explicit destination.');
+  }
+  return { structural: false };
+}
+
+function updateDynamicStructure(nextEntry, card, structural) {
+  if (!nextEntry || !structural) return nextEntry;
+  const type = catalogueType(card);
+  nextEntry.taster = type === 'taster';
+  nextEntry.archived = Boolean(card.archived);
+  nextEntry.archivedAt = String(card.archivedAt || '');
+  if (!card.archived && (type === 'half' || type === 'taster')) nextEntry.rank = Number(card.rank) || 1;
+  else delete nextEntry.rank;
+  return nextEntry;
+}
+
+async function verifyV4State(fetchImpl, baseUrl, repoRoot, includeStaticCatalogue, state, label) {
+  assertRankingInvariant(state.cards, label, state.version);
+  const effective = await completeRankingCards(repoRoot, state, includeStaticCatalogue);
+  assertV4Inventory(state, effective, label);
+  return effective;
+}
+
 export async function publishRequestDocument(input, options = {}) {
   const request = validateRequest(input);
   const fetchImpl = options.fetchImpl || globalThis.fetch;
@@ -471,9 +634,11 @@ export async function publishRequestDocument(input, options = {}) {
   const sleep = typeof options.sleep === 'function'
     ? options.sleep
     : milliseconds => new Promise(resolveSleep => setTimeout(resolveSleep, milliseconds));
+  const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
+
   if (request.operation === 'update-sections') {
     state.sections = { ...state.sections, ...request.sections };
     await putState(fetchImpl, baseUrl, token, state);
@@ -481,6 +646,9 @@ export async function publishRequestDocument(input, options = {}) {
     const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
     const verifiedState = normaliseStateShape(verifiedStateRaw);
     assertSubset(verifiedState.sections, state.sections, new Set(Object.keys(request.sections)), 'Catalogue section read-back');
+    if (state.version >= CATALOGUE_STATE_VERSION) {
+      assert.deepEqual(verifiedState.recommendationSubsections, state.recommendationSubsections);
+    }
 
     const productionUrl = `${baseUrl}/?catalogue_verify=benchmarks`;
     if (typeof request.sections.benchmarksHtml === 'string') {
@@ -502,10 +670,32 @@ export async function publishRequestDocument(input, options = {}) {
 
     return { ok: true, operation: request.operation, target: 'sections', verified: true };
   }
-  const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
-  state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue));
+
+  if (request.operation === 'update-recommendation-subsections') {
+    const effectiveCards = await completeRankingCards(repoRoot, state, includeStaticCatalogue);
+    const migrated = {
+      ...state,
+      version: CATALOGUE_STATE_VERSION,
+      recommendationSubsections: request.recommendationSubsections
+    };
+    assertV4Inventory(migrated, effectiveCards, 'Recommendation subsection migration');
+    await putState(fetchImpl, baseUrl, token, migrated);
+
+    const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+    const verifiedState = normaliseStateShape(verifiedStateRaw);
+    assert.equal(verifiedState.version, CATALOGUE_STATE_VERSION, 'Catalogue state read-back did not remain v4.');
+    assert.deepEqual(verifiedState.recommendationSubsections, request.recommendationSubsections);
+    await verifyV4State(fetchImpl, baseUrl, repoRoot, includeStaticCatalogue, verifiedState, 'Catalogue state read-back');
+    await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=recommendation-subsections`, sleep);
+    return { ok: true, operation: request.operation, target: 'recommendation-subsections', verified: true };
+  }
+
+  const effectiveCards = await completeRankingCards(repoRoot, state, includeStaticCatalogue);
+  state.cards = state.version >= CATALOGUE_STATE_VERSION
+    ? { ...state.cards }
+    : normaliseRankings(effectiveCards, state.version);
   const existingDynamic = isRecord(state.entries[request.key]) ? clone(state.entries[request.key]) : null;
-  const existingCard = isRecord(state.cards[request.key]) ? clone(state.cards[request.key]) : null;
+  const existingCard = isRecord(effectiveCards[request.key]) ? clone(effectiveCards[request.key]) : null;
   const exists = Boolean(existingDynamic || existingCard);
 
   if (!exists && request.operation !== 'upsert-entry') throw new Error(`Catalogue key "${request.key}" does not exist.`);
@@ -520,12 +710,17 @@ export async function publishRequestDocument(input, options = {}) {
     cardPatch = {
       archived: true,
       archivedAt: existingCard?.archivedAt || existingDynamic?.archivedAt || timestamp,
-      archivedRank: existingCard?.archivedRank || currentRank
+      ...(state.version < CATALOGUE_STATE_VERSION ? { archivedRank: existingCard?.archivedRank || currentRank } : {})
     };
   } else if (request.operation === 'unarchive-entry') {
-    const restoredRank = existingCard?.archivedRank || existingCard?.rank || existingDynamic?.rank || 1;
-    entryPatch = { archived: false, archivedAt: '', rank: restoredRank };
-    cardPatch = { archived: false, archivedAt: '', rank: restoredRank };
+    if (state.version >= CATALOGUE_STATE_VERSION) {
+      entryPatch = { archived: false, archivedAt: '' };
+      cardPatch = { archived: false, archivedAt: '' };
+    } else {
+      const restoredRank = existingCard?.archivedRank || existingCard?.rank || existingDynamic?.rank || 1;
+      entryPatch = { archived: false, archivedAt: '', rank: restoredRank };
+      cardPatch = { archived: false, archivedAt: '', rank: restoredRank };
+    }
   }
 
   const imageData = request.image ? await loadImage(request.image, repoRoot) : null;
@@ -546,7 +741,39 @@ export async function publishRequestDocument(input, options = {}) {
   if (target === 'dynamic' && !existingCard) nextCard = mergeCard({}, { ...nextEntry, ...cardPatch });
   if (request.operation === 'replace-image' && !imageData) throw new Error('replace-image requires a valid image.');
 
-  if (request.operation === 'upsert-entry' || request.operation === 'archive-entry' || request.operation === 'unarchive-entry') {
+  let structural = false;
+  let effectiveAfter = effectiveCards;
+  if (state.version >= CATALOGUE_STATE_VERSION) {
+    const intent = structuralIntentForV4(request, exists, existingCard, nextCard);
+    structural = Boolean(intent.structural);
+    if (structural) {
+      const workingCards = { ...effectiveCards, [request.key]: nextCard };
+      const destination = intent.destination;
+      const structuralResult = applyCatalogueStructuralChange({
+        cards: workingCards,
+        recommendationSubsections: state.recommendationSubsections,
+        key: request.key,
+        targetType: intent.targetType,
+        targetSubsectionId: destination?.subsectionId || '',
+        targetPosition: destination?.position || 1,
+        wantsArchived: intent.wantsArchived,
+        now: timestamp
+      });
+      effectiveAfter = structuralResult.cards;
+      state.recommendationSubsections = structuralResult.recommendationSubsections;
+      state.cards = mergeStructuralResultIntoStateCards(state.cards, effectiveCards, effectiveAfter, request.key);
+      nextCard = { ...nextCard, ...effectiveAfter[request.key] };
+      state.cards[request.key] = mergeCard(state.cards[request.key], nextCard);
+      const type = catalogueType(nextCard);
+      if (nextCard.archived || type === 'main') delete state.cards[request.key].rank;
+      if (target === 'dynamic') nextEntry = updateDynamicStructure(nextEntry, nextCard, true);
+    } else {
+      state.cards[request.key] = nextCard;
+      effectiveAfter = { ...effectiveCards, [request.key]: nextCard };
+    }
+    assertRankingInvariant(effectiveAfter, 'Catalogue write', state.version);
+    assertV4Inventory(state, effectiveAfter, 'Catalogue write');
+  } else if (request.operation === 'upsert-entry' || request.operation === 'archive-entry' || request.operation === 'unarchive-entry') {
     if (target === 'dynamic') {
       const fallbackRank = nextEntry.rank ?? nextCard.rank ?? 1;
       const nextType = catalogueType(nextCard);
@@ -560,6 +787,7 @@ export async function publishRequestDocument(input, options = {}) {
     }
     state.cards = reorderForTarget(state.cards, request.key, nextCard, timestamp);
     nextCard = state.cards[request.key];
+    effectiveAfter = state.cards;
     if (target === 'dynamic') {
       if (nextCard.archived) delete nextEntry.rank;
       else nextEntry.rank = nextCard.rank;
@@ -569,9 +797,10 @@ export async function publishRequestDocument(input, options = {}) {
     }
   } else {
     state.cards[request.key] = nextCard;
+    effectiveAfter = state.cards;
   }
 
-  assertRankingInvariant(state.cards, 'Catalogue write');
+  assertRankingInvariant(state.version >= CATALOGUE_STATE_VERSION ? effectiveAfter : state.cards, 'Catalogue write', state.version);
   if (target === 'dynamic') await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry);
   await putState(fetchImpl, baseUrl, token, state);
 
@@ -580,18 +809,26 @@ export async function publishRequestDocument(input, options = {}) {
     savedEntry = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-entry/${encodeURIComponent(request.key)}`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Entry read-back');
     savedEntry = isRecord(savedEntry?.entry) ? savedEntry.entry : savedEntry;
     const expectedKeys = new Set([...intendedKeys(request)].filter(key => key !== 'catalogueType' && key !== 'archivedRank' && key !== 'laurel' && key !== 'productionHtml' && key !== 'practicalHtml'));
-    if (request.operation === 'unarchive-entry') expectedKeys.add('rank');
+    if (request.operation === 'unarchive-entry' && state.version < CATALOGUE_STATE_VERSION) expectedKeys.add('rank');
+    if (structural && state.version >= CATALOGUE_STATE_VERSION && catalogueType(nextCard) !== 'main' && !nextCard.archived) expectedKeys.add('rank');
     assertSubset(savedEntry, nextEntry, expectedKeys, 'Entry read-back');
   }
 
   const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
   const verifiedState = normaliseStateShape(verifiedStateRaw);
-  assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back');
+  assert.equal(verifiedState.version, state.version, 'Catalogue state version changed during read-back.');
+  if (state.version >= CATALOGUE_STATE_VERSION) {
+    assert.deepEqual(verifiedState.recommendationSubsections, state.recommendationSubsections);
+    await verifyV4State(fetchImpl, baseUrl, repoRoot, includeStaticCatalogue, verifiedState, 'Catalogue state read-back');
+  } else {
+    assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back', verifiedState.version);
+  }
   const savedCard = verifiedState.cards[request.key];
   if (!isRecord(savedCard)) throw new Error(`Catalogue state read-back is missing card "${request.key}".`);
   const cardKeys = new Set([...intendedKeys(request)].filter(key => !DYNAMIC_ONLY_FIELDS.has(key) && key !== 'productionLines' && key !== 'practicalLines'));
-  if (request.operation === 'unarchive-entry') cardKeys.add('rank');
-  assertSubset(savedCard, nextCard, cardKeys, 'Catalogue state read-back');
+  if (request.operation === 'unarchive-entry' && state.version < CATALOGUE_STATE_VERSION) cardKeys.add('rank');
+  if (structural && state.version >= CATALOGUE_STATE_VERSION && catalogueType(nextCard) !== 'main' && !nextCard.archived) cardKeys.add('rank');
+  assertSubset(savedCard, state.cards[request.key], cardKeys, 'Catalogue state read-back');
 
   const html = await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=${encodeURIComponent(request.key)}`, sleep);
   const keyPattern = new RegExp(`\\bdata-key=["']${escapeRegex(request.key)}["']`, 'i');
