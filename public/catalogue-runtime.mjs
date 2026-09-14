@@ -1,17 +1,17 @@
 if (typeof document !== 'undefined') {
-  await import('./catalogue-personal-status-persistence.mjs?v=20260914-v4');
-  import('./catalogue-direct-edit.mjs?v=20260914-v4');
-  import('./catalogue-direct-persistence.mjs?v=20260914-v4');
-  import('./catalogue-flavour.mjs?v=20260914-v4');
-  import('./catalogue-card-layout.mjs?v=20260914-v4');
-  import('./catalogue-legacy-copy.mjs?v=20260914-v4');
-  import('./catalogue-size-presentation.mjs?v=20260914-v4');
-  import('./catalogue-presentation.mjs?v=20260914-v4');
+  await import('./catalogue-personal-status-persistence.mjs');
+  import('./catalogue-direct-edit.mjs');
+  import('./catalogue-direct-persistence.mjs');
+  import('./catalogue-flavour.mjs');
+  import('./catalogue-card-layout.mjs');
+  import('./catalogue-legacy-copy.mjs');
+  import('./catalogue-size-presentation.mjs');
+  import('./catalogue-presentation.mjs');
   import('./catalogue-recommendation-subsections.mjs?v=20260914-v4');
-  import('./catalogue-half-cohort.mjs?v=20260914-v4');
+  import('./catalogue-half-cohort.mjs');
   import('./catalogue-structure-editor.mjs?v=20260914-v4');
-  import('./catalogue-editor-behaviour.mjs?v=20260914-v4');
-  import('./catalogue-convenience.mjs?v=20260914-v4');
-  import('./catalogue-retailer-price-fallbacks.mjs?v=20260914-v4');
-  import('./catalogue-convenience-refinements.mjs?v=20260914-v4');
+  import('./catalogue-editor-behaviour.mjs');
+  import('./catalogue-convenience.mjs');
+  import('./catalogue-retailer-price-fallbacks.mjs');
+  import('./catalogue-convenience-refinements.mjs');
 }
