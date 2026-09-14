@@ -45,7 +45,18 @@ jobs:
         with:
           node-version: '22'
       - name: Run tests
-        run: npm test
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee npm-test.log
+      - name: Upload test log
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-test-log
+          path: npm-test.log
+          retention-days: 1
+          if-no-files-found: error
 
   verify-live:
     name: Verify Cloudflare Workers Build
