@@ -10,8 +10,9 @@ test('Worker injects a cache-busted top-level runtime module', () => {
   assert.match(workerCore, new RegExp(`catalogue-runtime\\.mjs\\?v=${ASSET_VERSION}`));
 });
 
-test('runtime forces fresh Recommendation, convenience, and structural editor modules together', () => {
+test('runtime keeps structural modules on the deployed v8 chain and cache-busts the editor shell fix', () => {
   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-convenience\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-recommendation-subsections\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
   assert.match(runtime, new RegExp(`import\\(['"]\\.\\/catalogue-structure-editor\\.mjs\\?v=${ASSET_VERSION}['"]\\)`));
+  assert.match(runtime, /catalogue-editor-fullscreen\.mjs\?v=20260914-v9/);
 });
