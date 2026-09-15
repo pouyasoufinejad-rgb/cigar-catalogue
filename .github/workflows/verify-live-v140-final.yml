@@ -1,0 +1,30 @@
+name: Verify live v140 final
+
+on:
+  push:
+    branches:
+      - verify/live-v140-final
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify live catalogue v140
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://cigar-catalogue.psncodex.workers.dev'
+          headers="$(mktemp)"
+          html="$(curl -fsSL -D "$headers" "$base/?final_verify=1")"
+          runtime="$(curl -fsSL "$base/catalogue-runtime.mjs?v=140&final_verify=1")"
+          hotfix="$(curl -fsSL "$base/catalogue-recommendation-subsections.mjs?v=editor-focus-1&final_verify=1")"
+          tr -d '\r' < "$headers" | grep -Fi 'x-cigar-catalogue-version: 140'
+          grep -Fq '/catalogue-runtime.mjs?v=140' <<< "$html"
+          grep -Fq 'catalogue-recommendation-subsections.mjs?v=editor-focus-1' <<< "$runtime"
+          grep -Eq 'observer\.observe\((catalogueRoot|observationRoot)' <<< "$hotfix"
+          grep -Eq 'card\.parentElement !== grid|grid\.insertBefore\(card, expected\)' <<< "$hotfix"
+          ! grep -Fq 'observer.observe(root.body' <<< "$hotfix"
+          echo 'LIVE VERIFIED: Worker v140 and editor focus hotfix are serving.'
