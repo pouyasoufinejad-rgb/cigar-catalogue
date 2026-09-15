@@ -62,7 +62,6 @@ function buildStateFromDom(document) {
     assigned.add(card.dataset.key);
   }
 
-  // The smoke test needs every subsection represented so selection changes can prove bounds are subsection-local.
   for (let index = 0; index < sections.length; index += 1) {
     if (sections[index].entryKeys.length) continue;
     const donor = sections.find(section => section.entryKeys.length > 1);
@@ -177,10 +176,12 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   const restoreGlobals = installGlobals(window);
   const previousFetch = globalThis.fetch;
   globalThis.fetch = fetchStub;
-  t.after(() => {
+  t.after(async () => {
+    dom.window.close();
+    await Promise.resolve();
+    await new Promise(resolve => setImmediate(resolve));
     globalThis.fetch = previousFetch;
     restoreGlobals();
-    dom.window.close();
   });
 
   if (window.document.readyState === 'loading') {
@@ -204,7 +205,6 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   await waitFor(() => window.document.getElementById('catalogue-admin-subsection'), 'subsection editor control did not hydrate');
   await delay(75);
 
-  // 1. Direct editor owns the public toggle.
   const toggle = window.document.getElementById('catalogue-admin-toggle');
   assert.ok(toggle, 'Edit catalogue toggle must exist');
   toggle.click();
@@ -212,7 +212,6 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.equal(toggle.textContent.trim(), 'Finish editing');
   t.diagnostic('ASSERTION 1 PASS: Edit catalogue enters direct edit mode and changes the toggle label.');
 
-  // 2. Card selection enables in-place contenteditable fields.
   const firstCard = window.document.querySelector('[data-recommendation-subsection] .tier-grid article.card[data-key]:not(.hidden)');
   assert.ok(firstCard, 'a visible recommendation card must exist');
   firstCard.dispatchEvent(new window.MouseEvent('click', { bubbles:true, cancelable:true }));
@@ -222,7 +221,6 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.ok(firstCard.querySelectorAll('[contenteditable="true"]').length >= 1);
   t.diagnostic('ASSERTION 2 PASS: exactly one subsection card is selected and has contenteditable fields.');
 
-  // 3. Typing must not re-render/reparent/reorder the selected card.
   const editable = firstCard.querySelector('[contenteditable="true"]');
   const originalParent = firstCard.parentElement;
   const originalIndex = Array.from(originalParent.children).indexOf(firstCard);
@@ -235,7 +233,6 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.equal(Array.from(originalParent.children).indexOf(firstCard), originalIndex);
   t.diagnostic('ASSERTION 3 PASS: input does not re-render subsections or move the selected card.');
 
-  // 4. More fields opens the full modal on the selected card.
   const more = window.document.querySelector('#catalogue-direct-controls [data-direct="more"]');
   assert.ok(more, 'More fields button must exist');
   more.click();
@@ -247,8 +244,8 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.equal(window.document.getElementById('catalogue-admin-subsection').value, firstCard.dataset.subsection);
   t.diagnostic('ASSERTION 4 PASS: More fields opens the populated full modal for the selected card.');
 
-  // 5. Rank max is owned by the selected recommendation subsection, before and after selection changes.
   const rank = window.document.getElementById('catalogue-admin-rank');
+  await delay(0);
   assert.equal(Number(rank.max), sectionLengthFor(state, firstCard.dataset.subsection));
   const alternateSection = state.sections.recommendationSubsections.find(section => section.id !== firstCard.dataset.subsection && section.entryKeys.length);
   assert.ok(alternateSection, 'another subsection must contain a card');
@@ -258,9 +255,8 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   cardSelect.dispatchEvent(new window.Event('change', { bubbles:true }));
   await delay(30);
   assert.equal(Number(rank.max), alternateSection.entryKeys.length);
-  t.diagnostic('ASSERTION 5 PASS: rank max equals the selected subsection length before and after changing cards.');
+  t.diagnostic('ASSERTION 5 PASS: rank max equals the selected subsection length after the deferred modal-open sync and after changing cards.');
 
-  // 6. Full-editor save issues one transformed PUT preserving all three subsections and contiguous ranks.
   putBodies.length = 0;
   window.document.getElementById('catalogue-admin-save').click();
   await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
@@ -276,7 +272,6 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   }
   t.diagnostic('ASSERTION 6 PASS: save emits exactly one PUT with three subsections and contiguous 1..N ranks.');
 
-  // 7. The subsection renderer itself stays settled over an idle 300 ms window.
   await delay(75);
   let idleMutations = 0;
   const ownerCounts = new Map();
