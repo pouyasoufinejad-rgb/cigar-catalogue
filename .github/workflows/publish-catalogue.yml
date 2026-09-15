@@ -8,11 +8,6 @@ on:
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
-      - 'scripts/publish-live-maintenance-request.mjs'
-      - 'scripts/publish-live-maintenance-ranked-request.mjs'
-      - 'scripts/build-recommendation-subsections-migration.mjs'
-      - 'scripts/verify-live-code-ready.mjs'
-      - 'scripts/verify-live-recommendation-v4.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -25,11 +20,6 @@ on:
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
-      - 'scripts/publish-live-maintenance-request.mjs'
-      - 'scripts/publish-live-maintenance-ranked-request.mjs'
-      - 'scripts/build-recommendation-subsections-migration.mjs'
-      - 'scripts/verify-live-code-ready.mjs'
-      - 'scripts/verify-live-recommendation-v4.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -61,18 +51,6 @@ jobs:
           node-version: '22'
       - name: Run tests
         run: npm test
-      - name: Build read-only Recommendation migration candidate
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/build-recommendation-subsections-migration.mjs | tee recommendation-subsections-migration-candidate.json
-      - name: Upload Recommendation migration candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: recommendation-subsections-migration-candidate
-          path: recommendation-subsections-migration-candidate.json
-          retention-days: 1
-          if-no-files-found: error
 
   publish:
     name: Publish changed catalogue requests
@@ -92,7 +70,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Publish requests sequentially and verify v4 migration
+      - name: Publish requests sequentially
         shell: bash
         run: |
           set -euo pipefail
@@ -126,24 +104,11 @@ jobs:
             exit 1
           fi
 
-          needs_v4_verify=false
           for request in "${files[@]}"; do
             if [[ ! "${request}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
               echo "::error::Refusing unexpected request path: ${request}"
               exit 1
             fi
-            operation="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(String(p.operation||""));' "${request}")"
             echo "Publishing ${request} from current live Worker state"
-            if [[ "${operation}" == "bulk-maintenance" ]]; then
-              node scripts/publish-live-maintenance-ranked-request.mjs "${request}"
-            else
-              node scripts/publish-live-catalogue-request.mjs "${request}"
-            fi
-            if [[ "${operation}" == "update-recommendation-subsections" ]]; then
-              needs_v4_verify=true
-            fi
+            node scripts/publish-live-catalogue-request.mjs "${request}"
           done
-
-          if [[ "${needs_v4_verify}" == "true" ]]; then
-            node scripts/verify-live-recommendation-v4.mjs
-          fi

@@ -11,8 +11,8 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
   assert.match(stockClient, /production[^\n]*querySelectorAll\('\.artmeta-line'\)/);
 });
 
-test('legacy desktop layout helper remains testable while the rebuilt UI owns production layout', () => {
-  assert.match(runtimeLoader, /catalogue-next-ui\.mjs\?v=20260915-next1/);
+test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
   assert.match(wideLayout, /width:\s*calc\(100% \+ 60px\)!important/);

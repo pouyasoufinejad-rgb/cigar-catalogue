@@ -11,9 +11,9 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
   assert.ok(runtimeSource, 'catalogue-runtime.mjs must exist');
   assert.doesNotMatch(valueSource, /import\(['"]\.\/catalogue-[^'"]+\.mjs['"]\)/);
   assert.doesNotMatch(valueSource, /\btypeof document\b|\bdocument\./);
-  assert.doesNotMatch(runtimeSource, /catalogue-direct-edit\.mjs/);
 
   for (const moduleName of [
+    'catalogue-direct-edit.mjs',
     'catalogue-direct-persistence.mjs',
     'catalogue-flavour.mjs',
     'catalogue-card-layout.mjs',
@@ -22,7 +22,6 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
     'catalogue-presentation.mjs',
     'catalogue-half-cohort.mjs',
     'catalogue-editor-behaviour.mjs',
-    'catalogue-editor-fullscreen.mjs',
     'catalogue-convenience.mjs',
     'catalogue-convenience-refinements.mjs'
   ]) {
@@ -30,7 +29,7 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
   }
 });
 
-test('Worker HTML transform injects the cache-busted runtime bootstrap exactly once', async () => {
+test('Worker HTML transform injects the runtime bootstrap exactly once', async () => {
   const worker = await import('../src/index.js');
   assert.equal(typeof worker.injectRuntimeBootstrap, 'function');
 
@@ -38,7 +37,7 @@ test('Worker HTML transform injects the cache-busted runtime bootstrap exactly o
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=20260914-v10"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });
