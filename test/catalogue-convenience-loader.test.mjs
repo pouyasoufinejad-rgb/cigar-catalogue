@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 const valueSource = await readFile(new URL('../public/catalogue-value.mjs', import.meta.url), 'utf8');
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
-test('catalogue runtime bootstrap loads the convenience layer with the other browser presentation modules', () => {
-  assert.match(runtimeSource, /import\('\.\/catalogue-convenience\.mjs'\)/);
+test('catalogue runtime bootstrap loads the cache-busted convenience layer with the other browser presentation modules', () => {
+  assert.match(runtimeSource, /import\('\.\/catalogue-convenience\.mjs\?v=direct-edit-1'\)/);
 });
 
 test('Value module stays browser-independent', () => {

@@ -28,6 +28,19 @@ test('clicking a card selects it and exposes in-place text editing plus image co
   assert.match(directEdit, /Text Y/);
 });
 
+test('direct editing temporarily expands compact cards so editable detail fields are visible', () => {
+  assert.match(directEdit, /function exposeCardForEditing\(card\)/);
+  assert.match(directEdit, /classList\.contains\('convenience-compact'\)/);
+  assert.match(directEdit, /dataset\.catalogueDirectWasCompact\s*=\s*'1'/);
+  assert.match(directEdit, /classList\.remove\('convenience-compact'\)/);
+  assert.match(directEdit, /classList\.add\('convenience-expanded'\)/);
+  assert.match(directEdit, /function restoreCardPresentation\(card\)/);
+  assert.match(directEdit, /dataset\.catalogueDirectWasCompact\s*!==\s*'1'/);
+  assert.match(directEdit, /delete card\.dataset\.catalogueDirectWasCompact/);
+  assert.match(directEdit, /function selectCard\(card\)[\s\S]*?exposeCardForEditing\(selected\)[\s\S]*?setEditable\(selected, true\)/);
+  assert.match(directEdit, /function exitEditMode\(\)[\s\S]*?restoreCardPresentation\(selected\)/);
+});
+
 test('direct image and text positioning overrides existing important transforms', () => {
   assert.match(persistence, /style\.setProperty\('transform',\s*`translate\(\$\{layout\.imageX\}px, \$\{layout\.imageY\}px\) scale\(\$\{layout\.imageScale \/ 100\}\)`,\s*'important'\)/);
   assert.match(persistence, /style\.setProperty\('transform',\s*`translateY\(\$\{layout\.metaY\}px\)`,\s*'important'\)/);
@@ -44,7 +57,7 @@ test('direct editor uses the existing card selection and catalogue state save pa
 
 test('direct editor and verified persistence are loaded by the browser module chain', () => {
   assert.match(runtimeModule, /typeof document !== 'undefined'/);
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs'\)/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs\?v=compact-edit-1'\)/);
   assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
 });
 

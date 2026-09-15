@@ -371,7 +371,8 @@ function renderCard(card) {
   const compare = card.querySelector('[data-convenience-compare]');
   if (compare) compare.setAttribute('aria-pressed', browserState.compare.includes(key) ? 'true' : 'false');
 
-  const expanded = isCardExpanded(browserState, key);
+  const directEditing = card.dataset.catalogueDirectWasCompact === '1';
+  const expanded = directEditing || isCardExpanded(browserState, key);
   card.classList.toggle('convenience-compact', !expanded);
   card.classList.toggle('convenience-expanded', expanded);
   const details = card.querySelector('[data-convenience-details]');

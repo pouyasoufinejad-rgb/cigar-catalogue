@@ -95,6 +95,20 @@ function setEditable(card, enabled) {
   });
 }
 
+function exposeCardForEditing(card) {
+  if (!card || !card.classList.contains('convenience-compact')) return;
+  card.dataset.catalogueDirectWasCompact = '1';
+  card.classList.remove('convenience-compact');
+  card.classList.add('convenience-expanded');
+}
+
+function restoreCardPresentation(card) {
+  if (!card || card.dataset.catalogueDirectWasCompact !== '1') return;
+  card.classList.add('convenience-compact');
+  card.classList.remove('convenience-expanded');
+  delete card.dataset.catalogueDirectWasCompact;
+}
+
 function selectInExistingAdmin(card) {
   const select = q('catalogue-admin-card');
   if (!select) return;
@@ -151,9 +165,11 @@ function selectCard(card) {
   if (selected) {
     setEditable(selected, false);
     selected.classList.remove('catalogue-direct-selected');
+    restoreCardPresentation(selected);
   }
   selected = card;
   selected.classList.add('catalogue-direct-selected');
+  exposeCardForEditing(selected);
   setEditable(selected, true);
   selectInExistingAdmin(selected);
   updatePanelFor(selected);
@@ -181,6 +197,7 @@ function exitEditMode() {
   if (selected) {
     setEditable(selected, false);
     selected.classList.remove('catalogue-direct-selected');
+    restoreCardPresentation(selected);
   }
   selected = null;
   const toggle = q('catalogue-admin-toggle');

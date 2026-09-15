@@ -153,6 +153,12 @@ test('compact presentation hides only secondary detail groups and keeps core car
   assert.doesNotMatch(source, /convenience-compact[^}]*\.medals\s*\{[^}]*display\s*:\s*none/is);
 });
 
+test('convenience rendering respects the direct editor temporary expansion instead of immediately re-collapsing the selected card', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  assert.match(source, /const directEditing = card\.dataset\.catalogueDirectWasCompact === '1'/);
+  assert.match(source, /const expanded = directEditing \|\| isCardExpanded\(browserState, key\)/);
+});
+
 test('compare UI provides a four-cigar tray and a full comparison field set', async () => {
   const source = await readFile(moduleUrl, 'utf8');
   assert.match(source, /catalogue-compare-tray/);
