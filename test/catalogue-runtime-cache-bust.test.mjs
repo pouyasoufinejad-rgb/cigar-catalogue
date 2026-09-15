@@ -9,8 +9,8 @@ test('Worker injects a versioned runtime bootstrap so repaired editor code bypas
   assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=141\"/);
 });
 
-test('cache-busted runtime keeps the legacy direct editor retired', () => {
-  assert.doesNotMatch(runtime, /catalogue-direct-edit\.mjs/);
+test('cache-busted runtime restores the direct editor', () => {
+  assert.match(runtime, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=editor-repair-1['"]\)/);
 });
 
 test('runtime version-busts the recommendation subsection module containing the editor hotfix', () => {
