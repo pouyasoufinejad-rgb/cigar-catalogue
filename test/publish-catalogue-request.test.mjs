@@ -69,7 +69,7 @@ test('partial update of an existing dynamic entry preserves unrelated fields and
       return jsonResponse({ ok: true });
     } },
     { method: 'GET', url: `${BASE}/api/catalogue-entry/existing-dynamic`, response: () => jsonResponse(writtenEntry) },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards, entries: { 'existing-dynamic': writtenEntry } }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...writtenState, entries: { 'existing-dynamic': writtenEntry } }) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=existing-dynamic`, response: new Response('<div id="flat-main"><article class="card" data-key="existing-dynamic"></article></div>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
   const fetchImpl = createFetchRouter(routes, calls);
@@ -103,7 +103,7 @@ test('existing static card update writes the complete cards map and does not cre
       writtenState = JSON.parse(options.body);
       return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=static-one`, response: new Response('<article class="card" data-key="static-one"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -130,7 +130,7 @@ test('archive removes active rank, stores archivedRank, and compacts the active 
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
       writtenState = JSON.parse(options.body); return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=b`, response: new Response('<article data-key="b" data-archived="1"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -161,7 +161,7 @@ test('any catalogue write normalises legacy archived ranks and active cohort gap
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
       writtenState = JSON.parse(options.body); return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=a`, response: new Response('<article data-key="a"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -188,7 +188,7 @@ test('unarchive restores the saved archived rank and shifts active entries aroun
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
       writtenState = JSON.parse(options.body); return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=b`, response: new Response('<article data-key="b"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -229,7 +229,7 @@ test('image upload validates bytes, verifies download, and associates imageUrl',
     { method: 'PUT', url: `${BASE}/api/catalogue-entry/img`, response: ({ options }) => { writtenEntry = JSON.parse(options.body); return jsonResponse({ ok: true, entry: writtenEntry }); } },
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => { writtenState = JSON.parse(options.body); return jsonResponse({ ok: true }); } },
     { method: 'GET', url: `${BASE}/api/catalogue-entry/img`, response: () => jsonResponse(writtenEntry) },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards, entries: { img: writtenEntry } }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...writtenState, entries: { img: writtenEntry } }) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=img`, response: new Response('<article data-key="img"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -259,7 +259,7 @@ test('live render absence is a hard failure and does not leak the token', async 
   const routes = [
     { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => { writtenState = JSON.parse(options.body); return jsonResponse({ ok: true }); } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=x`, response: new Response('<html>missing</html>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -326,7 +326,7 @@ test('production verification retries a transient Worker resource-limit response
   const routes = [
     { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => { writtenState = JSON.parse(options.body); return jsonResponse({ ok: true }); } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=x`, response: () => {
       renderAttempts += 1;
       if (renderAttempts === 1) return new Response('Worker exceeded resource limits', { status: 503 });
