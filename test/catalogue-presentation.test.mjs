@@ -14,7 +14,7 @@ const presentationSource = await readFile(new URL('../public/catalogue-presentat
 
 test('catalogue loader installs presentation, recommendation subsection, and Half-Cigar runtimes', () => {
   assert.match(runtimeLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
-  assert.match(runtimeLoader, /import\('\.\/catalogue-recommendation-subsections\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-recommendation-subsections\.mjs(?:\?[^']+)?'\)/);
   assert.match(runtimeLoader, /import\('\.\/catalogue-half-cohort\.mjs'\)/);
 });
 

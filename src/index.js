@@ -876,7 +876,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=140"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -894,7 +894,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.set('cache-control', 'no-cache, must-revalidate');
-  headers.set('x-cigar-catalogue-version', '139');
+  headers.set('x-cigar-catalogue-version', '140');
   return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
 }
 
