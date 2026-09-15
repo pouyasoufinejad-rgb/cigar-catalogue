@@ -9,3 +9,4 @@ source = source.replace(before, after);
 source = source.replace("headers.set('x-cigar-catalogue-version', '139');", "headers.set('x-cigar-catalogue-version', '140');");
 await writeFile(target, source);
 await rm('scripts/apply-runtime-cache-bust.mjs', { force: true });
+// Triggered again after updating the loader regression to allow the intentional versioned module URL.
