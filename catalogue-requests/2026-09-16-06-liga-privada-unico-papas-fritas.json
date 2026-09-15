@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-16-06-liga-privada-unico-papas-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-papas-fritas",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "Único Serie Papas Fritas — Single",
+    "eyebrow": "Broadleaf Liga short-filler value taster",
+    "packagePrice": 30.7,
+    "packageLabel": "single cigar",
+    "price": 30.7,
+    "country": "Nicaragua",
+    "length": 4.5,
+    "ring": 44,
+    "strength": 8,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 10,
+    "taster": true,
+    "catalogueType": "taster",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High (projected)",
+      "Pairings: Espresso, dark chocolate, cola or dark rum (projected)",
+      "Occasion: Compact dark Liga session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Cocoa, espresso, leather, earth, cedar and black pepper</strong> give the original Papas Fritas the dark, smoke-heavy character expected from Liga Privada. Premium Liga tobacco trimmings are used in a compact mixed/short-filler format beneath Connecticut Broadleaf and Brazilian Mata Fina, making this one of the cheapest ways to access the darker Único/Liga flavour family. At A$30.70 for a substantial 4½″ × 44 single, it is a particularly strong projected value candidate. Untasted here, so Strength 8 and Quality 8 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. The Index currently lists the exact Australian Único Serie Papas Fritas single at A$30.70 and 4½″ × 44, with the single variant available. The local SKU dimensions are used here. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade at La Gran Fabrica Drew Estate, Estelí",
+      "Wrapper: Connecticut Broadleaf",
+      "Binder: Plantation-Grown Brazilian Mata Fina",
+      "Filler: Honduran + Nicaraguan premium Liga trimmings",
+      "Mixed / short-filler construction"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4½″ × 44 compact format",
+      "A$30.70 single",
+      "Mixed / short filler",
+      "No Half-Cigar treatment"
+    ],
+    "smokeTime": "About 35–45 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-papas-fritas"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Liga Privada Único Serie Papas Fritas as an active untasted Taster at rank 10. The Index lists the exact local 4.5 x 44 single at A$30.70 and available. Strength 8 and Quality 8 are projections; leave Flavour unrated and Value automatic."
+}
