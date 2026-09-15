@@ -1,0 +1,126 @@
+name: Diagnose live edit flow v140
+
+on:
+  push:
+    branches:
+      - diag/live-edit-click-browser-v140
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Reproduce live edit flow
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
+            const consoleErrors = [];
+            const pageErrors = [];
+            page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+            page.on('pageerror', err => pageErrors.push(String(err)));
+            await page.goto('https://cigar-catalogue.psncodex.workers.dev/?diag_edit=1', { waitUntil: 'networkidle', timeout: 60000 });
+            await page.waitForTimeout(1500);
+
+            const state0 = await page.evaluate(() => ({
+              readyState: document.readyState,
+              toggle: document.querySelector('#catalogue-admin-toggle')?.textContent?.trim(),
+              toggleVisible: !!document.querySelector('#catalogue-admin-toggle')?.getClientRects().length,
+              modalHidden: document.querySelector('#catalogue-admin')?.hidden,
+              directPanel: !!document.querySelector('#catalogue-direct-controls'),
+              bodyClass: document.body.className,
+              cards: document.querySelectorAll('article.card[data-key]').length,
+              runtimeScripts: Array.from(document.scripts).map(s => s.src).filter(Boolean).filter(s => s.includes('catalogue-runtime'))
+            }));
+            console.log('STATE0', JSON.stringify(state0));
+
+            const toggle = page.locator('#catalogue-admin-toggle');
+            await toggle.click({ timeout: 10000 });
+            await page.waitForTimeout(300);
+            const state1 = await page.evaluate(() => ({
+              toggle: document.querySelector('#catalogue-admin-toggle')?.textContent?.trim(),
+              modalHidden: document.querySelector('#catalogue-admin')?.hidden,
+              directPanelDisplay: getComputedStyle(document.querySelector('#catalogue-direct-controls')).display,
+              editMode: document.body.classList.contains('catalogue-direct-edit-mode'),
+              selectedCount: document.querySelectorAll('.catalogue-direct-selected').length,
+              editableCount: document.querySelectorAll('[contenteditable="true"]').length
+            }));
+            console.log('STATE1_AFTER_TOGGLE', JSON.stringify(state1));
+
+            const firstCard = page.locator('article.card[data-key]:visible').first();
+            const key = await firstCard.getAttribute('data-key');
+            console.log('FIRST_CARD_KEY', key);
+            await firstCard.click({ position: { x: 30, y: 30 }, timeout: 10000 });
+            await page.waitForTimeout(300);
+            const state2 = await page.evaluate(() => {
+              const selected = document.querySelector('article.card.catalogue-direct-selected');
+              return {
+                selectedKey: selected?.dataset.key || null,
+                editableCount: selected?.querySelectorAll('[contenteditable="true"]').length || 0,
+                summaryEditable: selected?.querySelector('.summary')?.contentEditable || null,
+                eyebrowEditable: selected?.querySelector('.eyebrow')?.contentEditable || null,
+                panelTitle: document.querySelector('#catalogue-direct-controls .direct-title')?.textContent?.trim() || null
+              };
+            });
+            console.log('STATE2_AFTER_CARD', JSON.stringify(state2));
+
+            const summary = firstCard.locator('.summary').first();
+            const summaryExists = await summary.count();
+            if (summaryExists) {
+              const before = await summary.textContent();
+              await summary.click({ timeout: 10000 });
+              await page.keyboard.press('End');
+              await page.keyboard.type(' DIAGX');
+              await page.waitForTimeout(200);
+              const after = await summary.textContent();
+              const active = await page.evaluate(() => ({
+                tag: document.activeElement?.tagName,
+                cls: document.activeElement?.className,
+                contentEditable: document.activeElement?.contentEditable
+              }));
+              console.log('SUMMARY_EDIT', JSON.stringify({ before, after, changed: after !== before, active }));
+            } else {
+              console.log('SUMMARY_EDIT', JSON.stringify({ error: 'no summary node' }));
+            }
+
+            const more = page.locator('#catalogue-direct-controls [data-direct="more"]');
+            const moreVisible = await more.isVisible().catch(() => false);
+            console.log('MORE_VISIBLE', moreVisible);
+            if (moreVisible) {
+              await more.click();
+              await page.waitForTimeout(600);
+              const state3 = await page.evaluate(() => ({
+                modalHidden: document.querySelector('#catalogue-admin')?.hidden,
+                modalDisplay: document.querySelector('#catalogue-admin') ? getComputedStyle(document.querySelector('#catalogue-admin')).display : null,
+                adminCard: document.querySelector('#catalogue-admin-card')?.value || null,
+                subsection: document.querySelector('#catalogue-admin-subsection')?.value || null,
+                panelScrollTop: document.querySelector('.catalogue-admin-panel')?.scrollTop ?? null
+              }));
+              console.log('STATE3_MORE_FIELDS', JSON.stringify(state3));
+            }
+
+            console.log('PAGE_ERRORS', JSON.stringify(pageErrors));
+            console.log('CONSOLE_ERRORS', JSON.stringify(consoleErrors));
+            await page.screenshot({ path: 'live-edit-diagnostic.png', fullPage: true });
+            await browser.close();
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-edit-diagnostic
+          path: live-edit-diagnostic.png
+          if-no-files-found: ignore
