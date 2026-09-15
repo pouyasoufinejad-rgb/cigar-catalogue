@@ -24,6 +24,7 @@ jobs:
         run: |
           node scripts/apply-recommendation-subsections-task-patch.mjs
           node scripts/apply-recommendation-publisher-task-patch.mjs
+          node scripts/patch-recommendation-test-mocks.mjs
       - name: Commit scoped changes
         run: |
           if git diff --quiet; then
@@ -32,6 +33,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/index.html public/catalogue-admin-unified-v139.mjs public/catalogue-half-cohort.mjs scripts/publish-catalogue-request.mjs
-          git commit -m "feat: wire recommendation subsection persistence"
+          git add public/index.html public/catalogue-admin-unified-v139.mjs public/catalogue-half-cohort.mjs scripts/publish-catalogue-request.mjs test/publish-catalogue-request.test.mjs
+          git commit -m "test: round-trip recommendation subsection state"
           git push origin HEAD:task/recommendation-subsections
