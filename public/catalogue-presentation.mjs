@@ -1,26 +1,5 @@
-import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
-
 const STYLE_ID = 'catalogue-presentation-v155';
 const STOCK_COLOURS = new Set(['green', 'yellow', 'red']);
-const STRONG_SECTION_SELECTOR = '[data-tier-section="strong"]';
-const ELITE_SECTION_SELECTOR = '[data-tier-section="elite"]';
-
-function normaliseGoldLabels(labels = []) {
-  return [...new Set(Array.from(labels || [])
-    .map(label => String(label || '').trim().toLowerCase())
-    .filter(Boolean))].sort();
-}
-
-export function recommendationDestination(labels = [], { flavourRated = false, key = '' } = {}) {
-  const golds = new Set(normaliseGoldLabels(labels));
-  const strengthGold = golds.has('strength');
-  const qualityGold = golds.has('quality');
-  const eliteQualityGold = qualityGold || hasQualityAwardException(key);
-  if (strengthGold && eliteQualityGold && (!flavourRated || golds.has('flavour'))) return 'elite';
-  if (strengthGold || qualityGold) return 'strong';
-  if (golds.has('value')) return 'noteworthy-cheap';
-  return 'noteworthy-neither';
-}
 
 export function stockColourForStatus(status) {
   const value = String(status || '').trim().toLowerCase();
@@ -83,26 +62,6 @@ article.card .eyebrow .stock-dot-red{background:#a92d35}
   document.head.appendChild(style);
 }
 
-function cardGoldLabels(card) {
-  return Array.from(card?.querySelectorAll?.('.rating.gold') || []).map(node =>
-    node.querySelector(':scope > span')?.textContent?.trim().toLowerCase() || ''
-  ).filter(Boolean);
-}
-
-function cardFlavourRated(card) {
-  const flavour = Array.from(card?.querySelectorAll?.('.rating') || []).find(node =>
-    node.querySelector(':scope > span')?.textContent?.trim().toLowerCase() === 'flavour'
-  );
-  return Boolean(flavour && !flavour.classList.contains('flavour-unrated'));
-}
-
-export function recommendationDestinationForCard(card) {
-  return recommendationDestination(cardGoldLabels(card), {
-    flavourRated: cardFlavourRated(card),
-    key: card?.dataset?.key || ''
-  });
-}
-
 function effectiveStockStatus(card) {
   const pin = String(card?.dataset?.stockPin || '').trim().toLowerCase();
   if (pin === 'in' || pin === 'out' || pin === 'hold') return pin;
@@ -132,71 +91,12 @@ export function ensureStockDot(card) {
   return dot;
 }
 
-function destinationGrid(root, destination) {
-  const selector = destination === 'elite'
-    ? `${ELITE_SECTION_SELECTOR} .grid`
-    : destination === 'strong'
-      ? `${STRONG_SECTION_SELECTOR} .grid`
-      : destination === 'noteworthy-cheap'
-        ? '[data-noteworthy-section="cheap"] .grid'
-        : '[data-noteworthy-section="neither"] .grid';
-  return root.querySelector(selector);
-}
-
-function isUnavailableCard(card) {
-  return card?.classList?.contains?.('is-unavailable')
-    || card?.closest?.('.unavailable-grid')
-    || ['out', 'delisted'].includes(effectiveStockStatus(card));
-}
-
-function catalogueType(card) {
-  const explicit = String(card?.dataset?.catalogueType || '').trim().toLowerCase();
-  if (explicit === 'half') return 'half';
-  if (explicit === 'taster' || card?.dataset?.taster === '1') return 'taster';
-  return 'main';
-}
-
-function insertByRank(grid, card) {
-  if (!grid || !card) return;
-  const rank = Number(card.dataset?.rank) || Number.MAX_SAFE_INTEGER;
-  const siblings = Array.from(grid.querySelectorAll(':scope > article.card'));
-  const before = siblings.find(node => (Number(node.dataset?.rank) || Number.MAX_SAFE_INTEGER) > rank);
-  if (before) grid.insertBefore(card, before);
-  else grid.appendChild(card);
-}
-
-function refreshRecommendationGroupVisibility() {
-  const refresh = globalThis?.window?.refreshGroupVisibility;
-  if (typeof refresh === 'function') refresh();
-}
-
-export function reclassifyRecommendationCards(root = document) {
-  if (!root?.querySelectorAll) return 0;
-  const sort = root.getElementById?.('sort') || root.querySelector?.('#sort');
-  const rankSortActive = !sort?.value || sort.value === 'rank';
-
-  let moved = 0;
-  root.querySelectorAll('article.card[data-key]').forEach(card => {
-    if (card.dataset.archived === '1' || catalogueType(card) !== 'main' || isUnavailableCard(card)) return;
-    if (!rankSortActive && card.dataset.dynamicEntry !== '1') return;
-    const destination = recommendationDestinationForCard(card);
-    const target = destinationGrid(root, destination);
-    if (target && card.parentElement !== target) {
-      insertByRank(target, card);
-      moved += 1;
-    }
-  });
-  if (moved) refreshRecommendationGroupVisibility();
-  return moved;
-}
-
 let refreshTimer = 0;
 function refreshPresentation() {
   refreshTimer = 0;
   ensureStyle();
   normaliseExperienceTags(document);
   document.querySelectorAll('article.card[data-key]').forEach(ensureStockDot);
-  reclassifyRecommendationCards(document);
 }
 
 function scheduleRefresh() {
@@ -209,7 +109,6 @@ export function installCataloguePresentation() {
   ensureStyle();
   const start = () => {
     refreshPresentation();
-    document.getElementById('sort')?.addEventListener('change', scheduleRefresh);
     if (typeof MutationObserver !== 'undefined' && document.body) {
       const observer = new MutationObserver(scheduleRefresh);
       observer.observe(document.body, {
