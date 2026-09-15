@@ -1,0 +1,30 @@
+name: Recommendation subsections task harness
+
+on:
+  push:
+    branches:
+      - task/recommendation-subsections
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Read live catalogue state (read-only)
+        run: |
+          curl --fail --silent --show-error \
+            -H 'accept: application/json' \
+            'https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides' \
+            -o /tmp/catalogue-overrides.json
+          node -e "const fs=require('fs'); const s=JSON.parse(fs.readFileSync('/tmp/catalogue-overrides.json','utf8')); console.log(JSON.stringify({version:s.version,updatedAt:s.updatedAt,cards:Object.keys(s.cards||{}).length,sections:Object.keys(s.sections||{}),entries:Object.keys(s.entries||{}).length,hasRecommendationSubsections:Array.isArray(s.sections?.recommendationSubsections)},null,2))"
+      - name: Baseline npm test
+        run: npm test
