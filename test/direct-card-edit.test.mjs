@@ -7,18 +7,37 @@ const persistence = await readFile(new URL('../public/catalogue-direct-persisten
 const runtimeModule = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const fullEditor = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
-test('legacy direct editor remains dormant and cannot intercept Edit catalogue', () => {
-  assert.ok(directEdit.length > 0, 'legacy module may remain in the repository for history/rollback');
-  assert.doesNotMatch(runtimeModule, /catalogue-direct-edit\.mjs/);
-  assert.doesNotMatch(runtimeModule, /initDirectCardEditing/);
+test('direct editor is loaded by the runtime and owns Edit catalogue', () => {
+  assert.ok(directEdit.length > 0, 'direct editor module must remain present');
+  assert.match(runtimeModule, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=editor-repair-1['"]\)/);
+  assert.match(directEdit, /function onToggleCapture\(event\)[\s\S]*?if \(allowModalOpen\) return;[\s\S]*?event\.stopImmediatePropagation\(\);[\s\S]*?enterEditMode\(\)/);
+  assert.match(directEdit, /document\.addEventListener\('click', onToggleCapture, \{ capture: true \}\)/);
 });
 
-test('full catalogue editor owns the Edit catalogue button', () => {
+test('full catalogue editor remains reachable from More fields', () => {
+  assert.match(directEdit, /function openMoreFields\(\)[\s\S]*?allowModalOpen = true;[\s\S]*?q\('catalogue-admin-toggle'\)\?\.click\(\);[\s\S]*?allowModalOpen = false;[\s\S]*?catalogue-admin-reload/);
   assert.match(fullEditor, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
   assert.match(fullEditor, /function openEditor\(\)[\s\S]*?modal\.hidden\s*=\s*false/);
 });
 
-test('full editor exposes structural product fields rather than only legacy inline text', () => {
+test('direct editor patch is limited to inline copy and layout fields', () => {
+  const match = directEdit.match(/function directPatch\(card\) \{([\s\S]*?)\n\}/);
+  assert.ok(match, 'directPatch must exist');
+  const patch = match[1];
+  for (const field of ['summaryHtml', 'noteHtml', 'eyebrow', 'experienceTags', 'productionHtml', 'practicalHtml', 'readLayout']) {
+    assert.ok(patch.includes(field), `directPatch should include ${field}`);
+  }
+  for (const field of ['rank', 'subsection', 'catalogueType', 'archived']) {
+    assert.doesNotMatch(patch, new RegExp(`\\b${field}\\b`), `directPatch must never write ${field}`);
+  }
+});
+
+test('direct editor saves against freshly fetched sections', () => {
+  assert.match(directEdit, /const state = await fetchState\(\)/);
+  assert.match(directEdit, /sections:\{ \.\.\.\(state\.sections \|\| \{\}\) \}/);
+});
+
+test('full editor exposes structural product fields rather than only inline text', () => {
   for (const id of [
     'catalogue-v139-type', 'catalogue-v139-risk', 'catalogue-v139-brand', 'catalogue-v139-title',
     'catalogue-v139-package-price', 'catalogue-v139-package-label', 'catalogue-v139-price',
@@ -32,7 +51,7 @@ test('full editor exposes structural product fields rather than only legacy inli
   }
 });
 
-test('verified layout persistence remains loaded independently of the retired direct editor', () => {
+test('verified layout persistence remains loaded alongside the direct editor', () => {
   assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
   assert.match(persistence, /\/api\/catalogue-overrides/);
 });
