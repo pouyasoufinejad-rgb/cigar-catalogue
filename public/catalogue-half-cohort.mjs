@@ -62,13 +62,16 @@ export function rankDisplayForType(type, rank) {
 export function compactCatalogueCohorts(rows = []) {
   const source = Array.isArray(rows) ? rows.map(row => ({ ...row, catalogueType: catalogueTypeForRow(row) })) : [];
   const rankByKey = new Map();
-  for (const type of [MAIN_TYPE, HALF_TYPE, TASTER_TYPE]) {
+  for (const type of [HALF_TYPE, TASTER_TYPE]) {
     source
       .filter(row => !row.archived && row.catalogueType === type)
       .sort((a, b) => finiteNumber(a.rank, Number.MAX_SAFE_INTEGER) - finiteNumber(b.rank, Number.MAX_SAFE_INTEGER))
       .forEach((row, index) => rankByKey.set(row.key, index + 1));
   }
-  return source.map(row => row.archived ? row : { ...row, rank: rankByKey.get(row.key) || 1 });
+  return source.map(row => {
+    if (row.archived || row.catalogueType === MAIN_TYPE) return row;
+    return { ...row, rank: rankByKey.get(row.key) || 1 };
+  });
 }
 
 export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
@@ -81,34 +84,34 @@ export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
   const selected = sourceRows.find(row => row.key === key);
   const updates = {};
   if (!selected) return updates;
-
   const originalRank = Math.max(1, Math.round(finiteNumber(selected.rank, 1)));
   const oldType = catalogueTypeForRow(selected);
-  const existing = existingCards && existingCards[key] && typeof existingCards[key] === 'object'
-    ? existingCards[key]
-    : {};
+  const existing = existingCards && existingCards[key] && typeof existingCards[key] === 'object' ? existingCards[key] : {};
 
-  if (!selected.archived && (wantsArchived || oldType !== targetType)) {
-    const oldCohort = sourceRows
+  if (!selected.archived && oldType !== MAIN_TYPE && (wantsArchived || oldType !== targetType)) {
+    sourceRows
       .filter(row => row.key !== key && !row.archived && catalogueTypeForRow(row) === oldType)
-      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
-    oldCohort.forEach((row, index) => {
-      updates[row.key] = mergeOverride(existingCards?.[row.key], {
-        rank: index + 1,
-        catalogueType: oldType,
-        taster: oldType === TASTER_TYPE
+      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank))
+      .forEach((row, index) => {
+        updates[row.key] = mergeOverride(existingCards?.[row.key], { rank:index + 1, catalogueType:oldType, taster:oldType === TASTER_TYPE });
       });
-    });
   }
 
   if (wantsArchived) {
-    updates[key] = mergeOverride(existing, {
-      archived: true,
-      archivedAt: existing.archivedAt || now,
-      archivedRank: existing.archivedRank || originalRank,
-      catalogueType: targetType,
-      taster: targetType === TASTER_TYPE
+    const archived = mergeOverride(existing, {
+      archived:true, archivedAt:existing.archivedAt || now, archivedRank:existing.archivedRank || originalRank,
+      catalogueType:targetType, taster:targetType === TASTER_TYPE
     });
+    delete archived.rank;
+    delete archived.subsection;
+    updates[key] = archived;
+    return updates;
+  }
+
+  if (targetType === MAIN_TYPE) {
+    const main = mergeOverride(existing, { catalogueType:MAIN_TYPE, taster:false, archived:false, archivedAt:'' });
+    delete main.subsection;
+    updates[key] = main;
     return updates;
   }
 
@@ -116,21 +119,11 @@ export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
     .filter(row => row.key !== key && !row.archived && catalogueTypeForRow(row) === targetType)
     .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
   const insertionIndex = Math.max(0, Math.min(targetCohort.length, targetRank - 1));
-  targetCohort.splice(insertionIndex, 0, {
-    ...selected,
-    key,
-    catalogueType: targetType,
-    taster: targetType === TASTER_TYPE,
-    archived: false
-  });
-
+  targetCohort.splice(insertionIndex, 0, { ...selected, key, catalogueType:targetType, taster:targetType === TASTER_TYPE, archived:false });
   targetCohort.forEach((row, index) => {
-    const rowType = row.key === key ? targetType : catalogueTypeForRow(row);
     updates[row.key] = mergeOverride(existingCards?.[row.key], {
-      rank: index + 1,
-      catalogueType: rowType,
-      taster: rowType === TASTER_TYPE,
-      ...(row.key === key ? { archived: false, archivedAt: '' } : {})
+      rank:index + 1, catalogueType:targetType, taster:targetType === TASTER_TYPE,
+      ...(row.key === key ? { archived:false, archivedAt:'' } : {})
     });
   });
   return updates;
@@ -140,16 +133,10 @@ export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', s
   const targetType = normaliseCatalogueType(selectedType);
   const activeRows = compactCatalogueCohorts((Array.isArray(rows) ? rows : [])
     .filter(row => !row.archived)
-    .map(row => row.key === selectedKey
-      ? { ...row, catalogueType: targetType, taster: targetType === TASTER_TYPE }
-      : { ...row }));
+    .map(row => row.key === selectedKey ? { ...row, catalogueType:targetType, taster:targetType === TASTER_TYPE } : { ...row }));
   const output = {};
-
-  for (const type of [MAIN_TYPE, HALF_TYPE, TASTER_TYPE]) {
-    const cohort = activeRows
-      .filter(row => catalogueTypeForRow(row) === type)
-      .sort((a, b) => finiteNumber(a.rank) - finiteNumber(b.rank));
-
+  for (const type of [HALF_TYPE, TASTER_TYPE]) {
+    const cohort = activeRows.filter(row => catalogueTypeForRow(row) === type).sort((a,b)=>finiteNumber(a.rank)-finiteNumber(b.rank));
     if (selectedKey && targetType === type) {
       const selectedIndex = cohort.findIndex(row => row.key === selectedKey);
       if (selectedIndex >= 0) {
@@ -158,14 +145,12 @@ export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', s
         cohort.splice(insertionIndex, 0, selected);
       }
     }
-
-    cohort.forEach((row, index) => {
-      output[row.key] = mergeOverride(existingCards?.[row.key], {
-        rank: index + 1,
-        catalogueType: type,
-        taster: type === TASTER_TYPE
-      });
-    });
+    cohort.forEach((row,index)=>{ output[row.key]=mergeOverride(existingCards?.[row.key], { rank:index+1, catalogueType:type, taster:type===TASTER_TYPE }); });
+  }
+  if (selectedKey && targetType === MAIN_TYPE) {
+    const main = mergeOverride(existingCards?.[selectedKey], { catalogueType:MAIN_TYPE, taster:false, archived:false });
+    delete main.subsection;
+    output[selectedKey] = main;
   }
   return output;
 }
