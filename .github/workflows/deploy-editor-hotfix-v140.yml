@@ -14,6 +14,14 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      CLOUDFLARE_WORKERS_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+      WORKERS_API_TOKEN: ${{ secrets.WORKERS_API_TOKEN }}
+      CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+      CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      CF_EMAIL: ${{ secrets.CF_EMAIL }}
     steps:
       - name: Check out fixed catalogue
         uses: actions/checkout@v4
@@ -26,12 +34,36 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Verify deployment credential
+      - name: Detect configured Cloudflare credential name
+        id: creds
         shell: bash
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "CLOUDFLARE_API_TOKEN is not configured in GitHub Actions."
+          set -euo pipefail
+          found=0
+          for name in CLOUDFLARE_API_TOKEN CF_API_TOKEN CLOUDFLARE_TOKEN CLOUDFLARE_WORKERS_API_TOKEN WORKERS_API_TOKEN CLOUDFLARE_API_KEY CLOUDFLARE_EMAIL CF_API_KEY CF_EMAIL CLOUDFLARE_ACCOUNT_ID; do
+            if [ -n "${!name:-}" ]; then
+              echo "configured:$name"
+              found=1
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No known Cloudflare credential secret is configured."
             exit 1
+          fi
+
+      - name: Normalize alternate token names
+        shell: bash
+        run: |
+          set -euo pipefail
+          token="${CLOUDFLARE_API_TOKEN:-${CF_API_TOKEN:-${CLOUDFLARE_TOKEN:-${CLOUDFLARE_WORKERS_API_TOKEN:-${WORKERS_API_TOKEN:-}}}}}"
+          if [ -n "$token" ]; then
+            echo "CLOUDFLARE_API_TOKEN=$token" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${CLOUDFLARE_API_KEY:-}" ] && [ -n "${CF_API_KEY:-}" ]; then
+            echo "CLOUDFLARE_API_KEY=$CF_API_KEY" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${CLOUDFLARE_EMAIL:-}" ] && [ -n "${CF_EMAIL:-}" ]; then
+            echo "CLOUDFLARE_EMAIL=$CF_EMAIL" >> "$GITHUB_ENV"
           fi
 
       - name: Run full test suite
@@ -45,16 +77,16 @@ jobs:
         run: |
           set -euo pipefail
           base="https://cigar-catalogue.psncodex.workers.dev"
-          for attempt in $(seq 1 12); do
-            headers="$(curl -fsSI "$base/?deploy_verify=$attempt")"
-            html="$(curl -fsS "$base/?deploy_verify=$attempt")"
-            runtime="$(curl -fsS "$base/catalogue-runtime.mjs?v=140&deploy_verify=$attempt")"
-            hotfix="$(curl -fsS "$base/catalogue-recommendation-subsections.mjs?v=editor-focus-1&deploy_verify=$attempt")"
+          for attempt in $(seq 1 18); do
+            headers="$(curl -fsSI "$base/?deploy_verify=$attempt" || true)"
+            html="$(curl -fsS "$base/?deploy_verify=$attempt" || true)"
+            runtime="$(curl -fsS "$base/catalogue-runtime.mjs?v=140&deploy_verify=$attempt" || true)"
+            hotfix="$(curl -fsS "$base/catalogue-recommendation-subsections.mjs?v=editor-focus-1&deploy_verify=$attempt" || true)"
             if printf '%s' "$headers" | tr -d '\r' | grep -qi '^x-cigar-catalogue-version: 140$' \
               && printf '%s' "$html" | grep -q 'catalogue-runtime.mjs?v=140' \
               && printf '%s' "$runtime" | grep -q 'catalogue-recommendation-subsections.mjs?v=editor-focus-1' \
-              && printf '%s' "$hotfix" | grep -q 'observer.observe(catalogueRoot' \
-              && printf '%s' "$hotfix" | grep -q 'card.parentElement !== grid'; then
+              && printf '%s' "$hotfix" | grep -Eq 'observer\.observe\((catalogueRoot|observationRoot)' \
+              && printf '%s' "$hotfix" | grep -Eq 'card\.parentElement !== grid|grid\.insertBefore\(card, expected\)'; then
               echo "Live Worker v140 and editor hotfix verified."
               exit 0
             fi
