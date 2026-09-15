@@ -642,6 +642,11 @@ function bindAdmin(root = document) {
       control.addEventListener('change', () => setTimeout(() => syncAdminSelection(root), 0));
     }
   }
+  const adminToggle = root.getElementById?.('catalogue-admin-toggle');
+  if (adminToggle && adminToggle.dataset.recommendationSubsectionsRankBound !== '1') {
+    adminToggle.dataset.recommendationSubsectionsRankBound = '1';
+    adminToggle.addEventListener('click', () => setTimeout(() => syncAdminSelection(root), 0));
+  }
   syncAdminSelection(root);
 }
 
