@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import {
+import worker, {
   applyStructuralOverridesToHtml,
   extractStockTargetsFromHtml,
   injectEntriesIntoHtml,
@@ -115,4 +115,16 @@ test('catalogue cards show friendly labels for Firmin Cigars and The Index', () 
 
   assert.match(html, />View at Firmin Cigars <span>/);
   assert.match(html, />View at The Index <span>/);
+});
+
+test('stock API exposes the deployed stock runtime version', async () => {
+  const env = {
+    CATALOGUE_STATE: {
+      async get() { return null; }
+    }
+  };
+  const response = await worker.fetch(new Request('https://catalogue.test/api/stock'), env);
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.runtimeVersion, 2);
 });
