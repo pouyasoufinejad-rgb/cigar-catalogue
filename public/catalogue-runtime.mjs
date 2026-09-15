@@ -9,6 +9,6 @@ if (typeof document !== 'undefined') {
   import('./catalogue-recommendation-subsections.mjs?v=editor-focus-1');
   import('./catalogue-half-cohort.mjs');
   import('./catalogue-editor-behaviour.mjs');
-  import('./catalogue-convenience.mjs');
+  import('./catalogue-convenience.mjs?v=direct-edit-1');
   import('./catalogue-convenience-refinements.mjs');
 }
