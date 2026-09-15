@@ -11,9 +11,9 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
   assert.ok(runtimeSource, 'catalogue-runtime.mjs must exist');
   assert.doesNotMatch(valueSource, /import\(['"]\.\/catalogue-[^'"]+\.mjs['"]\)/);
   assert.doesNotMatch(valueSource, /\btypeof document\b|\bdocument\./);
+  assert.doesNotMatch(runtimeSource, /catalogue-direct-edit\.mjs/, 'legacy direct editor must not own Edit catalogue');
 
   for (const moduleName of [
-    'catalogue-direct-edit.mjs',
     'catalogue-direct-persistence.mjs',
     'catalogue-flavour.mjs',
     'catalogue-card-layout.mjs',
