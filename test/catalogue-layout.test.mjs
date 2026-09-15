@@ -67,19 +67,19 @@ function createCountryCard() {
   };
 }
 
-test('legacy Substantial mount remains available for runtime Half-Cigar presentation', () => {
+test('recommendation catalogue exposes three stable subsection mounts plus the flat non-rank sort grid', () => {
   const tree = parseDivTree(catalogueHtml);
-  const substantial = findDiv(tree, 'data-noteworthy-section', 'substantial');
-
-  assert.ok(substantial, 'legacy Substantial mount must remain available for the presentation runtime');
+  assert.ok(findDiv(tree, 'id', 'flat-main'));
+  assert.ok(findDiv(tree, 'data-recommendation-subsection', 'coronets-cigarillos'));
+  assert.ok(findDiv(tree, 'data-recommendation-subsection', 'petit-panatelas'));
+  assert.ok(findDiv(tree, 'data-recommendation-subsection', 'flavoured-infused'));
+  assert.doesNotMatch(catalogueHtml, /data-noteworthy-section=/);
 });
 
-test('the former Neither group is presented as Flavoured & Infused Cigars', () => {
-  assert.match(
-    catalogueHtml,
-    /data-noteworthy-section="neither">\s*<h4 class="subtier-heading">Flavoured &amp; Infused Cigars<\/h4><p class="subtier-note">Sweetened, aromatic and infused profiles\.<\/p>/
-  );
-  assert.doesNotMatch(catalogueHtml, /<h4 class="subtier-heading">Neither<\/h4>/);
+test('static subsection headings and notes match the seeded recommendation metadata', () => {
+  assert.match(catalogueHtml, /data-recommendation-subsection="coronets-cigarillos">\s*<h3 class="tier-heading">Coronets &amp; Cigarillos<\/h3>\s*<p class="subtier-note">Ring gauge 34 and under\.<\/p>/);
+  assert.match(catalogueHtml, /data-recommendation-subsection="petit-panatelas">\s*<h3 class="tier-heading">Petit Panatelas<\/h3>\s*<p class="subtier-note">Ring gauge 35 and over\.<\/p>/);
+  assert.match(catalogueHtml, /data-recommendation-subsection="flavoured-infused">\s*<h3 class="tier-heading">Flavoured &amp; Infused Cigars<\/h3>\s*<p class="subtier-note">Sweetened, aromatic and infused profiles\.<\/p>/);
 });
 
 test('Benchmarks lists every tasted cigar as its own collapsed disclosure', () => {
