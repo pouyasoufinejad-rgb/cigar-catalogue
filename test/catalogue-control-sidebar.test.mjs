@@ -1,10 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import {
   moveControlsToSidebar,
   restoreControlsFromSidebar
 } from '../public/catalogue-control-sidebar.mjs';
+
+const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+
+test('runtime loads the cache-busted control-sidebar placement module', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-1/);
+});
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
   const dom = new JSDOM(`<!doctype html><body>
