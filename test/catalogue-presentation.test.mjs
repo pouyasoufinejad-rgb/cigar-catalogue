@@ -12,33 +12,25 @@ try {
 const runtimeLoader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const presentationSource = await readFile(new URL('../public/catalogue-presentation.mjs', import.meta.url), 'utf8').catch(() => '');
 
-test('catalogue loader installs presentation and Half-Cigar cohort runtimes', () => {
+test('catalogue loader installs presentation, recommendation subsection, and Half-Cigar runtimes', () => {
   assert.match(runtimeLoader, /import\('\.\/catalogue-presentation\.mjs'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-recommendation-subsections\.mjs'\)/);
   assert.match(runtimeLoader, /import\('\.\/catalogue-half-cohort\.mjs'\)/);
 });
 
-test('recommendation routing no longer creates a rating-driven Substantial destination', () => {
+test('presentation no longer owns medal-based recommendation routing', () => {
   assert.ok(presentation, 'catalogue presentation module must load');
-  assert.equal(presentation.recommendationDestination(['size']), 'noteworthy-neither');
-  assert.equal(presentation.recommendationDestination(['strength', 'size']), 'strong');
-  assert.equal(presentation.recommendationDestination(['quality', 'size']), 'strong');
-  assert.equal(presentation.recommendationDestination(['strength', 'size', 'flavour']), 'strong');
-  assert.equal(presentation.recommendationDestination(['strength', 'quality', 'size']), 'elite');
-  assert.equal(presentation.recommendationDestination(['size', 'value']), 'noteworthy-cheap');
-  assert.equal(presentation.recommendationDestination(['size', 'flavour']), 'noteworthy-neither');
-  assert.notEqual(presentation.recommendationDestination(['size']), 'substantial');
-});
-
-test('dynamic main entries are reclassified even when a non-rank sort is active', () => {
-  assert.doesNotMatch(presentationSource, /if \(sort\?\.value && sort\.value !== ['"]rank['"]\) return 0;/);
-  assert.match(presentationSource, /if \(!rankSortActive && card\.dataset\.dynamicEntry !== ['"]1['"]\) return;/);
+  assert.equal('recommendationDestination' in presentation, false);
+  assert.doesNotMatch(presentationSource, /recommendationDestination/);
+  assert.doesNotMatch(presentationSource, /recommendedTarget/);
+  assert.doesNotMatch(presentationSource, /data-tier/);
+  assert.doesNotMatch(presentationSource, /tier-elite|tier-strong|noteworthy-cheap|noteworthy-neither/);
 });
 
 test('recommendation presentation does not own Half-Cigar sectioning or filtering', () => {
   assert.doesNotMatch(presentationSource, /containsHalfCigarCue/);
   assert.doesNotMatch(presentationSource, /isHalfCigarCard/);
   assert.doesNotMatch(presentationSource, /data-half-cigar-filter/);
-  assert.doesNotMatch(presentationSource, /data-noteworthy-section=["']substantial["']/);
   assert.doesNotMatch(presentationSource, /normaliseCardRankCaption/);
 });
 
