@@ -101,6 +101,31 @@ function installGlobals(window) {
   };
 }
 
+function trackRuntimeTimeouts() {
+  // ESM imports use Node's timers, which jsdom's window.close() cannot cancel.
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  const pending = new Set();
+  globalThis.setTimeout = (callback, ms, ...args) => {
+    const handle = originalSetTimeout((...values) => {
+      pending.delete(handle);
+      callback(...values);
+    }, ms, ...args);
+    pending.add(handle);
+    return handle;
+  };
+  globalThis.clearTimeout = handle => {
+    pending.delete(handle);
+    originalClearTimeout(handle);
+  };
+  return () => {
+    for (const handle of pending) originalClearTimeout(handle);
+    pending.clear();
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  };
+}
+
 async function importRuntimeModules(runtimeSource) {
   const specs = Array.from(runtimeSource.matchAll(/import\(['"]([^'"]+)['"]\)/g), match => match[1]);
   assert.ok(specs.length >= 10, 'runtime module list should be discoverable');
@@ -174,12 +199,14 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   });
   const { window } = dom;
   const restoreGlobals = installGlobals(window);
+  const restoreTimeouts = trackRuntimeTimeouts();
   const previousFetch = globalThis.fetch;
   globalThis.fetch = fetchStub;
   t.after(async () => {
     dom.window.close();
     await Promise.resolve();
     await new Promise(resolve => setImmediate(resolve));
+    restoreTimeouts();
     globalThis.fetch = previousFetch;
     restoreGlobals();
   });
@@ -187,7 +214,14 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   if (window.document.readyState === 'loading') {
     await new Promise(resolve => window.addEventListener('DOMContentLoaded', resolve, { once:true }));
   }
+  // The static HTML predates Half-Cigar entries, which production adds from KV.
+  // Reserve two fixture cards for that cohort without changing catalogue files.
+  const halfFixture = activeMainCards(window.document).slice(-2);
+  halfFixture.forEach(card => { card.dataset.catalogueType = 'half'; });
   state = buildStateFromDom(window.document);
+  halfFixture.forEach((card, index) => {
+    state.cards[card.dataset.key] = { catalogueType:'half', rank:index + 1 };
+  });
   window.sessionStorage.setItem('cigar-catalogue-admin-token', 'test-token');
 
   const adminUrl = new URL(ADMIN_URL);
@@ -257,6 +291,27 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.equal(Number(rank.max), alternateSection.entryKeys.length);
   t.diagnostic('ASSERTION 5 PASS: rank max equals the selected subsection length after the deferred modal-open sync and after changing cards.');
 
+  for (const [type, selector] of [
+    ['half', '#half-cigar-cards article.card[data-key]'],
+    ['taster', '#tasters-section article.card[data-key]']
+  ]) {
+    const cohort = Array.from(window.document.querySelectorAll(selector))
+      .filter(card => card.dataset.archived !== '1');
+    assert.ok(cohort.length, `${type} fixture must contain an active card`);
+    cardSelect.value = cohort[0].dataset.key;
+    cardSelect.dispatchEvent(new window.Event('change', { bubbles:true }));
+    await delay(30);
+    assert.equal(window.document.getElementById('catalogue-v139-type').value, type);
+    assert.equal(Number(rank.max), cohort.length, `${type} owns its cohort rank max`);
+    assert.equal(window.document.getElementById('catalogue-admin-subsection').disabled, true);
+  }
+  cardSelect.value = alternateKey;
+  cardSelect.dispatchEvent(new window.Event('change', { bubbles:true }));
+  await delay(30);
+  assert.equal(Number(rank.max), alternateSection.entryKeys.length);
+  t.diagnostic('COHORT OWNERSHIP PASS: Half-Cigar and Taster bounds remain independent; returning to recommendations restores subsection-local bounds.');
+
+  const expectedSections = structuredClone(state.sections.recommendationSubsections);
   putBodies.length = 0;
   window.document.getElementById('catalogue-admin-save').click();
   await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
@@ -264,6 +319,11 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   assert.equal(putBodies.length, 1);
   const saved = putBodies[0];
   assert.equal(saved.sections?.recommendationSubsections?.length, 3);
+  assert.deepEqual(saved.sections.recommendationSubsections, expectedSections);
+  halfFixture.forEach((card, index) => {
+    assert.equal(saved.cards[card.dataset.key].rank, index + 1);
+    assert.equal(saved.cards[card.dataset.key].catalogueType, 'half');
+  });
   for (const section of saved.sections.recommendationSubsections) {
     section.entryKeys.forEach((key, index) => {
       assert.equal(saved.cards?.[key]?.rank, index + 1, `${section.id} rank for ${key}`);
@@ -288,7 +348,7 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   await delay(300);
   const idleRenders = subsectionModule.getRecommendationSubsectionRenderCount() - rendersBeforeIdle;
   idleObserver.disconnect();
-  assert.ok(idleRenders <= 2, `renderSubsectionBlocks ran ${idleRenders} times during the 300 ms idle window`);
+  assert.equal(idleRenders, 0, `renderSubsectionBlocks ran ${idleRenders} times during the 300 ms idle window`);
   t.diagnostic(`ASSERTION 7 PASS: renderSubsectionBlocks ran ${idleRenders} time(s) during the 300 ms idle window.`);
   t.diagnostic(`IDLE_MUTATIONS=${idleMutations}`);
   t.diagnostic(`IDLE_MUTATION_OWNERS=${JSON.stringify(Object.fromEntries([...ownerCounts.entries()].sort((a,b) => b[1] - a[1])))}`);
