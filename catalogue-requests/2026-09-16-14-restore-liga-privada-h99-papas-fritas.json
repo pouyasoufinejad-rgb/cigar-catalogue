@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-16-14-restore-liga-privada-h99-papas-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-h99-papas-fritas",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "H99 Papas Fritas — Single",
+    "eyebrow": "Compact H99 Liga value taster",
+    "packagePrice": 30.7,
+    "packageLabel": "single cigar",
+    "price": 30.7,
+    "country": "Nicaragua",
+    "length": 4.5,
+    "ring": 44,
+    "strength": 8,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 8,
+    "taster": true,
+    "catalogueType": "taster",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High",
+      "Pairings: Espresso, cola, dark rum or bourbon",
+      "Occasion: Compact premium Liga session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, earth, cocoa, cedar, espresso and a touch of sweet spice</strong> put the H99 Papas Fritas squarely in the dark Liga family. The 4½″ × 44 format gives more tobacco and a slower read than a coronet while keeping the commitment to one cigar, making it the cleanest low-cost test of whether the H99 profile belongs in the catalogue.",
+    "noteHtml": "The Index lists the exact 4½″ × 44 single at A$30.70.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut Corojo",
+      "Binder: San Andrés Otapan",
+      "Filler: Honduran, Nicaraguan and Pennsylvania"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4½″ × 44",
+      "A$30.70 single",
+      "Compact H99 blend taster"
+    ],
+    "smokeTime": "About 45 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/liga-privada-h99-papa-fritas"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Restore the missing H99 Papas Fritas as the final publication in this corrective batch. The Index currently lists the exact 4.5 x 44 Single at A$30.70 and available. Leave Flavour unrated and Value automatic."
+}
