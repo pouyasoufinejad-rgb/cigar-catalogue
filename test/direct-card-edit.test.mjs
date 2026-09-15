@@ -7,10 +7,11 @@ const persistence = await readFile(new URL('../public/catalogue-direct-persisten
 const runtimeModule = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const fullEditor = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
-test('legacy direct editor remains dormant and cannot intercept Edit catalogue', () => {
-  assert.ok(directEdit.length > 0, 'legacy module may remain in the repository for history/rollback');
-  assert.doesNotMatch(runtimeModule, /catalogue-direct-edit\.mjs/);
-  assert.doesNotMatch(runtimeModule, /initDirectCardEditing/);
+test('direct editor owns Edit catalogue and can hand off to the full editor', () => {
+  assert.ok(directEdit.length > 0, 'direct editor module should exist');
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs\?v=editor-repair-1'\)/);
+  assert.match(directEdit, /function onToggleCapture\(event\)[\s\S]*?event\.stopImmediatePropagation\(\)[\s\S]*?enterEditMode\(\)/);
+  assert.match(directEdit, /function openMoreFields\(\)[\s\S]*?allowModalOpen\s*=\s*true[\s\S]*?q\('catalogue-admin-toggle'\)\?\.click\(\)[\s\S]*?setTimeout\(\(\) => q\('catalogue-admin-reload'\)\?\.click\(\), 0\)/);
 });
 
 test('full catalogue editor owns the Edit catalogue button', () => {
@@ -32,7 +33,7 @@ test('full editor exposes structural product fields rather than only legacy inli
   }
 });
 
-test('verified layout persistence remains loaded independently of the retired direct editor', () => {
+test('verified layout persistence remains loaded independently of direct editor ownership', () => {
   assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
   assert.match(persistence, /\/api\/catalogue-overrides/);
 });

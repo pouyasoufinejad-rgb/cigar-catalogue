@@ -26,6 +26,8 @@ const SUBSECTION_SELECT_ID = 'catalogue-admin-subsection';
 const SUBSECTION_EDITOR_ID = 'catalogue-admin-subsection-editor';
 let runtimeState = null;
 let refreshTimer = 0;
+let renderingSubsectionBlocks = false;
+export let recommendationSubsectionRenderCount = 0;
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -323,8 +325,17 @@ function refreshRankVisual(card) {
   if (value && value.textContent !== String(rank)) value.textContent = String(rank);
 }
 
-export function renderSubsectionBlocks(root = document, state = runtimeState) {
-  if (!root?.querySelector) return 0;
+function blockVisibility(block) {
+  if (!block?.querySelectorAll) return false;
+  const visible = Array.from(block.querySelectorAll('article.card')).some(card => !card.classList?.contains?.('hidden'));
+  const shouldHide = !visible;
+  const wasHidden = Boolean(block.classList?.contains?.('hidden'));
+  if (wasHidden === shouldHide) return false;
+  block.classList?.toggle?.('hidden', shouldHide);
+  return true;
+}
+
+function renderSubsectionBlocksInternal(root, state) {
   const target = ensureStateShape(state || {});
   const container = root.getElementById?.('cards') || root.querySelector('#cards');
   if (!container) return 0;
@@ -335,6 +346,7 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
   const flatMain = root.getElementById?.('flat-main') || root.querySelector('#flat-main');
   const sort = root.getElementById?.('sort') || root.querySelector('#sort');
   const rankSortActive = !sort?.value || sort.value === 'rank';
+  let visibilityRelevantChange = false;
 
   const existingBlocks = new Map(Array.from(container.querySelectorAll?.(':scope > [data-recommendation-subsection]') || [])
     .map(block => [block.dataset.recommendationSubsection, block]));
@@ -358,8 +370,14 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
     const heading = block.querySelector('.tier-heading');
     const note = block.querySelector('.subtier-note');
     const grid = block.querySelector('.tier-grid') || block.querySelector('.grid');
-    if (heading && heading.textContent !== section.title) heading.textContent = section.title;
-    if (note && note.textContent !== section.note) note.textContent = section.note;
+    if (heading && heading.textContent !== section.title) {
+      heading.textContent = section.title;
+      visibilityRelevantChange = true;
+    }
+    if (note && note.textContent !== section.note) {
+      note.textContent = section.note;
+      visibilityRelevantChange = true;
+    }
     if (grid && grid.id !== `recommendation-${section.id}`) grid.id = `recommendation-${section.id}`;
     orderedBlocks.push(block);
   }
@@ -388,21 +406,29 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
         if (card.dataset.subsection !== section.id) card.dataset.subsection = section.id;
         refreshRankVisual(card);
         const expected = grid.children?.[visibleIndex] || null;
-        if (expected !== card) grid.insertBefore(card, expected);
+        if (expected !== card) {
+          grid.insertBefore(card, expected);
+          visibilityRelevantChange = true;
+        }
         visibleIndex += 1;
       }
     }
-    blockVisibility(grid.parentElement);
+    if (blockVisibility(grid.parentElement)) visibilityRelevantChange = true;
   }
   if (rankSortActive) flatMain?.classList?.add?.('hidden');
-  globalThis?.window?.refreshGroupVisibility?.();
+  if (visibilityRelevantChange) globalThis?.window?.refreshGroupVisibility?.();
   return subsections.length;
 }
 
-function blockVisibility(block) {
-  if (!block?.querySelectorAll) return;
-  const visible = Array.from(block.querySelectorAll('article.card')).some(card => !card.classList?.contains?.('hidden'));
-  block.classList?.toggle?.('hidden', !visible);
+export function renderSubsectionBlocks(root = document, state = runtimeState) {
+  if (!root?.querySelector) return 0;
+  renderingSubsectionBlocks = true;
+  recommendationSubsectionRenderCount += 1;
+  try {
+    return renderSubsectionBlocksInternal(root, state);
+  } finally {
+    renderingSubsectionBlocks = false;
+  }
 }
 
 function currentSubsections() {
@@ -616,6 +642,11 @@ function bindAdmin(root = document) {
       control.addEventListener('change', () => setTimeout(() => syncAdminSelection(root), 0));
     }
   }
+  const adminToggle = root.getElementById?.('catalogue-admin-toggle');
+  if (adminToggle && adminToggle.dataset.recommendationSubsectionsRankBound !== '1') {
+    adminToggle.dataset.recommendationSubsectionsRankBound = '1';
+    adminToggle.addEventListener('click', () => setTimeout(() => syncAdminSelection(root), 0));
+  }
   syncAdminSelection(root);
 }
 
@@ -640,7 +671,7 @@ function hydrateRuntimeState(state, root = document) {
 }
 
 function scheduleRefresh(root = document) {
-  if (refreshTimer) return;
+  if (renderingSubsectionBlocks || refreshTimer) return;
   refreshTimer = setTimeout(() => {
     refreshTimer = 0;
     if (!runtimeState) return;
@@ -668,12 +699,15 @@ export function installRecommendationSubsections(root = document) {
   });
   initialRead(root);
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
+  root.addEventListener?.('catalogue:cards-refreshed', () => scheduleRefresh(root));
+  root.querySelectorAll?.('.toggle button').forEach(button => {
+    button.addEventListener('click', () => scheduleRefresh(root));
+  });
   const observationRoot = root.getElementById?.('cards') || root.querySelector?.('#cards');
   if (typeof MutationObserver !== 'undefined' && observationRoot) {
     const observer = new MutationObserver(() => scheduleRefresh(root));
     observer.observe(observationRoot, {
       subtree: true,
-      childList: true,
       attributes: true,
       attributeFilter: ['data-key', 'data-rank', 'data-subsection', 'data-archived', 'data-catalogue-type', 'data-taster', 'data-stock', 'data-stock-pin']
     });

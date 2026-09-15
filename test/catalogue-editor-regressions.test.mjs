@@ -52,10 +52,9 @@ test('edit click is observed at window capture before direct edit can stop docum
   assert.match(behaviourSource, /clickTarget\.addEventListener\?\.\('click',[\s\S]*?true\)/);
 });
 
-test('Edit catalogue is owned by the full editor, not the legacy direct-edit interceptor', () => {
+test('Edit catalogue loads direct edit ownership while the full editor retains its toggle binding', () => {
+  assert.match(loaderSource, /import\('\.\/catalogue-direct-edit\.mjs\?v=editor-repair-1'\)/);
   assert.match(fullEditorSource, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
-  assert.doesNotMatch(loaderSource, /catalogue-direct-edit\.mjs/);
-  assert.doesNotMatch(loaderSource, /initDirectCardEditing/);
 });
 
 test('Legend and Benchmarks full-editor fields are converted to explicit collapsed disclosures', () => {
