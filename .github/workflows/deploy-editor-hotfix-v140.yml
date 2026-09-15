@@ -1,0 +1,64 @@
+name: Deploy editor hotfix v140
+
+on:
+  push:
+    branches:
+      - deploy/editor-hotfix-v140
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check out fixed catalogue
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify deployment credential
+        shell: bash
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN is not configured in GitHub Actions."
+            exit 1
+          fi
+
+      - name: Run full test suite
+        run: npm test
+
+      - name: Deploy Worker with Wrangler
+        run: npx wrangler deploy
+
+      - name: Verify live editor hotfix
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://cigar-catalogue.psncodex.workers.dev"
+          for attempt in $(seq 1 12); do
+            headers="$(curl -fsSI "$base/?deploy_verify=$attempt")"
+            html="$(curl -fsS "$base/?deploy_verify=$attempt")"
+            runtime="$(curl -fsS "$base/catalogue-runtime.mjs?v=140&deploy_verify=$attempt")"
+            hotfix="$(curl -fsS "$base/catalogue-recommendation-subsections.mjs?v=editor-focus-1&deploy_verify=$attempt")"
+            if printf '%s' "$headers" | tr -d '\r' | grep -qi '^x-cigar-catalogue-version: 140$' \
+              && printf '%s' "$html" | grep -q 'catalogue-runtime.mjs?v=140' \
+              && printf '%s' "$runtime" | grep -q 'catalogue-recommendation-subsections.mjs?v=editor-focus-1' \
+              && printf '%s' "$hotfix" | grep -q 'observer.observe(catalogueRoot' \
+              && printf '%s' "$hotfix" | grep -q 'card.parentElement !== grid'; then
+              echo "Live Worker v140 and editor hotfix verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Deployment completed but live v140 verification did not converge."
+          exit 1
