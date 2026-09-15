@@ -319,8 +319,8 @@ function refreshRankVisual(card) {
   const flag = card?.querySelector?.('.rankflag');
   const label = flag?.querySelector?.('span');
   const value = flag?.querySelector?.('b');
-  if (label) label.textContent = 'No.';
-  if (value) value.textContent = String(rank);
+  if (label && label.textContent !== 'No.') label.textContent = 'No.';
+  if (value && value.textContent !== String(rank)) value.textContent = String(rank);
 }
 
 export function renderSubsectionBlocks(root = document, state = runtimeState) {
@@ -354,13 +354,13 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
       grid.className = 'grid tier-grid';
       block.append(heading, note, grid);
     }
-    block.dataset.recommendationSubsection = section.id;
+    if (block.dataset.recommendationSubsection !== section.id) block.dataset.recommendationSubsection = section.id;
     const heading = block.querySelector('.tier-heading');
     const note = block.querySelector('.subtier-note');
     const grid = block.querySelector('.tier-grid') || block.querySelector('.grid');
-    if (heading) heading.textContent = section.title;
-    if (note) note.textContent = section.note;
-    if (grid) grid.id = `recommendation-${section.id}`;
+    if (heading && heading.textContent !== section.title) heading.textContent = section.title;
+    if (note && note.textContent !== section.note) note.textContent = section.note;
+    if (grid && grid.id !== `recommendation-${section.id}`) grid.id = `recommendation-${section.id}`;
     orderedBlocks.push(block);
   }
 
@@ -379,15 +379,18 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
     const grid = root.getElementById?.(`recommendation-${section.id}`) || container.querySelector(`#recommendation-${section.id}`);
     if (!grid) continue;
     if (rankSortActive) {
-      section.entryKeys.forEach((key, index) => {
+      let visibleIndex = 0;
+      for (const [index, key] of section.entryKeys.entries()) {
         const card = byKey.get(key);
-        if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main' || unavailable(card)) return;
-        card.dataset.rank = String(index + 1);
-        card.dataset.subsection = section.id;
+        if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main' || unavailable(card)) continue;
+        const rank = String(index + 1);
+        if (card.dataset.rank !== rank) card.dataset.rank = rank;
+        if (card.dataset.subsection !== section.id) card.dataset.subsection = section.id;
         refreshRankVisual(card);
-        if (card.parentElement !== grid) grid.appendChild(card);
-        else grid.appendChild(card);
-      });
+        const expected = grid.children?.[visibleIndex] || null;
+        if (expected !== card) grid.insertBefore(card, expected);
+        visibleIndex += 1;
+      }
     }
     blockVisibility(grid.parentElement);
   }
@@ -665,9 +668,10 @@ export function installRecommendationSubsections(root = document) {
   });
   initialRead(root);
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
-  if (typeof MutationObserver !== 'undefined' && root.body) {
+  const observationRoot = root.getElementById?.('cards') || root.querySelector?.('#cards');
+  if (typeof MutationObserver !== 'undefined' && observationRoot) {
     const observer = new MutationObserver(() => scheduleRefresh(root));
-    observer.observe(root.body, {
+    observer.observe(observationRoot, {
       subtree: true,
       childList: true,
       attributes: true,
