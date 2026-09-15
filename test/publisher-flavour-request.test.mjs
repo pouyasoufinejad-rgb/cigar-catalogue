@@ -40,7 +40,7 @@ test('upsert-entry preserves flavour in card overrides', async () => {
       writtenState = JSON.parse(options.body);
       return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=static-one`, response: new Response('<article class="card" data-key="static-one"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -56,4 +56,5 @@ test('upsert-entry preserves flavour in card overrides', async () => {
   });
 
   assert.equal(writtenState.cards['static-one'].flavour, 9);
+  assert.equal(writtenState.cards['static-one'].subsection, 'coronets-cigarillos');
 });
