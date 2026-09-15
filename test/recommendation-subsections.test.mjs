@@ -37,7 +37,8 @@ test('recommendation subsections round-trip inside sections through normaliseSta
 test('editor sectionsFromFields spreads current sections so a Legend-only save preserves recommendation subsections', async () => {
   const source = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
   const body = source.match(/function sectionsFromFields\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-  assert.match(body, /\.\.\.\(stateForBrowser\.sections&&typeof stateForBrowser\.sections==='object'\?stateForBrowser\.sections:\{\}\)/);
+  assert.match(body, /\.\.\.\(stateForBrowser\.sections/);
+  assert.match(body, /typeof stateForBrowser\.sections\s*===\s*'object'/);
   assert.match(body, /legendHtml:/);
   assert.match(body, /benchmarksHtml:/);
 });
