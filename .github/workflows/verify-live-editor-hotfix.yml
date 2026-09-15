@@ -1,0 +1,32 @@
+name: Verify live editor hotfix
+
+on:
+  push:
+    branches: [verify/live-editor-hotfix]
+    paths:
+      - '.github/workflows/verify-live-editor-hotfix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify patched subsection runtime is live
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://cigar-catalogue.psncodex.workers.dev/catalogue-recommendation-subsections.mjs'
+          for attempt in $(seq 1 30); do
+            body="$(curl -fsSL --max-time 15 "$url" || true)"
+            if grep -Fq "observer.observe(observationRoot" <<<"$body" \
+              && grep -Fq "if (expected !== card) grid.insertBefore(card, expected);" <<<"$body" \
+              && ! grep -Fq "observer.observe(root.body" <<<"$body"; then
+              echo 'Live Worker is serving the editor focus hotfix.'
+              exit 0
+            fi
+            sleep 4
+          done
+          echo '::error::Live Worker is not serving the editor focus hotfix.'
+          exit 1
