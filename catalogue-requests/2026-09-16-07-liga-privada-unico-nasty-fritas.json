@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-16-07-liga-privada-unico-nasty-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-nasty-fritas",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "Único Serie Nasty Fritas — Single",
+    "eyebrow": "Broadleaf short-pyramid Liga taster",
+    "packagePrice": 41,
+    "packageLabel": "single cigar",
+    "price": 41,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 52,
+    "strength": 8,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 11,
+    "taster": true,
+    "catalogueType": "taster",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High (projected)",
+      "Pairings: Espresso, dark chocolate, cola or dark rum (projected)",
+      "Occasion: Compact broad-gauge Liga session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Espresso, dark chocolate, black pepper, earth, leather and natural sweetness</strong> drive Nasty Fritas' compact, broad-gauge take on the Papas Fritas concept. The short 4″ × 52 pyramid combines Connecticut Broadleaf, Brazilian Mata Fina and premium mixed-filler Liga tobaccos with a pigtail cap and closed foot, creating a thicker, more concentrated smoke than the standard Papas Fritas. Untasted here, so Strength 8 and Quality 8 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Cigar of the Month Australia currently lists an available exact Nasty Fritas single at A$41 and 4″ × 52. Cigarworld lists a 4½″ × 52 single at A$38.35 but currently marks it temporarily unavailable. The catalogue uses the canonical 4″ × 52 specification. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade at La Gran Fabrica Drew Estate, Estelí",
+      "Wrapper: Connecticut Broadleaf Oscuro",
+      "Binder: Brazilian Mata Fina",
+      "Filler: Honduran + Nicaraguan premium Liga trimmings",
+      "Mixed / short-filler construction"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4″ × 52 short pyramid",
+      "A$41 current available single",
+      "Pigtail cap + closed foot",
+      "Mixed / short filler"
+    ],
+    "smokeTime": "About 35–45 min smoke (projected)",
+    "retailerLinks": [
+      "https://cigarofthemonth.com.au/product/liga-privada-unico-serie-nasty-fritas/",
+      "https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/liga-privada/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Liga Privada Único Serie Nasty Fritas as an active untasted Taster at rank 11. Use the current available A$41 Australian single and canonical 4 x 52 specification; Cigarworld's cheaper A$38.35 single is currently unavailable and lists 4.5 x 52. Strength 8 and Quality 8 are projections; leave Flavour unrated and Value automatic."
+}
