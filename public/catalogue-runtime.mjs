@@ -1,4 +1,5 @@
 if (typeof document !== 'undefined') {
+  import('./catalogue-direct-edit.mjs?v=editor-repair-1');
   import('./catalogue-direct-persistence.mjs');
   import('./catalogue-flavour.mjs');
   import('./catalogue-card-layout.mjs');
