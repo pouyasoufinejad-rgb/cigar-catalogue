@@ -38,7 +38,7 @@ test('publisher can move a recommendation into Half-Cigar without mixing main an
       written = JSON.parse(options.body);
       return json({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => json({ ...initial, cards: written.cards }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => json(written) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=move-me`, response: new Response('<article class="card" data-key="move-me"></article>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
@@ -60,4 +60,5 @@ test('publisher can move a recommendation into Half-Cigar without mixing main an
   assert.equal(written.cards['move-me'].rank, 2);
   assert.equal(written.cards['move-me'].catalogueType, 'half');
   assert.equal(written.cards['taster-a'].rank, 1);
+  assert.deepEqual(written.sections.recommendationSubsections[0].entryKeys, ['main-a', 'main-b']);
 });
