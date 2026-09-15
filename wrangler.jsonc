@@ -1,3 +1,4 @@
+// deployment trigger: editor hotfix v140
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "cigar-catalogue",
@@ -13,4 +14,5 @@
       "binding": "CATALOGUE_STATE",
       "id": "e7a1c5222f594ebbaee4a80eb68817d6"
     }
-  ]}
+  ]
+}
