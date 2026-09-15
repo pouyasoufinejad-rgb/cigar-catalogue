@@ -1028,6 +1028,7 @@ function editorialFromFields({ archivedAt = '', archivedRank = null, rank = null
 }
 function sectionsFromFields() {
   return {
+    ...(stateForBrowser.sections && typeof stateForBrowser.sections === 'object' ? stateForBrowser.sections : {}),
     legendHtml: sanitiseMarkup(q('catalogue-admin-legend')?.value || stateForBrowser.sections.legendHtml || ''),
     benchmarksHtml: sanitiseMarkup(q('catalogue-admin-benchmarks')?.value || stateForBrowser.sections.benchmarksHtml || '')
   };
