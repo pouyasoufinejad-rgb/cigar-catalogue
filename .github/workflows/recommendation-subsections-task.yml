@@ -26,3 +26,5 @@ jobs:
           node -e "const fs=require('fs'); const s=JSON.parse(fs.readFileSync('/tmp/catalogue-overrides.json','utf8')); console.log(JSON.stringify({version:s.version,updatedAt:s.updatedAt,cards:Object.keys(s.cards||{}).length,sections:Object.keys(s.sections||{}),entries:Object.keys(s.entries||{}).length,hasRecommendationSubsections:Array.isArray(s.sections?.recommendationSubsections)},null,2))"
       - name: Full npm test
         run: npm test
+      - name: Dry-run seeded recommendation subsections
+        run: node scripts/report-recommendation-subsection-seed.mjs /tmp/catalogue-overrides.json
