@@ -153,7 +153,10 @@ function parseStaticRankingCards(html) {
     const scrubbed = body.replace(/<img\b[^>]*>/gi, ' ');
     const sizeText = scrubbed.match(/\d+(?:\.\d+)?(?:″|&quot;|")?\s*[×x]\s*\d{2}(?!\d)/i)?.[0];
     if (sizeText) card.sizeText = sizeText;
-    const production = scrubbed.match(/<[^>]*class=["'][^"']*artmeta-left[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1] || '';
+    const productionStart = scrubbed.search(/<[^>]*class=["'][^"']*artmeta-left[^"']*["'][^>]*>/i);
+    const productionTail = productionStart >= 0 ? scrubbed.slice(productionStart) : '';
+    const practicalStart = productionTail.search(/<[^>]*class=["'][^"']*artmeta-right[^"']*["'][^>]*>/i);
+    const production = practicalStart >= 0 ? productionTail.slice(0, practicalStart) : productionTail;
     card.productionLines = Array.from(production.matchAll(/<[^>]*class=["'][^"']*artmeta-line[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi), line =>
       line[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').trim()
     ).filter(Boolean);
