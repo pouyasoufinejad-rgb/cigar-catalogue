@@ -11,6 +11,11 @@ import {
   resolveRingGauge,
   seedSubsectionForCard
 } from '../public/catalogue-recommendation-subsections.mjs';
+import {
+  normalisePublisherRankingState,
+  reorderPublisherTarget,
+  assertPublisherRankingInvariant
+} from '../scripts/recommendation-subsection-ranking.mjs';
 
 function stateWith(subsections, cards = {}, entries = {}) {
   return { version: 3, cards, sections: { legendHtml: '<b>Legend</b>', recommendationSubsections: subsections }, entries };
@@ -95,4 +100,67 @@ test('sync mirrors entryKeys without changing stable subsection ids or membershi
   assert.equal(state.cards.three.rank, 1);
   assert.equal(state.cards.one.subsection, 'same-id');
   assert.equal(state.cards.three.subsection, 'other');
+});
+
+test('publisher normalisation keeps main ranks local while half and taster remain globally contiguous', () => {
+  const state = stateWith([
+    { id: 'a', title: 'A', note: '', entryKeys: ['a1', 'a2'] },
+    { id: 'b', title: 'B', note: '', entryKeys: ['b1'] }
+  ]);
+  const complete = {
+    a1: card('a1', { rank: 9, ring: 32 }),
+    a2: card('a2', { rank: 10, ring: 32 }),
+    b1: card('b1', { rank: 20, ring: 40 }),
+    half2: card('half2', { rank: 9, type: 'half' }),
+    half1: card('half1', { rank: 3, type: 'half' }),
+    taster2: card('taster2', { rank: 7, type: 'taster' }),
+    taster1: card('taster1', { rank: 2, type: 'taster' })
+  };
+  normalisePublisherRankingState(state, complete);
+  assert.deepEqual([state.cards.a1.rank, state.cards.a2.rank, state.cards.b1.rank], [1, 2, 1]);
+  assert.deepEqual([state.cards.half1.rank, state.cards.half2.rank], [1, 2]);
+  assert.deepEqual([state.cards.taster1.rank, state.cards.taster2.rank], [1, 2]);
+  assertPublisherRankingInvariant(state, 'test state');
+});
+
+test('publisher archive and unarchive restore a main card to its local subsection position', () => {
+  const state = stateWith([
+    { id: 'a', title: 'A', note: '', entryKeys: ['a1', 'a2', 'a3'] },
+    { id: 'b', title: 'B', note: '', entryKeys: ['b1'] }
+  ]);
+  const complete = Object.fromEntries([
+    card('a1', { rank: 1, ring: 32 }), card('a2', { rank: 2, ring: 32 }), card('a3', { rank: 3, ring: 32 }), card('b1', { rank: 1, ring: 40 })
+  ].map(row => [row.key, row]));
+  normalisePublisherRankingState(state, complete);
+  reorderPublisherTarget(state, 'a2', { ...state.cards.a2, archived: true }, '2026-09-15T00:00:00.000Z');
+  assert.deepEqual(state.sections.recommendationSubsections[0].entryKeys, ['a1', 'a3']);
+  assert.equal(state.cards.a2.archived, true);
+  assert.equal(state.cards.a2.archivedRank, 2);
+  assert.equal(state.cards.a2.archivedSubsection, 'a');
+  reorderPublisherTarget(state, 'a2', { ...state.cards.a2, archived: false }, '2026-09-15T00:01:00.000Z');
+  assert.deepEqual(state.sections.recommendationSubsections[0].entryKeys, ['a1', 'a2', 'a3']);
+  assert.equal(state.cards.a2.rank, 2);
+  assert.equal(state.cards.a2.subsection, 'a');
+  assertPublisherRankingInvariant(state, 'test state');
+});
+
+test('publisher can move a main card between subsections without disturbing half or taster ranks', () => {
+  const state = stateWith([
+    { id: 'a', title: 'A', note: '', entryKeys: ['a1', 'a2'] },
+    { id: 'b', title: 'B', note: '', entryKeys: ['b1', 'b2'] }
+  ], {
+    half: { catalogueType: 'half', rank: 1 },
+    taster: { catalogueType: 'taster', rank: 1 }
+  });
+  const complete = {
+    a1: card('a1', { rank: 1 }), a2: card('a2', { rank: 2 }), b1: card('b1', { rank: 1 }), b2: card('b2', { rank: 2 }),
+    half: card('half', { rank: 1, type: 'half' }), taster: card('taster', { rank: 1, type: 'taster' })
+  };
+  normalisePublisherRankingState(state, complete);
+  reorderPublisherTarget(state, 'a2', { ...state.cards.a2, subsection: 'b', rank: 1 }, '2026-09-15T00:00:00.000Z');
+  assert.deepEqual(state.sections.recommendationSubsections[0].entryKeys, ['a1']);
+  assert.deepEqual(state.sections.recommendationSubsections[1].entryKeys, ['a2', 'b1', 'b2']);
+  assert.equal(state.cards.half.rank, 1);
+  assert.equal(state.cards.taster.rank, 1);
+  assertPublisherRankingInvariant(state, 'test state');
 });
