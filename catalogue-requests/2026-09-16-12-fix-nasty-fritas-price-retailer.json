@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-16-12-fix-nasty-fritas-price-retailer",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-nasty-fritas",
+  "entry": {
+    "packagePrice": 30.7,
+    "price": 30.7,
+    "stock": "in",
+    "noteHtml": "The Index lists the exact 4″ × 52 single at A$30.70.",
+    "practicalLines": [
+      "Single cigar",
+      "4″ × 52 short pyramid",
+      "A$30.70 single",
+      "Pigtail cap + closed foot",
+      "Mixed / short filler"
+    ],
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-nasty-fritas"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Use the exact available The Index Nasty Fritas single at A$30.70 instead of the A$41 source and generic secondary link. Preserve ratings and Value remains automatic."
+}
