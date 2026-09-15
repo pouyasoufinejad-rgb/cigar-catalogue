@@ -44,6 +44,31 @@ test('KV-only dynamic entry is injected into catalogue HTML', () => {
   assert.match(transformed, /KV-only cigar/);
 });
 
+test('structural image override inserts an image into a dynamic card that was rendered without one', () => {
+  const html = injectEntriesIntoHtml('<div id="flat-main"></div>', {
+    'image-later': {
+      key: 'image-later',
+      brand: 'Test Brand',
+      title: 'Image Later',
+      price: 12,
+      quality: 7,
+      strength: 6,
+      length: 4,
+      ring: 32,
+      rank: 1,
+      risk: 1
+    }
+  });
+
+  assert.doesNotMatch(html, /src="\/api\/catalogue-image\/image-later/);
+
+  const transformed = applyStructuralOverridesToHtml(html, {
+    'image-later': { imageUrl: '/api/catalogue-image/image-later?v=123' }
+  });
+
+  assert.match(transformed, /<img[^>]*src="\/api\/catalogue-image\/image-later\?v=123"/);
+});
+
 test('single-pass structural overrides update every matching card without touching others', () => {
   const html = [
     '<article class="card" data-key="one" data-taster="1"><h3><span>Brand One</span>Old One</h3></article>',
