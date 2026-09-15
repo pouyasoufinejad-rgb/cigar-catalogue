@@ -98,12 +98,11 @@ test('production ranking completion uses live Worker HTML instead of stale repos
     } },
     { method: 'GET', url: `${BASE}/api/catalogue-entry/d`, response: () => jsonResponse(writtenEntry) },
     { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({
-      ...state,
-      cards: writtenState.cards,
+      ...writtenState,
       entries: { d: writtenEntry }
     }) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=d`, response: new Response(
-      '<article class="card" data-key="d" data-rank="2"></article>',
+      '<article class="card" data-key="d" data-rank="1"></article>',
       { status: 200, headers: { 'content-type': 'text/html' } }
     ) }
   ];
@@ -116,9 +115,12 @@ test('production ranking completion uses live Worker HTML instead of stale repos
     now: () => new Date('2026-09-08T00:00:00Z')
   });
 
+  assert.deepEqual(writtenState.sections.recommendationSubsections[0].entryKeys, ['c', 'b', 'a']);
+  assert.deepEqual(writtenState.sections.recommendationSubsections[1].entryKeys, ['d']);
   assert.equal(writtenState.cards.c.rank, 1);
-  assert.equal(writtenState.cards.d.rank, 2);
-  assert.equal(writtenState.cards.b.rank, 3);
-  assert.equal(writtenState.cards.a.rank, 4);
+  assert.equal(writtenState.cards.b.rank, 2);
+  assert.equal(writtenState.cards.a.rank, 3);
+  assert.equal(writtenState.cards.d.rank, 1);
+  assert.equal(writtenState.cards.d.subsection, 'petit-panatelas');
   assert.equal(await readFile(join(publicDir, 'index.html'), 'utf8'), staleHtml);
 });
