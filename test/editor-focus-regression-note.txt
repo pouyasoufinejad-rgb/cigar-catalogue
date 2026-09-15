@@ -1,0 +1,1 @@
+This branch verifies that recommendation subsection rendering does not continuously mutate the DOM while direct edit mode is active.
