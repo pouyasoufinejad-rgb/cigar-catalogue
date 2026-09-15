@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { normaliseState, mergeState } from '../src/index.js';
 import {
@@ -31,6 +32,14 @@ test('recommendation subsections round-trip inside sections through normaliseSta
   assert.deepEqual(normalised.sections.recommendationSubsections, subsections);
   const merged = mergeState(normalised, { sections: { ...normalised.sections, legendHtml: '<b>Changed</b>' } });
   assert.deepEqual(merged.sections.recommendationSubsections, subsections);
+});
+
+test('editor sectionsFromFields spreads current sections so a Legend-only save preserves recommendation subsections', async () => {
+  const source = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
+  const body = source.match(/function sectionsFromFields\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+  assert.match(body, /\.\.\.\(stateForBrowser\.sections&&typeof stateForBrowser\.sections==='object'\?stateForBrowser\.sections:\{\}\)/);
+  assert.match(body, /legendHtml:/);
+  assert.match(body, /benchmarksHtml:/);
 });
 
 test('invalid or absent subsection data seeds the three stable default subsections', () => {
