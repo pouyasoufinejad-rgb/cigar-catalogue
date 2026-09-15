@@ -30,7 +30,7 @@ test('legacy half or halve wording migrates only entries without an explicit cat
   assert.equal(cohort.catalogueTypeFromFields({ text: 'Ordinary robusto' }), 'main');
 });
 
-test('cohort ranks are compact and independent after legacy migration', () => {
+test('Half-Cigar and Taster ranks compact independently without rewriting main recommendation ranks', () => {
   assert.ok(cohort, 'Half-Cigar cohort module must load');
   const rows = [
     { key: 'main-a', rank: 1, catalogueType: 'main', archived: false },
@@ -43,13 +43,13 @@ test('cohort ranks are compact and independent after legacy migration', () => {
   assert.deepEqual(ranked.map(row => [row.key, row.catalogueType, row.rank]), [
     ['main-a', 'main', 1],
     ['legacy-half', 'half', 1],
-    ['main-c', 'main', 2],
+    ['main-c', 'main', 3],
     ['legacy-halve', 'half', 2],
     ['taster-a', 'taster', 1]
   ]);
 });
 
-test('moving a recommendation into Half-Cigar compacts main and ranks Half-Cigar independently', () => {
+test('moving a recommendation into Half-Cigar leaves remaining main ranks to subsection ownership', () => {
   assert.ok(cohort, 'Half-Cigar cohort module must load');
   const rows = [
     { key: 'main-a', rank: 1, catalogueType: 'main', archived: false },
@@ -67,8 +67,8 @@ test('moving a recommendation into Half-Cigar compacts main and ranks Half-Cigar
     now: '2026-09-08T12:00:00Z'
   });
 
-  assert.equal(updates['main-a'].rank, 1);
-  assert.equal(updates['main-c'].rank, 2);
+  assert.equal(updates['main-a'], undefined);
+  assert.equal(updates['main-c'], undefined);
   assert.equal(updates['half-a'].rank, 1);
   assert.equal(updates['move-me'].rank, 2);
   assert.equal(updates['move-me'].catalogueType, 'half');

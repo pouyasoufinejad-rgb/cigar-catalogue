@@ -3,6 +3,11 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import {
+  normalisePublisherRankingState,
+  reorderPublisherTarget,
+  assertPublisherRankingInvariant
+} from './recommendation-subsection-ranking.mjs';
 
 export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
@@ -11,7 +16,7 @@ export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'u
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
-  'archived', 'archivedAt', 'archivedRank', 'stockPin', 'rank', 'strength', 'quality', 'flavour', 'size', 'laurel',
+  'archived', 'archivedAt', 'archivedRank', 'archivedSubsection', 'subsection', 'stockPin', 'rank', 'strength', 'quality', 'flavour', 'size', 'laurel',
   'experienceTags', 'eyebrow', 'summaryHtml', 'noteHtml', 'productionHtml', 'practicalHtml'
 ]);
 const CARD_STRUCTURAL_FIELDS = new Set([
@@ -125,13 +130,13 @@ function applyCatalogueType(card, typeInput) {
 
 function parseStaticRankingCards(html) {
   const cards = {};
-  for (const match of String(html || '').matchAll(/<article\b[^>]*>/gi)) {
-    const tag = match[0];
+  for (const match of String(html || '').matchAll(/<article\b([^>]*)>([\s\S]*?)<\/article>/gi)) {
+    const tag = `<article${match[1]}>`;
+    const body = match[2] || '';
     const className = htmlAttribute(tag, 'class');
     if (!/(?:^|\s)card(?:\s|$)/i.test(className)) continue;
     const key = safeKey(htmlAttribute(tag, 'data-key'));
     if (!key) continue;
-
     const taster = htmlAttribute(tag, 'data-taster') === '1';
     const explicitType = htmlAttribute(tag, 'data-catalogue-type');
     const card = {
@@ -143,6 +148,18 @@ function parseStaticRankingCards(html) {
     if (Number.isFinite(rank) && rank >= 1) card.rank = Math.round(rank);
     const archivedRank = Number(htmlAttribute(tag, 'data-archived-rank'));
     if (Number.isFinite(archivedRank) && archivedRank >= 1) card.archivedRank = Math.round(archivedRank);
+    const visualRing = Number(body.match(/\bdata-visual-ring=["'](\d{2})["']/i)?.[1]);
+    if (Number.isFinite(visualRing)) card.visualRing = visualRing;
+    const scrubbed = body.replace(/<img\b[^>]*>/gi, ' ');
+    const sizeText = scrubbed.match(/\d+(?:\.\d+)?(?:″|&quot;|")?\s*[×x]\s*\d{2}(?!\d)/i)?.[0];
+    if (sizeText) card.sizeText = sizeText;
+    const productionStart = scrubbed.search(/<[^>]*class=["'][^"']*artmeta-left[^"']*["'][^>]*>/i);
+    const productionTail = productionStart >= 0 ? scrubbed.slice(productionStart) : '';
+    const practicalStart = productionTail.search(/<[^>]*class=["'][^"']*artmeta-right[^"']*["'][^>]*>/i);
+    const production = practicalStart >= 0 ? productionTail.slice(0, practicalStart) : productionTail;
+    card.productionLines = Array.from(production.matchAll(/<[^>]*class=["'][^"']*artmeta-line[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi), line =>
+      line[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').trim()
+    ).filter(Boolean);
     cards[key] = card;
   }
   return cards;
@@ -157,6 +174,11 @@ function rankingCardFromEntry(entry) {
   };
   const rank = Number(entry?.rank);
   if (Number.isFinite(rank) && rank >= 1) card.rank = Math.round(rank);
+  const archivedRank = Number(entry?.archivedRank);
+  if (Number.isFinite(archivedRank) && archivedRank >= 1) card.archivedRank = Math.round(archivedRank);
+  const ring = Number(entry?.ring);
+  if (Number.isFinite(ring) && ring >= 10 && ring <= 99) card.ring = Math.round(ring);
+  if (Array.isArray(entry?.productionLines)) card.productionLines = entry.productionLines.map(value => String(value));
   if (typeof entry?.archivedAt === 'string') card.archivedAt = entry.archivedAt;
   return card;
 }
@@ -222,6 +244,8 @@ function patchForDynamic(entryPatch) {
     if (CARD_EDITORIAL_FIELDS.has(key) || CARD_STRUCTURAL_FIELDS.has(key) || DYNAMIC_ONLY_FIELDS.has(key)) patch[key] = clone(value);
   }
   delete patch.catalogueType;
+  delete patch.subsection;
+  delete patch.archivedSubsection;
   delete patch.flavour;
   delete patch.laurel;
   delete patch.archivedRank;
@@ -241,100 +265,20 @@ function rankNumber(card) {
   return Number.isFinite(value) && value >= 1 ? Math.round(value) : Number.MAX_SAFE_INTEGER;
 }
 
-function normaliseRankings(cardsInput) {
-  const cards = {};
-  for (const [key, value] of Object.entries(cardsInput || {})) {
-    let card = stripDerivedCardValue(value);
-    card = applyCatalogueType(card, catalogueType(card));
-    if (card.archived) {
-      const archivedRank = Number(card.archivedRank);
-      const activeRank = rankNumber(card);
-      if ((!Number.isFinite(archivedRank) || archivedRank < 1) && activeRank !== Number.MAX_SAFE_INTEGER) {
-        card.archivedRank = activeRank;
-      }
-      delete card.rank;
-    }
-    cards[key] = card;
-  }
-
-  for (const type of ['main', 'half', 'taster']) {
-    const cohort = Object.entries(cards)
-      .filter(([, card]) => !card.archived && catalogueType(card) === type)
-      .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
-    cohort.forEach(([key], index) => {
-      cards[key] = { ...cards[key], rank: index + 1, catalogueType: type, taster: type === 'taster' };
-    });
-  }
-
-  return cards;
+function normaliseRankings(cardsInput, sections = {}) {
+  const scratch = { version:3, cards:cardsInput || {}, sections, entries:{} };
+  normalisePublisherRankingState(scratch, cardsInput || {});
+  return scratch.cards;
 }
 
-function assertRankingInvariant(cardsInput, label) {
-  const cards = cardsInput || {};
-  for (const [key, card] of Object.entries(cards)) {
-    if (card?.archived && Object.prototype.hasOwnProperty.call(card, 'rank')) {
-      throw new Error(`${label} contains active rank on archived card "${key}".`);
-    }
-  }
-  for (const type of ['main', 'half', 'taster']) {
-    const ranks = Object.values(cards)
-      .filter(card => !card?.archived && catalogueType(card) === type)
-      .map(card => rankNumber(card))
-      .sort((a, b) => a - b);
-    ranks.forEach((rank, index) => {
-      if (rank !== index + 1) throw new Error(`${label} has a gap or duplicate in the ${type} rankings.`);
-    });
-  }
+function assertRankingInvariant(cardsInput, label, sections = {}) {
+  return assertPublisherRankingInvariant({ version:3, cards:cardsInput || {}, sections, entries:{} }, label);
 }
 
-function reorderForTarget(cardsInput, key, targetCard, nowString) {
-  const cards = normaliseRankings(cardsInput);
-  const existing = cards[key] || {};
-  const oldArchived = Boolean(existing.archived);
-  const oldType = catalogueType(existing);
-  const oldRank = rankNumber(existing);
-  const targetArchived = Boolean(targetCard.archived);
-  const targetType = catalogueType(targetCard);
-  const requestedRank = Math.max(1, Math.round(Number(targetCard.rank) || (Number.isFinite(oldRank) ? oldRank : 1)));
-
-  if (oldArchived && !targetArchived) {
-    // The card rejoins the requested active cohort below.
-  } else if (!oldArchived && (targetArchived || oldType !== targetType || requestedRank !== oldRank)) {
-    const oldCohort = Object.entries(cards)
-      .filter(([otherKey, card]) => otherKey !== key && !card.archived && catalogueType(card) === oldType)
-      .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
-    oldCohort.forEach(([otherKey], index) => {
-      cards[otherKey] = { ...cards[otherKey], rank: index + 1, catalogueType: oldType, taster: oldType === 'taster' };
-    });
-  }
-
-  if (targetArchived) {
-    const archivedCard = applyCatalogueType({
-      ...targetCard,
-      archived: true,
-      archivedAt: targetCard.archivedAt || existing.archivedAt || nowString,
-      archivedRank: targetCard.archivedRank || existing.archivedRank || (Number.isFinite(oldRank) ? oldRank : requestedRank)
-    }, targetType);
-    delete archivedCard.rank;
-    cards[key] = archivedCard;
-    return normaliseRankings(cards);
-  }
-
-  const cohort = Object.entries(cards)
-    .filter(([otherKey, card]) => otherKey !== key && !card.archived && catalogueType(card) === targetType)
-    .sort((a, b) => rankNumber(a[1]) - rankNumber(b[1]));
-  const index = Math.max(0, Math.min(cohort.length, requestedRank - 1));
-  cohort.splice(index, 0, [key, applyCatalogueType({ ...targetCard, archived: false, archivedAt: '' }, targetType)]);
-  cohort.forEach(([otherKey, card], cohortIndex) => {
-    cards[otherKey] = {
-      ...cards[otherKey],
-      ...card,
-      rank: cohortIndex + 1,
-      catalogueType: targetType,
-      taster: targetType === 'taster'
-    };
-  });
-  return normaliseRankings(cards);
+function reorderForTarget(cardsInput, key, targetCard, nowString, sections = {}) {
+  const scratch = { version:3, cards:{ ...(cardsInput || {}) }, sections, entries:{} };
+  reorderPublisherTarget(scratch, key, targetCard, nowString);
+  return scratch.cards;
 }
 
 function validateImage(image, required) {
@@ -362,9 +306,16 @@ export function validateRequest(input) {
   if (operation === 'update-sections') {
     const sectionNames = Object.keys(sections);
     if (!sectionNames.length) throw new Error('update-sections requires a sections object.');
-    if (sectionNames.some(name => !['legendHtml', 'benchmarksHtml'].includes(name) || typeof sections[name] !== 'string')) {
-      throw new Error('update-sections only accepts string legendHtml and benchmarksHtml fields.');
-    }
+    const invalid = sectionNames.some(name => {
+      if (name === 'legendHtml' || name === 'benchmarksHtml') return typeof sections[name] !== 'string';
+      if (name !== 'recommendationSubsections') return true;
+      return !Array.isArray(sections[name]) || !sections[name].length || sections[name].some(section =>
+        !isRecord(section) || !/^[a-z0-9][a-z0-9_-]*$/i.test(String(section.id || '')) ||
+        typeof section.title !== 'string' || typeof section.note !== 'string' ||
+        !Array.isArray(section.entryKeys) || section.entryKeys.some(key => !safeKey(key))
+      );
+    });
+    if (invalid) throw new Error('update-sections accepts legendHtml, benchmarksHtml and valid recommendationSubsections only.');
   }
   const image = validateImage(input.image, operation === 'replace-image');
   return {
@@ -474,8 +425,13 @@ export async function publishRequestDocument(input, options = {}) {
 
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
+  const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
   if (request.operation === 'update-sections') {
     state.sections = { ...state.sections, ...request.sections };
+    if (Array.isArray(request.sections.recommendationSubsections)) {
+      state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue), state.sections);
+      assertRankingInvariant(state.cards, 'Catalogue section write', state.sections);
+    }
     await putState(fetchImpl, baseUrl, token, state);
 
     const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
@@ -502,8 +458,7 @@ export async function publishRequestDocument(input, options = {}) {
 
     return { ok: true, operation: request.operation, target: 'sections', verified: true };
   }
-  const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
-  state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue));
+  state.cards = normaliseRankings(await completeRankingCards(repoRoot, state, includeStaticCatalogue), state.sections);
   const existingDynamic = isRecord(state.entries[request.key]) ? clone(state.entries[request.key]) : null;
   const existingCard = isRecord(state.cards[request.key]) ? clone(state.cards[request.key]) : null;
   const exists = Boolean(existingDynamic || existingCard);
@@ -558,7 +513,7 @@ export async function publishRequestDocument(input, options = {}) {
         archived: nextCard.archived ?? Boolean(nextEntry.archived)
       };
     }
-    state.cards = reorderForTarget(state.cards, request.key, nextCard, timestamp);
+    state.cards = reorderForTarget(state.cards, request.key, nextCard, timestamp, state.sections);
     nextCard = state.cards[request.key];
     if (target === 'dynamic') {
       if (nextCard.archived) delete nextEntry.rank;
@@ -571,7 +526,7 @@ export async function publishRequestDocument(input, options = {}) {
     state.cards[request.key] = nextCard;
   }
 
-  assertRankingInvariant(state.cards, 'Catalogue write');
+  assertRankingInvariant(state.cards, 'Catalogue write', state.sections);
   if (target === 'dynamic') await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry);
   await putState(fetchImpl, baseUrl, token, state);
 
@@ -586,7 +541,7 @@ export async function publishRequestDocument(input, options = {}) {
 
   const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
   const verifiedState = normaliseStateShape(verifiedStateRaw);
-  assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back');
+  assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back', verifiedState.sections);
   const savedCard = verifiedState.cards[request.key];
   if (!isRecord(savedCard)) throw new Error(`Catalogue state read-back is missing card "${request.key}".`);
   const cardKeys = new Set([...intendedKeys(request)].filter(key => !DYNAMIC_ONLY_FIELDS.has(key) && key !== 'productionLines' && key !== 'practicalLines'));
