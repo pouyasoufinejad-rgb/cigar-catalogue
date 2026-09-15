@@ -825,7 +825,12 @@ export function applyStructuralOverridesToHtml(html, cards) {
     if (Object.prototype.hasOwnProperty.call(override, 'imageUrl') && text(override.imageUrl).startsWith('/')) {
       const imageUrl = text(override.imageUrl);
       const artImageRx = /(<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>[\s\S]*?<img\b[^>]*\bsrc=[\"'])[^\"']*([\"'][^>]*>)/i;
-      if (artImageRx.test(card)) card = card.replace(artImageRx, `$1${esc(imageUrl)}$2`);
+      if (artImageRx.test(card)) {
+        card = card.replace(artImageRx, `$1${esc(imageUrl)}$2`);
+      } else {
+        const artframeOpenRx = /(<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>)/i;
+        if (artframeOpenRx.test(card)) card = card.replace(artframeOpenRx, `$1<img alt="" src="${esc(imageUrl)}">`);
+      }
     }
 
     if (["packagePrice","packageLabel","price","length","ring"].some(name => Object.prototype.hasOwnProperty.call(override, name))) {
