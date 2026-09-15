@@ -1,0 +1,43 @@
+name: Patch editor runtime cache key
+
+on:
+  push:
+    branches:
+      - fix/restore-full-catalogue-editor
+    paths:
+      - '.github/workflows/patch-editor-cache-bust-v141.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/restore-full-catalogue-editor
+          fetch-depth: 0
+      - name: Bump outer runtime cache key and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'src/index.js',
+              'test/catalogue-runtime-hardening.test.mjs',
+              'test/catalogue-runtime-cache-bust.test.mjs',
+          ]:
+              path = Path(name)
+              text = path.read_text()
+              if 'v=140' not in text:
+                  raise SystemExit(f'expected v=140 in {name}')
+              path.write_text(text.replace('v=140', 'v=141'))
+          PY
+          rm .github/workflows/patch-editor-cache-bust-v141.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/index.js test/catalogue-runtime-hardening.test.mjs test/catalogue-runtime-cache-bust.test.mjs .github/workflows/patch-editor-cache-bust-v141.yml
+          git commit -m 'Cache-bust restored full catalogue editor'
+          git push origin HEAD:fix/restore-full-catalogue-editor
