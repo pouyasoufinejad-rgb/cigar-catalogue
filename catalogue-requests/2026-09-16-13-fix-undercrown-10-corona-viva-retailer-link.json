@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-16-13-fix-undercrown-10-corona-viva-retailer-link",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/undercrown-10-corona-viva/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Keep only the verified product-level Cigar Hut link for Undercrown 10 Corona Viva and remove the redundant brand-category link."
+}

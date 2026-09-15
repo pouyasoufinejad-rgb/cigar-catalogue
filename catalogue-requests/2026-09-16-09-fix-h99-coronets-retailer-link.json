@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-16-09-fix-h99-coronets-retailer-link",
+  "operation": "upsert-entry",
+  "key": "liga-privada-h99-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-h99-coronets/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Replace generic Cigar Hut category links with the product-level H99 Coronets link. Preserve all unrelated live fields."
+}

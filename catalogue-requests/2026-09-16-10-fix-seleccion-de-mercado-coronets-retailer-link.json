@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-16-10-fix-seleccion-de-mercado-coronets-retailer-link",
+  "operation": "upsert-entry",
+  "key": "liga-privada-10-seleccion-de-mercado-coronets",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/undercrown-seleccion-de-mercado-coronets/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Replace generic Cigar Hut category links with the product-level Seleccion de Mercado Coronets link. Preserve all unrelated live fields."
+}

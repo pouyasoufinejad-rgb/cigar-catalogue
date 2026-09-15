@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-16-14-restore-liga-privada-h99-papas-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-h99-papas-fritas",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "H99 Papas Fritas — Single",
+    "eyebrow": "Compact H99 Liga value taster",
+    "packagePrice": 30.7,
+    "packageLabel": "single cigar",
+    "price": 30.7,
+    "country": "Nicaragua",
+    "length": 4.5,
+    "ring": 44,
+    "strength": 8,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 8,
+    "taster": true,
+    "catalogueType": "taster",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High",
+      "Pairings: Espresso, cola, dark rum or bourbon",
+      "Occasion: Compact premium Liga session, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Espresso, cocoa, cedar, leather, pepper and natural sweetness</strong> bring the H99 character into one of Liga Privada's most compelling compact formats. Papas Fritas uses premium Liga tobacco trimmings in a mixed/short-filler construction, retaining the dense smoke and high-grade leaf of the larger line while bringing the price down dramatically. At 4½″ × 44 and A$30.70 for a single, it offers unusually substantial Liga Privada smoking time for the money.",
+    "noteHtml": "The Index lists the exact 4½″ × 44 single at A$30.70 and the single variant is available.",
+    "productionLines": [
+      "Handmade at La Gran Fabrica Drew Estate, Estelí",
+      "Wrapper: Connecticut Corojo / H99 hybrid",
+      "Binder: Mexican San Andrés Otapan",
+      "Filler: Honduran + Nicaraguan + Pennsylvania Liga trimmings",
+      "Mixed / short-filler construction"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4½″ × 44 compact format",
+      "A$30.70 single",
+      "Mixed / short filler",
+      "No Half-Cigar treatment"
+    ],
+    "smokeTime": "About 45 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/liga-privada-h99-papa-fritas"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Restore the missing H99 Papas Fritas as the final publication in this corrective batch. The Index lists the exact 4.5 x 44 Single at A$30.70 and available. Leave Flavour unrated and Value automatic."
+}
