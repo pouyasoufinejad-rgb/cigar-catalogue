@@ -86,12 +86,18 @@ function buildStateFromDom(document) {
 
 function installGlobals(window) {
   const names = ['window', 'document', 'MutationObserver', 'Event', 'CustomEvent', 'Node', 'Element', 'HTMLElement', 'localStorage', 'sessionStorage', 'location', 'navigator', 'CSS'];
-  const previous = new Map(names.map(name => [name, globalThis[name]]));
-  for (const name of names) globalThis[name] = window[name];
+  const previous = new Map(names.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  for (const name of names) {
+    Object.defineProperty(globalThis, name, {
+      configurable:true,
+      writable:true,
+      value:window[name]
+    });
+  }
   return () => {
-    for (const [name, value] of previous) {
-      if (value === undefined) delete globalThis[name];
-      else globalThis[name] = value;
+    for (const [name, descriptor] of previous) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
     }
   };
 }
