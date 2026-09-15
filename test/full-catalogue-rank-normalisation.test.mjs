@@ -40,8 +40,6 @@ test('archiving a static card compacts ranks using the complete static catalogue
     </div>
   `);
 
-  // This matches production: KV is an override map, so cards a/c do not
-  // necessarily exist in state.cards even though they are real static cards.
   const state = {
     version: 3,
     sections: {},
@@ -58,10 +56,7 @@ test('archiving a static card compacts ranks using the complete static catalogue
       writtenState = JSON.parse(options.body);
       return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({
-      ...state,
-      cards: writtenState.cards
-    }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse(writtenState) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=b`, response: new Response(
       '<article class="card" data-key="b" data-archived="1"></article>',
       { status: 200, headers: { 'content-type': 'text/html' } }
@@ -81,4 +76,5 @@ test('archiving a static card compacts ranks using the complete static catalogue
   assert.equal(writtenState.cards.b.archivedRank, 2);
   assert.equal('rank' in writtenState.cards.b, false);
   assert.equal(writtenState.cards.c.rank, 2);
+  assert.deepEqual(writtenState.sections.recommendationSubsections[0].entryKeys, ['a', 'c']);
 });
