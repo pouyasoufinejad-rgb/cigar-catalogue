@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-16-03-undercrown-10-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-coronets",
+  "entry": {
+    "brand": "Undercrown",
+    "title": "Undercrown 10 Coronets — Tin of 10",
+    "eyebrow": "Full-bodied anniversary-blend Coronet",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 9,
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High (projected)",
+      "Pairings: Espresso, dark chocolate, cola or dark rum (projected)",
+      "Occasion: Quick rich smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, cacao, earth, espresso, dried cherry and raisin sweetness</strong> give Undercrown 10 its darker and more concentrated anniversary profile. Mexican San Andrés over Connecticut Broadleaf and Nicaraguan filler should translate particularly well to the compact Coronet format, emphasizing pepper, cocoa and dark fruit while retaining the blend's characteristic richness. Untasted here, so Strength 8 and Quality 8 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Cigar Hut currently lists the exact Undercrown 10 Coronets from A$119 with purchasable package options. No Australian single of the exact Coronet has been verified. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 Coronet",
+      "A$11.90 per cigar at A$119 per tin",
+      "No verified Australian single currently found",
+      "Slow Cadence"
+    ],
+    "smokeTime": "About 20–25 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-undercrown/",
+      "https://www.cigarhut.com.au/brands/Undercrown.html"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Undercrown 10 Coronets as an active untasted main Recommendation entry in Coronets & Cigarillos at local rank 9. Cigar Hut currently lists the product from A$119 with purchasable package options. Strength 8 and Quality 8 are projections; leave Flavour unrated and Value automatic."
+}
