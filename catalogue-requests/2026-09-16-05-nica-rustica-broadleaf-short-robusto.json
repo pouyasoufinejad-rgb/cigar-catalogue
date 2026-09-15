@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-16-05-nica-rustica-broadleaf-short-robusto",
+  "operation": "upsert-entry",
+  "key": "nica-rustica-broadleaf-short-robusto",
+  "entry": {
+    "brand": "Nica Rustica",
+    "title": "Broadleaf Short Robusto — Single",
+    "eyebrow": "Rustic Broadleaf value taster",
+    "packagePrice": 39,
+    "packageLabel": "single cigar",
+    "price": 39,
+    "country": "Nicaragua",
+    "length": 4.5,
+    "ring": 50,
+    "strength": 7,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 9,
+    "taster": true,
+    "catalogueType": "taster",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, cola, dark rum or bourbon (projected)",
+      "Occasion: Short full-size smoke, value comparison, evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, dark chocolate, cedar and earth</strong> form the blunt, robust core of Nica Rustica Broadleaf. Connecticut Broadleaf over Mexican San Andrés and Nicaraguan tobaccos is deliberately less polished than Liga Privada, but the 4½″ × 50 Short Robusto promises dense smoke, strong flavour delivery and a useful full-size comparison at a much lower price than most premium Drew Estate lines. Untasted here, so Strength 7 and Quality 7 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. The Index currently lists the exact 4½″ × 50 Nica Rustica Broadleaf Short Robusto single at A$39 and available. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut River Valley Broadleaf",
+      "Binder: Mexican San Andrés Negro",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4½″ × 50 Short Robusto",
+      "A$39 single",
+      "Conventional full-size short-format smoke",
+      "No Half-Cigar treatment"
+    ],
+    "smokeTime": "About 50 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/nica-rustica-broadleaf-short-robusto"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Nica Rustica Broadleaf Short Robusto as an active untasted Taster at rank 9. The Index lists the exact 4.5 x 50 single at A$39 and available. Strength 7 and Quality 7 are projections; leave Flavour unrated and Value automatic."
+}

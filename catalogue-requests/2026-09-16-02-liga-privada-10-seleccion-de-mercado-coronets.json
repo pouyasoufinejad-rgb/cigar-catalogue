@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-16-02-liga-privada-10-seleccion-de-mercado-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-privada-10-seleccion-de-mercado-coronets",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "Liga Privada 10 Selección de Mercado Coronets — Tin of 10",
+    "eyebrow": "Rosado international-market Liga Coronet",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 8,
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High (projected)",
+      "Pairings: Espresso, cola, dark rum or bourbon (projected)",
+      "Occasion: Quick premium smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, Italian espresso, cedar, toasted earth and restrained sweetness</strong> define Selección de Mercado's international-market interpretation of Liga Privada 10. Its reddish Connecticut Criollo wrapper sits over Mexican San Andrés and Nicaraguan/Pennsylvania filler, producing a pepper-forward, coffee-heavy profile distinct from both H99 and the darker Broadleaf Liga blends. The 4″ × 32 Coronet compresses that profile into a genuinely compact premium smoke. Untasted here, so Strength 7 and Quality 8 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Cigar Hut currently lists this product as ‘Undercrown Seleccion De Mercado Coronets’ from A$119, but the blend is Liga Privada 10 Selección de Mercado. The catalogue uses the correct Liga Privada identity. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut Criollo / Rosado",
+      "Binder: Mexican San Andrés",
+      "Filler: Nicaraguan + Pennsylvania tobaccos"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 Coronet",
+      "A$11.90 per cigar at A$119 per tin",
+      "Cigar Hut retailer title is misclassified under Undercrown",
+      "Slow Cadence"
+    ],
+    "smokeTime": "About 20–25 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cigarillos-and-cigarros/",
+      "https://www.cigarhut.com.au/brands/Undercrown.html"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add the 4 x 32 Liga Privada 10 Selección de Mercado Coronets as an active untasted main Recommendation entry in Coronets & Cigarillos at local rank 8. Cigar Hut mislabels the item as Undercrown; preserve that only as a retailer alias, not catalogue identity. Strength 7 and Quality 8 are projections; leave Flavour unrated and Value automatic."
+}

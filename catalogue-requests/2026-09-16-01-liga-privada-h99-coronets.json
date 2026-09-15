@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-16-01-liga-privada-h99-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-privada-h99-coronets",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "H99 Coronets — Tin of 10",
+    "eyebrow": "Sophisticated hybrid-wrapper Liga Coronet",
+    "packagePrice": 119,
+    "packageLabel": "tin of 10",
+    "price": 11.9,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 7,
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High (projected)",
+      "Pairings: Espresso, cola, dark rum or bourbon (projected)",
+      "Occasion: Quick premium smoke, after a meal, evening smoke"
+    ],
+    "summaryHtml": "<strong>Espresso, cedar, leather, black pepper and restrained natural sweetness</strong> define H99's rich, polished take on Liga Privada. The distinctive Connecticut River Valley H99 wrapper combines Stalk-Cut Habano and Corojo '99 genetics over Mexican San Andrés and a multinational filler blend, giving the compact 4″ × 32 Coronet considerably more pedigree and expected intensity than its size suggests. Untasted here, so Strength 8 and Quality 8 remain projections and Flavour stays unrated.",
+    "noteHtml": "Untasted. Cigar Hut currently lists Liga Privada H99 Coronets from A$119 with purchasable package options. No Australian single of the exact Coronet has been verified. Flavour remains unrated until personally tasted.",
+    "productionLines": [
+      "Handmade at La Gran Fabrica Drew Estate, Estelí",
+      "Wrapper: Connecticut River Valley H99 hybrid (Stalk-Cut Habano × Corojo '99)",
+      "Binder: Mexican San Andrés",
+      "Filler: Nicaraguan + Honduran + Pennsylvania tobaccos"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 Coronet",
+      "A$11.90 per cigar at A$119 per tin",
+      "No verified Australian single currently found",
+      "Slow Cadence"
+    ],
+    "smokeTime": "About 20–25 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cigarillos-and-cigarros/",
+      "https://www.cigarhut.com.au/brands/Undercrown.html"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Liga Privada H99 Coronets as an active untasted main Recommendation entry in Coronets & Cigarillos at local rank 7. Cigar Hut currently lists the product from A$119 with purchasable package options. Strength 8 and Quality 8 are projections; leave Flavour unrated and Value automatic."
+}
