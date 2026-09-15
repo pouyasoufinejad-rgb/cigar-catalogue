@@ -12,3 +12,5 @@ test('Worker injects a versioned runtime bootstrap so repaired editor code bypas
 test('runtime version-busts the recommendation subsection module containing the editor hotfix', () => {
   assert.match(runtime, /import\(['"]\.\/catalogue-recommendation-subsections\.mjs\?v=editor-focus-1['"]\)/);
 });
+
+// These checks intentionally pin both cache keys so this editor repair cannot silently regress to stale module URLs.
