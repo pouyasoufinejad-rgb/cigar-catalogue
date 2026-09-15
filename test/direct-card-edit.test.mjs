@@ -5,63 +5,44 @@ import { readFile } from 'node:fs/promises';
 const directEdit = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8').catch(() => '');
 const persistence = await readFile(new URL('../public/catalogue-direct-persistence.mjs', import.meta.url), 'utf8').catch(() => '');
 const runtimeModule = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+const fullEditor = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
-test('Edit catalogue activates direct card edit mode instead of opening the dropdown modal', () => {
-  assert.match(directEdit, /catalogue-admin-toggle/);
-  assert.match(directEdit, /capture:\s*true/);
-  assert.match(directEdit, /catalogue-direct-edit-mode/);
+test('legacy direct editor remains dormant and cannot intercept Edit catalogue', () => {
+  assert.ok(directEdit.length > 0, 'legacy module may remain in the repository for history/rollback');
+  assert.doesNotMatch(runtimeModule, /catalogue-direct-edit\.mjs/);
+  assert.doesNotMatch(runtimeModule, /initDirectCardEditing/);
 });
 
-test('entering direct edit mode closes the legend and benchmarks details', () => {
-  assert.match(directEdit, /function closeDiagnosticSections\(\)/);
-  assert.match(directEdit, /querySelectorAll\('\.legend-dropdown, #test-impact-map'\)/);
-  assert.match(directEdit, /removeAttribute\('open'\)/);
-  assert.match(directEdit, /function enterEditMode\(\)[\s\S]*?closeDiagnosticSections\(\)/);
+test('full catalogue editor owns the Edit catalogue button', () => {
+  assert.match(fullEditor, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
+  assert.match(fullEditor, /function openEditor\(\)[\s\S]*?modal\.hidden\s*=\s*false/);
 });
 
-test('clicking a card selects it and exposes in-place text editing plus image controls', () => {
-  assert.match(directEdit, /article\.card\[data-key\]/);
-  assert.match(directEdit, /contentEditable\s*=\s*enabled\s*\?\s*'true'/);
-  assert.match(directEdit, /Image size/);
-  assert.match(directEdit, /Image X/);
-  assert.match(directEdit, /Image Y/);
-  assert.match(directEdit, /Text Y/);
+test('full editor exposes structural product fields rather than only legacy inline text', () => {
+  for (const id of [
+    'catalogue-v139-type', 'catalogue-v139-risk', 'catalogue-v139-brand', 'catalogue-v139-title',
+    'catalogue-v139-package-price', 'catalogue-v139-package-label', 'catalogue-v139-price',
+    'catalogue-v139-country', 'catalogue-v139-length', 'catalogue-v139-ring',
+    'catalogue-v139-retailers', 'catalogue-v139-smoke-time', 'catalogue-v139-image'
+  ]) {
+    assert.ok(fullEditor.includes(id), `full editor should expose ${id}`);
+  }
+  for (const id of ['catalogue-admin-strength', 'catalogue-admin-quality', 'catalogue-admin-size', 'catalogue-admin-rank', 'catalogue-admin-section']) {
+    assert.ok(fullEditor.includes(id), `full editor should expose ${id}`);
+  }
 });
 
-test('direct editing temporarily expands compact cards so editable detail fields are visible', () => {
-  assert.match(directEdit, /function exposeCardForEditing\(card\)/);
-  assert.match(directEdit, /classList\.contains\('convenience-compact'\)/);
-  assert.match(directEdit, /dataset\.catalogueDirectWasCompact\s*=\s*'1'/);
-  assert.match(directEdit, /classList\.remove\('convenience-compact'\)/);
-  assert.match(directEdit, /classList\.add\('convenience-expanded'\)/);
-  assert.match(directEdit, /function restoreCardPresentation\(card\)/);
-  assert.match(directEdit, /dataset\.catalogueDirectWasCompact\s*!==\s*'1'/);
-  assert.match(directEdit, /delete card\.dataset\.catalogueDirectWasCompact/);
-  assert.match(directEdit, /function selectCard\(card\)[\s\S]*?exposeCardForEditing\(selected\)[\s\S]*?setEditable\(selected, true\)/);
-  assert.match(directEdit, /function exitEditMode\(\)[\s\S]*?restoreCardPresentation\(selected\)/);
+test('verified layout persistence remains loaded independently of the retired direct editor', () => {
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
+  assert.match(persistence, /\/api\/catalogue-overrides/);
 });
 
-test('direct image and text positioning overrides existing important transforms', () => {
+test('saved layout overrides existing important transforms', () => {
   assert.match(persistence, /style\.setProperty\('transform',\s*`translate\(\$\{layout\.imageX\}px, \$\{layout\.imageY\}px\) scale\(\$\{layout\.imageScale \/ 100\}\)`,\s*'important'\)/);
   assert.match(persistence, /style\.setProperty\('transform',\s*`translateY\(\$\{layout\.metaY\}px\)`,\s*'important'\)/);
 });
 
-test('direct editor uses the existing card selection and catalogue state save path', () => {
-  assert.match(directEdit, /catalogue-admin-card/);
-  assert.match(persistence, /\/api\/catalogue-overrides/);
-  assert.match(persistence, /summaryHtml/);
-  assert.match(persistence, /productionHtml/);
-  assert.match(persistence, /practicalHtml/);
-  assert.match(directEdit, /More fields/);
-});
-
-test('direct editor and verified persistence are loaded by the browser module chain', () => {
-  assert.match(runtimeModule, /typeof document !== 'undefined'/);
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-edit\.mjs\?v=compact-edit-1'\)/);
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
-});
-
-test('direct save verifies layout fields by reading KV back', () => {
+test('saved layout verifies layout fields by reading KV back', () => {
   assert.match(persistence, /verifySavedLayout/);
   assert.match(persistence, /await\s+verifySavedLayout\(key, patch\)/);
   assert.match(persistence, /imageScale/);
@@ -70,7 +51,7 @@ test('direct save verifies layout fields by reading KV back', () => {
   assert.match(persistence, /metaY/);
 });
 
-test('saved layout also survives immediate refresh and later DOM card rebuilds', () => {
+test('saved layout survives immediate refresh and later DOM card rebuilds', () => {
   assert.match(persistence, /catalogue-direct-layout-v1/);
   assert.match(persistence, /localStorage/);
   assert.match(persistence, /new MutationObserver/);
@@ -85,8 +66,4 @@ test('persistence observer ignores slider output and in-card text mutations', ()
   assert.match(persistence, /article\.card\[data-key\]/);
   assert.match(persistence, /mutations\.some\(mutationTouchesCatalogueCards\)/);
   assert.doesNotMatch(persistence, /mutations\.some\(mutation => mutation\.type === 'childList'\)/);
-});
-
-test('mobile Production and Practical blocks are moved farther down', () => {
-  assert.match(directEdit, /translateY\(22px\)!important/);
 });

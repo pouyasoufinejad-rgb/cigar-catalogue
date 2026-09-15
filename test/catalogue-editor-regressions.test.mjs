@@ -10,6 +10,7 @@ try {
 }
 const loaderSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
+const fullEditorSource = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
 test('Half-Cigar remains selected when legacy editor code programmatically writes Recommendation', () => {
   assert.ok(behaviour, 'catalogue editor behaviour module must load');
@@ -49,6 +50,12 @@ test('public Legend and Benchmarks disclosures are closed when editing starts', 
 test('edit click is observed at window capture before direct edit can stop document propagation', () => {
   assert.match(behaviourSource, /const clickTarget = root\.defaultView \|\| root/);
   assert.match(behaviourSource, /clickTarget\.addEventListener\?\.\('click',[\s\S]*?true\)/);
+});
+
+test('Edit catalogue is owned by the full editor, not the legacy direct-edit interceptor', () => {
+  assert.match(fullEditorSource, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
+  assert.doesNotMatch(loaderSource, /catalogue-direct-edit\.mjs/);
+  assert.doesNotMatch(loaderSource, /initDirectCardEditing/);
 });
 
 test('Legend and Benchmarks full-editor fields are converted to explicit collapsed disclosures', () => {
