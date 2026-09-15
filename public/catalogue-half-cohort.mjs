@@ -379,6 +379,7 @@ function syncEditorRankBounds(root = document) {
   const rankInput = root.getElementById?.(EDITOR_RANK_ID);
   if (!typeSelect || !rankInput) return;
   const type = normaliseCatalogueType(typeSelect.value);
+  if (type === MAIN_TYPE) return;
   const selected = selectedEditorCard(root);
   const rows = collectRows(root).filter(row => !row.archived && catalogueTypeForRow(row) === type);
   const selectedInType = selected && cardCatalogueType(selected) === type && selected.dataset.archived !== '1';

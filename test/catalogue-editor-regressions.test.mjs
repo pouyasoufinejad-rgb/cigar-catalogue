@@ -10,6 +10,7 @@ try {
 }
 const loaderSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
+const directEditSource = await readFile(new URL('../public/catalogue-direct-edit.mjs', import.meta.url), 'utf8');
 const fullEditorSource = await readFile(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
 
 test('Half-Cigar remains selected when legacy editor code programmatically writes Recommendation', () => {
@@ -52,10 +53,11 @@ test('edit click is observed at window capture before direct edit can stop docum
   assert.match(behaviourSource, /clickTarget\.addEventListener\?\.\('click',[\s\S]*?true\)/);
 });
 
-test('Edit catalogue is owned by the full editor, not the legacy direct-edit interceptor', () => {
+test('Edit catalogue is owned by direct edit while the full editor remains bound for More fields', () => {
+  assert.match(loaderSource, /catalogue-direct-edit\.mjs\?v=editor-repair-1/);
+  assert.match(directEditSource, /function onToggleCapture\(event\)[\s\S]*?event\.stopImmediatePropagation\(\)/);
+  assert.match(directEditSource, /function openMoreFields\(\)[\s\S]*?allowModalOpen = true;[\s\S]*?catalogue-admin-toggle/);
   assert.match(fullEditorSource, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
-  assert.doesNotMatch(loaderSource, /catalogue-direct-edit\.mjs/);
-  assert.doesNotMatch(loaderSource, /initDirectCardEditing/);
 });
 
 test('Legend and Benchmarks full-editor fields are converted to explicit collapsed disclosures', () => {

@@ -26,6 +26,12 @@ const SUBSECTION_SELECT_ID = 'catalogue-admin-subsection';
 const SUBSECTION_EDITOR_ID = 'catalogue-admin-subsection-editor';
 let runtimeState = null;
 let refreshTimer = 0;
+let renderingSubsections = false;
+let renderCount = 0;
+
+export function getRecommendationSubsectionRenderCount() {
+  return renderCount;
+}
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -324,85 +330,106 @@ function refreshRankVisual(card) {
 }
 
 export function renderSubsectionBlocks(root = document, state = runtimeState) {
-  if (!root?.querySelector) return 0;
+  if (!root?.querySelector || renderingSubsections) return 0;
   const target = ensureStateShape(state || {});
   const container = root.getElementById?.('cards') || root.querySelector('#cards');
   if (!container) return 0;
   const doc = documentFor(root);
   if (!doc) return 0;
-  const subsections = normaliseSubsections(target.sections.recommendationSubsections);
-  target.sections.recommendationSubsections = subsections;
-  const flatMain = root.getElementById?.('flat-main') || root.querySelector('#flat-main');
-  const sort = root.getElementById?.('sort') || root.querySelector('#sort');
-  const rankSortActive = !sort?.value || sort.value === 'rank';
 
-  const existingBlocks = new Map(Array.from(container.querySelectorAll?.(':scope > [data-recommendation-subsection]') || [])
-    .map(block => [block.dataset.recommendationSubsection, block]));
-  const orderedBlocks = [];
+  renderingSubsections = true;
+  renderCount += 1;
+  let visibilityRelevantChange = false;
+  try {
+    const subsections = normaliseSubsections(target.sections.recommendationSubsections);
+    target.sections.recommendationSubsections = subsections;
+    const flatMain = root.getElementById?.('flat-main') || root.querySelector('#flat-main');
+    const sort = root.getElementById?.('sort') || root.querySelector('#sort');
+    const rankSortActive = !sort?.value || sort.value === 'rank';
 
-  for (const section of subsections) {
-    let block = existingBlocks.get(section.id);
-    if (!block) {
-      block = doc.createElement('div');
-      block.className = 'tier-block';
-      block.dataset.recommendationSubsection = section.id;
-      const heading = doc.createElement('h3');
-      heading.className = 'tier-heading';
-      const note = doc.createElement('p');
-      note.className = 'subtier-note';
-      const grid = doc.createElement('div');
-      grid.className = 'grid tier-grid';
-      block.append(heading, note, grid);
-    }
-    if (block.dataset.recommendationSubsection !== section.id) block.dataset.recommendationSubsection = section.id;
-    const heading = block.querySelector('.tier-heading');
-    const note = block.querySelector('.subtier-note');
-    const grid = block.querySelector('.tier-grid') || block.querySelector('.grid');
-    if (heading && heading.textContent !== section.title) heading.textContent = section.title;
-    if (note && note.textContent !== section.note) note.textContent = section.note;
-    if (grid && grid.id !== `recommendation-${section.id}`) grid.id = `recommendation-${section.id}`;
-    orderedBlocks.push(block);
-  }
+    const existingBlocks = new Map(Array.from(container.querySelectorAll?.(':scope > [data-recommendation-subsection]') || [])
+      .map(block => [block.dataset.recommendationSubsection, block]));
+    const orderedBlocks = [];
 
-  Array.from(container.querySelectorAll?.(':scope > [data-recommendation-subsection]') || []).forEach(block => {
-    if (!subsections.some(section => section.id === block.dataset.recommendationSubsection)) block.remove();
-  });
-
-  let anchor = flatMain || null;
-  for (const block of orderedBlocks) {
-    if (anchor?.nextSibling !== block) container.insertBefore(block, anchor?.nextSibling || container.firstChild || null);
-    anchor = block;
-  }
-
-  const byKey = new Map(cardsForRoot(root).map(card => [cardKey(card), card]));
-  for (const section of subsections) {
-    const grid = root.getElementById?.(`recommendation-${section.id}`) || container.querySelector(`#recommendation-${section.id}`);
-    if (!grid) continue;
-    if (rankSortActive) {
-      let visibleIndex = 0;
-      for (const [index, key] of section.entryKeys.entries()) {
-        const card = byKey.get(key);
-        if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main' || unavailable(card)) continue;
-        const rank = String(index + 1);
-        if (card.dataset.rank !== rank) card.dataset.rank = rank;
-        if (card.dataset.subsection !== section.id) card.dataset.subsection = section.id;
-        refreshRankVisual(card);
-        const expected = grid.children?.[visibleIndex] || null;
-        if (expected !== card) grid.insertBefore(card, expected);
-        visibleIndex += 1;
+    for (const section of subsections) {
+      let block = existingBlocks.get(section.id);
+      if (!block) {
+        block = doc.createElement('div');
+        block.className = 'tier-block';
+        block.dataset.recommendationSubsection = section.id;
+        const heading = doc.createElement('h3');
+        heading.className = 'tier-heading';
+        const note = doc.createElement('p');
+        note.className = 'subtier-note';
+        const grid = doc.createElement('div');
+        grid.className = 'grid tier-grid';
+        block.append(heading, note, grid);
       }
+      if (block.dataset.recommendationSubsection !== section.id) block.dataset.recommendationSubsection = section.id;
+      const heading = block.querySelector('.tier-heading');
+      const note = block.querySelector('.subtier-note');
+      const grid = block.querySelector('.tier-grid') || block.querySelector('.grid');
+      if (heading && heading.textContent !== section.title) {
+        heading.textContent = section.title;
+        visibilityRelevantChange = true;
+      }
+      if (note && note.textContent !== section.note) {
+        note.textContent = section.note;
+        visibilityRelevantChange = true;
+      }
+      if (grid && grid.id !== `recommendation-${section.id}`) grid.id = `recommendation-${section.id}`;
+      orderedBlocks.push(block);
     }
-    blockVisibility(grid.parentElement);
+
+    Array.from(container.querySelectorAll?.(':scope > [data-recommendation-subsection]') || []).forEach(block => {
+      if (!subsections.some(section => section.id === block.dataset.recommendationSubsection)) block.remove();
+    });
+
+    let anchor = flatMain || null;
+    for (const block of orderedBlocks) {
+      if (anchor?.nextSibling !== block) container.insertBefore(block, anchor?.nextSibling || container.firstChild || null);
+      anchor = block;
+    }
+
+    const byKey = new Map(cardsForRoot(root).map(card => [cardKey(card), card]));
+    for (const section of subsections) {
+      const grid = root.getElementById?.(`recommendation-${section.id}`) || container.querySelector(`#recommendation-${section.id}`);
+      if (!grid) continue;
+      if (rankSortActive) {
+        let visibleIndex = 0;
+        for (const [index, key] of section.entryKeys.entries()) {
+          const card = byKey.get(key);
+          if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main' || unavailable(card)) continue;
+          const rank = String(index + 1);
+          if (card.dataset.rank !== rank) card.dataset.rank = rank;
+          if (card.dataset.subsection !== section.id) card.dataset.subsection = section.id;
+          refreshRankVisual(card);
+          const expected = grid.children?.[visibleIndex] || null;
+          if (expected !== card) {
+            grid.insertBefore(card, expected);
+            visibilityRelevantChange = true;
+          }
+          visibleIndex += 1;
+        }
+      }
+      if (blockVisibility(grid.parentElement)) visibilityRelevantChange = true;
+    }
+    if (rankSortActive) flatMain?.classList?.add?.('hidden');
+    if (visibilityRelevantChange) globalThis?.window?.refreshGroupVisibility?.();
+    return subsections.length;
+  } finally {
+    renderingSubsections = false;
   }
-  if (rankSortActive) flatMain?.classList?.add?.('hidden');
-  globalThis?.window?.refreshGroupVisibility?.();
-  return subsections.length;
 }
 
 function blockVisibility(block) {
-  if (!block?.querySelectorAll) return;
+  if (!block?.querySelectorAll) return false;
   const visible = Array.from(block.querySelectorAll('article.card')).some(card => !card.classList?.contains?.('hidden'));
-  block.classList?.toggle?.('hidden', !visible);
+  const shouldHide = !visible;
+  const wasHidden = Boolean(block.classList?.contains?.('hidden'));
+  if (wasHidden === shouldHide) return false;
+  block.classList?.toggle?.('hidden', shouldHide);
+  return true;
 }
 
 function currentSubsections() {
@@ -616,6 +643,11 @@ function bindAdmin(root = document) {
       control.addEventListener('change', () => setTimeout(() => syncAdminSelection(root), 0));
     }
   }
+  const toggle = root.getElementById?.('catalogue-admin-toggle');
+  if (toggle && toggle.dataset.recommendationSubsectionsBound !== '1') {
+    toggle.dataset.recommendationSubsectionsBound = '1';
+    toggle.addEventListener('click', () => setTimeout(() => syncAdminSelection(root), 0));
+  }
   syncAdminSelection(root);
 }
 
@@ -640,7 +672,7 @@ function hydrateRuntimeState(state, root = document) {
 }
 
 function scheduleRefresh(root = document) {
-  if (refreshTimer) return;
+  if (renderingSubsections || refreshTimer) return;
   refreshTimer = setTimeout(() => {
     refreshTimer = 0;
     if (!runtimeState) return;
@@ -668,12 +700,15 @@ export function installRecommendationSubsections(root = document) {
   });
   initialRead(root);
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
+  root.addEventListener?.('catalogue:cards-refreshed', () => scheduleRefresh(root));
+  root.querySelector?.('.toggle')?.addEventListener('click', event => {
+    if (event.target?.closest?.('button')) scheduleRefresh(root);
+  });
   const observationRoot = root.getElementById?.('cards') || root.querySelector?.('#cards');
   if (typeof MutationObserver !== 'undefined' && observationRoot) {
     const observer = new MutationObserver(() => scheduleRefresh(root));
     observer.observe(observationRoot, {
       subtree: true,
-      childList: true,
       attributes: true,
       attributeFilter: ['data-key', 'data-rank', 'data-subsection', 'data-archived', 'data-catalogue-type', 'data-taster', 'data-stock', 'data-stock-pin']
     });

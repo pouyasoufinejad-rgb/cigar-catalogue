@@ -88,7 +88,9 @@ function setEditable(card, enabled) {
   const selectors = ['.summary','.mog-note','.eyebrow','.artmeta-left','.artmeta-right','.tag-items'];
   selectors.forEach(selector => {
     card.querySelectorAll(selector).forEach(node => {
-      node.contentEditable = enabled ? 'true' : 'false';
+      const value = enabled ? 'true' : 'false';
+      node.contentEditable = value;
+      node.setAttribute('contenteditable', value);
       node.classList.toggle('catalogue-direct-editable', enabled);
       if (enabled) node.spellcheck = true;
     });
