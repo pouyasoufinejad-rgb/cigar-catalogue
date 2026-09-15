@@ -1,0 +1,41 @@
+name: Verify live editor v140
+
+on:
+  push:
+    branches: [verify/live-editor-v140]
+    paths:
+      - '.github/workflows/verify-live-editor-v140.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify live Worker and repaired editor modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='https://cigar-catalogue.psncodex.workers.dev/'
+          runtime='https://cigar-catalogue.psncodex.workers.dev/catalogue-runtime.mjs?v=140'
+          subsection='https://cigar-catalogue.psncodex.workers.dev/catalogue-recommendation-subsections.mjs?v=editor-focus-1'
+          for attempt in $(seq 1 45); do
+            headers="$(curl -fsSI --max-time 15 "$root" || true)"
+            html="$(curl -fsSL --max-time 15 "$root" || true)"
+            runtime_body="$(curl -fsSL --max-time 15 "$runtime" || true)"
+            subsection_body="$(curl -fsSL --max-time 15 "$subsection" || true)"
+            if grep -Fiq 'x-cigar-catalogue-version: 140' <<<"$headers" \
+              && grep -Fq '/catalogue-runtime.mjs?v=140' <<<"$html" \
+              && grep -Fq "catalogue-recommendation-subsections.mjs?v=editor-focus-1" <<<"$runtime_body" \
+              && grep -Fq 'observer.observe(observationRoot' <<<"$subsection_body" \
+              && grep -Fq 'if (expected !== card) grid.insertBefore(card, expected);' <<<"$subsection_body" \
+              && ! grep -Fq 'observer.observe(root.body' <<<"$subsection_body"; then
+              echo 'LIVE VERIFIED: Worker v140 and editor focus hotfix are serving.'
+              exit 0
+            fi
+            echo "attempt=$attempt live_version=$(grep -Fi 'x-cigar-catalogue-version:' <<<"$headers" | tr -d '\r' || true) runtime140=$(grep -Fc '/catalogue-runtime.mjs?v=140' <<<"$html" || true) module_bust=$(grep -Fc 'catalogue-recommendation-subsections.mjs?v=editor-focus-1' <<<"$runtime_body" || true) observer_fix=$(grep -Fc 'observer.observe(observationRoot' <<<"$subsection_body" || true)"
+            sleep 4
+          done
+          echo '::error::Live catalogue did not reach Worker/editor v140 during verification window.'
+          exit 1
