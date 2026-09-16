@@ -36,6 +36,14 @@ function cleanSpacing(value) {
     .trim();
 }
 
+function splitSummarySentences(value) {
+  const marker = '\uE000';
+  const protectedText = String(value || '').replace(/\bNo\.\s+(?=\d)/gi, match => match.replace('.', marker));
+  return protectedText
+    .split(/(?<=[.!?])\s+/)
+    .map(sentence => sentence.replaceAll(marker, '.'));
+}
+
 export function cleanCatalogueText(input) {
   if (typeof input !== 'string') return input;
   if (!REDUNDANT_COPY.test(plainText(input))) return input;
@@ -109,7 +117,7 @@ function isCataloguePlacementSentence(sentence) {
 
 export function cleanSummaryMeta(input) {
   if (typeof input !== 'string') return input;
-  const sentences = input.split(/(?<=[.!?])\s+/);
+  const sentences = splitSummarySentences(input);
   if (!sentences.some(isCataloguePlacementSentence)) return input;
   return cleanSpacing(sentences.filter(sentence => !isCataloguePlacementSentence(sentence)).join(' '));
 }
