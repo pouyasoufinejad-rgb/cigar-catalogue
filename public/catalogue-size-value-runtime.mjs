@@ -236,7 +236,7 @@ function bindEvents() {
 }
 
 function installStateListener() {
-  registerCatalogueStateResponseListener('size-value', 50, event => {
+  registerCatalogueStateResponseListener('size-value', event => {
     if (!event?.state || typeof event.state !== 'object') return;
     if (event.method === 'GET' || event.method === 'HEAD') state = event.state;
     else if (event.method === 'PUT') state = { ...state, cards: event.state.cards || state.cards || {} };
