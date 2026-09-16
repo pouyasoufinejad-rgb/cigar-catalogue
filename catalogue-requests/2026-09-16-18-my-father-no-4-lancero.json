@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-18-my-father-no-4-lancero",
+  "operation": "upsert-entry",
+  "key": "my-father-no-4-lancero",
+  "entry": {
+    "brand": "My Father",
+    "title": "My Father No.4 Lancero — Single",
+    "eyebrow": "Full-bodied Habano-Rosado lancero",
+    "packagePrice": 56,
+    "packageLabel": "single cigar",
+    "price": 56,
+    "country": "Nicaragua",
+    "length": 7.5,
+    "ring": 38,
+    "strength": 9,
+    "quality": 9,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High",
+      "Pairings: Espresso, dark chocolate, bourbon or dark rum",
+      "Occasion: Long high-intensity evening smoke"
+    ],
+    "summaryHtml": "<strong>Black pepper, cedar, espresso, cocoa, leather and sweet cherry</strong> define the original My Father lancero. The Habano-Rosado wrapper keeps the 38-ring smoke aromatic and spice-forward, while the all-Nicaraguan core builds roasted nuts, baking spice and substantial nicotine across the long format.",
+    "noteHtml": "Cigar Hut lists the exact 7.5″ × 38 My Father No.4 Lancero single at A$56.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Habano-Rosado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "7.5″ × 38 Lancero",
+      "Long, slender format",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 70–95 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/my-father-no-4-lancero/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add My Father No.4 Lancero as an active main-catalogue entry using the current Cigar Hut single price and My Father's published blend. Value remains automatic."
+}

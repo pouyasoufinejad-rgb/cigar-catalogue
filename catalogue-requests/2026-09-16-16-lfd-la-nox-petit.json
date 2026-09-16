@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-16-lfd-la-nox-petit",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-la-nox-petit",
+  "entry": {
+    "brand": "La Flor Dominicana",
+    "title": "La Nox Petit — Single",
+    "eyebrow": "Dark Brazilian maduro petit",
+    "packagePrice": 39.84,
+    "packageLabel": "single cigar",
+    "price": 39.84,
+    "country": "Dominican Republic",
+    "length": 5,
+    "ring": 40,
+    "strength": 8,
+    "quality": 9,
+    "risk": 1,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High to High",
+      "Pairings: Espresso, dark chocolate, cola or dark rum",
+      "Occasion: Rich narrow-gauge evening smoke"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, espresso, raspberry, maple sweetness, cedar and pepper</strong> come through densely in the narrow 5″ × 40 format. The sweet Brazilian maduro wrapper and San Andrés binder build cocoa and dark-fruit richness, while Dominican Piloto and Pelo de Oro keep the finish spicy, leathery and substantial.",
+    "noteHtml": "Cigar World lists the exact 5″ × 40 La Nox Petit single at A$39.84.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Brazilian Maduro",
+      "Binder: Mexican San Andrés",
+      "Filler: Dominican Piloto and Pelo de Oro"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "5″ × 40 Petit",
+      "Narrow ring gauge",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 40–55 min smoke",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/la-flor-dominicana-%252d-la-nox-petit-%252d-single-%252d-%285%22-x-40%29.html"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add La Flor Dominicana La Nox Petit as an active main-catalogue entry using the current Cigar World single price and LFD's published blend. Value remains automatic."
+}

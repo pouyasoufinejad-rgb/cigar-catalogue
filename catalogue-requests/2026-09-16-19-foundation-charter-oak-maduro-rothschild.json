@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-19-foundation-charter-oak-maduro-rothschild",
+  "operation": "upsert-entry",
+  "key": "foundation-charter-oak-maduro-rothschild",
+  "entry": {
+    "brand": "Foundation",
+    "title": "Charter Oak Maduro Rothschild — Single",
+    "eyebrow": "Connecticut Broadleaf Rothschild",
+    "packagePrice": 34,
+    "packageLabel": "single cigar",
+    "price": 34,
+    "country": "Nicaragua",
+    "length": 4.5,
+    "ring": 50,
+    "strength": 7,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium to Medium-High",
+      "Pairings: Espresso, cocoa, cola or dark rum",
+      "Occasion: Compact Broadleaf smoke, casual evening"
+    ],
+    "summaryHtml": "<strong>Dark chocolate, espresso, molasses, cedar, earth and black pepper</strong> make the Charter Oak Maduro a compact Broadleaf smoke with very little fuss. A Nicaraguan Habano binder and Nicaraguan filler add woody spice and leather beneath the wrapper's natural sweetness, and the 4.5″ × 50 Rothschild keeps the profile dense without turning into a long session.",
+    "noteHtml": "Cigar Hut lists the Charter Oak Maduro Rothschild single at A$34.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Connecticut Broadleaf Maduro",
+      "Binder: Nicaraguan Habano",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4.5″ × 50 Rothschild",
+      "Compact robusto format",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 35–45 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/charter-oak-maduro-rothschild/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Foundation Charter Oak Maduro Rothschild as an active main-catalogue entry using the current Cigar Hut single price and Foundation's published Broadleaf blend. Value remains automatic."
+}
