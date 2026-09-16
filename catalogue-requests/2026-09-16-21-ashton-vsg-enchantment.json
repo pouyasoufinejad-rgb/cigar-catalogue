@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-16-21-ashton-vsg-enchantment",
+  "operation": "upsert-entry",
+  "key": "ashton-vsg-enchantment",
+  "entry": {
+    "brand": "Ashton",
+    "title": "VSG Enchantment — Single",
+    "eyebrow": "Full-strength VSG perfecto",
+    "packagePrice": 44,
+    "packageLabel": "single cigar",
+    "price": 44,
+    "country": "Dominican Republic",
+    "length": 4.375,
+    "ring": 60,
+    "strength": 9,
+    "quality": 9,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: High",
+      "Pairings: Espresso, dark chocolate, bourbon or dark rum",
+      "Occasion: Short full-strength after-dinner smoke"
+    ],
+    "summaryHtml": "<strong>Espresso, dark cocoa, cedar, leather, earth and black pepper</strong> arrive quickly in this short VSG perfecto. The Ecuador Sumatra wrapper sits over aged Dominican tobaccos for dense sweetness, roasted nuts and spice, while the tapered shape concentrates the opening before the 60-ring centre produces a much broader mouthful of smoke.",
+    "noteHtml": "Cigar Hut lists the exact 4.375″ × 60 Ashton VSG Enchantment single at A$44.",
+    "productionLines": [
+      "Handmade in the Dominican Republic by Arturo Fuente",
+      "Wrapper: Ecuador Sumatra",
+      "Binder: Dominican",
+      "Filler: Dominican, aged 4–5 years"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4.375″ × 60 Perfecto",
+      "Very large ring gauge",
+      "Tapered head and foot",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 45–60 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/ashton-vsg-enchantment/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Ashton VSG Enchantment as an active main-catalogue entry using the current Cigar Hut single price and Ashton's published VSG construction. Value remains automatic."
+}

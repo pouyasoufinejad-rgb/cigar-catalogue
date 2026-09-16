@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   cleanCatalogueText,
+  cleanSummaryMeta,
   buildCleanupPatch,
   findAffectedKeys
 } from '../scripts/cleanup-live-card-copy.mjs';
@@ -38,6 +39,26 @@ test('cleans notes and eyebrow text rather than deleting useful facts', () => {
   );
 });
 
+test('removes catalogue-placement commentary from summaries while keeping cigar prose', () => {
+  const input = '<strong>Cocoa, cedar and pepper</strong> lead a dense savoury profile. Its No. 7 placement keeps it above the lighter cigars in the catalogue. The finish turns sweeter with espresso and leather.';
+  assert.equal(
+    cleanSummaryMeta(input),
+    '<strong>Cocoa, cedar and pepper</strong> lead a dense savoury profile. The finish turns sweeter with espresso and leather.'
+  );
+});
+
+test('preserves third-party ranking facts that are about the cigar rather than catalogue placement', () => {
+  const input = 'Cigar Aficionado ranked the exact vitola No. 3 in its 2025 Top 25.';
+  assert.equal(cleanSummaryMeta(input), input);
+});
+
+test('removes short-form self-referential rank sentences from summaries', () => {
+  assert.equal(
+    cleanSummaryMeta('Dense cocoa and coffee dominate. That puts it at No. 4. Pepper builds through the finish.'),
+    'Dense cocoa and coffee dominate. Pepper builds through the finish.'
+  );
+});
+
 test('buildCleanupPatch only returns visible fields whose current effective value changes', () => {
   const entry = {
     eyebrow: 'Dark Broadleaf cigar',
@@ -58,6 +79,17 @@ test('buildCleanupPatch only returns visible fields whose current effective valu
   });
 });
 
+test('buildCleanupPatch includes meta-summary cleanup without touching rank fields', () => {
+  const entry = {
+    summaryHtml: 'Earth and cocoa lead. It currently sits at No. 9 in the catalogue.',
+    rank: 9,
+    price: 33
+  };
+  assert.deepEqual(buildCleanupPatch({}, entry), {
+    summaryHtml: 'Earth and cocoa lead.'
+  });
+});
+
 test('findAffectedKeys scans the current effective live copy across cards and dynamic entries', () => {
   const state = {
     cards: {
@@ -67,8 +99,9 @@ test('findAffectedKeys scans the current effective live copy across cards and dy
     entries: {
       tasted: { summaryHtml: 'Old projected copy should not override the current card.' },
       dynamicOld: { smokeTime: '30 min smoke (projected)' },
+      metaOld: { summaryHtml: 'Dark cocoa and pepper. It sits at No. 12 in the catalogue.' },
       clean: { noteHtml: 'Current retailer price A$30.' }
     }
   };
-  assert.deepEqual(findAffectedKeys(state), ['dynamicOld', 'staticOld']);
+  assert.deepEqual(findAffectedKeys(state), ['dynamicOld', 'metaOld', 'staticOld']);
 });

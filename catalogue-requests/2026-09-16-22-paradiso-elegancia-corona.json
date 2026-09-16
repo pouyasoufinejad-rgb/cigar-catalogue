@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-22-paradiso-elegancia-corona",
+  "operation": "upsert-entry",
+  "key": "paradiso-elegancia-corona",
+  "entry": {
+    "brand": "Paradiso",
+    "title": "Paradiso Elegancia Corona — Single",
+    "eyebrow": "Connecticut-wrapped Nicaraguan corona",
+    "packagePrice": 37,
+    "packageLabel": "single cigar",
+    "price": 37,
+    "country": "Nicaragua",
+    "length": 5.5,
+    "ring": 46,
+    "strength": 5,
+    "quality": 8,
+    "risk": 3,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium",
+      "Pairings: Coffee, café au lait, toasted nuts",
+      "Occasion: Lighter daytime smoke, relaxed afternoon"
+    ],
+    "summaryHtml": "<strong>Cream, toasted nuts, cedar, café au lait, sweet grass and mild pepper</strong> make the Elegancia Corona the softer member of the Paradiso family. Its Ecuador Connecticut wrapper smooths the Nicaraguan core into wheat toast and light leather, while the 46-ring Corona keeps enough pepper and wood in the finish to avoid flattening out.",
+    "noteHtml": "Cigar Hut lists the exact 5.5″ × 46 Paradiso Elegancia Corona single at A$37.",
+    "productionLines": [
+      "Handmade in Nicaragua by My Father",
+      "Wrapper: Ecuador Connecticut",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "5.5″ × 46 Corona",
+      "Slim traditional format",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 45–60 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/paradiso-elegancia-corona/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Paradiso Elegancia Corona as an active main-catalogue entry using the current Cigar Hut single price and the established Paradiso/San Cristobal Elegancia blend. Value remains automatic."
+}

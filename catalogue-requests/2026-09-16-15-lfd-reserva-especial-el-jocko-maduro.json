@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-15-lfd-reserva-especial-el-jocko-maduro",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-reserva-especial-el-jocko-maduro",
+  "entry": {
+    "brand": "La Flor Dominicana",
+    "title": "Reserva Especial El Jocko Maduro — Single",
+    "eyebrow": "Broadleaf maduro perfecto",
+    "packagePrice": 37.14,
+    "packageLabel": "single cigar",
+    "price": 37.14,
+    "country": "Dominican Republic",
+    "length": 4.5,
+    "ring": 54,
+    "strength": 8,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium-High",
+      "Pairings: Espresso, dark chocolate, dark rum",
+      "Occasion: Compact evening perfecto, after-dinner smoke"
+    ],
+    "summaryHtml": "<strong>Dark cocoa, espresso, cedar, earth, anise and black pepper</strong> drive this compact Broadleaf perfecto. The Nicaraguan binder and Dominican core keep the smoke savoury and woody beneath the darker wrapper sweetness, while the tapered shape starts concentrated before opening into the 54-ring centre.",
+    "noteHtml": "Cigar World lists the exact El Jocko Maduro single at A$37.14.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Connecticut Broadleaf Maduro",
+      "Binder: Nicaraguan",
+      "Filler: Dominican"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "4.5″ × 32–54 Perfecto",
+      "Tapered head and foot",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 35–50 min smoke",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/la-flor-dominicana-%252d-reserva-especial-%252d-el-jocko-maduro-%252d-single-%252d-%284-1%7B47%7D2%22-x-32%252d54%29-perfecto.html"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add La Flor Dominicana Reserva Especial El Jocko Maduro as an active main-catalogue entry using the current Cigar World single price and the established sensory, Production and Practical card structure. Value remains automatic."
+}

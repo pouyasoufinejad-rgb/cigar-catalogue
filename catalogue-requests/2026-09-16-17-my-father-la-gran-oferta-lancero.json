@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-16-17-my-father-la-gran-oferta-lancero",
+  "operation": "upsert-entry",
+  "key": "my-father-la-gran-oferta-lancero",
+  "entry": {
+    "brand": "My Father",
+    "title": "La Gran Oferta Lancero — Box of 20",
+    "eyebrow": "Rosado lancero with dark-fruit sweetness",
+    "packagePrice": 666.96,
+    "packageLabel": "box of 20",
+    "price": 33.35,
+    "country": "Nicaragua",
+    "length": 7.5,
+    "ring": 38,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "out",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium to Medium-High",
+      "Pairings: Espresso, dark chocolate, black coffee",
+      "Occasion: Long narrow evening smoke"
+    ],
+    "summaryHtml": "<strong>Black cherry, dark chocolate, espresso, malt, toasted oak and black pepper</strong> give this lancero a sweeter, rounder My Father profile. The oily Habano Rosado wrapper carries much of the aromatic detail, while the Nicaraguan Habano-Criollo core adds leather, spice and a dry espresso finish through the long 38-ring format.",
+    "noteHtml": "AuCigars lists the box of 20 at A$666.96 and currently shows the product unavailable.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Habano Rosado",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan Habano-Criollo"
+    ],
+    "practicalLines": [
+      "Box of 20 cigars",
+      "A$33.35 per cigar",
+      "7.5″ × 38 Lancero",
+      "Long, narrow format",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 70–95 min smoke",
+    "retailerLinks": [
+      "https://aucigars.com/products/my-father-la-gran-oferta-lancero-cigar"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add My Father La Gran Oferta Lancero as an active main-catalogue entry using the current AuCigars box listing and per-cigar price. Value remains automatic."
+}

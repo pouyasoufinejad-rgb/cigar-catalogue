@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-16-20-paradiso-quintessence-robusto",
+  "operation": "upsert-entry",
+  "key": "paradiso-quintessence-robusto",
+  "entry": {
+    "brand": "Paradiso",
+    "title": "Paradiso Quintessence Robusto — Single",
+    "eyebrow": "My Father-made Ecuador Habano robusto",
+    "packagePrice": 40,
+    "packageLabel": "single cigar",
+    "price": 40,
+    "country": "Nicaragua",
+    "length": 5.5,
+    "ring": 50,
+    "strength": 7,
+    "quality": 9,
+    "risk": 1,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium to Medium-High",
+      "Pairings: Coffee, espresso, dark chocolate or dark rum",
+      "Occasion: Balanced premium evening smoke"
+    ],
+    "summaryHtml": "<strong>Coffee, toasted almond, cedar, dried plum, cocoa and brown sugar</strong> give the Quintessence Robusto a rounded medium-full profile. The Ecuador Habano wrapper brings sweetness and aromatic spice over an all-Nicaraguan core, with enough pepper and toast to keep the fruit and honeyed notes from becoming soft.",
+    "noteHtml": "Cigar Hut lists the exact 5.5″ × 50 Paradiso Quintessence Robusto single at A$40.",
+    "productionLines": [
+      "Handmade in Nicaragua by My Father",
+      "Wrapper: Ecuador Habano",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "5.5″ × 50 Robusto",
+      "My Father-made",
+      "Slow cadence recommended"
+    ],
+    "smokeTime": "About 55–70 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/paradiso-quintessence-robusto/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Paradiso Quintessence Robusto as an active main-catalogue entry using the current Cigar Hut single price and the established Paradiso/San Cristobal Quintessence blend. Value remains automatic."
+}
