@@ -144,6 +144,7 @@ function normaliseConstruction(lines, family) {
 
 function cleanFactValue(value) {
   return String(value || '')
+    .trim()
     .replace(/^and\s+/i, '')
     .replace(/\s+tobaccos?\b.*$/i, '')
     .replace(/[.;]+$/g, '')
