@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-16-23-acid-krush-red-cameroon",
+  "operation": "upsert-entry",
+  "key": "drew-estate-acid-krush-red-cameroon",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "ACID Krush Red Cameroon",
+    "eyebrow": "Sweet-tea infused Cameroon Coronet",
+    "packagePrice": 14.8,
+    "packageLabel": "single cigar",
+    "price": 14.8,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 5,
+    "quality": 7,
+    "flavour": 8,
+    "risk": 1,
+    "stock": "in",
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "experienceTags": [
+      "Nicotine: Medium",
+      "Pairings: Iced tea, coffee or cola",
+      "Occasion: Quick sweet aromatic smoke"
+    ],
+    "summaryHtml": "<strong>Sweet tea, aromatic herbs, mild Cameroon spice, earth and toasted nuttiness</strong> lead the profile. The infusion is sweet without becoming syrupy, while the Cameroon wrapper adds dry toast and gentle spice underneath. The 4×32 format concentrates the flavour into a quick, aromatic smoke with enough tobacco character to keep the sweetness balanced.",
+    "noteHtml": "Firmin Cigars currently lists the individual cigar at A$14.80.",
+    "productionLines": [
+      "Flavoured",
+      "Handmade",
+      "Wrapper: Cameroon",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Fragile",
+      "Lenient Cadence"
+    ],
+    "smokeTime": "About 15–25 min smoke",
+    "retailerLinks": [
+      "https://firmincigars.com.au/product-tag/drew-estate-cigars/?v=2c18c36508d1",
+      "https://www.cigarhut.com.au/acid-krush-red-cameroon/"
+    ],
+    "priceChecked": "2026-09-16",
+    "stockChecked": "2026-09-16"
+  },
+  "note": "Add Drew Estate ACID Krush Red Cameroon to Coronets & Cigarillos. Personal tasting sets Flavour 8 and Quality/Construction 7, with sweet tea as the standout flavour. Firmin lists the individual cigar at A$14.80; Cigar Hut lists the exact 4×32 product in tin packages. Value remains automatic."
+}
