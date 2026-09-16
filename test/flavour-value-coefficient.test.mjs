@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { deriveValue, flavourValueMultiplier } from '../public/catalogue-value.mjs';
+import {
+  SIZE_EXPONENT,
+  deriveValue,
+  flavourValueMultiplier,
+  resolveSmokingUnit,
+  sizeFactor
+} from '../public/catalogue-value.mjs';
 
 const flavourRuntime = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
 
@@ -31,6 +37,53 @@ test('the adjusted ratio feeds the existing logarithmic Value score', () => {
   assert.equal(deriveValue(14, 7, 8).score, 7);
   assert.equal(deriveValue(14, 7, 9).score, 8);
   assert.equal(deriveValue(14, 7, 10).score, 9);
+});
+
+test('Size Factor uses a 4x32 baseline with square-root diminishing returns', () => {
+  assert.equal(SIZE_EXPONENT, 0.5);
+  assert.equal(sizeFactor(4, 32), 1);
+
+  const papasFritasRaw = (4.5 * (44 ** 2)) / (4 * (32 ** 2));
+  assert.ok(Math.abs(sizeFactor(4.5, 44) - Math.sqrt(papasFritasRaw)) < 1e-12);
+
+  const toroRaw = (6 * (52 ** 2)) / (4 * (32 ** 2));
+  assert.ok(Math.abs(sizeFactor(6, 52) - Math.sqrt(toroRaw)) < 1e-12);
+});
+
+test('Size Factor divides the flavour-adjusted price-to-quality ratio', () => {
+  const baseline = deriveValue(14, 7, 6, { length: 4, ring: 32 });
+  assert.equal(baseline.sizeFactor, 1);
+  assert.equal(baseline.ratio, 1);
+  assert.equal(baseline.score, 6);
+
+  const larger = deriveValue(14, 7, 6, { length: 4.5, ring: 44 });
+  assert.ok(larger.sizeFactor > 1);
+  assert.ok(Math.abs(larger.ratio - (1 / larger.sizeFactor)) < 1e-12);
+  assert.equal(larger.score, 8);
+});
+
+test('Half-Cigars resolve to one half-session exactly once', () => {
+  assert.deepEqual(
+    resolveSmokingUnit({ price: 50, length: 7, ring: 38, catalogueType: 'half' }),
+    { price: 25, length: 3.5, ring: 38, split: true }
+  );
+
+  assert.deepEqual(
+    resolveSmokingUnit({ price: 25, length: 3.5, ring: 38, catalogueType: 'half', valueUnit: 'session' }),
+    { price: 25, length: 3.5, ring: 38, split: false }
+  );
+
+  assert.deepEqual(
+    resolveSmokingUnit({ price: 50, length: 7, ring: 38, catalogueType: 'main' }),
+    { price: 50, length: 7, ring: 38, split: false }
+  );
+});
+
+test('missing dimensions preserve the previous Value behaviour', () => {
+  const result = deriveValue(14, 7, 10);
+  assert.equal(result.sizeFactor, 1);
+  assert.equal(result.ratio, 0.6);
+  assert.equal(result.score, 9);
 });
 
 test('Flavour runtime recalculates card Value before automatic laurels', () => {
