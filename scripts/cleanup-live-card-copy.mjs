@@ -92,6 +92,28 @@ export function cleanCatalogueText(input) {
   return text;
 }
 
+function isCataloguePlacementSentence(sentence) {
+  const plain = plainText(sentence).trim();
+  if (!plain) return false;
+
+  const explicitCataloguePlacement = /\b(?:catalogue|catalog)\b/i.test(plain)
+    && /\b(?:rank(?:ed|ing|s)?|placement|position|sits?|placed|above|below|ahead|behind|moves?|moved|slot|spot|no\.\s*\d+|#\s*\d+)\b/i.test(plain);
+
+  const shortPlacementStatement = /\b(?:that|this)\s+(?:puts?|places?)\s+it\s+(?:at|in)\s+(?:no\.\s*\d+|#\s*\d+|\w+\s+place)\b/i.test(plain)
+    || /\b(?:it|this cigar)\s+(?:currently\s+)?sits?\s+at\s+(?:no\.\s*\d+|#\s*\d+)\b/i.test(plain)
+    || /\bcurrent\s+(?:rank|ranking|placement|position)\b/i.test(plain)
+    || /\b(?:moves?|moved|puts?|placed)\s+(?:it|this cigar)\s+(?:up|down|at|to|into)\s+(?:no\.\s*\d+|#\s*\d+|\w+\s+place)\b/i.test(plain);
+
+  return explicitCataloguePlacement || shortPlacementStatement;
+}
+
+export function cleanSummaryMeta(input) {
+  if (typeof input !== 'string') return input;
+  const sentences = input.split(/(?<=[.!?])\s+/);
+  if (!sentences.some(isCataloguePlacementSentence)) return input;
+  return cleanSpacing(sentences.filter(sentence => !isCataloguePlacementSentence(sentence)).join(' '));
+}
+
 function effectiveRecord(card = {}, entry = {}, base = {}) {
   return {
     ...(base && typeof base === 'object' ? base : {}),
@@ -106,7 +128,8 @@ export function buildCleanupPatch(card = {}, entry = {}, base = {}) {
 
   for (const field of TEXT_FIELDS) {
     if (typeof effective[field] !== 'string') continue;
-    const cleaned = cleanCatalogueText(effective[field]);
+    let cleaned = cleanCatalogueText(effective[field]);
+    if (field === 'summaryHtml') cleaned = cleanSummaryMeta(cleaned);
     if (cleaned !== effective[field]) patch[field] = cleaned;
   }
 
@@ -168,7 +191,7 @@ export async function runLiveCleanup(options = {}) {
   const initialState = await readLiveState(fetchImpl, baseUrl);
   const initialKeys = findAffectedKeys(initialState, seed);
 
-  console.log(`Found ${initialKeys.length} catalogue card(s) with redundant untasted/projected copy.`);
+  console.log(`Found ${initialKeys.length} catalogue card(s) with redundant visible copy.`);
 
   const published = [];
   for (const key of initialKeys) {
@@ -188,7 +211,7 @@ export async function runLiveCleanup(options = {}) {
         operation: 'upsert-entry',
         key,
         entry: patch,
-        note: 'Remove redundant untasted/projected wording from current visible catalogue copy.'
+        note: 'Clean redundant status or catalogue-placement wording from current visible catalogue copy.'
       },
       {
         baseUrl,
@@ -209,7 +232,7 @@ export async function runLiveCleanup(options = {}) {
     throw new Error(`Cleanup verification failed; redundant copy remains for: ${remaining.join(', ')}`);
   }
 
-  console.log(`Cleanup verified: ${published.length} card(s) updated and no untasted/projected copy remains in effective live card fields.`);
+  console.log(`Cleanup verified: ${published.length} card(s) updated and no redundant visible copy remains.`);
   return { published, remaining };
 }
 
