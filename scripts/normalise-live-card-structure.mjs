@@ -61,6 +61,41 @@ function sourceLines(record, kind) {
   return uniqueLines([...direct, ...html, ...fallback]);
 }
 
+function canonicalLines(card = {}, entry = {}, base = {}, kind = '') {
+  const lineKey = `${kind}Lines`;
+  const htmlKey = `${kind}Html`;
+
+  // Dynamic entries persist their metadata as line arrays. Card line arrays are
+  // ranking/render snapshots and can legitimately lag behind the live entry.
+  if (isRecord(entry)) {
+    const entryLines = arrayLines(entry?.[lineKey]);
+    if (entryLines.length) return entryLines;
+    const entryHtml = linesFromHtml(entry?.[htmlKey]);
+    if (entryHtml.length) return entryHtml;
+  }
+
+  // Static cards persist editorial metadata as HTML overrides. Parsed line
+  // arrays originate from repository/static HTML and may be stale after a KV
+  // override has been written, so prefer the rendered override first.
+  if (!isRecord(entry)) {
+    const cardHtml = linesFromHtml(card?.[htmlKey]);
+    if (cardHtml.length) return cardHtml;
+    const baseHtml = linesFromHtml(base?.[htmlKey]);
+    if (baseHtml.length) return baseHtml;
+    const cardLines = arrayLines(card?.[lineKey]);
+    if (cardLines.length) return cardLines;
+  }
+
+  // Conservative fallbacks for partially migrated records.
+  const cardHtml = linesFromHtml(card?.[htmlKey]);
+  if (cardHtml.length) return cardHtml;
+  const cardLines = arrayLines(card?.[lineKey]);
+  if (cardLines.length) return cardLines;
+  const baseLines = arrayLines(base?.[lineKey]);
+  if (baseLines.length) return baseLines;
+  return linesFromHtml(base?.[htmlKey]);
+}
+
 function effectiveRecord(card = {}, entry = {}, base = {}, key = '') {
   const merged = {
     ...(isRecord(base) ? base : {}),
@@ -68,15 +103,23 @@ function effectiveRecord(card = {}, entry = {}, base = {}, key = '') {
     ...(isRecord(card) ? card : {})
   };
   if (key && !merged.key) merged.key = key;
+
+  // Force canonical persisted metadata back over any stale card snapshot.
+  merged.productionLines = canonicalLines(card, entry, base, 'production');
+  merged.practicalLines = canonicalLines(card, entry, base, 'practical');
+  merged.__target = isRecord(entry) ? 'dynamic' : 'static';
+
+  // Retain all known historical/current lines only as fact-recovery fallbacks.
+  // They must never determine whether the canonical live value is compliant.
   merged.__sourceProductionLines = uniqueLines([
-    ...arrayLines(card?.productionLines), ...linesFromHtml(card?.productionHtml),
     ...arrayLines(entry?.productionLines), ...linesFromHtml(entry?.productionHtml),
-    ...arrayLines(base?.productionLines), ...linesFromHtml(base?.productionHtml)
+    ...linesFromHtml(card?.productionHtml), ...arrayLines(card?.productionLines),
+    ...linesFromHtml(base?.productionHtml), ...arrayLines(base?.productionLines)
   ]);
   merged.__sourcePracticalLines = uniqueLines([
-    ...arrayLines(card?.practicalLines), ...linesFromHtml(card?.practicalHtml),
     ...arrayLines(entry?.practicalLines), ...linesFromHtml(entry?.practicalHtml),
-    ...arrayLines(base?.practicalLines), ...linesFromHtml(base?.practicalHtml)
+    ...linesFromHtml(card?.practicalHtml), ...arrayLines(card?.practicalLines),
+    ...linesFromHtml(base?.practicalHtml), ...arrayLines(base?.practicalLines)
   ]);
   return merged;
 }
