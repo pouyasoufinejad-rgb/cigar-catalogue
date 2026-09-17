@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
-import {
+import * as sidebarModule from '../public/catalogue-control-sidebar.mjs';
+
+const {
   moveControlsToSidebar,
   restoreControlsFromSidebar
-} from '../public/catalogue-control-sidebar.mjs';
+} = sidebarModule;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
@@ -22,6 +24,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
           <div class="grid" id="recommendation-coronets-cigarillos">
             <article class="card" data-key="liga-privada-no-9-coronets"><h3><small>Liga Privada</small>No. 9 Coronets</h3></article>
             <article class="card hidden" data-key="undercrown-maduro-coronets"><h3><small>Undercrown</small>Maduro Coronets</h3></article>
+            <article class="card" data-key="example-brand-cigar"><h3><small>Example Brand</small>Example Cigar</h3></article>
           </div>
         </section>
         <section class="tier-block" data-recommendation-subsection="petit-panatelas">
@@ -104,6 +107,7 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.ok(liga, 'Liga Privada filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="undercrown"]'), 'Undercrown filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="davidoff"]'), 'Davidoff filter should exist');
+  assert.ok(document.querySelector('[data-brand-line-filter="example-brand"]'), 'brands without custom config should be discovered');
 
   liga.click();
   assert.equal(liga.getAttribute('aria-pressed'), 'true');
@@ -114,6 +118,7 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.equal(undercrownCard.classList.contains('hidden'), true, 'existing stock/price hidden state must be preserved');
   assert.equal(new URL(dom.window.location.href).searchParams.get('brandLine'), 'liga-privada');
   assert.equal(new URL(dom.window.location.href).searchParams.get('foo'), 'bar');
+  assert.match(document.querySelector('[data-recommendation-subsection="petit-panatelas"] .catalogue-brand-line-empty').textContent, /No Liga Privada matches/);
 
   all.click();
   assert.equal(ligaCard.classList.contains('brand-line-filter-hidden'), false);
@@ -121,10 +126,11 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.equal(davidoffCard.classList.contains('brand-line-filter-hidden'), false);
   assert.equal(undercrownCard.classList.contains('hidden'), true, 'clearing brand filter must not clear another filter');
   assert.equal(new URL(dom.window.location.href).searchParams.has('brandLine'), false);
+  assert.equal(document.querySelector('.catalogue-brand-line-empty'), null);
   dom.window.close();
 });
 
-test('brand filter restores from URL and logo rendering is optional', () => {
+test('brand filter restores from URL', () => {
   const dom = catalogueFixture('https://example.test/catalogue?brandLine=davidoff');
   const { document } = dom.window;
   moveControlsToSidebar(document, dom.window);
@@ -135,6 +141,22 @@ test('brand filter restores from URL and logo rendering is optional', () => {
   assert.equal(davidoff.getAttribute('aria-pressed'), 'true');
   assert.equal(ligaCard.classList.contains('brand-line-filter-hidden'), true);
   assert.equal(davidoffCard.classList.contains('brand-line-filter-hidden'), false);
-  assert.equal(document.querySelectorAll('.catalogue-brand-line-logo').length, 0, 'empty logo config should render text only');
+  dom.window.close();
+});
+
+test('brand-line buttons support optional small logos without requiring them', () => {
+  assert.equal(typeof sidebarModule.createBrandLineButton, 'function');
+  const dom = new JSDOM('<!doctype html><body></body>');
+  const { document } = dom.window;
+
+  const textOnly = sidebarModule.createBrandLineButton(document, { id:'plain', label:'Plain Brand', logo:'' });
+  assert.equal(textOnly.textContent.trim(), 'Plain Brand');
+  assert.equal(textOnly.querySelector('img'), null);
+
+  const withLogo = sidebarModule.createBrandLineButton(document, { id:'logo', label:'Logo Brand', logo:'/brand-logos/logo.webp' });
+  const image = withLogo.querySelector('.catalogue-brand-line-logo');
+  assert.ok(image);
+  assert.match(image.src, /\/brand-logos\/logo\.webp$/);
+  assert.equal(withLogo.textContent.trim(), 'Logo Brand');
   dom.window.close();
 });
