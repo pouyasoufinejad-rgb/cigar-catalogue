@@ -46,9 +46,12 @@ function patchRecord(record, patch, deletes = []) {
 }
 
 function setTaster(state, key, rank) {
-  const patch = { catalogueType:'taster', taster:true, rank };
-  if (state.cards?.[key]) state.cards[key] = patchRecord(state.cards[key], patch, ['subsection']);
-  if (state.entries?.[key]) state.entries[key] = patchRecord(state.entries[key], patch, ['subsection']);
+  if (state.cards?.[key]) {
+    state.cards[key] = patchRecord(state.cards[key], { catalogueType:'taster', taster:true, rank }, ['subsection']);
+  }
+  if (state.entries?.[key]) {
+    state.entries[key] = patchRecord(state.entries[key], { taster:true, rank }, ['catalogueType', 'subsection']);
+  }
 }
 
 function compactChangedRecommendationSubsections(state) {
@@ -106,7 +109,6 @@ export function assertRepair(state, verifiedImageKeys = VERIFIED_IMAGE_KEYS) {
     assert.equal('subsection' in (card || {}), false, `${key} must not retain a recommendation subsection.`);
     assert.equal(subsections.some(section => section?.entryKeys?.includes?.(key)), false, `${key} must not be a recommendation member.`);
     if (state.entries?.[key]) {
-      assert.equal(state.entries[key].catalogueType, 'taster', `${key} entry must be a Taster.`);
       assert.equal(state.entries[key].taster, true, `${key} entry must have taster=true.`);
       assert.equal(state.entries[key].rank, rank, `${key} entry must have Taster rank ${rank}.`);
       assert.equal('subsection' in state.entries[key], false, `${key} entry must not retain a recommendation subsection.`);
@@ -156,7 +158,7 @@ function describeChanges(before, after) {
   for (const key of new Set([...Object.keys(before.entries || {}), ...Object.keys(after.entries || {})])) {
     const a = before.entries?.[key] || {};
     const b = after.entries?.[key] || {};
-    for (const field of ['catalogueType','taster','subsection','rank']) {
+    for (const field of ['taster','subsection','rank']) {
       if (JSON.stringify(a[field]) !== JSON.stringify(b[field])) changes.push({ scope:'entries', key, field, before:a[field] ?? null, after:b[field] ?? null });
     }
   }
