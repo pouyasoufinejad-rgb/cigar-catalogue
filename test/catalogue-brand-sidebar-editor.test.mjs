@@ -43,8 +43,8 @@ function fixture() {
 }
 
 test('runtime loads the sidebar manager after the existing sidebar module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6&brand-editor=1/);
-  assert.match(runtimeSource, /catalogue-brand-sidebar-editor\.mjs\?v=brand-editor-1/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6&brand-editor=2/);
+  assert.match(runtimeSource, /catalogue-brand-sidebar-editor\.mjs\?v=brand-editor-2/);
 });
 
 test('brands section is compact by default and expands only when its heading is clicked', async () => {
