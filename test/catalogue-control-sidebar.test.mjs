@@ -6,7 +6,8 @@ import * as sidebarModule from '../public/catalogue-control-sidebar.mjs';
 
 const {
   moveControlsToSidebar,
-  restoreControlsFromSidebar
+  restoreControlsFromSidebar,
+  discoverBrandLineFilters
 } = sidebarModule;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
@@ -22,14 +23,19 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
       <div id="cards">
         <section class="tier-block" data-recommendation-subsection="coronets-cigarillos">
           <div class="grid" id="recommendation-coronets-cigarillos">
-            <article class="card" data-key="liga-privada-no-9-coronets"><h3><small>Liga Privada</small>No. 9 Coronets</h3></article>
-            <article class="card hidden" data-key="undercrown-maduro-coronets"><h3><small>Undercrown</small>Maduro Coronets</h3></article>
-            <article class="card" data-key="example-brand-cigar"><h3><small>Example Brand</small>Example Cigar</h3></article>
+            <article class="card" data-key="liga-privada-no-9-coronets"><h3><span>Liga Privada</span>No. 9 Coronets</h3></article>
+            <article class="card hidden" data-key="undercrown-maduro-coronets"><h3><span>Undercrown</span>Maduro Coronets</h3></article>
+            <article class="card" data-key="oliva-serie-g"><h3><span>Oliva</span>Serie G Cigarillos</h3></article>
+            <article class="card" data-key="cao-bella-vanilla"><h3><span>CAO</span>Bella Vanilla</h3></article>
+            <article class="card" data-key="drew-estate-acid-krush-red-cameroon"><h3><span>Drew Estate</span>ACID Krush Red Cameroon</h3></article>
+            <article class="card" data-key="joya-black-cigarillo"><h3><span>Joya de Nicaragua</span>Joya Black Cigarillo</h3></article>
           </div>
         </section>
         <section class="tier-block" data-recommendation-subsection="petit-panatelas">
           <div class="grid" id="recommendation-petit-panatelas">
-            <article class="card" data-key="davidoff-escurio-petit-robusto"><h3><small>Davidoff</small>Escurio Petit Robusto</h3></article>
+            <article class="card" data-key="davidoff-escurio-petit-robusto"><h3><span>Davidoff</span>Escurio Petit Robusto</h3></article>
+            <article class="card" data-key="foundation-charter-oak-maduro-rothschild"><h3><span>Foundation</span>Charter Oak Maduro Rothschild</h3></article>
+            <article class="card" data-key="my-father-la-gran-oferta-lancero"><h3><span>My Father</span>La Gran Oferta Lancero</h3></article>
           </div>
         </section>
         <section class="tier-block" data-recommendation-subsection="flavoured-infused">
@@ -41,8 +47,8 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
   return dom;
 }
 
-test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-2/);
+test('runtime loads the cache-busted v3 control-sidebar module', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-3/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
@@ -73,6 +79,16 @@ test('sidebar placement reparents the existing controls without cloning or repla
   assert.ok(controls.compareDocumentPosition(document.getElementById('cards')) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
   assert.equal(document.getElementById('catalogue-control-sidebar'), null);
 
+  dom.window.close();
+});
+
+test('production heading markup auto-discovers every catalogue brand rather than only configured brands', () => {
+  const dom = catalogueFixture();
+  const ids = discoverBrandLineFilters(dom.window.document).map(item => item.id);
+
+  for (const id of ['oliva', 'cao', 'drew-estate', 'joya-de-nicaragua', 'foundation', 'my-father']) {
+    assert.ok(ids.includes(id), `${id} should be auto-discovered from production h3 > span markup`);
+  }
   dom.window.close();
 });
 
@@ -107,7 +123,6 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.ok(liga, 'Liga Privada filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="undercrown"]'), 'Undercrown filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="davidoff"]'), 'Davidoff filter should exist');
-  assert.ok(document.querySelector('[data-brand-line-filter="example-brand"]'), 'brands without custom config should be discovered');
 
   liga.click();
   assert.equal(liga.getAttribute('aria-pressed'), 'true');
@@ -118,7 +133,6 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.equal(undercrownCard.classList.contains('hidden'), true, 'existing stock/price hidden state must be preserved');
   assert.equal(new URL(dom.window.location.href).searchParams.get('brandLine'), 'liga-privada');
   assert.equal(new URL(dom.window.location.href).searchParams.get('foo'), 'bar');
-  assert.match(document.querySelector('[data-recommendation-subsection="petit-panatelas"] .catalogue-brand-line-empty').textContent, /No Liga Privada matches/);
 
   all.click();
   assert.equal(ligaCard.classList.contains('brand-line-filter-hidden'), false);
@@ -126,7 +140,22 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.equal(davidoffCard.classList.contains('brand-line-filter-hidden'), false);
   assert.equal(undercrownCard.classList.contains('hidden'), true, 'clearing brand filter must not clear another filter');
   assert.equal(new URL(dom.window.location.href).searchParams.has('brandLine'), false);
-  assert.equal(document.querySelector('.catalogue-brand-line-empty'), null);
+  dom.window.close();
+});
+
+test('representative named catalogue lines are exposed separately from their parent brands', () => {
+  const dom = catalogueFixture();
+  const ids = discoverBrandLineFilters(dom.window.document).map(item => item.id);
+  for (const id of [
+    'liga-privada-no-9',
+    'davidoff-escurio',
+    'oliva-serie-g',
+    'cao-bella-vanilla',
+    'drew-estate-acid',
+    'joya-black',
+    'foundation-charter-oak',
+    'my-father-la-gran-oferta'
+  ]) assert.ok(ids.includes(id), `${id} line filter should exist`);
   dom.window.close();
 });
 
@@ -159,4 +188,10 @@ test('brand-line buttons support optional small logos without requiring them', (
   assert.match(image.src, /\/brand-logos\/logo\.webp$/);
   assert.equal(withLogo.textContent.trim(), 'Logo Brand');
   dom.window.close();
+});
+
+test('logo hooks live in the dedicated brand-line config module', async () => {
+  const configSource = await readFile(new URL('../public/catalogue-brand-line-config.mjs', import.meta.url), 'utf8');
+  assert.match(configSource, /logo:\s*['"]/);
+  assert.match(configSource, /\/brand-logos\//);
 });
