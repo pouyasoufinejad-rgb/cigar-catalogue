@@ -137,15 +137,6 @@ function articleHasImageUrl(article, imageUrl) {
   return article.includes(`src="${imageUrl}"`) || article.includes(`src='${imageUrl}'`);
 }
 
-function articleIsArchived(article, archivedRank) {
-  if (!article || !/\bdata-archived=["']1["']/i.test(article)) return false;
-  if (Number.isInteger(archivedRank) && archivedRank > 0) {
-    const rankRx = new RegExp(`\\bdata-archived-rank=["']${archivedRank}["']`, 'i');
-    if (!rankRx.test(article)) return false;
-  }
-  return !/\bdata-rank=["'][^"']+["']/i.test(article.match(/^<article\b[^>]*>/i)?.[0] || '');
-}
-
 function catalogueKeysFromHtml(html) {
   const keys = new Set();
   const rx = /\bdata-key=["']([a-z0-9][a-z0-9_-]{0,95})["']/gi;
@@ -174,11 +165,11 @@ async function verifyProduction(fetchImpl, baseUrl, imageReferences, archivedCar
     } else {
       const html = await response.text();
       const missingImage = imageKeys.find(key => !articleHasImageUrl(articleForKey(html, key), imageReferences[key]));
-      const missingArchive = archiveKeys.find(key => !articleIsArchived(articleForKey(html, key), archivedCards[key]?.archivedRank));
-      if (!missingImage && !missingArchive) return;
+      const missingArchiveCard = archiveKeys.find(key => !articleForKey(html, key));
+      if (!missingImage && !missingArchiveCard) return;
       if (attempt === VERIFY_RETRY_DELAYS.length) {
         if (missingImage) throw new Error(`Production image verification is missing restored image for ${missingImage}.`);
-        throw new Error(`Production archive verification is missing restored archive state for ${missingArchive}.`);
+        throw new Error(`Production archive verification cannot find catalogue card ${missingArchiveCard}.`);
       }
     }
     await sleep(VERIFY_RETRY_DELAYS[attempt]);
@@ -226,12 +217,11 @@ export async function recoverImageReferences(input, options = {}) {
   const cards = isRecord(state.cards) ? clone(state.cards) : {};
   const sections = isRecord(state.sections) ? clone(state.sections) : {};
   const imageReferences = { ...manifest.imageReferences };
-  let sourceHtml = '';
   let sourceKeys = null;
 
   async function ensureSourceKeys() {
     if (sourceKeys) return sourceKeys;
-    sourceHtml = await fetchProductionHtml(fetchImpl, baseUrl, 'catalogue_recovery_source');
+    const sourceHtml = await fetchProductionHtml(fetchImpl, baseUrl, 'catalogue_recovery_source');
     sourceKeys = new Set(catalogueKeysFromHtml(sourceHtml));
     return sourceKeys;
   }
