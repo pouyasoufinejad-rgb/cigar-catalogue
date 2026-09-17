@@ -89,9 +89,17 @@ function ensureStyles(root = document) {
 body:not(.catalogue-direct-edit-mode) #${EXTRA_ID} .catalogue-brand-logo-actions{display:none!important}
 body:not(.catalogue-direct-edit-mode) #${EXTRA_ID} .catalogue-brand-logo-controls{display:none!important}
 body:not(.catalogue-direct-edit-mode) #${EXTRA_ID} .catalogue-brand-removed-panel{display:none!important}
-#${EXTRA_ID} .catalogue-brand-dropdown-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;cursor:pointer;user-select:none}
+#${EXTRA_ID} .catalogue-brand-section [data-brand-line-options][hidden]{display:none!important}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-brand-row[hidden]{display:none!important}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-brand-removed-panel[hidden]{display:none!important}
+#${EXTRA_ID} .catalogue-brand-dropdown-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;cursor:pointer;user-select:none;margin-bottom:0!important}
 #${EXTRA_ID} .catalogue-brand-dropdown-heading::after{content:'▾';font-size:11px;line-height:1;transition:transform .15s ease}
 #${EXTRA_ID} .catalogue-brand-dropdown-heading[aria-expanded="true"]::after{transform:rotate(180deg)}
+#${EXTRA_ID} .catalogue-brand-section [data-brand-line-options]{padding-top:7px}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-brand-row{gap:3px}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-sidebar-choice{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;min-height:30px;padding:5px 3px}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-sidebar-choice:hover{border:0!important;background:rgba(195,162,80,.07)!important}
+#${EXTRA_ID} .catalogue-brand-section .catalogue-sidebar-choice[aria-pressed="true"]{border:0!important;background:transparent!important;color:#f5e7b8}
 #${EXTRA_ID} .catalogue-brand-remove{padding:5px 7px;border:1px solid rgba(196,89,72,.45);border-radius:7px;background:rgba(196,89,72,.08);color:#e6a497;font:700 10px/1.1 inherit;cursor:pointer;white-space:normal;max-width:74px}
 #${EXTRA_ID} .catalogue-brand-remove:hover{border-color:rgba(220,110,92,.8);background:rgba(196,89,72,.15)}
 #${EXTRA_ID} .catalogue-brand-removed-panel{grid-column:1/-1;margin-top:4px;padding:7px;border:1px dashed rgba(195,162,80,.3);border-radius:7px;background:rgba(255,255,255,.02)}
@@ -117,6 +125,7 @@ function makeBrandDropdown(section) {
   const heading = section?.querySelector?.('.catalogue-sidebar-heading');
   const list = brandList(section);
   if (!heading || !list) return null;
+  section.classList.add('catalogue-brand-section');
   if (heading.dataset.brandDropdownReady === '1') return { heading, list };
 
   heading.dataset.brandDropdownReady = '1';
