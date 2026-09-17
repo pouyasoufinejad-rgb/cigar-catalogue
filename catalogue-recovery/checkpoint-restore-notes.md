@@ -1,0 +1,1 @@
+The target production publication run completed successfully at 2026-09-16 10:28 AWST. This restore intentionally excludes the later ACID Krush addition, sidebar state, and Production/Practical normaliser.
