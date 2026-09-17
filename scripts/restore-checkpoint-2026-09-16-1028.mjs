@@ -28,7 +28,6 @@ const ENTRY_FIELDS = new Set([
 ]);
 
 const clone = value => JSON.parse(JSON.stringify(value ?? {}));
-const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
 
 function cleanEntryPatch(entry = {}) {
   const output = {};
@@ -45,7 +44,7 @@ function cleanCardPatch(entry = {}) {
 }
 
 export function linesToMarkup(lines = []) {
-  const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]));
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;' }[char]));
   return Array.isArray(lines) ? lines.map(line => `<span class="artmeta-line">${escape(line)}</span>`).join('') : '';
 }
 
@@ -113,10 +112,9 @@ function syncRecommendationRanks(state) {
   for (const section of state.sections.recommendationSubsections) {
     const keys = Array.isArray(section.entryKeys) ? section.entryKeys : [];
     keys.forEach((key, index) => {
-      state.cards[key] = { ...(state.cards[key] || {}), catalogueType:'main', taster:false, subsection:section.id, rank:index + 1, archived:false };
+      state.cards[key] = { ...(state.cards[key] || {}), catalogueType:'main', taster:false, subsection:section.id, rank:index + 1 };
       if (state.entries[key]) {
         state.entries[key].taster = false;
-        state.entries[key].archived = false;
         state.entries[key].rank = index + 1;
       }
     });
@@ -162,7 +160,7 @@ export function buildCheckpointState({ current, targetRequests = [], targetHtml 
     delete entry.imageUrl;
     delete entry.imageSourceKey;
     delete entry.imageVersion;
-    state.entries[key] = { ...state.entries[key], ...entry, key };
+    state.entries[key] = { ...state.entries[key], ...entry, key, archived:false };
     state.cards[key] = { ...state.cards[key], ...cleanCardPatch(source), catalogueType:'main', taster:false, archived:false };
     delete state.cards[key].imageUrl;
     delete state.cards[key].imageSourceKey;
