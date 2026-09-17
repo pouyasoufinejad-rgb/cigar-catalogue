@@ -1,17 +1,13 @@
-// Central sidebar brand registry.
-//
-// LOGO HOOK:
-// 1. Put a small transparent PNG/WebP/SVG in public/brand-logos/.
-// 2. Set that brand's logo to its public path, e.g.:
-//      logo:'/brand-logos/davidoff.webp'
-// 3. Leave logo:'' for a text-only button.
+// Central sidebar brand registry for canonical labels and aliases only.
+// Logos are uploaded directly from the sidebar and stored in Cloudflare KV; no file-path
+// configuration is required here.
 //
 // The sidebar only renders brands that currently have at least one active (non-archived)
 // catalogue card. Future unlisted brands are still auto-discovered; adding a brand here is
-// only needed for a custom label, alias, or logo.
+// only needed for a custom label or alias.
 
-const brand = (id, label, names = [label], logo = '') =>
-  Object.freeze({ id, label, kind:'brand', logo, brands:names });
+const brand = (id, label, names = [label]) =>
+  Object.freeze({ id, label, kind:'brand', brands:names });
 
 export const BRAND_LINE_CONFIG = Object.freeze([
   brand('aj-fernandez', 'AJ Fernandez'),
