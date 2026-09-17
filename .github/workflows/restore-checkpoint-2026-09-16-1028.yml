@@ -1,0 +1,50 @@
+name: Restore Sep 16 catalogue checkpoint
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/restore-checkpoint-2026-09-16-1028.yml'
+      - 'scripts/restore-checkpoint-2026-09-16-1028.mjs'
+      - 'test/restore-checkpoint-2026-09-16-1028.test.mjs'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-checkpoint-2026-09-16-1028.yml'
+      - 'scripts/restore-checkpoint-2026-09-16-1028.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-checkpoint-restore
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm test
+      - if: github.event_name == 'pull_request'
+        run: node scripts/restore-checkpoint-2026-09-16-1028.mjs --dry-run-live
+
+  restore:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/restore-checkpoint-2026-09-16-1028.mjs --apply
