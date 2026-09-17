@@ -28,7 +28,12 @@ export const VERIFIED_IMAGE_KEYS = Object.freeze([
   'foundation-charter-oak-maduro-rothschild',
   'paradiso-quintessence-robusto',
   'ashton-vsg-enchantment',
-  'drew-estate-acid-krush-red-cameroon'
+  'drew-estate-acid-krush-red-cameroon',
+  'arturo-fuente-exquisitos-maduro',
+  'ashton-aged-maduro-esquire',
+  'isla-del-sol-maduro-coronets',
+  'kfc-ponies',
+  'tabernacle-broadleaf-corona'
 ]);
 
 const tasterKeys = new Set(TASTER_REPAIRS.map(item => item.key));
