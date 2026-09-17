@@ -1,0 +1,43 @@
+name: Apply placement and image repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-placement-image-repair.yml'
+      - 'scripts/repair-live-placement-images.mjs'
+      - 'test/repair-live-placement-images.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-placement-image-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Run full test suite
+        run: npm test
+      - name: Save exact pre-repair live state
+        run: curl --fail --silent --show-error 'https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?pre_repair_backup=${{ github.sha }}' --output pre-repair-catalogue-state.json
+      - name: Upload pre-repair state backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-placement-image-repair-state-${{ github.sha }}
+          path: pre-repair-catalogue-state.json
+          retention-days: 30
+      - name: Dry run against current production state
+        run: node scripts/repair-live-placement-images.mjs --dry-run-live
+      - name: Apply and verify repair
+        run: node scripts/repair-live-placement-images.mjs --apply
