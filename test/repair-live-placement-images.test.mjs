@@ -25,7 +25,7 @@ function numbered(prefix, count) {
 function fixture() {
   const coronets = numbered('coronet', 19);
   const petit = numbered('petit', 14);
-  const taster = numbered('taster', 7);
+  const taster = numbered('taster', 5);
   const cards = {};
   const entries = {};
 
@@ -82,10 +82,10 @@ test('recovered evidence restores H99 Papas, Nasty Fritas and Undercrown 10 Coro
   }
 });
 
-test('Nica Rustica and Unico Papas Fritas remain the only recovered Taster repairs and compact to ranks 8 and 9', () => {
+test('Nica Rustica and Unico Papas Fritas remain Tasters and compact to recovered ranks 6 and 7', () => {
   assert.deepEqual(TASTER_REPAIRS, [
-    { key:NICA, rank:8 },
-    { key:PAPAS, rank:9 }
+    { key:NICA, rank:6 },
+    { key:PAPAS, rank:7 }
   ]);
   const repaired = applyVerifiedPlacementImageRepair(fixture(), { verifiedImageKeys:[] });
   for (const { key, rank } of TASTER_REPAIRS) {
