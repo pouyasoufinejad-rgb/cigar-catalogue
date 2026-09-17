@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 
 async function getText(path) {
-  const response = await fetch(`${BASE}${path}${path.includes('?') ? '&' : '?'}diag=${Date.now()}`, { cache:'no-store' });
+  const response = await fetch(`${BASE}${path}${path.includes('?') ? '&' : '?'}diag=${Date.now()}-${Math.random()}`, { cache:'no-store' });
   const body = await response.text();
   assert.equal(response.ok, true, `${path} returned HTTP ${response.status}: ${body.slice(0, 200)}`);
   return body;
