@@ -7,6 +7,7 @@ on:
       - '.github/workflows/apply-placement-image-repair.yml'
       - 'scripts/repair-live-placement-images.mjs'
       - 'test/repair-live-placement-images.test.mjs'
+  workflow_dispatch:
 
 permissions:
   contents: read
