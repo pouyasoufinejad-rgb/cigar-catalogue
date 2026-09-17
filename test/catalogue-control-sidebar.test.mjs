@@ -7,7 +7,9 @@ import * as sidebarModule from '../public/catalogue-control-sidebar.mjs';
 const {
   moveControlsToSidebar,
   restoreControlsFromSidebar,
-  discoverBrandLineFilters
+  discoverBrandLineFilters,
+  brandLogoUrl,
+  uploadBrandLogo
 } = sidebarModule;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
@@ -49,8 +51,8 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
   return dom;
 }
 
-test('runtime loads the cache-busted v4 control-sidebar module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-4/);
+test('runtime loads the cache-busted v5 control-sidebar module', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-5/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
@@ -92,6 +94,20 @@ test('production heading markup auto-discovers active catalogue brands only', ()
     assert.ok(ids.includes(id), `${id} should be auto-discovered from production h3 > span markup`);
   }
   assert.equal(ids.includes('cohiba'), false, 'archived-only brands must not appear');
+  dom.window.close();
+});
+
+test('KV archive overrides exclude static archived-only brands even when static HTML is not marked archived', () => {
+  const dom = catalogueFixture();
+  const state = {
+    cards: {
+      'oliva-serie-g': { archived:true }
+    },
+    entries: {}
+  };
+  const ids = discoverBrandLineFilters(dom.window.document, state).map(item => item.id);
+  assert.equal(ids.includes('oliva'), false, 'Oliva is archived-only in authoritative catalogue state');
+  assert.ok(ids.includes('cao'), 'active brands must remain available');
   dom.window.close();
 });
 
@@ -183,26 +199,38 @@ test('brand filter restores from URL', () => {
   dom.window.close();
 });
 
-test('brand buttons support optional small logos without requiring them', () => {
-  assert.equal(typeof sidebarModule.createBrandLineButton, 'function');
-  const dom = new JSDOM('<!doctype html><body></body>');
+test('every active brand row has a real upload-logo button and deterministic KV logo URL', () => {
+  const dom = catalogueFixture();
   const { document } = dom.window;
+  moveControlsToSidebar(document, dom.window);
 
-  const textOnly = sidebarModule.createBrandLineButton(document, { id:'plain', label:'Plain Brand', logo:'' });
-  assert.equal(textOnly.textContent.trim(), 'Plain Brand');
-  assert.equal(textOnly.querySelector('img'), null);
-
-  const withLogo = sidebarModule.createBrandLineButton(document, { id:'logo', label:'Logo Brand', logo:'/brand-logos/logo.webp' });
-  const image = withLogo.querySelector('.catalogue-brand-line-logo');
-  assert.ok(image);
-  assert.match(image.src, /\/brand-logos\/logo\.webp$/);
-  assert.equal(withLogo.textContent.trim(), 'Logo Brand');
+  const upload = document.querySelector('[data-brand-logo-upload="davidoff"]');
+  const filter = document.querySelector('[data-brand-line-filter="davidoff"]');
+  const image = filter.querySelector('.catalogue-brand-line-logo');
+  assert.ok(upload, 'Davidoff should have an actual Upload logo button');
+  assert.equal(upload.textContent.trim(), 'Upload logo');
+  assert.equal(image.getAttribute('src'), brandLogoUrl('davidoff'));
+  assert.equal(image.hidden, true, 'missing logos stay hidden until the image loads');
   dom.window.close();
 });
 
-test('logo hooks live in the dedicated brand config module', async () => {
+test('brand logo upload uses the existing authenticated catalogue-image API without config-file paths', async () => {
+  const dom = new JSDOM('<!doctype html><body></body>');
+  const file = new dom.window.File(['logo-bytes'], 'davidoff.png', { type:'image/png' });
+  let captured = null;
+  const writeFetch = async (url, init) => {
+    captured = { url, init };
+    return { ok:true, json:async () => ({ ok:true }) };
+  };
+
+  await uploadBrandLogo('davidoff', file, writeFetch);
+  assert.equal(captured.url, '/api/catalogue-image/brand-logo-davidoff');
+  assert.equal(captured.init.method, 'PUT');
+  assert.equal(captured.init.headers['content-type'], 'image/png');
+  assert.equal(captured.init.body, file);
+
   const configSource = await readFile(new URL('../public/catalogue-brand-line-config.mjs', import.meta.url), 'utf8');
-  assert.match(configSource, /logo:\s*['"]/);
-  assert.match(configSource, /\/brand-logos\//);
-  assert.doesNotMatch(configSource, /kind:'line'/);
+  assert.doesNotMatch(configSource, /brand-logos\//);
+  assert.doesNotMatch(configSource, /logo\s*=/);
+  dom.window.close();
 });
