@@ -15,7 +15,7 @@ export const CATALOGUE_JUMPS = Object.freeze([
 // Example: logo:'/assets/brand-logos/davidoff.webp'
 export const BRAND_LINE_CONFIG = Object.freeze([
   Object.freeze({ id:'davidoff', label:'Davidoff', kind:'brand', logo:'', brands:['Davidoff'] }),
-  Object.freeze({ id:'liga-privada', label:'Liga Privada', kind:'line', logo:'', brands:['Liga Privada'], keyPrefixes:['liga-privada-', 'liga-t52-'] }),
+  Object.freeze({ id:'liga-privada', label:'Liga Privada', kind:'line', logo:'', brands:['Liga Privada'], keyPrefixes:['liga-'] }),
   Object.freeze({ id:'undercrown', label:'Undercrown', kind:'line', logo:'', brands:['Undercrown'], keyIncludes:['undercrown'] })
 ]);
 
@@ -103,7 +103,7 @@ export function discoverBrandLineFilters(root = document) {
   return output;
 }
 
-function buttonForDescriptor(root, descriptor) {
+export function createBrandLineButton(root, descriptor) {
   const button = root.createElement('button');
   button.type = 'button';
   button.className = 'catalogue-sidebar-choice';
@@ -179,9 +179,8 @@ function initialBrandLineId(root, view) {
 function renderBrandLineButtons(root, container, activeId, view) {
   const descriptors = discoverBrandLineFilters(root);
   container.replaceChildren();
-  const all = buttonForDescriptor(root, { id:'all', label:'All Brands / Lines', logo:'' });
-  container.appendChild(all);
-  for (const descriptor of descriptors) container.appendChild(buttonForDescriptor(root, descriptor));
+  container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands / Lines', logo:'' }));
+  for (const descriptor of descriptors) container.appendChild(createBrandLineButton(root, descriptor));
   container.querySelectorAll('[data-brand-line-filter]').forEach(button => {
     button.addEventListener('click', () => applyBrandLineFilter(root, button.dataset.brandLineFilter, view));
   });
@@ -234,8 +233,7 @@ function ensureExtraControls(root = document, view = globalThis.window) {
   if (anchor?.parentNode) anchor.parentNode.insertBefore(extra, anchor);
   else (root.body || root.documentElement).appendChild(extra);
 
-  const activeId = initialBrandLineId(root, view);
-  renderBrandLineButtons(root, brandButtons, activeId, view);
+  renderBrandLineButtons(root, brandButtons, initialBrandLineId(root, view), view);
   return extra;
 }
 
@@ -415,7 +413,6 @@ export function installControlSidebar(root = document, view = globalThis.window)
   ensureExtraControls(root, view);
   const media = view?.matchMedia?.(DESKTOP_QUERY);
   let retries = 0;
-  let refreshTimer = 0;
 
   const apply = () => {
     if (media?.matches) moveControlsToSidebar(root, view);
@@ -430,15 +427,11 @@ export function installControlSidebar(root = document, view = globalThis.window)
   apply();
   media?.addEventListener?.('change', apply);
 
-  const cards = root.getElementById?.('cards');
-  if (cards && typeof MutationObserver !== 'undefined') {
-    const observer = new MutationObserver(mutations => {
-      if (!mutations.some(mutation => mutation.type === 'childList')) return;
-      view?.clearTimeout?.(refreshTimer);
-      refreshTimer = view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 0) || 0;
-    });
-    observer.observe(cards, { childList:true, subtree:true });
-  }
+  // The Worker renders catalogue cards server-side, while the subsection module may finish
+  // rearranging them just after startup. Two bounded refreshes pick up that final structure
+  // without a MutationObserver that could react to this module's own empty-state messages.
+  view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 0);
+  view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 300);
 }
 
 if (typeof document !== 'undefined') {
