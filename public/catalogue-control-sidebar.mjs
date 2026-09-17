@@ -1,6 +1,6 @@
 import { BRAND_LINE_CONFIG } from './catalogue-brand-line-config.mjs';
 
-const STYLE_ID = 'catalogue-control-sidebar-style-v3';
+const STYLE_ID = 'catalogue-control-sidebar-style-v4';
 const SIDEBAR_ID = 'catalogue-control-sidebar';
 const EXTRA_ID = 'catalogue-sidebar-extra-controls';
 const DESKTOP_QUERY = '(min-width: 1660px)';
@@ -62,24 +62,25 @@ function cardBrand(card) {
   );
 }
 
-function cardKey(card) {
-  return cleanText(card?.dataset?.key).toLowerCase();
+function isArchived(card) {
+  return card?.dataset?.archived === '1';
+}
+
+function allCardsForRoot(root) {
+  return Array.from(root.querySelectorAll?.('article.card[data-key]') || []);
+}
+
+function activeCardsForRoot(root) {
+  return allCardsForRoot(root).filter(card => !isArchived(card));
 }
 
 function descriptorMatchesCard(card, descriptor) {
   if (!descriptor || descriptor.id === 'all') return true;
-  const key = cardKey(card);
   const brand = cardBrand(card).toLowerCase();
-  const brands = Array.from(descriptor.brands || []).map(value => cleanText(value).toLowerCase()).filter(Boolean);
-  if (brands.includes(brand)) return true;
-  if (Array.from(descriptor.keys || []).some(value => key === cleanText(value).toLowerCase())) return true;
-  if (Array.from(descriptor.keyPrefixes || []).some(prefix => key.startsWith(String(prefix).toLowerCase()))) return true;
-  if (Array.from(descriptor.keyIncludes || []).some(fragment => key.includes(String(fragment).toLowerCase()))) return true;
-  return false;
-}
-
-function cardsForRoot(root) {
-  return Array.from(root.querySelectorAll?.('article.card[data-key]') || []);
+  return Array.from(descriptor.brands || [])
+    .map(value => cleanText(value).toLowerCase())
+    .filter(Boolean)
+    .includes(brand);
 }
 
 function configuredBrandForLabel(label) {
@@ -90,11 +91,12 @@ function configuredBrandForLabel(label) {
 }
 
 export function discoverBrandLineFilters(root = document) {
-  const cards = cardsForRoot(root);
+  const cards = activeCardsForRoot(root);
   const output = [];
   const seen = new Set();
 
   for (const configured of BRAND_LINE_CONFIG) {
+    if (configured.kind !== 'brand') continue;
     if (!cards.some(card => descriptorMatchesCard(card, configured))) continue;
     output.push({ ...configured });
     seen.add(configured.id);
@@ -139,7 +141,7 @@ function updateSubsectionEmptyStates(root, descriptor) {
   removeEmptyStates(root);
   if (!descriptor || descriptor.id === 'all') return;
   for (const block of Array.from(root.querySelectorAll?.('#cards [data-recommendation-subsection]') || [])) {
-    const cards = Array.from(block.querySelectorAll?.('article.card[data-key]') || []);
+    const cards = Array.from(block.querySelectorAll?.('article.card[data-key]') || []).filter(card => !isArchived(card));
     if (cards.some(card => !card.classList.contains('brand-line-filter-hidden'))) continue;
     const note = root.createElement('p');
     note.className = 'catalogue-brand-line-empty';
@@ -158,10 +160,14 @@ function updateBrandLineUrl(view, id) {
 
 export function applyBrandLineFilter(root = document, id = 'all', view = globalThis.window) {
   const descriptors = discoverBrandLineFilters(root);
-  const descriptor = id === 'all' ? { id:'all', label:'All Brands / Lines' } : descriptors.find(item => item.id === id);
-  const active = descriptor || { id:'all', label:'All Brands / Lines' };
+  const descriptor = id === 'all' ? { id:'all', label:'All Brands' } : descriptors.find(item => item.id === id);
+  const active = descriptor || { id:'all', label:'All Brands' };
 
-  for (const card of cardsForRoot(root)) {
+  for (const card of allCardsForRoot(root)) {
+    if (isArchived(card)) {
+      card.classList.remove('brand-line-filter-hidden');
+      continue;
+    }
     card.classList.toggle('brand-line-filter-hidden', !descriptorMatchesCard(card, active));
   }
   root.querySelectorAll?.('[data-brand-line-filter]').forEach(button => {
@@ -187,7 +193,7 @@ function initialBrandLineId(root, view) {
 function renderBrandLineButtons(root, container, activeId, view) {
   const descriptors = discoverBrandLineFilters(root);
   container.replaceChildren();
-  container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands / Lines', logo:'' }));
+  container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands', logo:'' }));
   for (const descriptor of descriptors) container.appendChild(createBrandLineButton(root, descriptor));
   container.querySelectorAll('[data-brand-line-filter]').forEach(button => {
     button.addEventListener('click', () => applyBrandLineFilter(root, button.dataset.brandLineFilter, view));
@@ -228,7 +234,7 @@ function ensureExtraControls(root = document, view = globalThis.window) {
   brandSection.className = 'catalogue-sidebar-section';
   const brandTitle = root.createElement('div');
   brandTitle.className = 'catalogue-sidebar-heading';
-  brandTitle.textContent = 'BRANDS & LINES';
+  brandTitle.textContent = 'BRANDS';
   const brandButtons = root.createElement('div');
   brandButtons.className = 'catalogue-sidebar-list';
   brandButtons.dataset.brandLineOptions = '';
@@ -328,7 +334,6 @@ export function installControlSidebar(root = document, view = globalThis.window)
 
   apply();
   media?.addEventListener?.('change', apply);
-
   view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 0);
 }
 
