@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import { moveControlsToSidebar } from '../public/catalogue-control-sidebar.mjs';
+import { compactBrandSidebar } from '../public/catalogue-brand-sidebar-compact.mjs';
 
 const sidebarSource = await readFile(new URL('../public/catalogue-control-sidebar.mjs', import.meta.url), 'utf8');
+const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 function fixture() {
   return new JSDOM(`<!doctype html><html><head></head><body>
@@ -26,6 +28,7 @@ function fixture() {
 test('Brands is a collapsed-by-default details panel with All Brands available', () => {
   const dom = fixture();
   moveControlsToSidebar(dom.window.document, dom.window);
+  compactBrandSidebar(dom.window.document);
 
   const details = dom.window.document.querySelector('details[data-brand-sidebar]');
   assert.ok(details, 'Brands must use a compact details panel');
@@ -49,4 +52,9 @@ test('brand logo writes remain isolated to the dedicated image endpoint', () => 
   assert.match(sidebarSource, /const IMAGE_API = ['"]\/api\/catalogue-image\/['"]/);
   assert.match(sidebarSource, /brand-logo-\$\{safe\}/);
   assert.match(sidebarSource, /method:\s*['"]PUT['"]/);
+});
+
+test('runtime installs compact Brands only after the restored sidebar module loads', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6/);
+  assert.match(runtimeSource, /\.then\(\(\) => import\('\.\/catalogue-brand-sidebar-compact\.mjs\?v=safe-brands-1'\)\)/);
 });
