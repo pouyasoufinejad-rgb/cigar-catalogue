@@ -10,7 +10,7 @@ async function getText(path) {
   return body;
 }
 
-test('live Worker serves the pre-sidebar application and restored Arturito catalogue state', async () => {
+test('final live Worker serves the pre-sidebar application and restored Arturito catalogue state', async () => {
   const sidebar = await getText('/catalogue-control-sidebar.mjs');
   assert.equal(sidebar.includes('BRAND_LINE_CONFIG'), false, 'Sep 17 brand/line filter code is still live.');
   assert.equal(sidebar.includes('BRAND_LINE_QUERY_PARAM'), false, 'Sep 17 brandLine URL filter code is still live.');
