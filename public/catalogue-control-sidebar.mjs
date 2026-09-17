@@ -1,22 +1,18 @@
-const STYLE_ID = 'catalogue-control-sidebar-style-v2';
+import { BRAND_LINE_CONFIG } from './catalogue-brand-line-config.mjs';
+
+const STYLE_ID = 'catalogue-control-sidebar-style-v3';
 const SIDEBAR_ID = 'catalogue-control-sidebar';
 const EXTRA_ID = 'catalogue-sidebar-extra-controls';
 const DESKTOP_QUERY = '(min-width: 1660px)';
 const BRAND_LINE_QUERY_PARAM = 'brandLine';
 const placements = new WeakMap();
 
+export { BRAND_LINE_CONFIG };
+
 export const CATALOGUE_JUMPS = Object.freeze([
   Object.freeze({ id:'coronets-cigarillos', label:'Coronets & Cigarillos' }),
   Object.freeze({ id:'petit-panatelas', label:'Petit Panatelas, Petit Coronas & Petit Robustos' }),
   Object.freeze({ id:'flavoured-infused', label:'Flavoured & Infused Cigars' })
-]);
-
-// Optional logos live here so they can be added or replaced without touching render logic.
-// Example: logo:'/assets/brand-logos/davidoff.webp'
-export const BRAND_LINE_CONFIG = Object.freeze([
-  Object.freeze({ id:'davidoff', label:'Davidoff', kind:'brand', logo:'', brands:['Davidoff'] }),
-  Object.freeze({ id:'liga-privada', label:'Liga Privada', kind:'line', logo:'', brands:['Liga Privada'], keyPrefixes:['liga-'] }),
-  Object.freeze({ id:'undercrown', label:'Undercrown', kind:'line', logo:'', brands:['Undercrown'], keyIncludes:['undercrown'] })
 ]);
 
 function rememberPlacement(node) {
@@ -59,7 +55,11 @@ function slugify(value) {
 }
 
 function cardBrand(card) {
-  return cleanText(card?.dataset?.brand || card?.querySelector?.('h3 small')?.textContent || '');
+  return cleanText(
+    card?.dataset?.brand ||
+    card?.querySelector?.('h3 > span, h3 > small')?.textContent ||
+    ''
+  );
 }
 
 function cardKey(card) {
@@ -72,6 +72,7 @@ function descriptorMatchesCard(card, descriptor) {
   const brand = cardBrand(card).toLowerCase();
   const brands = Array.from(descriptor.brands || []).map(value => cleanText(value).toLowerCase()).filter(Boolean);
   if (brands.includes(brand)) return true;
+  if (Array.from(descriptor.keys || []).some(value => key === cleanText(value).toLowerCase())) return true;
   if (Array.from(descriptor.keyPrefixes || []).some(prefix => key.startsWith(String(prefix).toLowerCase()))) return true;
   if (Array.from(descriptor.keyIncludes || []).some(fragment => key.includes(String(fragment).toLowerCase()))) return true;
   return false;
@@ -79,6 +80,13 @@ function descriptorMatchesCard(card, descriptor) {
 
 function cardsForRoot(root) {
   return Array.from(root.querySelectorAll?.('article.card[data-key]') || []);
+}
+
+function configuredBrandForLabel(label) {
+  const normal = cleanText(label).toLowerCase();
+  return BRAND_LINE_CONFIG.find(item =>
+    item.kind === 'brand' && Array.from(item.brands || []).some(value => cleanText(value).toLowerCase() === normal)
+  );
 }
 
 export function discoverBrandLineFilters(root = document) {
@@ -92,12 +100,14 @@ export function discoverBrandLineFilters(root = document) {
     seen.add(configured.id);
   }
 
+  // Anything not explicitly registered is still available automatically as a brand filter.
+  // Production dynamic cards render brand names in h3 > span; older static cards may use small.
   const brands = Array.from(new Set(cards.map(cardBrand).filter(Boolean))).sort((a, b) => a.localeCompare(b));
   for (const label of brands) {
-    const configured = BRAND_LINE_CONFIG.find(item => Array.from(item.brands || []).some(value => cleanText(value).toLowerCase() === label.toLowerCase()));
+    const configured = configuredBrandForLabel(label);
     const id = configured?.id || slugify(label);
     if (!id || seen.has(id)) continue;
-    output.push({ id, label, kind:'brand', logo:'', brands:[label] });
+    output.push(configured ? { ...configured } : { id, label, kind:'brand', logo:'', brands:[label] });
     seen.add(id);
   }
   return output;
@@ -276,133 +286,27 @@ function ensureStyles(root = document) {
   style.textContent = `
 .brand-line-filter-hidden{display:none!important}
 #cards [data-recommendation-subsection]{scroll-margin-top:24px}
-#${EXTRA_ID}{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin:0 0 14px;
-}
-#${EXTRA_ID} .catalogue-sidebar-section{
-  padding:10px;
-  border:1px solid rgba(195,162,80,.35);
-  border-radius:10px;
-  background:rgba(10,9,7,.94);
-}
-#${EXTRA_ID} .catalogue-sidebar-heading{
-  margin:0 0 8px;
-  color:#d7bf7b;
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.14em;
-}
-#${EXTRA_ID} .catalogue-sidebar-list{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:5px;
-}
-#${EXTRA_ID} .catalogue-sidebar-choice{
-  width:100%;
-  min-height:34px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 9px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:7px;
-  background:rgba(255,255,255,.035);
-  color:inherit;
-  font:inherit;
-  line-height:1.2;
-  text-align:left;
-  cursor:pointer;
-}
+#${EXTRA_ID}{display:flex;flex-direction:column;gap:10px;margin:0 0 14px}
+#${EXTRA_ID} .catalogue-sidebar-section{padding:10px;border:1px solid rgba(195,162,80,.35);border-radius:10px;background:rgba(10,9,7,.94)}
+#${EXTRA_ID} .catalogue-sidebar-heading{margin:0 0 8px;color:#d7bf7b;font-size:11px;font-weight:800;letter-spacing:.14em}
+#${EXTRA_ID} .catalogue-sidebar-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px}
+#${EXTRA_ID} .catalogue-sidebar-choice{width:100%;min-height:34px;display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.035);color:inherit;font:inherit;line-height:1.2;text-align:left;cursor:pointer}
 #${EXTRA_ID} .catalogue-sidebar-choice:hover{border-color:rgba(195,162,80,.62);background:rgba(195,162,80,.08)}
 #${EXTRA_ID} .catalogue-sidebar-choice[aria-pressed="true"]{border-color:#c3a250;background:rgba(195,162,80,.16);color:#f5e7b8}
 #${EXTRA_ID} .catalogue-brand-line-logo{width:24px;height:24px;object-fit:contain;flex:0 0 24px}
-.catalogue-brand-line-empty{
-  margin:10px 0 0;
-  padding:9px 11px;
-  border:1px dashed rgba(195,162,80,.28);
-  border-radius:8px;
-  color:rgba(255,255,255,.62);
-  font-size:12px;
-}
-#${SIDEBAR_ID}{
-  position:fixed;
-  z-index:44;
-  top:18px;
-  right:calc(50vw + 650px);
-  width:min(230px,calc(50vw - 660px));
-  max-height:calc(100vh - 36px);
-  overflow:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  scrollbar-width:thin;
-}
+.catalogue-brand-line-empty{margin:10px 0 0;padding:9px 11px;border:1px dashed rgba(195,162,80,.28);border-radius:8px;color:rgba(255,255,255,.62);font-size:12px}
+#${SIDEBAR_ID}{position:fixed;z-index:44;top:18px;right:calc(50vw + 650px);width:min(230px,calc(50vw - 660px));max-height:calc(100vh - 36px);overflow:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
 #${SIDEBAR_ID} #${EXTRA_ID}{margin:0}
 #${SIDEBAR_ID} #${EXTRA_ID} .catalogue-sidebar-list{grid-template-columns:1fr}
-#${SIDEBAR_ID} .catalogue-convenience-toolbar{
-  position:static!important;
-  top:auto!important;
-  width:100%!important;
-  margin:0!important;
-  padding:9px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  gap:8px!important;
-}
-#${SIDEBAR_ID} .catalogue-convenience-toolbar .convenience-toolbar-group{
-  width:100%!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:5px!important;
-  flex-wrap:wrap!important;
-}
-#${SIDEBAR_ID} .controls{
-  width:100%!important;
-  margin:0!important;
-  padding:10px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  gap:10px!important;
-  border:1px solid rgba(195,162,80,.35);
-  border-radius:10px;
-  background:rgba(10,9,7,.94);
-}
-#${SIDEBAR_ID} .sort-pair{
-  width:100%!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  gap:8px!important;
-}
+#${SIDEBAR_ID} .catalogue-convenience-toolbar{position:static!important;top:auto!important;width:100%!important;margin:0!important;padding:9px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important}
+#${SIDEBAR_ID} .catalogue-convenience-toolbar .convenience-toolbar-group{width:100%!important;display:flex!important;align-items:center!important;gap:5px!important;flex-wrap:wrap!important}
+#${SIDEBAR_ID} .controls{width:100%!important;margin:0!important;padding:10px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;border:1px solid rgba(195,162,80,.35);border-radius:10px;background:rgba(10,9,7,.94)}
+#${SIDEBAR_ID} .sort-pair{width:100%!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important}
 #${SIDEBAR_ID} .controls label{display:block!important;width:100%!important}
-#${SIDEBAR_ID} .controls select{
-  display:block!important;
-  width:100%!important;
-  min-width:0!important;
-  margin:4px 0 0!important;
-  padding:7px 26px 7px 8px!important;
-  font-size:12px!important;
-}
-#${SIDEBAR_ID} .toggle{
-  width:100%!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:5px!important;
-}
-#${SIDEBAR_ID} .toggle button{
-  width:100%!important;
-  padding:7px 8px!important;
-  text-align:left!important;
-  line-height:1.25!important;
-}
-@media(max-width:1659px){
-  #${SIDEBAR_ID}{display:none!important}
-}
+#${SIDEBAR_ID} .controls select{display:block!important;width:100%!important;min-width:0!important;margin:4px 0 0!important;padding:7px 26px 7px 8px!important;font-size:12px!important}
+#${SIDEBAR_ID} .toggle{width:100%!important;display:grid!important;grid-template-columns:1fr!important;gap:5px!important}
+#${SIDEBAR_ID} .toggle button{width:100%!important;padding:7px 8px!important;text-align:left!important;line-height:1.25!important}
+@media(max-width:1659px){#${SIDEBAR_ID}{display:none!important}}
 `;
   (root.head || root.documentElement).appendChild(style);
 }
@@ -427,9 +331,7 @@ export function installControlSidebar(root = document, view = globalThis.window)
   apply();
   media?.addEventListener?.('change', apply);
 
-  // The Worker renders catalogue cards server-side, while the subsection module may finish
-  // rearranging them just after startup. Two bounded refreshes pick up that final structure
-  // without a MutationObserver that could react to this module's own empty-state messages.
+  // The subsection runtime can finish rearranging cards just after startup.
   view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 0);
   view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 300);
 }
