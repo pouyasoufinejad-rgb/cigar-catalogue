@@ -12,6 +12,6 @@ if (typeof document !== 'undefined') {
   import('./catalogue-editor-behaviour.mjs');
   import('./catalogue-convenience.mjs?v=direct-edit-1');
   import('./catalogue-convenience-refinements.mjs');
-  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-6')
+  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-5')
     .then(() => import('./catalogue-brand-sidebar-compact.mjs?v=safe-brands-1'));
 }
