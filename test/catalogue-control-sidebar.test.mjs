@@ -9,7 +9,11 @@ const {
   restoreControlsFromSidebar,
   discoverBrandLineFilters,
   brandLogoUrl,
-  uploadBrandLogo
+  brandLogoSrc,
+  uploadBrandLogo,
+  normaliseBrandLogoSettings,
+  applyBrandLogoSettings,
+  saveBrandLogoSettings
 } = sidebarModule;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
@@ -51,8 +55,8 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
   return dom;
 }
 
-test('runtime loads the cache-busted v5 control-sidebar module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-5/);
+test('runtime loads the cache-busted v6 control-sidebar module', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
@@ -199,7 +203,7 @@ test('brand filter restores from URL', () => {
   dom.window.close();
 });
 
-test('every active brand row has a real upload-logo button and deterministic KV logo URL', () => {
+test('every active brand row has a real upload-logo button and cache-busted KV logo source', () => {
   const dom = catalogueFixture();
   const { document } = dom.window;
   moveControlsToSidebar(document, dom.window);
@@ -209,8 +213,33 @@ test('every active brand row has a real upload-logo button and deterministic KV 
   const image = filter.querySelector('.catalogue-brand-line-logo');
   assert.ok(upload, 'Davidoff should have an actual Upload logo button');
   assert.equal(upload.textContent.trim(), 'Upload logo');
-  assert.equal(image.getAttribute('src'), brandLogoUrl('davidoff'));
+  assert.equal(brandLogoUrl('davidoff'), '/api/catalogue-image/brand-logo-davidoff');
+  assert.match(image.getAttribute('src'), /^\/api\/catalogue-image\/brand-logo-davidoff\?v=/);
   assert.equal(image.hidden, true, 'missing logos stay hidden until the image loads');
+  assert.equal(brandLogoSrc('davidoff', 'fresh'), '/api/catalogue-image/brand-logo-davidoff?v=fresh');
+  dom.window.close();
+});
+
+test('uploaded logo becomes visible immediately from a local preview instead of remaining hidden', async () => {
+  const dom = catalogueFixture();
+  const { document } = dom.window;
+  dom.window.sessionStorage.setItem('cigar-catalogue-admin-token', 'test-token');
+  dom.window.URL.createObjectURL = () => 'blob:https://example.test/davidoff-logo';
+  dom.window.URL.revokeObjectURL = () => {};
+  dom.window.fetch = async () => ({ ok:true, status:200, json:async () => ({ ok:true }) });
+
+  moveControlsToSidebar(document, dom.window);
+  const input = document.querySelector('[data-brand-logo-input="davidoff"]');
+  const upload = document.querySelector('[data-brand-logo-upload="davidoff"]');
+  const image = document.querySelector('[data-brand-line-filter="davidoff"] .catalogue-brand-line-logo');
+  const file = new dom.window.File(['logo-bytes'], 'davidoff.png', { type:'image/png' });
+  Object.defineProperty(input, 'files', { configurable:true, value:[file] });
+  input.dispatchEvent(new dom.window.Event('change', { bubbles:true }));
+  await new Promise(resolve => dom.window.setTimeout(resolve, 0));
+
+  assert.equal(upload.textContent.trim(), 'Replace logo');
+  assert.equal(image.hidden, false, 'successful upload must leave the logo visible');
+  assert.match(image.src, /^blob:https:\/\/example\.test\/davidoff-logo$/);
   dom.window.close();
 });
 
@@ -232,5 +261,55 @@ test('brand logo upload uses the existing authenticated catalogue-image API with
   const configSource = await readFile(new URL('../public/catalogue-brand-line-config.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(configSource, /brand-logos\//);
   assert.doesNotMatch(configSource, /logo\s*=/);
+  dom.window.close();
+});
+
+test('brand rows expose size and position adjustment controls', () => {
+  const dom = catalogueFixture();
+  const { document } = dom.window;
+  moveControlsToSidebar(document, dom.window);
+
+  const adjust = document.querySelector('[data-brand-logo-adjust="davidoff"]');
+  assert.ok(adjust, 'Davidoff should have an Adjust logo button');
+  adjust.click();
+  const panel = document.querySelector('[data-brand-logo-controls="davidoff"]');
+  assert.equal(panel.hidden, false);
+  assert.ok(panel.querySelector('[data-brand-logo-size="davidoff"]'));
+  assert.ok(panel.querySelector('[data-brand-logo-x="davidoff"]'));
+  assert.ok(panel.querySelector('[data-brand-logo-y="davidoff"]'));
+  assert.ok(panel.querySelector('[data-brand-logo-reset="davidoff"]'));
+  dom.window.close();
+});
+
+test('logo size and position settings are clamped, applied to the image, and persisted in catalogue sections', async () => {
+  const dom = new JSDOM('<!doctype html><body><img id="logo"></body>');
+  const image = dom.window.document.getElementById('logo');
+  const settings = normaliseBrandLogoSettings({ size:48, x:7, y:-3 });
+  assert.deepEqual(settings, { size:48, x:7, y:-3 });
+  assert.deepEqual(normaliseBrandLogoSettings({ size:999, x:-999, y:999 }), { size:96, x:-40, y:40 });
+
+  applyBrandLogoSettings(image, settings);
+  assert.equal(image.style.width, '48px');
+  assert.equal(image.style.height, '48px');
+  assert.equal(image.style.transform, 'translate(7px, -3px)');
+
+  let captured = null;
+  const state = {
+    sections: {
+      recommendationSubsections: [{ id:'coronets-cigarillos' }],
+      brandLogos: { cao:{ size:30, x:0, y:0 } }
+    }
+  };
+  const writeFetch = async (url, init) => {
+    captured = { url, init };
+    return { ok:true, status:200, json:async () => ({ ...state, sections:JSON.parse(init.body).sections }) };
+  };
+  await saveBrandLogoSettings('davidoff', settings, state, writeFetch);
+  const body = JSON.parse(captured.init.body);
+  assert.equal(captured.url, '/api/catalogue-overrides');
+  assert.equal(captured.init.method, 'PUT');
+  assert.deepEqual(body.sections.recommendationSubsections, [{ id:'coronets-cigarillos' }]);
+  assert.deepEqual(body.sections.brandLogos.cao, { size:30, x:0, y:0 });
+  assert.deepEqual(body.sections.brandLogos.davidoff, settings);
   dom.window.close();
 });
