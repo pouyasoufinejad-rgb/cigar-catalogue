@@ -1,6 +1,6 @@
 import { BRAND_LINE_CONFIG } from './catalogue-brand-line-config.mjs';
 
-const STYLE_ID = 'catalogue-control-sidebar-style-v5';
+const STYLE_ID = 'catalogue-control-sidebar-style-v6';
 const SIDEBAR_ID = 'catalogue-control-sidebar';
 const EXTRA_ID = 'catalogue-sidebar-extra-controls';
 const DESKTOP_QUERY = '(min-width: 1660px)';
@@ -10,6 +10,7 @@ const IMAGE_API = '/api/catalogue-image/';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
 const MAX_LOGO_BYTES = 12 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+const DEFAULT_LOGO_SETTINGS = Object.freeze({ size:24, x:0, y:0 });
 const placements = new WeakMap();
 const catalogueStateByRoot = new WeakMap();
 let adminTokenMemory = '';
@@ -63,6 +64,12 @@ function slugify(value) {
 
 function own(object, key) {
   return Object.prototype.hasOwnProperty.call(object || {}, key);
+}
+
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(number)));
 }
 
 function cardBrand(card) {
@@ -140,6 +147,32 @@ export function brandLogoUrl(id) {
   return safe ? `${IMAGE_API}brand-logo-${safe}` : '';
 }
 
+export function brandLogoSrc(id, version = Date.now()) {
+  const url = brandLogoUrl(id);
+  return url ? `${url}?v=${encodeURIComponent(String(version))}` : '';
+}
+
+export function normaliseBrandLogoSettings(value = {}) {
+  return {
+    size: clamp(value?.size, 12, 96, DEFAULT_LOGO_SETTINGS.size),
+    x: clamp(value?.x, -40, 40, DEFAULT_LOGO_SETTINGS.x),
+    y: clamp(value?.y, -40, 40, DEFAULT_LOGO_SETTINGS.y)
+  };
+}
+
+export function applyBrandLogoSettings(image, value = DEFAULT_LOGO_SETTINGS) {
+  if (!image?.style) return;
+  const settings = normaliseBrandLogoSettings(value);
+  image.style.width = `${settings.size}px`;
+  image.style.height = `${settings.size}px`;
+  image.style.flexBasis = `${settings.size}px`;
+  image.style.transform = `translate(${settings.x}px, ${settings.y}px)`;
+}
+
+function brandLogoSettingsFromState(state, id) {
+  return normaliseBrandLogoSettings(state?.sections?.brandLogos?.[id]);
+}
+
 function readAdminToken(view = globalThis) {
   if (adminTokenMemory) return adminTokenMemory;
   try { adminTokenMemory = view?.sessionStorage?.getItem(ADMIN_TOKEN_SESSION_KEY) || ''; }
@@ -160,7 +193,7 @@ function requireAdminToken(view = globalThis) {
   if (existing) return existing;
   const entered = view?.prompt?.('Admin token required to change the catalogue.') || '';
   const token = entered.trim();
-  if (!token) throw new Error('Admin token is required to upload a brand logo.');
+  if (!token) throw new Error('Admin token is required to change a brand logo.');
   storeAdminToken(token, view);
   return token;
 }
@@ -170,7 +203,7 @@ async function authenticatedWriteFetch(url, options = {}, view = globalThis) {
   const headers = new Headers(options.headers || {});
   headers.set('authorization', `Bearer ${token}`);
   const writer = view?.fetch?.bind(view) || globalThis.fetch?.bind(globalThis);
-  if (!writer) throw new Error('Upload is unavailable in this browser.');
+  if (!writer) throw new Error('Catalogue editing is unavailable in this browser.');
   const response = await writer(url, { ...options, headers });
   if (response.status === 401) storeAdminToken('', view);
   return response;
@@ -189,7 +222,29 @@ export async function uploadBrandLogo(id, file, writeFetch = null, view = global
   return payload;
 }
 
-export function createBrandLineButton(root, descriptor) {
+export async function saveBrandLogoSettings(id, value, state = {}, writeFetch = null, view = globalThis) {
+  const safe = slugify(id);
+  if (!safe) throw new Error('Invalid brand logo key.');
+  const settings = normaliseBrandLogoSettings(value);
+  const sections = {
+    ...(state?.sections || {}),
+    brandLogos: {
+      ...(state?.sections?.brandLogos || {}),
+      [safe]: settings
+    }
+  };
+  const writer = writeFetch || ((target, options) => authenticatedWriteFetch(target, options, view));
+  const response = await writer(STATE_API, {
+    method:'PUT',
+    headers:{ 'content-type':'application/json' },
+    body:JSON.stringify({ sections })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || `Logo settings save failed with HTTP ${response.status}`);
+  return payload;
+}
+
+export function createBrandLineButton(root, descriptor, state = null) {
   const button = root.createElement('button');
   button.type = 'button';
   button.className = 'catalogue-sidebar-choice';
@@ -199,26 +254,63 @@ export function createBrandLineButton(root, descriptor) {
   if (descriptor.id !== 'all') {
     const image = root.createElement('img');
     image.className = 'catalogue-brand-line-logo';
-    image.src = brandLogoUrl(descriptor.id);
     image.alt = '';
     image.loading = 'lazy';
     image.hidden = true;
+    applyBrandLogoSettings(image, brandLogoSettingsFromState(state, descriptor.id));
     image.addEventListener('load', () => { image.hidden = false; });
     image.addEventListener('error', () => { image.hidden = true; });
+    image.src = brandLogoSrc(descriptor.id);
     button.appendChild(image);
   }
 
   const label = root.createElement('span');
+  label.className = 'catalogue-brand-label';
   label.textContent = descriptor.label;
   button.appendChild(label);
   return button;
 }
 
-function createBrandRow(root, descriptor, view) {
+function updateLocalLogoState(root, id, settings) {
+  const current = catalogueStateByRoot.get(root) || {};
+  const next = {
+    ...current,
+    sections: {
+      ...(current.sections || {}),
+      brandLogos: {
+        ...(current.sections?.brandLogos || {}),
+        [id]: normaliseBrandLogoSettings(settings)
+      }
+    }
+  };
+  catalogueStateByRoot.set(root, next);
+  return next;
+}
+
+function createRangeControl(root, labelText, id, dataName, min, max, value) {
+  const label = root.createElement('label');
+  label.className = 'catalogue-brand-logo-control';
+  const caption = root.createElement('span');
+  caption.textContent = labelText;
+  const input = root.createElement('input');
+  input.type = 'range';
+  input.min = String(min);
+  input.max = String(max);
+  input.step = '1';
+  input.value = String(value);
+  input.dataset[dataName] = id;
+  label.append(caption, input);
+  return { label, input };
+}
+
+function createBrandRow(root, descriptor, view, state = catalogueStateByRoot.get(root)) {
   const row = root.createElement('div');
   row.className = 'catalogue-brand-row';
-  const filterButton = createBrandLineButton(root, descriptor);
+  const filterButton = createBrandLineButton(root, descriptor, state);
   row.appendChild(filterButton);
+
+  const actions = root.createElement('div');
+  actions.className = 'catalogue-brand-logo-actions';
 
   const uploadButton = root.createElement('button');
   uploadButton.type = 'button';
@@ -226,11 +318,35 @@ function createBrandRow(root, descriptor, view) {
   uploadButton.dataset.brandLogoUpload = descriptor.id;
   uploadButton.textContent = 'Upload logo';
 
+  const adjustButton = root.createElement('button');
+  adjustButton.type = 'button';
+  adjustButton.className = 'catalogue-brand-logo-adjust';
+  adjustButton.dataset.brandLogoAdjust = descriptor.id;
+  adjustButton.textContent = 'Adjust';
+
   const input = root.createElement('input');
   input.type = 'file';
   input.accept = 'image/png,image/jpeg,image/webp';
   input.hidden = true;
   input.dataset.brandLogoInput = descriptor.id;
+
+  const panel = root.createElement('div');
+  panel.className = 'catalogue-brand-logo-controls';
+  panel.dataset.brandLogoControls = descriptor.id;
+  panel.hidden = true;
+  const settings = brandLogoSettingsFromState(state, descriptor.id);
+  const sizeControl = createRangeControl(root, 'Size', descriptor.id, 'brandLogoSize', 12, 96, settings.size);
+  const xControl = createRangeControl(root, 'X', descriptor.id, 'brandLogoX', -40, 40, settings.x);
+  const yControl = createRangeControl(root, 'Y', descriptor.id, 'brandLogoY', -40, 40, settings.y);
+  const resetButton = root.createElement('button');
+  resetButton.type = 'button';
+  resetButton.className = 'catalogue-brand-logo-reset';
+  resetButton.dataset.brandLogoReset = descriptor.id;
+  resetButton.textContent = 'Reset';
+  panel.append(sizeControl.label, xControl.label, yControl.label, resetButton);
+
+  const image = filterButton.querySelector('.catalogue-brand-line-logo');
+  image?.addEventListener('load', () => { uploadButton.textContent = 'Replace logo'; });
 
   uploadButton.addEventListener('click', event => {
     event.preventDefault();
@@ -238,21 +354,33 @@ function createBrandRow(root, descriptor, view) {
     input.click();
   });
 
+  adjustButton.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    panel.hidden = !panel.hidden;
+  });
+
   input.addEventListener('change', async () => {
     const file = input.files?.[0];
     if (!file) return;
-    const image = filterButton.querySelector('.catalogue-brand-line-logo');
     uploadButton.disabled = true;
     uploadButton.textContent = 'Uploading…';
+    let previewUrl = '';
     try {
+      previewUrl = view?.URL?.createObjectURL?.(file) || '';
+      if (image && previewUrl) {
+        image.hidden = false;
+        image.src = previewUrl;
+      }
       await uploadBrandLogo(descriptor.id, file, null, view);
-      if (image) {
+      if (image && !previewUrl) {
         image.hidden = true;
-        image.src = `${brandLogoUrl(descriptor.id)}?v=${Date.now()}`;
+        image.src = brandLogoSrc(descriptor.id);
       }
       uploadButton.textContent = 'Replace logo';
     } catch (error) {
       uploadButton.textContent = 'Upload logo';
+      if (image) image.src = brandLogoSrc(descriptor.id);
       view?.alert?.(error?.message || 'Brand logo upload failed.');
     } finally {
       uploadButton.disabled = false;
@@ -260,7 +388,41 @@ function createBrandRow(root, descriptor, view) {
     }
   });
 
-  row.append(uploadButton, input);
+  const currentSettings = () => normaliseBrandLogoSettings({
+    size:sizeControl.input.value,
+    x:xControl.input.value,
+    y:yControl.input.value
+  });
+
+  const applyLive = () => applyBrandLogoSettings(image, currentSettings());
+  const persist = async () => {
+    const nextSettings = currentSettings();
+    const currentState = catalogueStateByRoot.get(root) || state || {};
+    try {
+      const payload = await saveBrandLogoSettings(descriptor.id, nextSettings, currentState, null, view);
+      if (payload && typeof payload === 'object' && payload.sections) catalogueStateByRoot.set(root, payload);
+      else updateLocalLogoState(root, descriptor.id, nextSettings);
+    } catch (error) {
+      view?.alert?.(error?.message || 'Logo adjustment could not be saved.');
+    }
+  };
+
+  for (const control of [sizeControl.input, xControl.input, yControl.input]) {
+    control.addEventListener('input', applyLive);
+    control.addEventListener('change', persist);
+  }
+
+  resetButton.addEventListener('click', async event => {
+    event.preventDefault();
+    sizeControl.input.value = String(DEFAULT_LOGO_SETTINGS.size);
+    xControl.input.value = '0';
+    yControl.input.value = '0';
+    applyLive();
+    await persist();
+  });
+
+  actions.append(uploadButton, adjustButton);
+  row.append(actions, input, panel);
   return row;
 }
 
@@ -324,8 +486,8 @@ function initialBrandLineId(root, view, state = catalogueStateByRoot.get(root)) 
 function renderBrandLineButtons(root, container, activeId, view, state = catalogueStateByRoot.get(root)) {
   const descriptors = discoverBrandLineFilters(root, state);
   container.replaceChildren();
-  container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands' }));
-  for (const descriptor of descriptors) container.appendChild(createBrandRow(root, descriptor, view));
+  container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands' }, state));
+  for (const descriptor of descriptors) container.appendChild(createBrandRow(root, descriptor, view, state));
   container.querySelectorAll('[data-brand-line-filter]').forEach(button => {
     button.addEventListener('click', () => applyBrandLineFilter(root, button.dataset.brandLineFilter, view, catalogueStateByRoot.get(root)));
   });
@@ -438,14 +600,20 @@ function ensureStyles(root = document) {
 #${EXTRA_ID} .catalogue-sidebar-section{padding:10px;border:1px solid rgba(195,162,80,.35);border-radius:10px;background:rgba(10,9,7,.94)}
 #${EXTRA_ID} .catalogue-sidebar-heading{margin:0 0 8px;color:#d7bf7b;font-size:11px;font-weight:800;letter-spacing:.14em}
 #${EXTRA_ID} .catalogue-sidebar-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px}
-#${EXTRA_ID} .catalogue-brand-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:stretch}
-#${EXTRA_ID} .catalogue-sidebar-choice{width:100%;min-height:34px;display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.035);color:inherit;font:inherit;line-height:1.2;text-align:left;cursor:pointer;min-width:0}
+#${EXTRA_ID} .catalogue-brand-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:start}
+#${EXTRA_ID} .catalogue-sidebar-choice{width:100%;min-height:34px;display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.035);color:inherit;font:inherit;line-height:1.2;text-align:left;cursor:pointer;min-width:0;overflow:visible}
 #${EXTRA_ID} .catalogue-sidebar-choice:hover{border-color:rgba(195,162,80,.62);background:rgba(195,162,80,.08)}
 #${EXTRA_ID} .catalogue-sidebar-choice[aria-pressed="true"]{border-color:#c3a250;background:rgba(195,162,80,.16);color:#f5e7b8}
-#${EXTRA_ID} .catalogue-brand-line-logo{width:24px;height:24px;object-fit:contain;flex:0 0 24px}
-#${EXTRA_ID} .catalogue-brand-logo-upload{padding:5px 7px;border:1px solid rgba(195,162,80,.38);border-radius:7px;background:rgba(195,162,80,.07);color:#d7bf7b;font:700 10px/1.1 inherit;cursor:pointer;white-space:normal;max-width:74px}
-#${EXTRA_ID} .catalogue-brand-logo-upload:hover{border-color:#c3a250;background:rgba(195,162,80,.14)}
+#${EXTRA_ID} .catalogue-brand-line-logo{width:24px;height:24px;object-fit:contain;object-position:center;flex:0 0 24px;position:relative;z-index:1}
+#${EXTRA_ID} .catalogue-brand-label{position:relative;z-index:2}
+#${EXTRA_ID} .catalogue-brand-logo-actions{display:flex;flex-direction:column;gap:4px}
+#${EXTRA_ID} .catalogue-brand-logo-upload,#${EXTRA_ID} .catalogue-brand-logo-adjust,#${EXTRA_ID} .catalogue-brand-logo-reset{padding:5px 7px;border:1px solid rgba(195,162,80,.38);border-radius:7px;background:rgba(195,162,80,.07);color:#d7bf7b;font:700 10px/1.1 inherit;cursor:pointer;white-space:normal;max-width:74px}
+#${EXTRA_ID} .catalogue-brand-logo-upload:hover,#${EXTRA_ID} .catalogue-brand-logo-adjust:hover,#${EXTRA_ID} .catalogue-brand-logo-reset:hover{border-color:#c3a250;background:rgba(195,162,80,.14)}
 #${EXTRA_ID} .catalogue-brand-logo-upload:disabled{opacity:.55;cursor:wait}
+#${EXTRA_ID} .catalogue-brand-logo-controls{grid-column:1/-1;padding:7px;border:1px solid rgba(255,255,255,.09);border-radius:7px;background:rgba(255,255,255,.025);display:grid;grid-template-columns:1fr;gap:5px}
+#${EXTRA_ID} .catalogue-brand-logo-controls[hidden]{display:none!important}
+#${EXTRA_ID} .catalogue-brand-logo-control{display:grid;grid-template-columns:38px 1fr;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.7)}
+#${EXTRA_ID} .catalogue-brand-logo-control input{width:100%}
 .catalogue-brand-line-empty{margin:10px 0 0;padding:9px 11px;border:1px dashed rgba(195,162,80,.28);border-radius:8px;color:rgba(255,255,255,.62);font-size:12px}
 #${SIDEBAR_ID}{position:fixed;z-index:44;top:18px;right:calc(50vw + 650px);width:min(230px,calc(50vw - 660px));max-height:calc(100vh - 36px);overflow:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
 #${SIDEBAR_ID} #${EXTRA_ID}{margin:0}
