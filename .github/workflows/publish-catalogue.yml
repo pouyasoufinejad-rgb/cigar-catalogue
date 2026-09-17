@@ -1,37 +1,6 @@
 name: Publish catalogue request
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/publish-catalogue.yml'
-      - 'catalogue-requests/**'
-      - 'catalogue-recovery/**'
-      - 'public/**'
-      - 'scripts/publish-catalogue-request.mjs'
-      - 'scripts/publish-live-catalogue-request.mjs'
-      - 'scripts/recover-image-references.mjs'
-      - 'scripts/cleanup-live-card-copy.mjs'
-      - 'scripts/normalise-live-card-structure.mjs'
-      - 'test/**'
-      - 'src/**'
-      - 'wrangler.jsonc'
-      - 'package.json'
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-catalogue.yml'
-      - 'catalogue-requests/**'
-      - 'catalogue-recovery/**'
-      - 'public/**'
-      - 'scripts/publish-catalogue-request.mjs'
-      - 'scripts/publish-live-catalogue-request.mjs'
-      - 'scripts/recover-image-references.mjs'
-      - 'scripts/cleanup-live-card-copy.mjs'
-      - 'scripts/normalise-live-card-structure.mjs'
-      - 'test/**'
-      - 'src/**'
-      - 'wrangler.jsonc'
-      - 'package.json'
   workflow_dispatch:
     inputs:
       request_path:
@@ -63,98 +32,33 @@ jobs:
         run: npm test
 
   publish:
-    name: Publish changed catalogue requests
+    name: Publish requested catalogue file
     needs: verify
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
       REQUEST_PATH: ${{ inputs.request_path }}
-      BEFORE_SHA: ${{ github.event.before }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Publish requests sequentially
+      - name: Validate and publish request
         shell: bash
         run: |
           set -euo pipefail
-
-          files=()
-          recovery_files=()
-          cleanup_changed=false
-          structure_changed=false
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            if [[ ! "${REQUEST_PATH}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
-              echo "::error::request_path must be a JSON file directly under catalogue-requests/."
-              exit 1
-            fi
-            if [[ ! -f "${REQUEST_PATH}" ]]; then
-              echo "::error::Request file does not exist: ${REQUEST_PATH}"
-              exit 1
-            fi
-            files=("${REQUEST_PATH}")
-          else
-            if [[ -n "${BEFORE_SHA}" && ! "${BEFORE_SHA}" =~ ^0+$ ]]; then
-              mapfile -t files < <(git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
-              mapfile -t recovery_files < <(git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'catalogue-recovery/*.json')
-              if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/cleanup-live-card-copy.mjs' | grep -q .; then
-                cleanup_changed=true
-              fi
-              if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
-                structure_changed=true
-              fi
-            else
-              mapfile -t files < <(git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
-              mapfile -t recovery_files < <(git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'catalogue-recovery/*.json')
-              if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-card-copy.mjs' | grep -q .; then
-                cleanup_changed=true
-              fi
-              if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
-                structure_changed=true
-              fi
-            fi
+          if [[ ! "${REQUEST_PATH}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
+            echo "::error::request_path must be a JSON file directly under catalogue-requests/."
+            exit 1
           fi
-
-          if (( ${#files[@]} == 0 )) && (( ${#recovery_files[@]} == 0 )) && [[ "${cleanup_changed}" != "true" ]] && [[ "${structure_changed}" != "true" ]]; then
-            echo "No catalogue request JSON files, recovery manifests or live normalisers changed; nothing to publish."
-            exit 0
+          if [[ ! -f "${REQUEST_PATH}" ]]; then
+            echo "::error::Request file does not exist: ${REQUEST_PATH}"
+            exit 1
           fi
-
           if [[ -z "${CATALOGUE_ADMIN_TOKEN:-}" ]]; then
             echo "::error::CATALOGUE_ADMIN_TOKEN repository Actions secret is not configured."
             exit 1
           fi
-
-          for request in "${files[@]}"; do
-            if [[ ! "${request}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
-              echo "::error::Refusing unexpected request path: ${request}"
-              exit 1
-            fi
-            echo "Publishing ${request} from current live Worker state"
-            node scripts/publish-live-catalogue-request.mjs "${request}"
-          done
-
-          for recovery in "${recovery_files[@]}"; do
-            if [[ ! "${recovery}" =~ ^catalogue-recovery/[A-Za-z0-9._-]+\.json$ ]]; then
-              echo "::error::Refusing unexpected recovery path: ${recovery}"
-              exit 1
-            fi
-            echo "Recovering verified image references from ${recovery}"
-            node scripts/recover-image-references.mjs "${recovery}"
-          done
-
-          if [[ "${cleanup_changed}" == "true" ]]; then
-            echo "Cleaning redundant untasted/projected wording from current live card copy"
-            node scripts/cleanup-live-card-copy.mjs
-          fi
-
-          if [[ "${structure_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
-            echo "Normalising Production and Practical structures across current live catalogue"
-            node scripts/normalise-live-card-structure.mjs
-          fi
+          node scripts/publish-live-catalogue-request.mjs "${REQUEST_PATH}"
