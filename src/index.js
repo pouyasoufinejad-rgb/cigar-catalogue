@@ -342,21 +342,14 @@ export function normaliseState(input) {
 }
 
 export function mergeState(existingInput, incomingInput) {
-  const rawExisting = isRecord(existingInput) ? existingInput : {};
-  const existing = normaliseState(rawExisting);
+  const existing = normaliseState(existingInput);
   const incoming = isRecord(incomingInput) ? incomingInput : {};
   return {
     version: 3,
     updatedAt: new Date().toISOString(),
-    cards: own(incoming, 'cards')
-      ? normaliseCardOverrides(incoming.cards)
-      : (isRecord(rawExisting.cards) ? clone(rawExisting.cards) : existing.cards),
-    sections: own(incoming, 'sections')
-      ? record(incoming.sections)
-      : (isRecord(rawExisting.sections) ? clone(rawExisting.sections) : existing.sections),
-    entries: own(incoming, 'entries')
-      ? normaliseEntries(incoming.entries)
-      : (isRecord(rawExisting.entries) ? clone(rawExisting.entries) : existing.entries)
+    cards: own(incoming, 'cards') ? normaliseCardOverrides(incoming.cards) : existing.cards,
+    sections: own(incoming, 'sections') ? record(incoming.sections) : existing.sections,
+    entries: own(incoming, 'entries') ? normaliseEntries(incoming.entries) : existing.entries
   };
 }
 
