@@ -44,7 +44,7 @@ function cleanCardPatch(entry = {}) {
 }
 
 export function linesToMarkup(lines = []) {
-  const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;' }[char]));
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]));
   return Array.isArray(lines) ? lines.map(line => `<span class="artmeta-line">${escape(line)}</span>`).join('') : '';
 }
 
@@ -55,7 +55,8 @@ function attr(tag, name) {
 
 function extractMetaLines(body, className) {
   const escaped = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const inner = body.match(new RegExp(`<[^>]*class=["'][^"']*${escaped}[^"']*["'][^>]*>([\\s\\S]*?)<\\/[^>]+>`, 'i'))?.[1] || '';
+  const block = body.match(new RegExp(`<([a-z0-9]+)\\b[^>]*class=["'][^"']*${escaped}[^"']*["'][^>]*>([\\s\\S]*?)<\\/\\1\\s*>`, 'i'));
+  const inner = block?.[2] || '';
   return Array.from(inner.matchAll(/<span\b[^>]*class=["'][^"']*artmeta-line[^"']*["'][^>]*>[\s\S]*?<\/span>/gi), match => match[0]).join('');
 }
 
