@@ -100,8 +100,6 @@ export function discoverBrandLineFilters(root = document) {
     seen.add(configured.id);
   }
 
-  // Anything not explicitly registered is still available automatically as a brand filter.
-  // Production dynamic cards render brand names in h3 > span; older static cards may use small.
   const brands = Array.from(new Set(cards.map(cardBrand).filter(Boolean))).sort((a, b) => a.localeCompare(b));
   for (const label of brands) {
     const configured = configuredBrandForLabel(label);
@@ -331,9 +329,7 @@ export function installControlSidebar(root = document, view = globalThis.window)
   apply();
   media?.addEventListener?.('change', apply);
 
-  // The subsection runtime can finish rearranging cards just after startup.
   view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 0);
-  view?.setTimeout?.(() => refreshBrandLineOptions(root, view), 300);
 }
 
 if (typeof document !== 'undefined') {
