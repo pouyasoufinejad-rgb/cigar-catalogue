@@ -8,8 +8,8 @@ const IMAGE_VERSION = 'recovery-20260918';
 const clone = value => JSON.parse(JSON.stringify(value ?? {}));
 
 export const TASTER_REPAIRS = Object.freeze([
-  Object.freeze({ key:'nica-rustica-broadleaf-short-robusto', rank:8 }),
-  Object.freeze({ key:'liga-privada-unico-papas-fritas', rank:9 })
+  Object.freeze({ key:'nica-rustica-broadleaf-short-robusto', rank:6 }),
+  Object.freeze({ key:'liga-privada-unico-papas-fritas', rank:7 })
 ]);
 
 export const PETIT_REPAIRS = Object.freeze([
