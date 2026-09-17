@@ -1,8 +1,0 @@
-{
-  "id": "2026-09-16-1028-verified-checkpoint",
-  "targetCommit": "287f7fc5e2e612463f09a91bf59cc9ad7d8e5dc9",
-  "publishedAt": "2026-09-16T02:28:44Z",
-  "localTime": "2026-09-16T10:28:44+08:00",
-  "postTargetEntryToRemove": "drew-estate-acid-krush-red-cameroon",
-  "postTargetSectionKeysToRemove": ["brandLogos", "hiddenBrands"]
-}
