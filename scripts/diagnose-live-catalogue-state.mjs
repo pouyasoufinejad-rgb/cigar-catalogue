@@ -32,3 +32,21 @@ for (const key of keys) {
   console.log(JSON.stringify(snapshot));
 }
 console.log('CARD_STATE_END');
+
+const missingActiveImages = keys.filter(key => {
+  const effective = { ...(entries[key] || {}), ...(cards[key] || {}) };
+  return effective.archived !== true && !String(effective.imageUrl || '').trim();
+});
+const imageBlobChecks = [];
+for (const key of missingActiveImages) {
+  const imageResponse = await fetch(`${BASE_URL}/api/catalogue-image/${encodeURIComponent(key)}?diagnostic=${Date.now()}`, { cache:'no-store' });
+  const bytes = new Uint8Array(await imageResponse.arrayBuffer());
+  imageBlobChecks.push({
+    key,
+    status:imageResponse.status,
+    contentType:imageResponse.headers.get('content-type'),
+    bytes:bytes.byteLength,
+    signature:Array.from(bytes.slice(0, 12))
+  });
+}
+console.log('MISSING_ACTIVE_IMAGE_BLOB_CHECKS', JSON.stringify(imageBlobChecks));
