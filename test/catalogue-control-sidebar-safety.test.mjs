@@ -54,7 +54,7 @@ test('brand logo writes remain isolated to the dedicated image endpoint', () => 
   assert.match(sidebarSource, /method:\s*['"]PUT['"]/);
 });
 
-test('runtime installs compact Brands only after the restored sidebar module loads', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6/);
+test('runtime installs compact Brands only after the restored 1:21 sidebar module loads', () => {
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-5/);
   assert.match(runtimeSource, /\.then\(\(\) => import\('\.\/catalogue-brand-sidebar-compact\.mjs\?v=safe-brands-1'\)\)/);
 });
