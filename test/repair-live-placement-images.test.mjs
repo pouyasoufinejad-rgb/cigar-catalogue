@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyVerifiedPlacementImageRepair,
+  assertRepair,
   TASTER_REPAIRS,
   VERIFIED_IMAGE_KEYS
 } from '../scripts/repair-live-placement-images.mjs';
@@ -41,7 +42,7 @@ function fixture() {
   };
 }
 
-test('repair restores the five Sep 16 Drew Estate entries to exact Taster ranks 8 through 12', () => {
+test('repair restores the five Sep 16 Drew Estate cards to exact Taster ranks 8 through 12 without persisting entry catalogueType', () => {
   const before = fixture();
   const repaired = applyVerifiedPlacementImageRepair(before);
   assert.deepEqual(TASTER_REPAIRS.map(item => [item.key,item.rank]), [
@@ -56,11 +57,17 @@ test('repair restores the five Sep 16 Drew Estate entries to exact Taster ranks 
     assert.equal(repaired.cards[key].taster, true, key);
     assert.equal(repaired.cards[key].rank, rank, key);
     assert.equal('subsection' in repaired.cards[key], false, `${key} card subsection must be removed`);
-    assert.equal(repaired.entries[key].catalogueType, 'taster', `${key} entry`);
+    assert.equal('catalogueType' in repaired.entries[key], false, `${key} entry catalogueType is not persisted by the Worker`);
     assert.equal(repaired.entries[key].taster, true, `${key} entry`);
     assert.equal(repaired.entries[key].rank, rank, `${key} entry`);
     assert.equal('subsection' in repaired.entries[key], false, `${key} entry subsection must be removed`);
   }
+});
+
+test('read-back verification accepts the Worker contract where entry catalogueType is absent', () => {
+  const persisted = applyVerifiedPlacementImageRepair(fixture());
+  for (const { key } of TASTER_REPAIRS) delete persisted.entries[key].catalogueType;
+  assert.doesNotThrow(() => assertRepair(persisted, []));
 });
 
 test('repair removes Tasters from recommendation subsections and compacts only the affected main ranks', () => {
