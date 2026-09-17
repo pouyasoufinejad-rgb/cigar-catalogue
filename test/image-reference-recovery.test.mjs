@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { validateRequest, publishRequestDocument } from '../scripts/publish-catalogue-request.mjs';
+import {
+  validateRecoveryManifest,
+  recoverImageReferences
+} from '../scripts/recover-image-references.mjs';
 
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 const TOKEN = 'test-token-do-not-log';
@@ -15,34 +18,35 @@ function createFetchRouter(routes, calls) {
     const method = String(options.method || 'GET').toUpperCase();
     const href = String(url);
     calls.push({ href, method, headers:new Headers(options.headers || {}), body:options.body });
-    const route = routes.find(item => item.method === method && item.url === href);
+    const route = routes.find(item => item.method === method && (typeof item.url === 'function' ? item.url(href) : item.url === href));
     if (!route) throw new Error(`Unexpected request: ${method} ${href}`);
     return typeof route.response === 'function' ? route.response({ url:href, method, options }) : route.response;
   };
 }
 
-test('restore-image-reference accepts only the exact catalogue image endpoint for its key', () => {
-  const request = validateRequest({
-    operation:'restore-image-reference',
-    key:'liga-privada-h99-coronets',
-    imageUrl:'/api/catalogue-image/liga-privada-h99-coronets?v=recovery-20260917'
-  });
-  assert.equal(request.imageUrl, '/api/catalogue-image/liga-privada-h99-coronets?v=recovery-20260917');
+function manifestFor(key, imageUrl) {
+  return { id:'test-recovery', imageReferences:{ [key]:imageUrl } };
+}
 
-  assert.throws(() => validateRequest({
-    operation:'restore-image-reference',
-    key:'liga-privada-h99-coronets',
-    imageUrl:'/api/catalogue-image/another-key?v=1'
-  }), /imageUrl/i);
+test('recovery manifest accepts only the exact catalogue-image endpoint for each key', () => {
+  const manifest = validateRecoveryManifest(manifestFor(
+    'liga-privada-h99-coronets',
+    '/api/catalogue-image/liga-privada-h99-coronets?v=recovery-20260917'
+  ));
+  assert.equal(manifest.imageReferences['liga-privada-h99-coronets'], '/api/catalogue-image/liga-privada-h99-coronets?v=recovery-20260917');
 
-  assert.throws(() => validateRequest({
-    operation:'restore-image-reference',
-    key:'liga-privada-h99-coronets',
-    imageUrl:'https://example.com/logo.png'
-  }), /imageUrl/i);
+  assert.throws(() => validateRecoveryManifest(manifestFor(
+    'liga-privada-h99-coronets',
+    '/api/catalogue-image/another-key?v=1'
+  )), /image reference/i);
+
+  assert.throws(() => validateRecoveryManifest(manifestFor(
+    'liga-privada-h99-coronets',
+    'https://example.com/logo.png'
+  )), /image reference/i);
 });
 
-test('restore-image-reference changes only the target card imageUrl and never rewrites entries or rankings', async () => {
+test('recovery changes only target card imageUrl and never writes entries or rankings', async () => {
   const calls = [];
   const state = {
     version:3,
@@ -64,19 +68,18 @@ test('restore-image-reference changes only the target card imageUrl and never re
       writtenState = JSON.parse(options.body);
       return jsonResponse({ ok:true });
     } },
-    { method:'GET', url:`${BASE}/api/catalogue-overrides?verify=1`, response:() => jsonResponse({ ...state, ...writtenState, entries:state.entries }) },
-    { method:'GET', url:`${BASE}/?catalogue_verify=recover-me`, response:new Response(
+    { method:'GET', url:`${BASE}/api/catalogue-overrides?verify=image-recovery`, response:() => jsonResponse({ ...state, ...writtenState, entries:state.entries }) },
+    { method:'GET', url:href => href.startsWith(`${BASE}/?catalogue_image_recovery=`), response:new Response(
       `<article class="card" data-key="recover-me"><div class="artframe"><img src="${imageUrl}"></div></article>`,
       { status:200, headers:{ 'content-type':'text/html' } }
     ) }
   ];
 
-  const result = await publishRequestDocument({ operation:'restore-image-reference', key:'recover-me', imageUrl }, {
-    fetchImpl:createFetchRouter(routes, calls), baseUrl:BASE, token:TOKEN, includeStaticCatalogue:false
+  const result = await recoverImageReferences(manifestFor('recover-me', imageUrl), {
+    fetchImpl:createFetchRouter(routes, calls), baseUrl:BASE, token:TOKEN, sleep:async () => {}
   });
 
-  assert.equal(result.operation, 'restore-image-reference');
-  assert.equal(result.target, 'card-image-reference');
+  assert.equal(result.recovered, 1);
   assert.equal(writtenState.cards['recover-me'].imageUrl, imageUrl);
   assert.equal(writtenState.cards['recover-me'].rank, 8);
   assert.equal(writtenState.cards['recover-me'].flavour, 9);
@@ -85,18 +88,20 @@ test('restore-image-reference changes only the target card imageUrl and never re
   assert.deepEqual(writtenState.sections, state.sections);
   assert.equal('entries' in writtenState, false, 'state write must not send entries');
   assert.equal(calls.some(call => call.href.includes('/api/catalogue-entry/')), false, 'must not touch entry endpoint');
+  assert.equal(calls.filter(call => call.method === 'PUT').length, 1, 'recovery must perform exactly one state write');
+  assert.equal(calls.find(call => call.method === 'PUT').headers.get('authorization'), `Bearer ${TOKEN}`);
 });
 
-test('restore-image-reference refuses to reconnect a missing KV image blob', async () => {
+test('recovery refuses to reconnect a missing KV image blob before any write', async () => {
   const calls = [];
   const routes = [
     { method:'GET', url:`${BASE}/api/catalogue-overrides`, response:jsonResponse({ version:3, cards:{ missing:{ rank:1 } }, sections:{}, entries:{} }) },
     { method:'HEAD', url:`${BASE}/api/catalogue-image/missing`, response:new Response(null, { status:404 }) }
   ];
 
-  await assert.rejects(() => publishRequestDocument({
-    operation:'restore-image-reference', key:'missing', imageUrl:'/api/catalogue-image/missing?v=recovery-20260917'
-  }, { fetchImpl:createFetchRouter(routes, calls), baseUrl:BASE, token:TOKEN, includeStaticCatalogue:false }), /image.*404/i);
+  await assert.rejects(() => recoverImageReferences(manifestFor(
+    'missing', '/api/catalogue-image/missing?v=recovery-20260917'
+  ), { fetchImpl:createFetchRouter(routes, calls), baseUrl:BASE, token:TOKEN, sleep:async () => {} }), /image blob.*404/i);
 
   assert.equal(calls.some(call => call.method === 'PUT'), false);
 });
