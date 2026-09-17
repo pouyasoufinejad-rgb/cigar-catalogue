@@ -1,0 +1,26 @@
+name: Diagnose live catalogue state
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-live-catalogue-state.yml'
+      - 'scripts/diagnose-live-catalogue-state.mjs'
+      - 'scripts/repair-live-placement-images.mjs'
+      - 'test/repair-live-placement-images.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dump live catalogue placement and image metadata
+        run: node scripts/diagnose-live-catalogue-state.mjs
+      - name: Dry run guarded placement and image repair
+        run: node scripts/repair-live-placement-images.mjs --dry-run-live
