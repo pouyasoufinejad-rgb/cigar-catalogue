@@ -86,6 +86,25 @@ test('single-pass structural overrides update every matching card without touchi
   assert.match(transformed, /data-key="three"><h3><span>Brand Three<\/span>Unchanged<\/h3>/);
 });
 
+test('structural archive overrides render archived state immediately and remove the active rank', () => {
+  const html = [
+    '<article class="card" data-key="archived-card" data-rank="16"><div class="rankflag"><span>No.</span><b>16</b></div></article>',
+    '<article class="card" data-key="active-card" data-rank="2"></article>'
+  ].join('');
+
+  const transformed = applyStructuralOverridesToHtml(html, {
+    'archived-card': { archived:true, archivedRank:22 }
+  });
+
+  const archived = transformed.match(/<article\b[^>]*data-key="archived-card"[^>]*>/i)?.[0] || '';
+  const active = transformed.match(/<article\b[^>]*data-key="active-card"[^>]*>/i)?.[0] || '';
+  assert.match(archived, /data-archived="1"/);
+  assert.match(archived, /data-archived-rank="22"/);
+  assert.doesNotMatch(archived, /data-rank=/);
+  assert.match(active, /data-rank="2"/);
+  assert.doesNotMatch(active, /data-archived=/);
+});
+
 test('structural overrides process a production-sized catalogue in one bounded pass', () => {
   const cardCount = 100;
   const filler = 'x'.repeat(80_000);
