@@ -60,7 +60,7 @@ function compactChangedRecommendationSubsections(state) {
     if (filtered.length === section.entryKeys.length) continue;
     section.entryKeys = filtered;
     filtered.forEach((key, index) => {
-      const patch = { catalogueType:'main', taster:false, subsection:section.id, rank:index + 1 };
+      const patch = { rank:index + 1 };
       if (state.cards?.[key]) state.cards[key] = patchRecord(state.cards[key], patch);
       if (state.entries?.[key]) state.entries[key] = patchRecord(state.entries[key], patch);
     });
@@ -107,7 +107,9 @@ export function assertRepair(state, verifiedImageKeys = VERIFIED_IMAGE_KEYS) {
     assert.equal(subsections.some(section => section?.entryKeys?.includes?.(key)), false, `${key} must not be a recommendation member.`);
     if (state.entries?.[key]) {
       assert.equal(state.entries[key].catalogueType, 'taster', `${key} entry must be a Taster.`);
+      assert.equal(state.entries[key].taster, true, `${key} entry must have taster=true.`);
       assert.equal(state.entries[key].rank, rank, `${key} entry must have Taster rank ${rank}.`);
+      assert.equal('subsection' in state.entries[key], false, `${key} entry must not retain a recommendation subsection.`);
     }
   }
   for (const section of subsections) {
