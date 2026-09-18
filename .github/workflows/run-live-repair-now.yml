@@ -1,0 +1,66 @@
+name: Run live catalogue repair now
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/run-live-repair-now.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Repair live KV
+        run: node scripts/repair-pre-sidebar-live-state.mjs
+      - name: Verify production fields and SmokingPipes links
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const TARGET='8ba8f65754b37d5973331e55be0e9e9d5d306cf5';
+          const {execFileSync}=require('child_process');
+          const git=(a)=>execFileSync('git',a,{encoding:'utf8',maxBuffer:64*1024*1024}).trim();
+          const state=await fetch('https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?hotfix_verify='+Date.now(),{cache:'no-store'}).then(r=>r.json());
+          const paths=git(['ls-tree','-r','--name-only',TARGET,'catalogue-requests']).split(/\n+/).filter(x=>x.endsWith('.json')).sort();
+          const ledger=new Map();
+          for(const p of paths){let q;try{q=JSON.parse(git(['show',TARGET+':'+p]))}catch{continue} if(!q.key)continue; const x=ledger.get(q.key)||{}; if(q.operation==='upsert-entry'&&q.entry)Object.assign(x,q.entry); ledger.set(q.key,x);}
+          const bad=[];
+          for(const [key,x] of ledger) for(const f of ['productionLines','practicalLines']){
+            if(!(f in x))continue;
+            const actual=(state.entries?.[key]?.[f]?.length?state.entries[key][f]:state.cards?.[key]?.[f]);
+            if(JSON.stringify(actual)!==JSON.stringify(x[f])) bad.push({key,field:f});
+          }
+          const required={
+            'liga-privada-no-9-coronets':'268781',
+            'undercrown-maduro-coronets':'260322',
+            'undercrown-10-corona-viva':'433680',
+            'deadwood-leather-rose-petite-corona':'451471',
+            'my-father-la-gran-oferta-lancero':'503188',
+            'my-father-no-4-lancero':'291517',
+            'foundation-charter-oak-maduro-rothschild':'333828',
+            'ashton-vsg-enchantment':'26572'
+          };
+          const missing=[];
+          for(const [key,id] of Object.entries(required)){
+            const links=[...(state.entries?.[key]?.retailerLinks||[]),...(state.cards?.[key]?.retailerLinks||[])];
+            if(!links.some(u=>u.includes('smokingpipes.com')&&u.includes(id))) missing.push(key);
+          }
+          console.log('FINAL_LIVE_VERIFY '+JSON.stringify({entries:Object.keys(state.entries||{}).length,cards:Object.keys(state.cards||{}).length,fieldMismatches:bad.length,missingSmokingPipes:missing,updatedAt:state.updatedAt}));
+          if(bad.length||missing.length) process.exit(1);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && hashFiles('pre-repair-live-state.json') != '' }}
+        with:
+          name: live-state-before-emergency-repair
+          path: pre-repair-live-state.json
+          retention-days: 30
