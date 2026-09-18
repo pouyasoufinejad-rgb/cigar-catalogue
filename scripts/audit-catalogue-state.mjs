@@ -152,7 +152,8 @@ export async function runAudit(options = {}) {
     const context = buildStructureContext(live, seed);
     const keys = findNonCompliantKeys(live, seed, context);
     console.log(`NON_COMPLIANT_KEYS count=${keys.length} ${json(keys)}`);
-    for (const key of keys) {
+    const detailLimit = Number(process.env.AUDIT_DETAIL_LIMIT || 3);
+    for (const key of keys.slice(0, detailLimit)) {
       const card = isRecord(liveCards[key]) ? liveCards[key] : undefined;
       const entry = isRecord(liveEntries[key]) ? liveEntries[key] : undefined;
       const base = isRecord(seedCards[key]) ? seedCards[key] : undefined;
