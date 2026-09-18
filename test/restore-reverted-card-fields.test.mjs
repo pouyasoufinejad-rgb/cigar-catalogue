@@ -99,3 +99,12 @@ test('categorises price restores and content-clearing restores separately', () =
   assert.equal(byField.noteHtml, 'clears', 'wiping live content must be flagged, not silently applied');
   assert.equal(byField.price, 'price');
 });
+
+test('never replays a ledger value over live text known to be newer', () => {
+  const islaSeed = { cards: { 'isla-del-sol-maduro-coronets': { noteHtml: 'Nearest taster: about A$32, currently unavailable.' } } };
+  const live = { cards: { 'isla-del-sol-maduro-coronets': { noteHtml: 'Nearest taster: about A$32, currently unavailable.' } }, entries: {} };
+  const ledger = new Map([['isla-del-sol-maduro-coronets', { noteHtml: 'Pinned in at A$37.39 from Cigarworld.' }]]);
+  const { restores, manualDivergences } = planRestore({ live, seed: islaSeed, ledger });
+  assert.equal(restores.length, 0, 'stale pricing must not be replayed over current availability text');
+  assert.equal(manualDivergences.length, 0);
+});

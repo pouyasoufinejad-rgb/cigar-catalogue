@@ -22,6 +22,15 @@ export const RESTORABLE_FIELDS = Object.freeze([
   'packageLabel', 'packagePrice', 'price', 'retailerLinks'
 ]);
 
+// public/index.html was re-baked on 2026-09-15, so its seed is a snapshot of that
+// day's state rather than an old baseline. For these fields the Sep 15 text is
+// genuinely newer than the request ledger: it reflects availability and pricing that
+// changed after the request was published, so replaying the request would regress it.
+export const NEWER_THAN_LEDGER = Object.freeze({
+  'isla-del-sol-maduro-coronets': ['noteHtml'],
+  'isla-del-sol-maduro-gran-corona': ['noteHtml']
+});
+
 const isRecord = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const clone = v => JSON.parse(JSON.stringify(v));
 const json = v => JSON.stringify(v);
@@ -96,6 +105,7 @@ export function planRestore({ live, seed, ledger, provenance = new Map() }) {
 
     for (const field of RESTORABLE_FIELDS) {
       if (!Object.prototype.hasOwnProperty.call(intent, field)) continue;
+      if ((NEWER_THAN_LEDGER[key] || []).includes(field)) continue;
       const target = intent[field];
       const liveValue = entry && Object.prototype.hasOwnProperty.call(entry, field)
         ? entry[field]
