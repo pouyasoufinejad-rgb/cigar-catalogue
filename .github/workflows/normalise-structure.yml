@@ -1,0 +1,37 @@
+name: Normalise catalogue structure
+
+# Runs the Production/Practical structure normaliser against live state on demand.
+# The normaliser is the authority on card structure, so this is the remedy whenever
+# something else has written structure and left it un-canonicalised.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-production-publisher
+  cancel-in-progress: false
+
+jobs:
+  normalise:
+    name: Normalise live Production and Practical structure
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run test suite
+        run: npm test
+      - name: Normalise live structure
+        run: node scripts/normalise-live-card-structure.mjs

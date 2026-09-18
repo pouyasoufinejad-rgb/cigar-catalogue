@@ -152,7 +152,10 @@ jobs:
             node scripts/repair-pre-sidebar-live-state.mjs
           fi
 
-          if [[ "${structure_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
+          # The repair writes Production/Practical structure, but the normaliser is the
+          # authority on it. If the repair runs without the normaliser following it, the
+          # catalogue is left holding un-canonicalised structure.
+          if [[ "${structure_changed}" == "true" ]] || [[ "${repair_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
             echo "Normalising Production and Practical structures across current live catalogue"
             node scripts/normalise-live-card-structure.mjs
           fi
