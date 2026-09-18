@@ -45,7 +45,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-3/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-4/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {

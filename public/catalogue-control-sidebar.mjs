@@ -5,6 +5,86 @@ const DESKTOP_QUERY = '(min-width: 1660px)';
 const BRAND_LINE_QUERY_PARAM = 'brandLine';
 const placements = new WeakMap();
 
+// Sidebar preferences are per-viewer chrome: which brand chips are hidden, what the
+// catalogue jump buttons are called, and whether the brand list is expanded. They live
+// in browser storage on purpose. Catalogue state is the product data and is never
+// touched from here, so hiding a brand chip or renaming a jump button cannot alter,
+// reorder or drop a single catalogue record.
+export const SIDEBAR_PREFS_KEY = 'catalogue-sidebar-preferences-v1';
+
+function storage(view = globalThis.window) {
+  try {
+    return view?.localStorage || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function readSidebarPreferences(view = globalThis.window) {
+  const empty = { hiddenBrandLines: [], jumpLabels: {}, brandsExpanded: false };
+  try {
+    const raw = storage(view)?.getItem(SIDEBAR_PREFS_KEY);
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return empty;
+    return {
+      hiddenBrandLines: Array.isArray(parsed.hiddenBrandLines)
+        ? parsed.hiddenBrandLines.map(id => String(id || '').trim()).filter(Boolean)
+        : [],
+      jumpLabels: parsed.jumpLabels && typeof parsed.jumpLabels === 'object' ? { ...parsed.jumpLabels } : {},
+      brandsExpanded: parsed.brandsExpanded === true
+    };
+  } catch (_) {
+    return empty;
+  }
+}
+
+export function writeSidebarPreferences(preferences, view = globalThis.window) {
+  try {
+    storage(view)?.setItem(SIDEBAR_PREFS_KEY, JSON.stringify(preferences));
+  } catch (_) {}
+  return preferences;
+}
+
+export function hideBrandLine(id, view = globalThis.window) {
+  const clean = String(id || '').trim();
+  const preferences = readSidebarPreferences(view);
+  if (!clean || clean === 'all' || preferences.hiddenBrandLines.includes(clean)) return preferences;
+  preferences.hiddenBrandLines = [...preferences.hiddenBrandLines, clean];
+  return writeSidebarPreferences(preferences, view);
+}
+
+export function restoreHiddenBrandLines(view = globalThis.window) {
+  const preferences = readSidebarPreferences(view);
+  preferences.hiddenBrandLines = [];
+  return writeSidebarPreferences(preferences, view);
+}
+
+export function setBrandsExpanded(expanded, view = globalThis.window) {
+  const preferences = readSidebarPreferences(view);
+  preferences.brandsExpanded = expanded === true;
+  return writeSidebarPreferences(preferences, view);
+}
+
+export function renameCatalogueJump(id, label, view = globalThis.window) {
+  const key = String(id || '').trim();
+  const preferences = readSidebarPreferences(view);
+  if (!key) return preferences;
+  const clean = cleanText(label);
+  if (clean) preferences.jumpLabels = { ...preferences.jumpLabels, [key]: clean };
+  else {
+    const next = { ...preferences.jumpLabels };
+    delete next[key];
+    preferences.jumpLabels = next;
+  }
+  return writeSidebarPreferences(preferences, view);
+}
+
+export function catalogueJumpLabel(jump, view = globalThis.window) {
+  const custom = cleanText(readSidebarPreferences(view).jumpLabels?.[jump?.id]);
+  return custom || jump?.label || '';
+}
+
 export const CATALOGUE_JUMPS = Object.freeze([
   Object.freeze({ id:'coronets-cigarillos', label:'Coronets & Cigarillos' }),
   Object.freeze({ id:'petit-panatelas', label:'Petit Panatelas, Petit Coronas & Petit Robustos' }),
@@ -191,14 +271,57 @@ function initialBrandLineId(root, view) {
 }
 
 function renderBrandLineButtons(root, container, activeId, view) {
-  const descriptors = discoverBrandLineFilters(root);
+  const hidden = new Set(readSidebarPreferences(view).hiddenBrandLines);
+  const all = discoverBrandLineFilters(root);
+  const descriptors = all.filter(descriptor => !hidden.has(descriptor.id));
   container.replaceChildren();
   container.appendChild(createBrandLineButton(root, { id:'all', label:'All Brands / Lines', logo:'' }));
-  for (const descriptor of descriptors) container.appendChild(createBrandLineButton(root, descriptor));
+
+  for (const descriptor of descriptors) {
+    const row = root.createElement('div');
+    row.className = 'catalogue-sidebar-choice-row';
+    row.appendChild(createBrandLineButton(root, descriptor));
+
+    const remove = root.createElement('button');
+    remove.type = 'button';
+    remove.className = 'catalogue-sidebar-remove';
+    remove.dataset.brandLineRemove = descriptor.id;
+    remove.title = `Hide ${descriptor.label} from this list`;
+    remove.setAttribute('aria-label', `Hide ${descriptor.label} from this list`);
+    remove.textContent = '×';
+    remove.addEventListener('click', event => {
+      event.stopPropagation();
+      hideBrandLine(descriptor.id, view);
+      // Hiding a chip must never leave the catalogue filtered by it.
+      if (activeIdOf(root) === descriptor.id) applyBrandLineFilter(root, 'all', view);
+      renderBrandLineButtons(root, container, 'all', view);
+    });
+    row.appendChild(remove);
+    container.appendChild(row);
+  }
+
+  const hiddenCount = all.filter(descriptor => hidden.has(descriptor.id)).length;
+  if (hiddenCount) {
+    const restore = root.createElement('button');
+    restore.type = 'button';
+    restore.className = 'catalogue-sidebar-restore';
+    restore.dataset.brandLineRestore = '';
+    restore.textContent = `Restore hidden (${hiddenCount})`;
+    restore.addEventListener('click', () => {
+      restoreHiddenBrandLines(view);
+      renderBrandLineButtons(root, container, activeIdOf(root), view);
+    });
+    container.appendChild(restore);
+  }
+
   container.querySelectorAll('[data-brand-line-filter]').forEach(button => {
     button.addEventListener('click', () => applyBrandLineFilter(root, button.dataset.brandLineFilter, view));
   });
   applyBrandLineFilter(root, descriptors.some(item => item.id === activeId) || activeId === 'all' ? activeId : 'all', view);
+}
+
+function activeIdOf(root) {
+  return root.querySelector?.('[data-brand-line-filter][aria-pressed="true"]')?.dataset.brandLineFilter || 'all';
 }
 
 function ensureExtraControls(root = document, view = globalThis.window) {
@@ -217,27 +340,64 @@ function ensureExtraControls(root = document, view = globalThis.window) {
   const navButtons = root.createElement('div');
   navButtons.className = 'catalogue-sidebar-list';
   for (const jump of CATALOGUE_JUMPS) {
+    const row = root.createElement('div');
+    row.className = 'catalogue-sidebar-choice-row';
+
     const button = root.createElement('button');
     button.type = 'button';
     button.className = 'catalogue-sidebar-choice';
     button.dataset.catalogueJump = jump.id;
-    button.textContent = jump.label;
+    button.textContent = catalogueJumpLabel(jump, view);
     button.addEventListener('click', () => {
       const target = root.querySelector?.(`[data-recommendation-subsection="${jump.id}"]`) || root.getElementById?.(`recommendation-${jump.id}`);
       target?.scrollIntoView?.({ behavior:'smooth', block:'start' });
     });
-    navButtons.appendChild(button);
+
+    const rename = root.createElement('button');
+    rename.type = 'button';
+    rename.className = 'catalogue-sidebar-rename';
+    rename.dataset.catalogueJumpRename = jump.id;
+    rename.title = `Rename the ${jump.label} button`;
+    rename.setAttribute('aria-label', `Rename the ${jump.label} button`);
+    rename.textContent = '✎';
+    rename.addEventListener('click', event => {
+      event.stopPropagation();
+      const current = catalogueJumpLabel(jump, view);
+      const next = typeof view?.prompt === 'function' ? view.prompt('Button name', current) : null;
+      if (next === null || next === undefined) return;
+      renameCatalogueJump(jump.id, next, view);
+      button.textContent = catalogueJumpLabel(jump, view);
+    });
+
+    row.append(button, rename);
+    navButtons.appendChild(row);
   }
   navSection.append(navTitle, navButtons);
 
   const brandSection = root.createElement('section');
   brandSection.className = 'catalogue-sidebar-section';
-  const brandTitle = root.createElement('div');
-  brandTitle.className = 'catalogue-sidebar-heading';
-  brandTitle.textContent = 'BRANDS & LINES';
+  const brandTitle = root.createElement('button');
+  brandTitle.type = 'button';
+  brandTitle.className = 'catalogue-sidebar-heading catalogue-sidebar-toggle';
+  brandTitle.dataset.brandLineToggle = '';
   const brandButtons = root.createElement('div');
   brandButtons.className = 'catalogue-sidebar-list';
   brandButtons.dataset.brandLineOptions = '';
+
+  // Collapsed by default; the viewer's own choice is remembered per browser.
+  let expanded = readSidebarPreferences(view).brandsExpanded === true;
+  const applyExpanded = () => {
+    brandTitle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    brandTitle.textContent = `${expanded ? '▾' : '▸'} BRANDS & LINES`;
+    brandButtons.hidden = !expanded;
+  };
+  applyExpanded();
+  brandTitle.addEventListener('click', () => {
+    expanded = !expanded;
+    setBrandsExpanded(expanded, view);
+    applyExpanded();
+  });
+
   brandSection.append(brandTitle, brandButtons);
   extra.append(navSection, brandSection);
 
@@ -289,6 +449,48 @@ function ensureStyles(root = document) {
   style.id = STYLE_ID;
   style.textContent = `
 .brand-line-filter-hidden{display:none!important}
+/* The per-card benchmark/actual/size/ratio strip is retired. The Value score it fed
+   is still computed and still drives the medal and laurel, only the strip is gone. */
+.value-calc{display:none!important}
+.catalogue-sidebar-choice-row{display:flex;align-items:stretch;gap:4px}
+.catalogue-sidebar-choice-row>.catalogue-sidebar-choice{flex:1 1 auto;min-width:0}
+.catalogue-sidebar-remove,.catalogue-sidebar-rename{
+  flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.18);
+  background:transparent;
+  color:inherit;
+  border-radius:6px;
+  cursor:pointer;
+  padding:0 8px;
+  font-size:13px;
+  line-height:1;
+  opacity:.45;
+}
+.catalogue-sidebar-remove:hover,.catalogue-sidebar-rename:hover{opacity:1}
+.catalogue-sidebar-toggle{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:0;
+  padding:0;
+  cursor:pointer;
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+}
+.catalogue-sidebar-restore{
+  align-self:flex-start;
+  background:transparent;
+  border:1px dashed rgba(255,255,255,.25);
+  color:inherit;
+  border-radius:6px;
+  cursor:pointer;
+  padding:4px 8px;
+  font-size:12px;
+  opacity:.7;
+}
+.catalogue-sidebar-restore:hover{opacity:1}
 #cards [data-recommendation-subsection]{scroll-margin-top:24px}
 #${EXTRA_ID}{
   display:flex;
