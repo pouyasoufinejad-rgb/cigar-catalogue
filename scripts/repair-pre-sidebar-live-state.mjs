@@ -289,15 +289,20 @@ function summary(changes) {
     keys.add(change.key);
     byField[change.field] = (byField[change.field] || 0) + 1;
   }
-  const retailerAdds = changes
-    .filter(change => change.field.endsWith('retailerLinks'))
-    .flatMap(change => {
-      const before = new Set(stringList(change.before));
-      return stringList(change.after)
-        .filter(url => !before.has(url))
-        .map(url => ({ key:change.key, url }));
-    });
-  return { keys:[...keys].sort(), byField, retailerAdds };
+  const retailerChanges = changes.filter(change => change.field.endsWith('retailerLinks'));
+  const retailerAdds = retailerChanges.flatMap(change => {
+    const before = new Set(stringList(change.before));
+    return stringList(change.after)
+      .filter(url => !before.has(url))
+      .map(url => ({ key:change.key, url }));
+  });
+  const retailerRemovals = retailerChanges.flatMap(change => {
+    const after = new Set(stringList(change.after));
+    return stringList(change.before)
+      .filter(url => !after.has(url))
+      .map(url => ({ key:change.key, url }));
+  });
+  return { keys:[...keys].sort(), byField, retailerAdds, retailerRemovals };
 }
 
 export async function runPreSidebarRepair(options = {}) {
@@ -319,7 +324,8 @@ export async function runPreSidebarRepair(options = {}) {
     changedKeys:info.keys.length,
     changes:changes.length,
     byField:info.byField,
-    retailerAdds:info.retailerAdds
+    retailerAdds:info.retailerAdds,
+    retailerRemovals:info.retailerRemovals
   }));
 
   if (dryRun) return { state, changes, summary:info, dryRun:true };
