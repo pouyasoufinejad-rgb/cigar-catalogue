@@ -15,6 +15,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Verify production application matches pre-sidebar target
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6; do
+            curl -fsSL "https://cigar-catalogue.psncodex.workers.dev/catalogue-control-sidebar.mjs?rollback_verify=$attempt" -o /tmp/live-sidebar.mjs
+            git show 8ba8f65754b37d5973331e55be0e9e9d5d306cf5:public/catalogue-control-sidebar.mjs > /tmp/target-sidebar.mjs
+            if cmp -s /tmp/live-sidebar.mjs /tmp/target-sidebar.mjs; then
+              echo "PRODUCTION_PRE_SIDEBAR_MATCH true"
+              sha256sum /tmp/live-sidebar.mjs
+              exit 0
+            fi
+            echo "attempt $attempt: production sidebar not yet target"
+            sleep 5
+          done
+          echo "PRODUCTION_PRE_SIDEBAR_MATCH false"
+          diff -u /tmp/target-sidebar.mjs /tmp/live-sidebar.mjs | head -n 120 || true
+          exit 1
       - name: Capture current live catalogue state
         shell: bash
         run: |
