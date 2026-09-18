@@ -40,7 +40,7 @@ test('deep recovery diagnostic for exact pre-sidebar state', async () => {
       if(/smokingpipes|retailerLinks|productionLines|practicalLines|catalogue-overrides/i.test(body)){
         found={p,row,smokingpipes:/smokingpipes/i.test(body),bytes:Buffer.byteLength(body)};
         if(found.smokingpipes) {
-          const urls=body.split(/[\\s"'<>]+/).filter(u=>/^https?:\\/\\//i.test(u)&&/smokingpipes/i.test(u));
+          const urls=body.split('"').filter(u=>u.includes('smokingpipes.com'));
           found.urls=[...new Set(urls)].slice(0,30);
         }
         break;
