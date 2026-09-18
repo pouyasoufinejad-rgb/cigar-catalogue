@@ -15,6 +15,15 @@ export const CATALOGUE_JUMPS = Object.freeze([
 // Example: logo:'/assets/brand-logos/davidoff.webp'
 export const BRAND_LINE_CONFIG = Object.freeze([
   Object.freeze({ id:'davidoff', label:'Davidoff', kind:'brand', logo:'', brands:['Davidoff'] }),
+  Object.freeze({ id:'cao', label:'CAO', kind:'brand', logo:'', brands:['CAO'], keyPrefixes:['cao-'] }),
+  Object.freeze({
+    id:'drew-estate',
+    label:'Drew Estate',
+    kind:'brand',
+    logo:'',
+    brands:['Drew Estate', 'Java by Drew Estate'],
+    keyPrefixes:['kfc-', 'java-', 'tabak-', 'acid-', 'isla-del-sol-', 'liga-', 'undercrown-', 'blackened-']
+  }),
   Object.freeze({ id:'liga-privada', label:'Liga Privada', kind:'line', logo:'', brands:['Liga Privada'], keyPrefixes:['liga-'] }),
   Object.freeze({ id:'undercrown', label:'Undercrown', kind:'line', logo:'', brands:['Undercrown'], keyIncludes:['undercrown'] })
 ]);
@@ -59,7 +68,12 @@ function slugify(value) {
 }
 
 function cardBrand(card) {
-  return cleanText(card?.dataset?.brand || card?.querySelector?.('h3 small')?.textContent || '');
+  return cleanText(
+    card?.dataset?.brand
+    || card?.querySelector?.('h3 span')?.textContent
+    || card?.querySelector?.('h3 small')?.textContent
+    || ''
+  );
 }
 
 function cardKey(card) {
