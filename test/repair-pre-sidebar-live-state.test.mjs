@@ -113,5 +113,35 @@ test('repair uses seed data only when live/request data is missing and preserves
   const { state } = buildPreSidebarRepair(current, seed, new Map());
   assert.deepEqual(state.cards.static.retailerLinks, ['https://seed.example/item']);
   assert.deepEqual(state.cards.live.retailerLinks, ['https://live.example/item']);
-  assert.deepEqual(state.cards.static.productionLines, ['Unflavoured','Machine-made','Wrapper: Seed','Binder: Seed','Filler: Seed']);
+  // Cards carry the rendered markup; only dynamic entries carry the line arrays.
+  assert.equal(
+    state.cards.static.productionHtml,
+    ['Unflavoured','Machine-made','Wrapper: Seed','Binder: Seed','Filler: Seed']
+      .map(line => `<span class="artmeta-line">${line}</span>`).join('')
+  );
+  assert.equal(state.cards.static.productionLines, undefined, 'cards must not carry line arrays');
+});
+
+test('drops stale card line arrays that would permanently fail structure compliance', () => {
+  const current = {
+    cards: {
+      stale: {
+        rank: 1,
+        productionLines: ['Handmade', 'Wrapper: OLD'],
+        practicalLines: ['Two Halves', 'Cut', 'Fragile', 'Full cigar: 7″ × 40 Cigar'],
+        practicalHtml: '<span class="artmeta-line">Two Halves</span>'
+      }
+    },
+    entries: {},
+    sections: {}
+  };
+  const ledger = new Map([['stale', {
+    productionLines: ['Handmade', 'Wrapper: New'],
+    practicalLines: ['Two Halves', 'Cut', 'Fragile', 'Full cigar: 7″ × 40 Lancero']
+  }]]);
+  const { state } = buildPreSidebarRepair(current, { cards:{}, entries:{}, sections:{} }, ledger);
+  assert.equal(state.cards.stale.productionLines, undefined);
+  assert.equal(state.cards.stale.practicalLines, undefined);
+  assert.match(state.cards.stale.productionHtml, /Wrapper: New/);
+  assert.equal(state.cards.stale.rank, 1, 'unrelated card fields must survive');
 });

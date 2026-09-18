@@ -29,7 +29,7 @@ function isRecord(value) {
 }
 
 function clone(value) {
-  return JSON.parse(JSON.stringify(value));
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
 function own(object, key) {
@@ -221,18 +221,27 @@ export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
       if (!desiredRetailers.includes(url)) desiredRetailers.push(url);
     }
 
+    // Cards carry the rendered *Html; only dynamic entries carry *Lines. The publisher
+    // enforces this split, so a card-level *Lines array is never refreshed once written
+    // and goes stale against its own *Html. The structure normaliser reads *Lines first,
+    // so a stale array makes a card permanently non-compliant and the publisher never
+    // converges. Write the markup here and drop any array a previous run left behind.
     const nextCard = { ...currentCard };
     if (desiredProduction.length) {
-      fieldChange(changes, key, 'card.productionLines', nextCard.productionLines || [], desiredProduction);
       fieldChange(changes, key, 'card.productionHtml', nextCard.productionHtml || '', linesToMarkup(desiredProduction));
-      nextCard.productionLines = desiredProduction;
       nextCard.productionHtml = linesToMarkup(desiredProduction);
+      if (own(nextCard, 'productionLines')) {
+        fieldChange(changes, key, 'card.productionLines', nextCard.productionLines, undefined);
+        delete nextCard.productionLines;
+      }
     }
     if (desiredPractical.length) {
-      fieldChange(changes, key, 'card.practicalLines', nextCard.practicalLines || [], desiredPractical);
       fieldChange(changes, key, 'card.practicalHtml', nextCard.practicalHtml || '', linesToMarkup(desiredPractical));
-      nextCard.practicalLines = desiredPractical;
       nextCard.practicalHtml = linesToMarkup(desiredPractical);
+      if (own(nextCard, 'practicalLines')) {
+        fieldChange(changes, key, 'card.practicalLines', nextCard.practicalLines, undefined);
+        delete nextCard.practicalLines;
+      }
     }
     if (desiredRetailers.length || own(intent, 'retailerLinks')) {
       fieldChange(changes, key, 'card.retailerLinks', nextCard.retailerLinks || [], desiredRetailers);
