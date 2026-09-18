@@ -1,0 +1,30 @@
+name: Verify retailer and Isla live deploy
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-retailer-isla-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://cigar-catalogue.psncodex.workers.dev'
+          curl -fsSL "$base/catalogue-convenience.mjs?verify=$GITHUB_RUN_ID" -o /tmp/convenience.mjs
+          curl -fsSL "$base/catalogue-recommendation-subsections.mjs?verify=$GITHUB_RUN_ID" -o /tmp/subsections.mjs
+          curl -fsSL "$base/catalogue-stock-client.mjs?verify=$GITHUB_RUN_ID" -o /tmp/stock.mjs
+          if grep -Fq 'article.card.convenience-compact .retailer-matrix,' /tmp/convenience.mjs; then
+            echo 'Retailer matrix is still hidden in compact mode'
+            exit 1
+          fi
+          grep -Fq "catalogueType(card, target) !== 'main') continue;" /tmp/subsections.mjs
+          grep -Fq "!card.closest?.('[data-recommendation-subsection]')" /tmp/stock.mjs
+          echo 'LIVE_DEPLOY_VERIFY retailer_matrix_visible=1 unavailable_subsection_preserved=1 stock_relocation_guard=1'
