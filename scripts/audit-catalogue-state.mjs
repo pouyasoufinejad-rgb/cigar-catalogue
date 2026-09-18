@@ -6,6 +6,13 @@ import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 import { parseCatalogueSeed } from './cleanup-live-card-copy.mjs';
+import {
+  buildStructureContext,
+  buildStructurePatch,
+  findNonCompliantKeys,
+  normaliseProductionLines,
+  normalisePracticalLines
+} from './normalise-live-card-structure.mjs';
 
 export const PRE_SIDEBAR_COMMIT = '8ba8f65754b37d5973331e55be0e9e9d5d306cf5';
 
@@ -140,6 +147,28 @@ export async function runAudit(options = {}) {
   const seedCards = isRecord(seed.cards) ? seed.cards : {};
   const rows = await loadTargetRequests(repoRoot);
   const ledger = replayLedger(rows);
+
+  if ((options.mode ?? process.env.AUDIT_MODE ?? '') === 'noncompliant') {
+    const context = buildStructureContext(live, seed);
+    const keys = findNonCompliantKeys(live, seed, context);
+    console.log(`NON_COMPLIANT_KEYS count=${keys.length} ${json(keys)}`);
+    for (const key of keys) {
+      const card = isRecord(liveCards[key]) ? liveCards[key] : undefined;
+      const entry = isRecord(liveEntries[key]) ? liveEntries[key] : undefined;
+      const base = isRecord(seedCards[key]) ? seedCards[key] : undefined;
+      const merged = { ...(base || {}), ...(entry || {}), ...(card || {}), key };
+      console.log(`--- ${key} ---`);
+      console.log(`  card.practicalLines  ${json(card?.practicalLines)}`);
+      console.log(`  entry.practicalLines ${json(entry?.practicalLines)}`);
+      console.log(`  card.practicalHtml   ${json(card?.practicalHtml)}`.slice(0, 500));
+      console.log(`  WANT practical       ${json(normalisePracticalLines(merged, context))}`);
+      console.log(`  card.productionLines ${json(card?.productionLines)}`);
+      console.log(`  WANT production      ${json(normaliseProductionLines(merged, context))}`);
+      console.log(`  PATCH                ${json(buildStructurePatch(card, entry, base, context, key))}`.slice(0, 700));
+    }
+    console.log('AUDIT_COMPLETE_READ_ONLY');
+    return { live, nonCompliant: keys };
+  }
 
   if (keysToInspect.length) {
     inspectKeys(live, seedCards, ledger, keysToInspect);

@@ -10,6 +10,14 @@ on:
         description: 'Optional comma-separated catalogue keys to inspect in full instead of the summary report'
         required: false
         type: string
+      mode:
+        description: 'summary (default) or noncompliant to diagnose the structure normaliser'
+        required: false
+        default: 'summary'
+        type: choice
+        options:
+          - summary
+          - noncompliant
 
 permissions:
   contents: read
@@ -30,4 +38,5 @@ jobs:
       - name: Run read-only audit
         env:
           AUDIT_KEYS: ${{ inputs.keys }}
+          AUDIT_MODE: ${{ inputs.mode }}
         run: node scripts/audit-catalogue-state.mjs
