@@ -15,3 +15,5 @@ test('read-only live dry run identifies the pre-sidebar data repair', async () =
   assert.ok(result.summary.keys.length > 0);
   assert.ok(result.changes.length > 0);
 });
+
+// post-deploy verification trigger
