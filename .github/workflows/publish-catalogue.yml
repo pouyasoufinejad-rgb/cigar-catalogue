@@ -10,6 +10,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
+      - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -24,6 +25,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
+      - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
       - 'src/**'
       - 'wrangler.jsonc'
@@ -84,6 +86,7 @@ jobs:
           files=()
           cleanup_changed=false
           structure_changed=false
+          repair_changed=false
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             if [[ ! "${REQUEST_PATH}" =~ ^catalogue-requests/[A-Za-z0-9._-]+\.json$ ]]; then
               echo "::error::request_path must be a JSON file directly under catalogue-requests/."
@@ -103,6 +106,9 @@ jobs:
               if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
               fi
+              if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/repair-pre-sidebar-live-state.mjs' | grep -q .; then
+                repair_changed=true
+              fi
             else
               mapfile -t files < <(git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-card-copy.mjs' | grep -q .; then
@@ -111,11 +117,14 @@ jobs:
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
               fi
+              if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/repair-pre-sidebar-live-state.mjs' | grep -q .; then
+                repair_changed=true
+              fi
             fi
           fi
 
-          if (( ${#files[@]} == 0 )) && [[ "${cleanup_changed}" != "true" ]] && [[ "${structure_changed}" != "true" ]]; then
-            echo "No catalogue request JSON files or live normaliser changed; nothing to publish."
+          if (( ${#files[@]} == 0 )) && [[ "${cleanup_changed}" != "true" ]] && [[ "${structure_changed}" != "true" ]] && [[ "${repair_changed}" != "true" ]]; then
+            echo "No catalogue request JSON files or live repair/normaliser changed; nothing to publish."
             exit 0
           fi
 
@@ -138,7 +147,20 @@ jobs:
             node scripts/cleanup-live-card-copy.mjs
           fi
 
+          if [[ "${repair_changed}" == "true" ]]; then
+            echo "Reconstructing pre-sidebar Production, Practical and retailer-link state"
+            node scripts/repair-pre-sidebar-live-state.mjs
+          fi
+
           if [[ "${structure_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
             echo "Normalising Production and Practical structures across current live catalogue"
             node scripts/normalise-live-card-structure.mjs
           fi
+
+      - name: Upload pre-repair live-state backup
+        if: ${{ always() && hashFiles('pre-repair-live-state.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-sidebar-repair-live-state-${{ github.run_id }}
+          path: pre-repair-live-state.json
+          retention-days: 30
