@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-18-tabernacle-lancero-identity",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "brand": "Foundation",
+    "title": "The Tabernacle CT Broadleaf Lancero",
+    "length": 3.5,
+    "ring": 40
+  },
+  "note": "Restore the Tabernacle card identity. The card body, retailer links and the 2026-09-12 retailer request all describe the 7 x 40 Broadleaf Lancero, but the heading still rendered the static seed's Corona name because no brand or title override survived in KV, and the seed's Corona dimensions (5.25 x 46) still drove the visual footprint and the vitola name in the Practical block. Set the half-session dimensions so the normaliser derives the 7 x 40 full cigar and two 3.5 x 40 sessions, and so the vitola resolves to Lancero instead of a generic Cigar. Value stays automatically derived. Preserve every unrelated field."
+}
