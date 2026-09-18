@@ -9,6 +9,7 @@ test('read-only live dry run identifies the pre-sidebar data repair', async () =
     changes:result.changes.length,
     byField:result.summary.byField,
     retailerAdds:result.summary.retailerAdds,
+    retailerRemovals:result.summary.retailerRemovals,
     changedKeyList:result.summary.keys
   }));
   assert.ok(result.summary.keys.length > 0);
