@@ -63,6 +63,59 @@ jobs:
           console.log('RENDER_HAS_ARTURITO',/Arturito/i.test(h));
           console.log('RENDER_HAS_ACID_RED',/Krush Red Cameroon/i.test(h));
           NODE
+      - name: Compare live state to pre-sidebar request ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/target-requests
+          mkdir -p /tmp/target-requests
+          git archive 8ba8f65754b37d5973331e55be0e9e9d5d306cf5 catalogue-requests | tar -x -C /tmp/target-requests
+          cp live-state.json /tmp/live-state.json
+          node - <<'NODE'
+          const fs=require('fs'), path=require('path');
+          const root='/tmp/target-requests/catalogue-requests';
+          const state=JSON.parse(fs.readFileSync('/tmp/live-state.json','utf8'));
+          const files=fs.readdirSync(root).filter(x=>x.endsWith('.json')).sort();
+          const ledger=new Map();
+          for(const name of files){
+            const r=JSON.parse(fs.readFileSync(path.join(root,name),'utf8'));
+            if(!r.key) continue;
+            const cur=ledger.get(r.key)||{entry:{},ops:[]};
+            cur.ops.push({name,operation:r.operation});
+            if(r.operation==='upsert-entry') Object.assign(cur.entry,r.entry||{});
+            else if(r.operation==='archive-entry') Object.assign(cur.entry,{archived:true});
+            else if(r.operation==='unarchive-entry') Object.assign(cur.entry,{archived:false});
+            ledger.set(r.key,cur);
+          }
+          const ENTRY_FIELDS=new Set(['brand','title','eyebrow','packagePrice','packageLabel','price','length','ring','country','strength','quality','size','risk','stock','stockPin','rank','taster','archived','archivedAt','experienceTags','summaryHtml','noteHtml','productionLines','practicalLines','smokeTime','retailerLinks','imageUrl','imageSourceKey','imageVersion','priceChecked','stockChecked']);
+          const CARD_ONLY=new Set(['catalogueType','subsection','flavour','laurel','archivedRank','imageScale','imageX','imageY','metaY','productionHtml','practicalHtml']);
+          const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+          const mismatches=[];
+          for(const [key,row] of ledger){
+            const e=state.entries?.[key]||null, c=state.cards?.[key]||{};
+            if(!e && !state.cards?.[key]) { mismatches.push({key,field:'__missing__',expected:'present',actual:'absent'}); continue; }
+            for(const [field,expected] of Object.entries(row.entry)){
+              if(field==='value') continue;
+              let actual, source;
+              if(field==='subsection'){
+                const sec=(state.sections?.recommendationSubsections||[]).find(s=>Array.isArray(s.entryKeys)&&s.entryKeys.includes(key));
+                actual=c.subsection||sec?.id||'';
+                source='card/sections';
+              } else if(CARD_ONLY.has(field)){
+                actual=c[field]; source='card';
+              } else if(ENTRY_FIELDS.has(field)){
+                actual=e?.[field]; source='entry';
+              } else {
+                continue;
+              }
+              if(!eq(actual,expected)) mismatches.push({key,field,source,expected,actual,lastOp:row.ops.at(-1)});
+            }
+          }
+          console.log('REQUEST_LEDGER_FILES',files.length);
+          console.log('REQUEST_LEDGER_KEYS',ledger.size);
+          console.log('REQUEST_LEDGER_MISMATCH_COUNT',mismatches.length);
+          console.log('REQUEST_LEDGER_MISMATCHES',JSON.stringify(mismatches.slice(0,250)));
+          NODE
       - name: Find historical state/snapshot files across all refs
         shell: bash
         run: |
