@@ -1,0 +1,26 @@
+name: Audit catalogue state
+
+# Read-only diagnostic. Reads the live catalogue API and compares it against the
+# git-reconstructible pre-sidebar baseline. Never writes and needs no secrets.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Compare live state against pre-sidebar baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run read-only audit
+        run: node scripts/audit-catalogue-state.mjs
