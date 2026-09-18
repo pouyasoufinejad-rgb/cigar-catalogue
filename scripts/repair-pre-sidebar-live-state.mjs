@@ -50,7 +50,21 @@ function git(repoRoot, args) {
   }).trim();
 }
 
+function ensureTargetCommit(repoRoot) {
+  try {
+    git(repoRoot, ['cat-file', '-e', `${PRE_SIDEBAR_TARGET}^{commit}`]);
+    return;
+  } catch (_) {}
+  try {
+    const shallow = git(repoRoot, ['rev-parse', '--is-shallow-repository']);
+    if (shallow === 'true') git(repoRoot, ['fetch', '--unshallow', 'origin']);
+    else git(repoRoot, ['fetch', 'origin', PRE_SIDEBAR_TARGET]);
+  } catch (_) {}
+  git(repoRoot, ['cat-file', '-e', `${PRE_SIDEBAR_TARGET}^{commit}`]);
+}
+
 async function listRequestFiles(repoRoot) {
+  ensureTargetCommit(repoRoot);
   const dir = resolve(repoRoot, 'catalogue-requests');
   const names = (await readdir(dir)).filter(name => name.endsWith('.json'));
   const rows = [];
