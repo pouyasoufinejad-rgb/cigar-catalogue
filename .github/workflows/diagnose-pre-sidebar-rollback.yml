@@ -29,6 +29,17 @@ jobs:
           for (const f of fields) missing[f]=Object.values(entries).filter(e=>e?.[f]===undefined || e?.[f]===null || (Array.isArray(e?.[f])&&e[f].length===0) || (typeof e?.[f]==='string'&&!e[f].trim())).length;
           console.log('LIVE_COUNTS', JSON.stringify({entries:Object.keys(entries).length,cards:Object.keys(cards).length,sections:Object.keys(sections).length,sectionKeys:Object.keys(sections)}));
           console.log('ENTRY_MISSING_COUNTS', JSON.stringify(missing));
+          const entryFieldCounts={}; const cardFieldCounts={}; const extraByEntry={};
+          for (const [key,e] of Object.entries(entries)) {
+            for (const k of Object.keys(e||{})) entryFieldCounts[k]=(entryFieldCounts[k]||0)+1;
+            const c=cards[key]||{};
+            for (const k of Object.keys(c)) cardFieldCounts[k]=(cardFieldCounts[k]||0)+1;
+            extraByEntry[key]=Object.keys(c).filter(k=>!(k in (e||{}))).sort();
+          }
+          console.log('ENTRY_FIELD_COUNTS', JSON.stringify(entryFieldCounts));
+          console.log('DYNAMIC_CARD_FIELD_COUNTS', JSON.stringify(cardFieldCounts));
+          console.log('CARD_FIELDS_ABSENT_FROM_ENTRIES', JSON.stringify(extraByEntry));
+          console.log('SUBSECTIONS', JSON.stringify((sections.recommendationSubsections||[]).map(x=>({id:x.id,title:x.title,entryKeys:x.entryKeys}))));
           console.log('LIVE_UPDATED_AT', s.updatedAt||'');
           NODE
       - name: Find historical state/snapshot files across all refs
