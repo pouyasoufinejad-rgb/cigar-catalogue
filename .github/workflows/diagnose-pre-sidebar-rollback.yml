@@ -1,0 +1,48 @@
+name: Diagnose exact pre-sidebar rollback source
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-pre-sidebar-rollback.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Capture current live catalogue state
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?diag=exact-pre-sidebar-rollback' -o live-state.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=JSON.parse(fs.readFileSync('live-state.json','utf8'));
+          const entries=s.entries||{}, cards=s.cards||{}, sections=s.sections||{};
+          const fields=['brand','title','eyebrow','packagePrice','packageLabel','price','country','length','ring','strength','quality','risk','stock','experienceTags','summaryHtml','noteHtml','productionLines','practicalLines','smokeTime','retailerLinks','priceChecked','stockChecked'];
+          const missing={};
+          for (const f of fields) missing[f]=Object.values(entries).filter(e=>e?.[f]===undefined || e?.[f]===null || (Array.isArray(e?.[f])&&e[f].length===0) || (typeof e?.[f]==='string'&&!e[f].trim())).length;
+          console.log('LIVE_COUNTS', JSON.stringify({entries:Object.keys(entries).length,cards:Object.keys(cards).length,sections:Object.keys(sections).length,sectionKeys:Object.keys(sections)}));
+          console.log('ENTRY_MISSING_COUNTS', JSON.stringify(missing));
+          console.log('LIVE_UPDATED_AT', s.updatedAt||'');
+          NODE
+      - name: Find historical state/snapshot files across all refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --force
+          {
+            for c in $(git rev-list --all); do
+              git ls-tree -r --name-only "$c"
+            done
+          } | sort -u | grep -Ei '(^|/)([^/]*(live[-_ ]?state|snapshot|backup|checkpoint|recovery)[^/]*\.json|catalogue[^/]*(state|backup|snapshot)[^/]*\.json)$' | head -n 300 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-live-catalogue-state
+          path: live-state.json
+          retention-days: 2
