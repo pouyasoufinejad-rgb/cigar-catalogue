@@ -399,7 +399,7 @@ export function renderSubsectionBlocks(root = document, state = runtimeState) {
         let visibleIndex = 0;
         for (const [index, key] of section.entryKeys.entries()) {
           const card = byKey.get(key);
-          if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main' || unavailable(card)) continue;
+          if (!card || isArchived(card, target) || catalogueType(card, target) !== 'main') continue;
           const rank = String(index + 1);
           if (card.dataset.rank !== rank) card.dataset.rank = rank;
           if (card.dataset.subsection !== section.id) card.dataset.subsection = section.id;
