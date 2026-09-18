@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           echo 'REPO_GREP_BEGIN'
-          git grep -n -i -E 'retailerLinks|recommendationSubsections|isla.?del.?sol|smokingpipes' || true
+          git grep -n -i -E 'retailerLinks|recommendationSubsections|isla.?del.?sol|smokingpipes|class=.shop|\\.shop|stock-hold|is-unavailable|\.hidden' -- public scripts src '*.mjs' '*.js' '*.html' '*.css' 2>/dev/null || true
           echo 'REPO_GREP_END'
           node --input-type=module - <<'NODE'
           const base='https://cigar-catalogue.psncodex.workers.dev';
