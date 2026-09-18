@@ -5,11 +5,6 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 import { parseCatalogueSeed } from './cleanup-live-card-copy.mjs';
-import {
-  buildStructureContext,
-  normaliseProductionLines,
-  normalisePracticalLines
-} from './normalise-live-card-structure.mjs';
 
 export const PRE_SIDEBAR_TARGET = '8ba8f65754b37d5973331e55be0e9e9d5d306cf5';
 
@@ -183,7 +178,6 @@ export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
   const seed = isRecord(seedInput) ? seedInput : { cards:{}, entries:{}, sections:{} };
   const seedCards = isRecord(seed.cards) ? seed.cards : {};
   const ledger = ledgerInput instanceof Map ? ledgerInput : replayRequestDocuments(ledgerInput || []);
-  const context = buildStructureContext(current, seed);
   const keys = new Set([
     ...Object.keys(seedCards),
     ...Object.keys(current.cards),
@@ -200,12 +194,10 @@ export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
 
     const productionSource = pickStructureSource(currentCard, currentEntry, baseCard, intent, 'production');
     const practicalSource = pickStructureSource(currentCard, currentEntry, baseCard, intent, 'practical');
-    const record = effectiveRecord(key, currentCard, currentEntry, baseCard, intent, productionSource, practicalSource);
-
     const hasProductionSource = productionSource.lines.length || productionSource.html;
     const hasPracticalSource = practicalSource.lines.length || practicalSource.html;
-    const desiredProduction = hasProductionSource ? normaliseProductionLines(record, context) : [];
-    const desiredPractical = hasPracticalSource ? normalisePracticalLines(record, context) : [];
+    const desiredProduction = productionSource.lines.length ? clone(productionSource.lines) : [];
+    const desiredPractical = practicalSource.lines.length ? clone(practicalSource.lines) : [];
     const desiredRetailers = chooseRetailerLinks(currentCard, currentEntry, baseCard, intent);
 
     const nextCard = { ...currentCard };
@@ -357,4 +349,4 @@ if (directInvocation) {
   });
 }
 
-// production repair trigger 2026-09-18
+// production repair trigger 2026-09-18 exact-field replay
