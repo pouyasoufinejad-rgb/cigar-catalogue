@@ -8,6 +8,17 @@ import { parseCatalogueSeed } from './cleanup-live-card-copy.mjs';
 
 export const PRE_SIDEBAR_TARGET = '8ba8f65754b37d5973331e55be0e9e9d5d306cf5';
 
+export const RECOVERED_RETAILER_LINKS = Object.freeze({
+  'liga-privada-no-9-coronets': ['https://www.smokingpipes.com/cigars/liga-privada/moreinfo.cfm?product_id=268781'],
+  'undercrown-maduro-coronets': ['https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=260322'],
+  'undercrown-10-corona-viva': ['https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=433680'],
+  'deadwood-leather-rose-petite-corona': ['https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=451471'],
+  'my-father-la-gran-oferta-lancero': ['https://www.smokingpipes.com/cigars/myfather/moreinfo.cfm?product_id=503188'],
+  'my-father-no-4-lancero': ['https://www.smokingpipes.com/cigars/myfather/moreinfo.cfm?product_id=291517'],
+  'foundation-charter-oak-maduro-rothschild': ['https://www.smokingpipes.com/cigars/foundation-cigar-company/moreinfo.cfm?product_id=333828'],
+  'ashton-vsg-enchantment': ['https://www.smokingpipes.com/cigars/ashton/moreinfo.cfm?product_id=26572']
+});
+
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -199,6 +210,9 @@ export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
     const desiredProduction = productionSource.lines.length ? clone(productionSource.lines) : [];
     const desiredPractical = practicalSource.lines.length ? clone(practicalSource.lines) : [];
     const desiredRetailers = chooseRetailerLinks(currentCard, currentEntry, baseCard, intent);
+    for (const url of RECOVERED_RETAILER_LINKS[key] || []) {
+      if (!desiredRetailers.includes(url)) desiredRetailers.push(url);
+    }
 
     const nextCard = { ...currentCard };
     if (desiredProduction.length) {
