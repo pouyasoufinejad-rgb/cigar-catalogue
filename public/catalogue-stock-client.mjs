@@ -223,7 +223,11 @@ function separateUnavailableCards() {
     card.classList.toggle('is-unavailable', unavailable);
     card.classList.toggle('is-delisted', card.dataset.stock === 'delisted');
   });
-  const mainUnavailable = cards.filter(card => card.dataset.archived !== '1' && card.dataset.taster !== '1' && isUnavailable(card));
+  const mainUnavailable = cards.filter(card => card.dataset.archived !== '1'
+    && card.dataset.taster !== '1'
+    && isUnavailable(card)
+    && !card.dataset.subsection
+    && !card.closest?.('[data-recommendation-subsection]'));
   const tasterUnavailable = cards.filter(card => card.dataset.archived !== '1' && card.dataset.taster === '1' && isUnavailable(card));
   const syncSection = (kind, unavailableCards) => {
     const divider = document.querySelector(`.unavailable-divider[data-section="${kind}"]`);
