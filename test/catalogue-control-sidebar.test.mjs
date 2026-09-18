@@ -24,7 +24,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
           <div class="grid" id="recommendation-coronets-cigarillos">
             <article class="card" data-key="liga-privada-no-9-coronets"><h3><small>Liga Privada</small>No. 9 Coronets</h3></article>
             <article class="card hidden" data-key="undercrown-maduro-coronets"><h3><small>Undercrown</small>Maduro Coronets</h3></article>
-            <article class="card" data-key="example-brand-cigar"><h3><small>Example Brand</small>Example Cigar</h3></article>
+            <article class="card" data-key="example-brand-cigar"><h3><span>Example Brand</span>Example Cigar</h3></article>
           </div>
         </section>
         <section class="tier-block" data-recommendation-subsection="petit-panatelas">
@@ -33,7 +33,10 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
           </div>
         </section>
         <section class="tier-block" data-recommendation-subsection="flavoured-infused">
-          <div class="grid" id="recommendation-flavoured-infused"></div>
+          <div class="grid" id="recommendation-flavoured-infused">
+            <article class="card" data-key="cao-bella-vanilla"><h3><span>CAO</span>Bella Vanilla Cigarillos</h3></article>
+            <article class="card" data-key="tabak-especial-cafecita-negra"><h3><span>Drew Estate</span>Tabak Especial Cafecita Negra</h3></article>
+          </div>
         </section>
       </div>
     </main>
@@ -42,7 +45,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-2/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-3/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
@@ -107,7 +110,9 @@ test('brand and line filter is single-select, composes with existing hidden stat
   assert.ok(liga, 'Liga Privada filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="undercrown"]'), 'Undercrown filter should exist');
   assert.ok(document.querySelector('[data-brand-line-filter="davidoff"]'), 'Davidoff filter should exist');
-  assert.ok(document.querySelector('[data-brand-line-filter="example-brand"]'), 'brands without custom config should be discovered');
+  assert.ok(document.querySelector('[data-brand-line-filter="cao"]'), 'CAO filter should exist');
+  assert.ok(document.querySelector('[data-brand-line-filter="drew-estate"]'), 'Drew Estate filter should exist');
+  assert.ok(document.querySelector('[data-brand-line-filter="example-brand"]'), 'brands rendered with h3 span should be discovered');
 
   liga.click();
   assert.equal(liga.getAttribute('aria-pressed'), 'true');
@@ -158,5 +163,29 @@ test('brand-line buttons support optional small logos without requiring them', (
   assert.ok(image);
   assert.match(image.src, /\/brand-logos\/logo\.webp$/);
   assert.equal(withLogo.textContent.trim(), 'Logo Brand');
+  dom.window.close();
+});
+
+
+test('CAO and Drew Estate sidebar filters match span-rendered catalogue cards', () => {
+  const dom = catalogueFixture();
+  const { document } = dom.window;
+  moveControlsToSidebar(document, dom.window);
+
+  const cao = document.querySelector('[data-brand-line-filter="cao"]');
+  const drew = document.querySelector('[data-brand-line-filter="drew-estate"]');
+  const caoCard = document.querySelector('[data-key="cao-bella-vanilla"]');
+  const drewCard = document.querySelector('[data-key="tabak-especial-cafecita-negra"]');
+  const davidoffCard = document.querySelector('[data-key="davidoff-escurio-petit-robusto"]');
+
+  cao.click();
+  assert.equal(caoCard.classList.contains('brand-line-filter-hidden'), false);
+  assert.equal(drewCard.classList.contains('brand-line-filter-hidden'), true);
+
+  drew.click();
+  assert.equal(drewCard.classList.contains('brand-line-filter-hidden'), false);
+  assert.equal(caoCard.classList.contains('brand-line-filter-hidden'), true);
+  assert.equal(davidoffCard.classList.contains('brand-line-filter-hidden'), true);
+
   dom.window.close();
 });
