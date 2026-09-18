@@ -66,3 +66,36 @@ test('applies restores to both the card and the dynamic entry without touching o
   assert.equal(next.cards.reverted.imageUrl, '/keep');
   assert.deepEqual(next.sections, live.sections);
 });
+
+test('a card with no override at all counts as reverted, since the seed value renders', () => {
+  const live = { cards: { reverted: { rank: 1 } }, entries: {} };
+  const ledger = new Map([['reverted', { summaryHtml: '<p>New lancero copy</p>' }]]);
+  const { restores } = planRestore({ live, seed, ledger });
+  assert.equal(restores.length, 1);
+  assert.equal(restores[0].field, 'summaryHtml');
+  assert.equal(restores[0].category, 'content');
+});
+
+test('categorises price restores and content-clearing restores separately', () => {
+  const clearingSeed = {
+    cards: {
+      clearing: { noteHtml: 'De-risks: something useful' },
+      edited: { price: 20 }
+    }
+  };
+  const live = {
+    cards: {
+      clearing: { noteHtml: 'De-risks: something useful' },
+      edited: { price: 20 }
+    },
+    entries: {}
+  };
+  const ledger = new Map([
+    ['clearing', { noteHtml: '' }],
+    ['edited', { price: 17.7 }]
+  ]);
+  const { restores } = planRestore({ live, seed: clearingSeed, ledger });
+  const byField = Object.fromEntries(restores.map(row => [row.field, row.category]));
+  assert.equal(byField.noteHtml, 'clears', 'wiping live content must be flagged, not silently applied');
+  assert.equal(byField.price, 'price');
+});

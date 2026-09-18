@@ -105,9 +105,13 @@ export function planRestore({ live, seed, ledger, provenance = new Map() }) {
 
       const seedValue = seedCard[field];
       const seedDeclares = Object.prototype.hasOwnProperty.call(seedCard, field);
+      const hasOverride = liveValue !== undefined;
+      // A card with no override renders the seed value, so a missing override is the
+      // same reverted-to-baseline condition as an override that equals the seed.
+      const effectiveLive = hasOverride ? liveValue : (seedDeclares ? seedValue : undefined);
       const liveMatchesSeed = seedDeclares
-        ? sameValue(liveValue, seedValue)
-        : liveValue === undefined || liveValue === '' ;
+        ? sameValue(effectiveLive, seedValue)
+        : effectiveLive === undefined || effectiveLive === '';
 
       const row = {
         key, field,
@@ -116,8 +120,14 @@ export function planRestore({ live, seed, ledger, provenance = new Map() }) {
         seed: seedDeclares ? seedValue : undefined,
         source: provenance.get(key)?.[field] || null
       };
-      if (liveMatchesSeed) restores.push(row);
-      else manualDivergences.push(row);
+      if (!liveMatchesSeed) { manualDivergences.push(row); continue; }
+
+      const clearsContent = (target === '' || target === null)
+        && typeof effectiveLive === 'string' && effectiveLive.trim() !== '';
+      if (field === 'price' || field === 'packagePrice') row.category = 'price';
+      else if (clearsContent) row.category = 'clears';
+      else row.category = 'content';
+      restores.push(row);
     }
   }
   return { restores, manualDivergences };
@@ -155,18 +165,36 @@ export async function run(options = {}) {
   const live = await fetchLive(baseUrl, 'restore_read');
   const seed = parseCatalogueSeed(await readFile(resolve(repoRoot, 'public/index.html'), 'utf8'));
   const { ledger, provenance } = await loadLedger(repoRoot);
-  const { restores, manualDivergences } = planRestore({ live, seed, ledger, provenance });
+  const { restores: allRestores, manualDivergences } = planRestore({ live, seed, ledger, provenance });
 
-  console.log(`RESTORE_PLAN ${json({ restorable: restores.length, manualDivergences: manualDivergences.length, keys: [...new Set(restores.map(r => r.key))].length })}`);
-  console.log('=== REVERTED FIELDS (live still matches static seed, ledger has newer value) ===');
+  const includePrices = options.includePrices ?? process.env.RESTORE_INCLUDE_PRICES === '1';
+  const includeClears = options.includeClears ?? process.env.RESTORE_INCLUDE_CLEARS === '1';
+  const enabled = new Set(['content', ...(includePrices ? ['price'] : []), ...(includeClears ? ['clears'] : [])]);
+  const restores = allRestores.filter(row => enabled.has(row.category));
+  const held = allRestores.filter(row => !enabled.has(row.category));
+
+  const byCategory = {};
+  for (const row of allRestores) byCategory[row.category] = (byCategory[row.category] || 0) + 1;
+  console.log(`RESTORE_PLAN ${json({
+    selected: restores.length,
+    heldBack: held.length,
+    byCategory,
+    manualDivergences: manualDivergences.length,
+    keys: [...new Set(restores.map(r => r.key))].length
+  })}`);
+
+  console.log('=== SELECTED FOR RESTORE (live renders the stale seed value; ledger has a newer one) ===');
   for (const row of restores) {
-    console.log(`  RESTORE ${row.key}.${row.field}`);
-    console.log(`     live   : ${preview(row.live)}`);
-    console.log(`     restore: ${preview(row.target)}`);
-    console.log(`     source : ${row.source}`);
+    console.log(`  RESTORE ${row.key}.${row.field}  [${row.source}]`);
+    console.log(`     now  : ${preview(row.live === undefined ? '(no override, renders seed)' : row.live)}`);
+    console.log(`     after: ${preview(row.target)}`);
   }
-  console.log('=== LEFT ALONE (live differs from both seed and ledger, treated as later deliberate edit) ===');
-  for (const row of manualDivergences) console.log(`  SKIP ${row.key}.${row.field} live=${preview(row.live)}`);
+
+  console.log('=== HELD BACK (needs an explicit opt-in) ===');
+  for (const row of held) console.log(`  HOLD[${row.category}] ${row.key}.${row.field} now=${preview(row.live)} would=${preview(row.target)}`);
+
+  console.log('=== LEFT ALONE (differs from both seed and ledger, treated as a later deliberate edit) ===');
+  for (const row of manualDivergences) console.log(`  SKIP ${row.key}.${row.field}`);
 
   if (!apply) {
     console.log('RESTORE_DRY_RUN_COMPLETE_NO_WRITES');
