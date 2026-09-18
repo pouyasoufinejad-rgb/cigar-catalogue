@@ -1,0 +1,59 @@
+name: Diagnose retailer rendering and Isla placement
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diag-retailer-isla.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect repo and live catalogue
+        shell: bash
+        run: |
+          echo 'REPO_GREP_BEGIN'
+          git grep -n -i -E 'retailerLinks|recommendationSubsections|isla.?del.?sol|smokingpipes' || true
+          echo 'REPO_GREP_END'
+          node --input-type=module - <<'NODE'
+          const base='https://cigar-catalogue.psncodex.workers.dev';
+          const state=await fetch(base+'/api/catalogue-overrides?diag='+Date.now(),{cache:'no-store'}).then(r=>r.json());
+          const matches={};
+          for(const [scope,bucket] of [['entries',state.entries||{}],['cards',state.cards||{}]]){
+            for(const [key,v] of Object.entries(bucket)){
+              if(/isla|sol/i.test(key+' '+JSON.stringify(v?.title||''))) matches[scope+':'+key]=v;
+            }
+          }
+          console.log('LIVE_ISLA '+JSON.stringify(matches));
+          console.log('LIVE_SECTIONS '+JSON.stringify(state.sections||{}));
+          const smoking=[];
+          for(const [scope,bucket] of [['entries',state.entries||{}],['cards',state.cards||{}]]){
+            for(const [key,v] of Object.entries(bucket)){
+              const links=Array.isArray(v?.retailerLinks)?v.retailerLinks:[];
+              const hits=links.filter(u=>/smokingpipes/i.test(u));
+              if(hits.length) smoking.push({scope,key,hits});
+            }
+          }
+          console.log('LIVE_SMOKING '+JSON.stringify(smoking));
+          const html=await fetch(base+'/?diag='+Date.now(),{cache:'no-store'}).then(r=>r.text());
+          console.log('RENDER_COUNTS '+JSON.stringify({
+            smokingpipes:(html.match(/smokingpipes/gi)||[]).length,
+            isla:(html.match(/isla\s+del\s+sol/gi)||[]).length,
+            retailerAnchors:(html.match(/href=["'][^"']+/gi)||[]).filter(x=>/cigar|smoking|pipe/i.test(x)).length
+          }));
+          const snippets=[];
+          for(const needle of ['smokingpipes','Isla Del Sol','isla-del-sol']){
+            const i=html.toLowerCase().indexOf(needle.toLowerCase());
+            if(i>=0) snippets.push({needle,snippet:html.slice(Math.max(0,i-800),i+1800)});
+          }
+          console.log('RENDER_SNIPPETS '+JSON.stringify(snippets));
+          NODE
