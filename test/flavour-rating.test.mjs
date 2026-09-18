@@ -70,7 +70,10 @@ test('Axe Charutos quality exception does not create lower-tier laurels', () => 
 });
 
 test('browser runtime loads Flavour UI, card hydration and save interception', () => {
-  assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs'\)/);
+  // Versioned because the size runtime registers the single Value writer on this exact
+  // module instance; see test/value-single-writer.test.mjs, which pins every importer to
+  // one specifier.
+  assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs\?v=value-single-writer-1'\)/);
   assert.match(flavourSource, /catalogue-admin-flavour/);
   assert.match(flavourSource, /ensureFlavourRating/);
   assert.match(flavourSource, /MutationObserver/);

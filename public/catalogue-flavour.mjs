@@ -153,8 +153,19 @@ function setValueVisual(card, value) {
   card.dataset.value = String(score >= 7 ? 3 : score >= 5 ? 2 : 1);
 }
 
+// The size-adjusted runtime is the authority on Value. It registers itself here so a
+// card's Value medal has exactly one writer. Without this both modules looped over every
+// card on their own timers, one scoring with the size factor and one without, and the
+// medal settled on whichever loop happened to run last.
+let valueRefreshOverride = null;
+
+export function registerValueRefresh(handler) {
+  valueRefreshOverride = typeof handler === 'function' ? handler : null;
+}
+
 export function refreshValueForCard(card, flavour = null) {
   if (!card) return null;
+  if (valueRefreshOverride) return valueRefreshOverride(card, flavour);
   const quality = ratingScore(card, 'Quality', 5);
   const price = Math.max(0, finite(card.dataset.price));
   const result = deriveValue(price, quality, flavour);

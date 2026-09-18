@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveAutoLaurel, normaliseFlavour } from './catalogue-flavour.mjs';
+import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=value-single-writer-1';
 import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 
 const STATE_API = '/api/catalogue-overrides';
@@ -153,6 +153,15 @@ export function refreshSizeAdjustedValueForCard(card, saved = null) {
   refreshLaurel(card, cardSaved, result.score);
   return result;
 }
+
+// Claim sole ownership of the Value medal. The flavour module routes its own refreshes
+// through here so both paths score a card identically, size factor included.
+registerValueRefresh((card, flavour) => {
+  const saved = state.cards?.[card?.dataset?.key] || {};
+  return refreshSizeAdjustedValueForCard(card, flavour === null || flavour === undefined
+    ? saved
+    : { ...saved, flavour });
+});
 
 export function refreshAllSizeAdjustedValues() {
   refreshTimer = 0;
