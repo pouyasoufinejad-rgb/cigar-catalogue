@@ -356,3 +356,5 @@ if (directInvocation) {
     process.exitCode = 1;
   });
 }
+
+// production repair trigger 2026-09-18
