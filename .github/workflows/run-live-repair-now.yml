@@ -26,9 +26,9 @@ jobs:
       - name: Verify production fields and SmokingPipes links
         shell: bash
         run: |
-          node - <<'NODE'
+          node --input-type=module - <<'NODE'
+          import { execFileSync } from 'node:child_process';
           const TARGET='8ba8f65754b37d5973331e55be0e9e9d5d306cf5';
-          const {execFileSync}=require('child_process');
           const git=(a)=>execFileSync('git',a,{encoding:'utf8',maxBuffer:64*1024*1024}).trim();
           const state=await fetch('https://cigar-catalogue.psncodex.workers.dev/api/catalogue-overrides?hotfix_verify='+Date.now(),{cache:'no-store'}).then(r=>r.json());
           const paths=git(['ls-tree','-r','--name-only',TARGET,'catalogue-requests']).split(/\n+/).filter(x=>x.endsWith('.json')).sort();
