@@ -580,15 +580,17 @@ function collectLiveCards(root = document) {
 
 function preparePayload(payload, root = document) {
   if (!isRecord(payload)) return payload;
+  const carriesEntries = isRecord(payload.entries);
+  const workingEntries = carriesEntries ? payload.entries : (runtimeState?.entries || {});
   const next = {
     ...payload,
     cards: { ...(isRecord(payload.cards) ? payload.cards : {}) },
-    sections: { ...(isRecord(payload.sections) ? payload.sections : {}) },
-    entries: isRecord(payload.entries) ? payload.entries : (runtimeState?.entries || {})
+    sections: { ...(isRecord(payload.sections) ? payload.sections : {}) }
   };
+  if (!carriesEntries) delete next.entries;
   const base = runtimeState
-    ? { ...runtimeState, cards: next.cards, sections: { ...runtimeState.sections, ...next.sections }, entries: next.entries }
-    : { version: 3, cards: next.cards, sections: next.sections, entries: next.entries };
+    ? { ...runtimeState, cards: next.cards, sections: { ...runtimeState.sections, ...next.sections }, entries: workingEntries }
+    : { version: 3, cards: next.cards, sections: next.sections, entries: workingEntries };
   commitSubsectionEditor(root);
   if (runtimeState?.sections?.recommendationSubsections) {
     base.sections.recommendationSubsections = normaliseSubsections(runtimeState.sections.recommendationSubsections);
@@ -657,7 +659,7 @@ function hydrateRuntimeState(state, root = document) {
     version: 3,
     cards: { ...(isRecord(state.cards) ? state.cards : {}) },
     sections: { ...(isRecord(state.sections) ? state.sections : {}) },
-    entries: { ...(isRecord(state.entries) ? state.entries : {}) }
+    entries: { ...(isRecord(state.entries) ? state.entries : (runtimeState?.entries || {})) }
   };
   reconcileRecommendationSubsections(runtimeState, collectLiveCards(root));
   for (const card of collectLiveCards(root)) {
