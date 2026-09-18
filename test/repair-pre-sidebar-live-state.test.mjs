@@ -68,7 +68,7 @@ test('repair restores request-ledger Production, Practical and retailers without
     'Handmade','Wrapper: New Wrapper','Binder: New Binder','Filler: New Filler'
   ]);
   assert.deepEqual(state.entries.x.practicalLines, [
-    'Single cigar','Uncut','Protected','Box-pressed construction','Compact format','Slow Cadence'
+    'Single cigar','Uncut','Protected','5″ × 44 Corona','Compact format','Slow Cadence'
   ]);
   assert.deepEqual(state.entries.x.retailerLinks, [
     'https://www.smokingpipes.com/example/x','https://www.cigarhut.com.au/x/'
