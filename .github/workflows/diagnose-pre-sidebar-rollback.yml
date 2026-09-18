@@ -134,6 +134,42 @@ jobs:
           console.log('REQUEST_LEDGER_MISMATCH_COUNT',mismatches.length);
           console.log('REQUEST_LEDGER_MISMATCHES',JSON.stringify(mismatches.slice(0,250)));
           NODE
+      - name: Inspect every recoverable catalogue state artifact in git history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --force
+          echo 'STATE_ARTIFACT_HISTORY_BEGIN'
+          for name in axe-charutos-live-state.json live-snapshot-overrides.json; do
+            echo "FILE $name"
+            git log --all --date=iso-strict --format='%H %cI %s' -- "$name" || true
+            for c in $(git log --all --format=%H -- "$name"); do
+              if git cat-file -e "$c:$name" 2>/dev/null; then
+                echo "CONTENT_COMMIT $c"
+                git show "$c:$name" > "/tmp/$(basename "$name").$c"
+                node - "$name" "$c" "/tmp/$(basename "$name").$c" <<'NODE'
+                const fs=require('fs');
+                const [,,name,commit,p]=process.argv;
+                try {
+                  const s=JSON.parse(fs.readFileSync(p,'utf8'));
+                  console.log('STATE_ARTIFACT',JSON.stringify({
+                    name,commit,version:s.version,updatedAt:s.updatedAt,
+                    entries:Object.keys(s.entries||{}).length,
+                    cards:Object.keys(s.cards||{}).length,
+                    sections:Object.keys(s.sections||{}).length,
+                    sectionKeys:Object.keys(s.sections||{})
+                  }));
+                } catch(e) { console.log('STATE_ARTIFACT_PARSE_ERROR',name,commit,String(e)); }
+NODE
+              fi
+            done
+          done
+          echo 'STATE_ARTIFACT_HISTORY_END'
+          echo 'LARGE_JSON_CANDIDATES_BEGIN'
+          for c in $(git rev-list --all); do
+            git ls-tree -rl "$c" | awk '$4 >= 20000 && $5 ~ /\.json$/ {print "'"$c"'" " $4 " " $5}'
+          done | sort -k3,3 -k2,2nr | awk '!seen[$3]++' | head -n 200
+          echo 'LARGE_JSON_CANDIDATES_END'
       - name: Find historical state/snapshot files across all refs
         shell: bash
         run: |
