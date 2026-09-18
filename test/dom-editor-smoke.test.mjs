@@ -332,7 +332,20 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   }
   t.diagnostic('ASSERTION 6 PASS: save emits exactly one PUT with three subsections and contiguous 1..N ranks.');
 
-  await delay(75);
+  // Wait for post-save rendering to settle before sampling the idle window. Asserting
+  // zero renders a fixed 75 ms after the save is timing-dependent: under load a render
+  // that the save legitimately scheduled can still be pending and fire inside the
+  // window. A genuine render loop never settles, so this still fails on one.
+  let settleProbe = subsectionModule.getRecommendationSubsectionRenderCount();
+  let settled = false;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    await delay(25);
+    const current = subsectionModule.getRecommendationSubsectionRenderCount();
+    if (current === settleProbe) { settled = true; break; }
+    settleProbe = current;
+  }
+  assert.ok(settled, 'renderSubsectionBlocks never stopped running, which indicates a render loop');
+
   let idleMutations = 0;
   const ownerCounts = new Map();
   const cardsRoot = window.document.getElementById('cards');
