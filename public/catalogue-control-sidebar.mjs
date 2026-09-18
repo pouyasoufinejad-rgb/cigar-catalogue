@@ -516,6 +516,10 @@ function ensureStyles(root = document) {
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:5px;
 }
+/* The display:grid rule above is an id+class selector, so it outranks the browser's
+   built-in [hidden]{display:none}. Without this the hidden attribute sets but the list
+   keeps rendering, and the collapse toggle looks dead. */
+#${EXTRA_ID} .catalogue-sidebar-list[hidden]{display:none!important}
 #${EXTRA_ID} .catalogue-sidebar-choice{
   width:100%;
   min-height:34px;

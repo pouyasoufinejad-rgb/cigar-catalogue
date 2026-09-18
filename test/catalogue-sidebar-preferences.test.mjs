@@ -31,14 +31,22 @@ function fixture() {
   return dom;
 }
 
+// These assert the rendered display, not just the hidden property. The sidebar's own
+// `#id .catalogue-sidebar-list{display:grid}` rule outranks the browser's
+// [hidden]{display:none}, so a hidden attribute alone leaves the list on screen and the
+// toggle looks dead. Only a computed-style check catches that.
+function listDisplay(dom) {
+  const list = dom.window.document.querySelector('[data-brand-line-options]');
+  return dom.window.getComputedStyle(list).display;
+}
+
 test('the brands and lines section is collapsed by default', () => {
   const dom = fixture();
   installControlSidebar(dom.window.document, dom.window);
   const toggle = dom.window.document.querySelector('[data-brand-line-toggle]');
-  const list = dom.window.document.querySelector('[data-brand-line-options]');
   assert.ok(toggle, 'the heading should be a toggle');
   assert.equal(toggle.getAttribute('aria-expanded'), 'false');
-  assert.equal(list.hidden, true, 'the brand list starts collapsed');
+  assert.equal(listDisplay(dom), 'none', 'the brand list must actually be off screen');
   assert.match(toggle.textContent, /BRANDS & LINES/);
 });
 
@@ -48,8 +56,19 @@ test('expanding the brands section reveals the list and is remembered', () => {
   const toggle = dom.window.document.querySelector('[data-brand-line-toggle]');
   toggle.dispatchEvent(new dom.window.Event('click'));
   assert.equal(toggle.getAttribute('aria-expanded'), 'true');
-  assert.equal(dom.window.document.querySelector('[data-brand-line-options]').hidden, false);
+  assert.notEqual(listDisplay(dom), 'none', 'the brand list must actually be visible');
   assert.equal(readSidebarPreferences(dom.window).brandsExpanded, true);
+});
+
+test('collapsing again re-hides the list', () => {
+  const dom = fixture();
+  installControlSidebar(dom.window.document, dom.window);
+  const toggle = dom.window.document.querySelector('[data-brand-line-toggle]');
+  toggle.dispatchEvent(new dom.window.Event('click'));
+  toggle.dispatchEvent(new dom.window.Event('click'));
+  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(listDisplay(dom), 'none');
+  assert.equal(readSidebarPreferences(dom.window).brandsExpanded, false);
 });
 
 test('removing a brand drops it from the list and leaves every catalogue card untouched', () => {
