@@ -14,7 +14,7 @@ test('cache-busted runtime restores the direct editor', () => {
 });
 
 test('runtime version-busts the recommendation subsection module containing the observer repair', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-recommendation-subsections\.mjs\?v=editor-repair-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-recommendation-subsections\.mjs\?v=editor-repair-2['"]\)/);
 });
 
 test('runtime version-busts the half-cohort module containing the rank-bound repair', () => {
