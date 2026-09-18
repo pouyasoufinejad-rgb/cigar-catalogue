@@ -42,6 +42,27 @@ jobs:
           console.log('SUBSECTIONS', JSON.stringify((sections.recommendationSubsections||[]).map(x=>({id:x.id,title:x.title,entryKeys:x.entryKeys}))));
           console.log('LIVE_UPDATED_AT', s.updatedAt||'');
           NODE
+      - name: Inspect rendered live catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://cigar-catalogue.psncodex.workers.dev/?diag=render-rollback' -o live.html
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('live.html','utf8');
+          const arts=[...h.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^>]*>/gi)];
+          const keys=arts.map(m=>m[1]);
+          const dynamic=[...h.matchAll(/<article\b[^>]*\bdata-dynamic-entry=["']1["'][^>]*\bdata-key=["']([^"']+)["'][^>]*>/gi)].map(m=>m[1]);
+          const missingIdentity=[];
+          for(const key of keys){
+            const rx=new RegExp('<article\\b[^>]*\\bdata-key=["\\\']'+key+'["\\\'][^>]*>([\\s\\S]*?)<\\/article>','i');
+            const body=h.match(rx)?.[1]||'';
+            if(!/<h3>/i.test(body)||!/<p class=["']summary["']/i.test(body)) missingIdentity.push(key);
+          }
+          console.log('RENDER_COUNTS',JSON.stringify({articles:keys.length,unique:new Set(keys).size,dynamic:dynamic.length,duplicates:keys.filter((k,i)=>keys.indexOf(k)!==i).slice(0,20),missingIdentity:missingIdentity.slice(0,50)}));
+          console.log('RENDER_HAS_ARTURITO',/Arturito/i.test(h));
+          console.log('RENDER_HAS_ACID_RED',/Krush Red Cameroon/i.test(h));
+          NODE
       - name: Find historical state/snapshot files across all refs
         shell: bash
         run: |
