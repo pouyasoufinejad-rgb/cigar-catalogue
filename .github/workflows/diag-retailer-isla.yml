@@ -24,6 +24,9 @@ jobs:
           echo 'REPO_GREP_BEGIN'
           git grep -n -i -E 'retailerLinks|recommendationSubsections|isla.?del.?sol|smokingpipes|class=.shop|\\.shop|stock-hold|is-unavailable|\.hidden' -- public scripts src '*.mjs' '*.js' '*.html' '*.css' 2>/dev/null || true
           echo 'REPO_GREP_END'
+          echo 'FILTER_CONTEXT_BEGIN'
+          grep -n -C 18 -E 'applyCatalogueFilter|data-filter=.instock|filter.*instock' public/index.html public/*.mjs 2>/dev/null || true
+          echo 'FILTER_CONTEXT_END'
           node --input-type=module - <<'NODE'
           const base='https://cigar-catalogue.psncodex.workers.dev';
           const state=await fetch(base+'/api/catalogue-overrides?diag='+Date.now(),{cache:'no-store'}).then(r=>r.json());
