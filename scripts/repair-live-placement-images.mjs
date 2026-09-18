@@ -18,6 +18,18 @@ export const PETIT_REPAIRS = Object.freeze([
   Object.freeze({ key:'undercrown-10-corona-viva', rank:13 })
 ]);
 
+export const CHISELITO_REPAIR = Object.freeze({
+  key:'la-flor-dominicana-double-ligero-chiselito-maduro',
+  subsection:'petit-panatelas',
+  rank:1
+});
+
+export const ISLA_REPAIR = Object.freeze({
+  key:'isla-del-sol-maduro-coronets',
+  subsection:'flavoured-infused',
+  rank:2
+});
+
 export const ACID_REPAIR = Object.freeze({
   key:'drew-estate-acid-krush-red-cameroon',
   subsection:'coronets-cigarillos',
@@ -52,6 +64,8 @@ export const VERIFIED_IMAGE_KEYS = Object.freeze([
 const repairedKeys = new Set([
   ...TASTER_REPAIRS.map(item => item.key),
   ...PETIT_REPAIRS.map(item => item.key),
+  CHISELITO_REPAIR.key,
+  ISLA_REPAIR.key,
   ACID_REPAIR.key
 ]);
 
@@ -122,8 +136,12 @@ function compactTasters(state) {
 function restorePlacements(state) {
   removeRepairKeysFromRecommendationSubsections(state);
 
-  const petit = subsection(state, 'petit-panatelas');
+  const petit = subsection(state, CHISELITO_REPAIR.subsection);
+  insertAtRank(petit, CHISELITO_REPAIR.key, CHISELITO_REPAIR.rank);
   for (const { key, rank } of PETIT_REPAIRS) insertAtRank(petit, key, rank);
+
+  const flavoured = subsection(state, ISLA_REPAIR.subsection);
+  insertAtRank(flavoured, ISLA_REPAIR.key, ISLA_REPAIR.rank);
 
   const coronets = subsection(state, ACID_REPAIR.subsection);
   insertAtRank(coronets, ACID_REPAIR.key, ACID_REPAIR.rank);
@@ -162,8 +180,31 @@ export function assertPreservedShape(before, after) {
 
 export function assertRepair(state, verifiedImageKeys = VERIFIED_IMAGE_KEYS) {
   const subsections = state.sections?.recommendationSubsections || [];
-  const petit = subsection(state, 'petit-panatelas');
+  const petit = subsection(state, CHISELITO_REPAIR.subsection);
+  const flavoured = subsection(state, ISLA_REPAIR.subsection);
   const coronets = subsection(state, ACID_REPAIR.subsection);
+
+  const chiselito = state.cards?.[CHISELITO_REPAIR.key];
+  assert.equal(petit?.entryKeys?.[CHISELITO_REPAIR.rank - 1], CHISELITO_REPAIR.key, 'Chiselito must be Petit rank 1.');
+  assert.equal(chiselito?.catalogueType, 'main', 'Chiselito must remain a main catalogue card.');
+  assert.equal(chiselito?.taster, false, 'Chiselito must not be a Taster.');
+  assert.equal(chiselito?.subsection, CHISELITO_REPAIR.subsection, 'Chiselito must remain in Petit.');
+  assert.equal(chiselito?.rank, CHISELITO_REPAIR.rank, 'Chiselito must be Petit rank 1.');
+  if (state.entries?.[CHISELITO_REPAIR.key]) {
+    assert.equal(state.entries[CHISELITO_REPAIR.key].taster, false, 'Chiselito entry must not be a Taster.');
+    assert.equal(state.entries[CHISELITO_REPAIR.key].rank, CHISELITO_REPAIR.rank, 'Chiselito entry rank must mirror Petit rank 1.');
+  }
+
+  const isla = state.cards?.[ISLA_REPAIR.key];
+  assert.equal(flavoured?.entryKeys?.[ISLA_REPAIR.rank - 1], ISLA_REPAIR.key, 'Isla del Sol Maduro Coronets must be Flavoured rank 2.');
+  assert.equal(isla?.catalogueType, 'main', 'Isla del Sol Maduro Coronets must remain a main catalogue card.');
+  assert.equal(isla?.taster, false, 'Isla del Sol Maduro Coronets must not be a Taster.');
+  assert.equal(isla?.subsection, ISLA_REPAIR.subsection, 'Isla del Sol Maduro Coronets must remain in Flavoured & Infused.');
+  assert.equal(isla?.rank, ISLA_REPAIR.rank, 'Isla del Sol Maduro Coronets must be Flavoured rank 2.');
+  if (state.entries?.[ISLA_REPAIR.key]) {
+    assert.equal(state.entries[ISLA_REPAIR.key].taster, false, 'Isla entry must not be a Taster.');
+    assert.equal(state.entries[ISLA_REPAIR.key].rank, ISLA_REPAIR.rank, 'Isla entry rank must mirror Flavoured rank 2.');
+  }
 
   for (const { key, rank } of PETIT_REPAIRS) {
     const card = state.cards?.[key];
