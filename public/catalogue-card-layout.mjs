@@ -16,10 +16,10 @@ html body article.card{
   max-width:none!important;
   margin:0!important;
 }
-html body .grid > article.card:nth-last-of-type(2):nth-of-type(3n + 1){
+html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"]):nth-last-child(2 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])):nth-child(3n + 1 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])){
   transform:translateX(30%)!important;
 }
-html body .grid > article.card:last-of-type:nth-of-type(3n + 2){
+html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"]):nth-last-child(1 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])):nth-child(3n + 2 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])){
   grid-column:3!important;
   transform:translateX(-30%)!important;
 }
@@ -52,10 +52,7 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
     max-width:100%!important;
     margin:0!important;
   }
-  html body .grid > article.card:nth-last-of-type(2):nth-of-type(3n + 1){
-    transform:none!important;
-  }
-  html body .grid > article.card:last-of-type:nth-of-type(3n + 2){
+  html body .grid > article.card{
     grid-column:auto!important;
     transform:none!important;
   }
