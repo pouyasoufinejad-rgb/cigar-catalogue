@@ -5,6 +5,11 @@ name: Audit catalogue state
 
 on:
   workflow_dispatch:
+    inputs:
+      keys:
+        description: 'Optional comma-separated catalogue keys to inspect in full instead of the summary report'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -23,4 +28,6 @@ jobs:
         with:
           node-version: '22'
       - name: Run read-only audit
+        env:
+          AUDIT_KEYS: ${{ inputs.keys }}
         run: node scripts/audit-catalogue-state.mjs

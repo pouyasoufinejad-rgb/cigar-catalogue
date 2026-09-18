@@ -105,9 +105,32 @@ function reportSubsections(live) {
   console.log(`OTHER_SECTION_KEYS ${json(Object.keys(sections).filter(k => k !== 'recommendationSubsections'))}`);
 }
 
+function inspectKeys(live, seedCards, ledger, keys) {
+  const liveCards = isRecord(live.cards) ? live.cards : {};
+  const liveEntries = isRecord(live.entries) ? live.entries : {};
+  console.log('=== KEY INSPECTION ===');
+  for (const key of keys) {
+    console.log(`--- ${key} ---`);
+    const seedCard = seedCards[key];
+    console.log(`  SEED_PRESENT ${Boolean(seedCard)}`);
+    if (seedCard) {
+      const picked = {};
+      for (const field of ['title', 'brand', 'length', 'ring', 'price', 'packagePrice', 'retailerLinks', 'imageUrl']) {
+        if (seedCard[field] !== undefined) picked[field] = seedCard[field];
+      }
+      console.log(`  SEED ${json(picked)}`);
+    }
+    console.log(`  LIVE_CARD ${json(liveCards[key] ?? null)}`.slice(0, 2400));
+    console.log(`  LIVE_ENTRY ${json(liveEntries[key] ?? null)}`.slice(0, 2400));
+    console.log(`  LEDGER_INTENT ${json(ledger.get(key) ?? null)}`.slice(0, 2400));
+  }
+}
+
 export async function runAudit(options = {}) {
   const repoRoot = resolve(options.repoRoot || process.cwd());
   const baseUrl = String(options.baseUrl || DEFAULT_BASE_URL).replace(/\/$/, '');
+  const inspectArg = (options.keys ?? process.env.AUDIT_KEYS ?? '').trim();
+  const keysToInspect = inspectArg ? inspectArg.split(',').map(k => k.trim()).filter(Boolean) : [];
 
   const live = await fetchLive(baseUrl);
   const liveCards = isRecord(live.cards) ? live.cards : {};
@@ -117,6 +140,12 @@ export async function runAudit(options = {}) {
   const seedCards = isRecord(seed.cards) ? seed.cards : {};
   const rows = await loadTargetRequests(repoRoot);
   const ledger = replayLedger(rows);
+
+  if (keysToInspect.length) {
+    inspectKeys(live, seedCards, ledger, keysToInspect);
+    console.log('AUDIT_COMPLETE_READ_ONLY');
+    return { live, ledger, inspected: keysToInspect };
+  }
 
   console.log('=== LIVE STATE ===');
   console.log(`LIVE_COUNTS ${json({
