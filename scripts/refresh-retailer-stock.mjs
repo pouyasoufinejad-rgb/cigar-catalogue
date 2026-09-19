@@ -42,6 +42,14 @@ for (const match of html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^>
   });
 }
 console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));
+const auditKeys = ["ashton-aged-maduro-esquire","curivari-fuerte-chicos","don-pepin-garcia-demi-tasse","oliva-serie-g","oliva-serie-g-maduro-special-g","oliva-serie-g-petit-corona","oliva-serie-o","oliva-serie-o-petit-corona","oliva-serie-v-club-20","oliva-serie-v-melanio-no4","cohiba-short-10","cohiba-short-single","kfc-ponies-sweets","davidoff-nicaragua-mini-cigarillos","partagas-serie-club-10","tabak-especial-cafecita-negra","cao-moontrance","cao-moontrance-tubos","isla-del-sol-maduro-coronets","isla-del-sol-maduro-gran-corona"];
+for (const key of auditKeys) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));');
+  const rx = new RegExp('<article\\b[^>]*\\bdata-key=["\\\']' + escaped + '["\\\'][^>]*>[\\s\\S]*?<\\/article>', 'i');
+  const block = html.match(rx)?.[0] || '';
+  const textBlock = block.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ').replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\\s+/g,' ').trim();
+  console.log('[github-stock] CARD_TEXT ' + key + ' ' + JSON.stringify(textBlock.slice(0,3500)));
+}
 const state = await stateResponse.json();
 const prior = await stockResponse.json();
 const liveRows = [];
