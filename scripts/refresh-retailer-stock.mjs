@@ -27,6 +27,14 @@ const [htmlResponse, stateResponse, stockResponse] = await Promise.all([
 const html = await htmlResponse.text();
 const state = await stateResponse.json();
 const prior = await stockResponse.json();
+const liveRows = [];
+for (const [key, value] of Object.entries(state.cards || {})) {
+  liveRows.push({ key, source:'card', brand:value?.brand, title:value?.title, archived:Boolean(value?.archived), catalogueType:value?.catalogueType, taster:Boolean(value?.taster), packagePrice:value?.packagePrice, price:value?.price, packageLabel:value?.packageLabel, length:value?.length, ring:value?.ring, retailerLinks:value?.retailerLinks || [] });
+}
+for (const [key, value] of Object.entries(state.entries || {})) {
+  liveRows.push({ key, source:'entry', brand:value?.brand, title:value?.title, archived:Boolean(value?.archived), catalogueType:value?.catalogueType, taster:Boolean(value?.taster), packagePrice:value?.packagePrice, price:value?.price, packageLabel:value?.packageLabel, length:value?.length, ring:value?.ring, retailerLinks:value?.retailerLinks || [] });
+}
+console.log('[github-stock] STATE_SUMMARY ' + JSON.stringify(liveRows));
 
 class MemoryKv {
   constructor(values) { this.values = new Map(Object.entries(values)); }
