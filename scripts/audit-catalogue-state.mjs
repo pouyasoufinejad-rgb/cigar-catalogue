@@ -170,7 +170,7 @@ export async function runAudit(options = {}) {
     // renders from the entry while ranking normalisation runs over the cards, so the two
     // can disagree and only the rendered value settles it.
     for (const key of String(process.env.AUDIT_KEYS || '').split(',').map(k => k.trim()).filter(Boolean)) {
-      const article = html.match(new RegExp(`<article\\b[^>]*\\bdata-key="${escapeRegex(key)}"[^>]*>`, 'i'))?.[0] || '';
+      const article = html.match(new RegExp(`<article\\b[^>]*\\bdata-key="${key.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}"[^>]*>`, 'i'))?.[0] || '';
       const rendered = article.match(/data-rank="(\d+)"/)?.[1] || '(none)';
       const eyebrow = html.slice(html.indexOf(article)).match(/<div class="eyebrow">([^<]*)</)?.[1] || '(none)';
       console.log(`RENDERED_RANK ${key}: data-rank=${rendered} eyebrow="${eyebrow.trim()}"`);
