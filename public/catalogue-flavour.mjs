@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { hasQualityAwardException } from './catalogue-rating-exceptions.mjs';
+import { deriveOverallScore } from './catalogue-overall-score.mjs';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -55,19 +55,26 @@ export function injectFlavourIntoStatePayload(payload, key, value) {
   };
 }
 
-export function deriveAutoLaurel({ key = '', strength, quality, flavour, size, value } = {}) {
-  const strengthScore = finite(strength, 0);
-  if (strengthScore < 5) return 'none';
+// Gem and Crown are decided by the number of Gold rating fields and nothing else.
+//
+// There is no strength gate and no per-cigar exception: a cigar with all five Golds is a
+// Gem, a cigar with exactly four is a Crown, and anything below that gets neither. The
+// weighted /100 score deliberately plays no part here.
+export function countGoldRatings({ strength, quality, flavour, size, value } = {}) {
   let golds = 0;
-  if (strengthScore >= 7) golds++;
-  const qualityGold = finite(quality, 0) >= 7;
-  if (qualityGold) golds++;
+  if (finite(strength, 0) >= 7) golds++;
+  if (finite(quality, 0) >= 7) golds++;
   const flavourScore = normaliseFlavour(flavour);
   if (flavourScore !== null && flavourScore >= 7) golds++;
   if (String(size || '').toLowerCase() === 'gold') golds++;
   if (finite(value, 0) >= 7) golds++;
-  if (golds >= 4 || (!qualityGold && hasQualityAwardException(key) && golds >= 3)) return 'gem';
-  if (golds >= 3) return 'crown';
+  return golds;
+}
+
+export function deriveAutoLaurel(ratings = {}) {
+  const golds = countGoldRatings(ratings);
+  if (golds >= 5) return 'gem';
+  if (golds === 4) return 'crown';
   return 'none';
 }
 
@@ -202,33 +209,107 @@ function awardKindFromCard(card) {
   return 'none';
 }
 
-function applyLaurelKind(card, kind) {
-  const current = awardKindFromCard(card);
-  const existingAward = card.querySelector('.gem-award');
-  if (current === kind && ((kind === 'none' && !existingAward) || (kind !== 'none' && existingAward))) return;
+const LAUREL_LABEL = { gem: 'Gem Laurels', crown: 'Crown Laurels' };
 
-  const selector = kind === 'gem' ? '.gem-award.gem-tier' : kind === 'crown' ? '.gem-award.crown-tier' : '';
-  const template = selector ? document.querySelector(selector)?.cloneNode(true) : null;
-  card.querySelectorAll('.gem-award').forEach(node => node.remove());
-  card.classList.remove('crown-laurel', 'gem-laurel');
-  if (kind === 'none') return;
-  card.classList.add(kind === 'gem' ? 'gem-laurel' : 'crown-laurel');
-  const medals = card.querySelector('.medals');
-  if (template && medals) medals.insertAdjacentElement('beforebegin', template);
+// The artwork still lives in the page's award boxes, so the badge borrows the image rather
+// than shipping a second copy of it. It has to be cached before the first removal: the
+// boxes are the only source, and applyLaurelKind deletes them as it goes, so reading it
+// lazily would work for the first card and come back empty for every card after it.
+const laurelArt = { gem: null, crown: null };
+
+function captureLaurelArt() {
+  for (const kind of ['gem', 'crown']) {
+    if (laurelArt[kind] !== null) continue;
+    const selector = kind === 'gem' ? '.gem-award.gem-tier img' : '.gem-award.crown-tier img';
+    laurelArt[kind] = document.querySelector(selector)?.getAttribute('src') || '';
+  }
 }
 
-function refreshLaurelForCard(card, saved = {}) {
+function laurelImageSource(kind) {
+  captureLaurelArt();
+  return laurelArt[kind] || '';
+}
+
+// The laurel now reads as a small icon beside the country flag instead of a full-width
+// award box. Any box left in the static markup is removed on sight, so a card that was
+// baked with one does not end up showing both.
+function applyLaurelKind(card, kind) {
+  captureLaurelArt();
+  card.querySelectorAll('.gem-award').forEach(node => node.remove());
+
+  const row = card.querySelector('.country-row');
+  const existing = card.querySelector('.laurel-badge');
+  if (kind === 'none' || !row) {
+    existing?.remove();
+    card.classList.remove('crown-laurel', 'gem-laurel');
+    return;
+  }
+
+  card.classList.toggle('gem-laurel', kind === 'gem');
+  card.classList.toggle('crown-laurel', kind === 'crown');
+
+  const label = LAUREL_LABEL[kind] || '';
+  const badge = existing || document.createElement('span');
+  if (badge.dataset.laurel === kind && badge.isConnected) return;
+  badge.className = `laurel-badge laurel-${kind}`;
+  badge.dataset.laurel = kind;
+  badge.setAttribute('role', 'img');
+  badge.setAttribute('aria-label', label);
+  badge.setAttribute('title', label);
+  const src = laurelImageSource(kind);
+  badge.innerHTML = src ? `<img alt="" src="${src}">` : `<i aria-hidden="true">${kind === 'gem' ? '◆' : '♔'}</i>`;
+  if (!badge.isConnected) row.appendChild(badge);
+}
+
+// The five 1-10 scores the card is currently showing. Size renders its tier as the medal
+// but still carries its own 1-10 subscore, so every field has a number to weight.
+function cardRatingScores(card, saved = {}) {
+  const flavourSaved = own(saved, 'flavour') ? normaliseFlavour(saved.flavour) : null;
+  return {
+    strength: own(saved, 'strength') ? finite(saved.strength, 0) : ratingScore(card, 'Strength', 0),
+    quality: own(saved, 'quality') ? finite(saved.quality, 0) : ratingScore(card, 'Quality', 0),
+    flavour: flavourSaved !== null ? flavourSaved : ratingScore(card, 'Flavour', 0),
+    size: finite(card?.dataset?.sizeScore, 0) || ratingScore(card, 'Size', 0),
+    value: ratingScore(card, 'Value', 0)
+  };
+}
+
+function refreshOverallScoreForCard(card, saved = {}) {
+  if (!card?.querySelector) return null;
+  const { score, provisional } = deriveOverallScore(cardRatingScores(card, saved));
+  const existing = card.querySelector('.overall-score');
+  if (score === null) {
+    existing?.remove();
+    delete card.dataset.overallScore;
+    return null;
+  }
+  const tier = score >= 80 ? 'gold' : score >= 65 ? 'silver' : 'bronze';
+  const node = existing || document.createElement('div');
+  node.className = `overall-score ${tier}${provisional ? ' is-provisional' : ''}`;
+  node.setAttribute('title', provisional
+    ? 'Overall rating, scaled across the rated categories while Flavour is unrated'
+    : 'Overall rating across all five categories');
+  node.innerHTML = `<span>Overall</span><b>${score}</b><small>/100</small>`;
+  if (!node.isConnected) {
+    const medals = card.querySelector('.medals');
+    if (!medals) return null;
+    medals.insertAdjacentElement('afterend', node);
+  }
+  card.dataset.overallScore = String(score);
+  return score;
+}
+
+export function refreshLaurelForCard(card, saved = {}) {
+  const scores = cardRatingScores(card, saved);
   let kind = String(saved.laurel || 'auto').toLowerCase();
   if (!['auto', 'none', 'crown', 'gem'].includes(kind)) kind = 'auto';
   if (kind === 'auto') {
-    const strength = own(saved, 'strength') ? finite(saved.strength, 0) : ratingScore(card, 'Strength', 0);
-    const quality = own(saved, 'quality') ? finite(saved.quality, 0) : ratingScore(card, 'Quality', 0);
-    const flavour = own(saved, 'flavour') ? saved.flavour : null;
+    // Size gold is a ring-gauge band, not a score threshold, so the tier is what counts.
     const size = saved.size || ratingTier(card, 'Size', 'bronze');
-    const value = ratingScore(card, 'Value', 0);
-    kind = deriveAutoLaurel({ key: card.dataset.key, strength, quality, flavour, size, value });
+    kind = deriveAutoLaurel({ ...scores, size });
   }
   applyLaurelKind(card, kind);
+  refreshOverallScoreForCard(card, saved);
 }
 
 let state = { version: 3, cards: {}, sections: {}, entries: {} };

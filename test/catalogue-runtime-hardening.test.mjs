@@ -37,7 +37,7 @@ test('Worker HTML transform injects the runtime bootstrap exactly once', async (
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=143"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=144"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });
