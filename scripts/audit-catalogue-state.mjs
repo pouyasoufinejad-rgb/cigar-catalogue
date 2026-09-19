@@ -159,6 +159,13 @@ export async function runAudit(options = {}) {
     const page = await fetch(`${baseUrl}/?render_audit=${Date.now()}`, { cache: 'no-store' });
     if (!page.ok) throw new Error(`Production render read failed with HTTP ${page.status}.`);
     const html = await page.text();
+    // What the browser is actually told about caching this document, as opposed to what the
+    // Worker source intends. A long-lived or immutable policy here would explain a phone
+    // running current modules against an old stylesheet.
+    for (const header of ['cache-control', 'etag', 'last-modified', 'age', 'cf-cache-status', 'x-cigar-catalogue-version', 'vary']) {
+      console.log(`HEADER ${header}: ${page.headers.get(header) ?? '(absent)'}`);
+    }
+    console.log(`HTML_BYTES ${html.length}`);
     const cards = new Set([...html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["']/gi)].map(m => m[1]));
     // Read the expected bootstrap version out of the Worker source rather than pinning it
     // here, so a routine cache-bump does not fail the audit for the wrong reason.
