@@ -11,13 +11,14 @@ on:
         required: false
         type: string
       mode:
-        description: 'summary (default) or noncompliant to diagnose the structure normaliser'
+        description: 'summary (default), noncompliant, or laurels to check the Gold-count and score rules'
         required: false
         default: 'summary'
         type: choice
         options:
           - summary
           - noncompliant
+          - laurels
 
 permissions:
   contents: read

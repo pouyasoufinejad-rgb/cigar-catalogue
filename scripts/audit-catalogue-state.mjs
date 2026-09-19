@@ -6,6 +6,10 @@ import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 import { parseCatalogueSeed } from './cleanup-live-card-copy.mjs';
+import { countGoldRatings, deriveAutoLaurel } from '../public/catalogue-flavour.mjs';
+import { deriveOverallScore } from '../public/catalogue-overall-score.mjs';
+import { sizeScoreForRing, sizeTierForRing } from '../public/catalogue-size-rules.mjs';
+import { deriveValue } from '../public/catalogue-value.mjs';
 import {
   buildStructureContext,
   buildStructurePatch,
@@ -147,6 +151,57 @@ export async function runAudit(options = {}) {
   const seedCards = isRecord(seed.cards) ? seed.cards : {};
   const rows = await loadTargetRequests(repoRoot);
   const ledger = replayLedger(rows);
+
+  // Read-only check of the laurel and overall-score rules against what is actually live.
+  if ((options.mode ?? process.env.AUDIT_MODE ?? '') === 'laurels') {
+    const keys = [...new Set([...Object.keys(seedCards), ...Object.keys(liveEntries), ...Object.keys(liveCards)])].sort();
+    const tally = { gem: 0, crown: 0, none: 0 };
+    const goldTally = {};
+    let flavourRated = 0;
+    let scored = 0;
+    let provisional = 0;
+    const rows = [];
+
+    for (const key of keys) {
+      const record = { ...(seedCards[key] || {}), ...(liveEntries[key] || {}), ...(liveCards[key] || {}) };
+      const ring = Number(record.ring);
+      const price = Number(record.price);
+      const quality = Number(record.quality);
+      const flavour = record.flavour == null ? null : Number(record.flavour);
+      const valueScore = deriveValue(price, quality, flavour, {
+        length: Number(record.length), ring, catalogueType: record.catalogueType || '', valueUnit: ''
+      }).score;
+      const sizeTier = record.size || sizeTierForRing(ring);
+      const ratings = { strength: Number(record.strength), quality, flavour, size: sizeTier, value: valueScore };
+
+      const golds = countGoldRatings(ratings);
+      const laurel = deriveAutoLaurel(ratings);
+      const overall = deriveOverallScore({ ...ratings, size: sizeScoreForRing(ring) });
+
+      tally[laurel] += 1;
+      goldTally[golds] = (goldTally[golds] || 0) + 1;
+      if (flavour !== null && Number.isFinite(flavour)) flavourRated += 1;
+      if (overall.score !== null) scored += 1;
+      if (overall.provisional) provisional += 1;
+      rows.push({ key, golds, laurel, score: overall.score, provisional: overall.provisional, flavour });
+    }
+
+    console.log(`LAUREL_KEYS ${keys.length}`);
+    console.log(`FLAVOUR_RATED ${flavourRated} of ${keys.length} (unrated ${keys.length - flavourRated})`);
+    console.log(`GOLD_COUNT_DISTRIBUTION ${json(goldTally)}`);
+    console.log(`LAUREL_TALLY ${json(tally)}`);
+    console.log(`OVERALL_SCORED ${scored} (provisional ${provisional})`);
+    const invalid = rows.filter(row => (row.golds >= 5) !== (row.laurel === 'gem') || (row.golds === 4) !== (row.laurel === 'crown'));
+    console.log(`LAUREL_RULE_VIOLATIONS ${invalid.length} ${json(invalid.slice(0, 5))}`);
+    for (const row of rows.filter(r => r.laurel !== 'none').sort((a, b) => b.score - a.score)) {
+      console.log(`  ${row.laurel.toUpperCase().padEnd(5)} golds=${row.golds} score=${row.score}${row.provisional ? '*' : ' '} ${row.key}`);
+    }
+    const top = [...rows].filter(r => r.score !== null).sort((a, b) => b.score - a.score).slice(0, 10);
+    console.log('TOP_SCORES');
+    for (const row of top) console.log(`  ${String(row.score).padStart(3)}${row.provisional ? '*' : ' '} golds=${row.golds} ${row.key}`);
+    console.log('AUDIT_COMPLETE_READ_ONLY');
+    return { live, rows, tally };
+  }
 
   if ((options.mode ?? process.env.AUDIT_MODE ?? '') === 'noncompliant') {
     const context = buildStructureContext(live, seed);
