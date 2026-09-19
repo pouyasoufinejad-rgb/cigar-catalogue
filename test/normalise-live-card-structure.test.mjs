@@ -186,6 +186,35 @@ test('half Practical keeps the full-cigar line before cadence and drops the sess
   ]);
 });
 
+test('a half that lost its catalogueType is still normalised as a half', () => {
+  const byKey = {
+    key:'rocky-patel-sun-grown-maduro-lancero-half',
+    title:'Rocky Patel Sun Grown Maduro Lancero',
+    ring:38,
+    length:3.75,
+    practicalLines:['Single full lancero','Cut','Fragile','Full cigar: 7½″ × 38 Lancero','Two 3¾″ × 38 sessions','Slow Cadence']
+  };
+  assert.equal(classifyStructureFamily(byKey, context), 'half');
+  assert.deepEqual(normalisePracticalLines(byKey, context), [
+    'Two Halves','Cut','Fragile','Full cigar: 7½″ × 38 Lancero','Lenient Cadence'
+  ]);
+
+  // The full-cigar line alone is enough evidence even without the key suffix.
+  const byLine = { key:'mystery', practicalLines:['Single cigar','Cut','Fragile','Full cigar: 7″ × 40 Lancero'], ring:40, length:3.5 };
+  assert.equal(classifyStructureFamily(byLine, context), 'half');
+});
+
+test('every single reads "Single cigar" and only a tubo keeps its own word', () => {
+  const vitolaNamed = { key:'regular', ring:48, practicalLines:['Single Churchill','Cut','Fragile'] };
+  assert.equal(normalisePracticalLines(vitolaNamed, context)[0], 'Single cigar');
+
+  const tubo = { key:'regular', ring:44, practicalLines:['Single tubo','Uncut','Protected'] };
+  assert.equal(normalisePracticalLines(tubo, context)[0], 'Single tubo');
+
+  const fromLabel = { key:'regular', ring:44, packageLabel:'single full lancero' };
+  assert.equal(normalisePracticalLines(fromLabel, context)[0], 'Single cigar');
+});
+
 test('normalisation is idempotent, so a published card never needs a second write', () => {
   const records = [
     { key:'regular', title:'Undercrown 10 Corona Viva — Single', ring:43, length:5,

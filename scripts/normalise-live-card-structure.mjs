@@ -130,9 +130,17 @@ function effectiveRing(record = {}, context = {}) {
   return Number.isFinite(fallback) ? fallback : NaN;
 }
 
+function looksLikeHalf(record = {}) {
+  if (/-half$/i.test(String(record.key || ''))) return true;
+  return sourceLines(record, 'practical').some(line => /^(?:full cigar\b|two halves$)/i.test(line));
+}
+
 function explicitCatalogueType(record = {}) {
   const type = String(record.catalogueType || '').trim().toLowerCase();
   if (type === 'half' || type === 'half-cigar' || type === 'halfcigar') return HALF_FAMILY;
+  // A half that lost its catalogueType would otherwise be normalised as a single and
+  // silently drop the full-cigar line its section is built around.
+  if (looksLikeHalf(record)) return HALF_FAMILY;
   if (type === 'taster' || record.taster) return TASTER_FAMILY;
   return 'main';
 }
@@ -230,12 +238,14 @@ function packageLine(record, lines, family) {
   }
   const existing = firstMatch(lines, /^(?:tin|pack|box|case|bundle|single\b)/i);
   if (existing) {
-    if (/^single\s+\d/i.test(existing)) return 'Single cigar';
-    return existing.replace(/^single$/i, 'Single cigar');
+    if (/^single\s+tubo\b/i.test(existing)) return 'Single tubo';
+    if (/^single\b/i.test(existing)) return 'Single cigar';
+    return existing;
   }
   const label = String(record.packageLabel || '').trim();
   if (label) {
-    if (/^single(?:\s+cigar)?$/i.test(label)) return 'Single cigar';
+    if (/^single\s+tubo\b/i.test(label)) return 'Single tubo';
+    if (/^single\b/i.test(label)) return 'Single cigar';
     return label.charAt(0).toUpperCase() + label.slice(1);
   }
   return 'Single cigar';
