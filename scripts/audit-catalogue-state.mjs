@@ -160,11 +160,17 @@ export async function runAudit(options = {}) {
     if (!page.ok) throw new Error(`Production render read failed with HTTP ${page.status}.`);
     const html = await page.text();
     const cards = new Set([...html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["']/gi)].map(m => m[1]));
+    // Read the expected bootstrap version out of the Worker source rather than pinning it
+    // here, so a routine cache-bump does not fail the audit for the wrong reason.
+    const worker = await readFile(resolve(repoRoot, 'src/index.js'), 'utf8');
+    const expectedBootstrap = worker.match(/catalogue-runtime\.mjs\?v=(\d+)/)?.[1] || '';
     const checks = {
       RENDERED_CARDS: cards.size,
-      BOOTSTRAP_V144: /catalogue-runtime\.mjs\?v=144/.test(html),
+      EXPECTED_BOOTSTRAP: expectedBootstrap,
+      BOOTSTRAP_DEPLOYED: Boolean(expectedBootstrap) && html.includes(`catalogue-runtime.mjs?v=${expectedBootstrap}`),
       LAUREL_BADGE_CSS: /\.laurel-badge\{/.test(html),
       OVERALL_SCORE_CSS: /\.overall-score\{/.test(html),
+      MOBILE_ONE_COLUMN_CSS: /@media\(max-width:900px\)\{html body \.grid\.grid\{grid-template-columns:minmax\(0,1fr\)!important/.test(html),
       AWARD_BOX_HIDDEN_IN_CSS: /\.gem-award\{display:none!important\}/.test(html),
       OVERALL_SCORE_RENDERED: (html.match(/class="overall-score/g) || []).length,
       DOMINICAN_REPUBLIC_LEFT_LONG: (html.match(/<span class="country-name">[^<]*Dominican Republic[^<]*<\/span>/g) || []).length
