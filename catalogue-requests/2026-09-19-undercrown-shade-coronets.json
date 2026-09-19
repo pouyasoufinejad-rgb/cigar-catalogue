@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-19-undercrown-shade-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-shade-coronets",
+  "entry": {
+    "brand": "Undercrown",
+    "title": "Shade Coronets",
+    "eyebrow": "Creamy Connecticut Shade Coronet",
+    "packagePrice": 100,
+    "packageLabel": "tin of 10",
+    "price": 10,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 6,
+    "quality": 7,
+    "flavour": 7,
+    "risk": 2,
+    "size": "gold",
+    "subsection": "coronets-cigarillos",
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "rank": 14,
+    "experienceTags": [
+      "Nicotine: Low-Medium",
+      "Pairings: Coffee, cream ale, breakfast tea",
+      "Occasion: Morning smoke, quick daytime break, mild coffee pairing"
+    ],
+    "summaryHtml": "<strong>Sweet cream, toasted bread, almond, cedar and light white pepper</strong> are the reported centre of Undercrown Shade, the pale counterpart to the Maduro and Sun Grown blends. An Ecuadorian Connecticut wrapper sits over a Sumatra binder and a Dominican Criollo 98, Nicaraguan Criollo and Corojo filler, which keeps the blend medium-bodied rather than mild and gives the Coronet more structure than a typical shade-wrapped cigarillo. At 4″ × 32 it is the mildest Coronet in this cohort and the one most suited to a morning or coffee-hour smoke.",
+    "noteHtml": "Untasted. Cigar Hut lists the exact 4″ × 32 tin of 10 at A$100, The Index and Cigarworld also stock the line, and the retailer matrix carries all three. Strength and Quality follow the Blackened S84 Coronet, the closest Shade-wrapped Drew Estate reference in the catalogue.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Ecuadorian Connecticut",
+      "Binder: Sumatra",
+      "Filler: Dominican Criollo 98, Nicaraguan Criollo and Corojo"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "Uncut",
+      "Protected",
+      "Sensitive Cadence"
+    ],
+    "smokeTime": "20–30 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/undercrown-shade-coronets-tin-of-10/",
+      "https://www.theindexcigars.com.au/products/connecticut-shade-coronet-tin-of-10",
+      "https://www.cigarworld.com.au/aud/categories/Cigars/UNDERCROWN-(Drew-Estate)/"
+    ],
+    "priceChecked": "2026-09-19"
+  },
+  "note": "Add Undercrown Shade Coronets to Coronets & Cigarillos at rank 14, directly above Blackened S84 Shade to Black Coronets, which moves to 15. Strength 6, Quality 7, Flavour 7 and Size gold are copied from S84 as requested, so both carry the same four Golds and the same Crown; Value stays automatically derived from price. All three known Australian retailers are listed so the retailer matrix shows a row each, matching Undercrown Maduro Coronets and Liga Privada No. 9 Coronets, which both carry their full retailer set. Blend and 4 x 32 dimensions are consistent across Drew Estate's own listing and multiple retailers: Ecuadorian Connecticut wrapper, Sumatra binder, Dominican Criollo 98 with Nicaraguan Criollo and Corojo filler, handmade at La Gran Fabrica in Nicaragua. Pricing and retailer URLs come from search results only; this sandbox's egress proxy blocks .com.au, so no retailer page could be loaded to confirm them directly."
+}
