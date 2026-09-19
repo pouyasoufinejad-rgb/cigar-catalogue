@@ -10,7 +10,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-recommendation-subsections.mjs?v=editor-repair-2');
   import('./catalogue-half-cohort.mjs?v=editor-repair-1');
   import('./catalogue-editor-behaviour.mjs');
-  import('./catalogue-convenience.mjs?v=direct-edit-1');
+  import('./catalogue-convenience.mjs?v=compact-retailer-matrix-1');
   import('./catalogue-convenience-refinements.mjs');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-5');
 }

@@ -6,7 +6,7 @@ const valueSource = await readFile(new URL('../public/catalogue-value.mjs', impo
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('catalogue runtime bootstrap loads the cache-busted convenience layer with the other browser presentation modules', () => {
-  assert.match(runtimeSource, /import\('\.\/catalogue-convenience\.mjs\?v=direct-edit-1'\)/);
+  assert.match(runtimeSource, /import\('\.\/catalogue-convenience\.mjs\?v=compact-retailer-matrix-1'\)/);
 });
 
 test('Value module stays browser-independent', () => {
