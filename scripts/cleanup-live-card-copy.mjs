@@ -8,6 +8,7 @@ import {
 } from './publish-catalogue-request.mjs';
 
 const TEXT_FIELDS = Object.freeze([
+  'title',
   'eyebrow',
   'summaryHtml',
   'noteHtml',
@@ -100,6 +101,19 @@ export function cleanCatalogueText(input) {
   return text;
 }
 
+// "Undercrown 10 Corona Viva — Single" -> "Undercrown 10 Corona Viva". The package is
+// already stated in the Practical block and in packageLabel, so repeating it in the title
+// says nothing. A titled package that is not a single ("— Tin of 10") is left alone.
+export function cleanCatalogueTitle(input) {
+  if (typeof input !== 'string') return input;
+  if (!/\bsingles?\b/i.test(plainText(input))) return input;
+  const text = input
+    .replace(/\s*[—–-]\s*singles?(?:\s+cigars?)?\s*$/i, '')
+    .replace(/\s*\bsingles?\b\s*/gi, ' ')
+    .replace(/\s*[—–]\s*$/, '');
+  return cleanSpacing(text);
+}
+
 function isCataloguePlacementSentence(sentence) {
   const plain = plainText(sentence).trim();
   if (!plain) return false;
@@ -138,6 +152,7 @@ export function buildCleanupPatch(card = {}, entry = {}, base = {}) {
     if (typeof effective[field] !== 'string') continue;
     let cleaned = cleanCatalogueText(effective[field]);
     if (field === 'summaryHtml') cleaned = cleanSummaryMeta(cleaned);
+    if (field === 'title') cleaned = cleanCatalogueTitle(cleaned);
     if (cleaned !== effective[field]) patch[field] = cleaned;
   }
 
@@ -186,12 +201,37 @@ async function readLiveState(fetchImpl, baseUrl) {
   return response.json();
 }
 
+// A preview run reads live state and prints the exact before/after for every field it
+// would rewrite, without sending a write. Copy changes are not recoverable from KV, which
+// keeps no history, so a sweep this broad is reviewable first.
+export function buildCleanupPreview(state = {}, seed = {}) {
+  return findAffectedKeys(state, seed).map(key => {
+    const effective = effectiveRecord(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key]);
+    const patch = buildCleanupPatch(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key]);
+    return {
+      key,
+      fields: Object.entries(patch).map(([field, after]) => ({ field, before: effective[field], after }))
+    };
+  });
+}
+
+function printCleanupPreview(preview) {
+  for (const row of preview) {
+    console.log(`\n--- ${row.key}`);
+    for (const { field, before, after } of row.fields) {
+      console.log(`  ${field} before: ${JSON.stringify(before)}`);
+      console.log(`  ${field} after : ${JSON.stringify(after)}`);
+    }
+  }
+}
+
 export async function runLiveCleanup(options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable.');
   const baseUrl = String(options.baseUrl || DEFAULT_BASE_URL).replace(/\/$/, '');
+  const dryRun = options.dryRun ?? /^(1|true|yes)$/i.test(String(process.env.CLEANUP_DRY_RUN || ''));
   const token = String(options.token ?? process.env.CATALOGUE_ADMIN_TOKEN ?? '').trim();
-  if (!token) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
+  if (!token && !dryRun) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
   const repoRoot = resolve(options.repoRoot || process.cwd());
 
   const html = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8');
@@ -200,6 +240,13 @@ export async function runLiveCleanup(options = {}) {
   const initialKeys = findAffectedKeys(initialState, seed);
 
   console.log(`Found ${initialKeys.length} catalogue card(s) with redundant visible copy.`);
+
+  if (dryRun) {
+    const preview = buildCleanupPreview(initialState, seed);
+    printCleanupPreview(preview);
+    console.log(`\nDry run only: ${preview.length} card(s) would change and nothing was written to KV.`);
+    return { published: [], remaining: initialKeys, preview, dryRun: true };
+  }
 
   const published = [];
   for (const key of initialKeys) {

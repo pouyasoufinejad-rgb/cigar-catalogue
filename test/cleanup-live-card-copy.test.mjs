@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   cleanCatalogueText,
+  cleanCatalogueTitle,
   cleanSummaryMeta,
   buildCleanupPatch,
+  buildCleanupPreview,
   findAffectedKeys
 } from '../scripts/cleanup-live-card-copy.mjs';
 
@@ -104,4 +106,47 @@ test('findAffectedKeys scans the current effective live copy across cards and dy
     }
   };
   assert.deepEqual(findAffectedKeys(state), ['dynamicOld', 'metaOld', 'staticOld']);
+});
+
+test('a title never repeats the package when the package is a single', () => {
+  assert.equal(cleanCatalogueTitle('Undercrown 10 Corona Viva — Single'), 'Undercrown 10 Corona Viva');
+  assert.equal(cleanCatalogueTitle('Único Serie L40 Lancero — Single'), 'Único Serie L40 Lancero');
+  assert.equal(cleanCatalogueTitle('Short — Single'), 'Short');
+  assert.equal(cleanCatalogueTitle('Escurio Petit Robusto — Single cigar'), 'Escurio Petit Robusto');
+});
+
+test('a title keeps a package that is not a single, and an unaffected title is untouched', () => {
+  const tin = 'Liga Privada No. 9 Coronets — Tin of 10';
+  assert.equal(cleanCatalogueTitle(tin), tin);
+  const plain = 'The Wise Man Maduro Lancero';
+  assert.equal(cleanCatalogueTitle(plain), plain);
+  // A hyphenated vitola must not be mistaken for the package separator.
+  assert.equal(cleanCatalogueTitle('Disciple Half-Corona — Single'), 'Disciple Half-Corona');
+});
+
+test('the title rule runs as part of the card patch alongside the projected rule', () => {
+  const patch = buildCleanupPatch({}, {
+    title: 'New World Cameroon Short Robusto — Single',
+    smokeTime: '40–55 min smoke (projected)',
+    experienceTags: ['Nicotine: Medium (projected)']
+  }, {});
+  assert.equal(patch.title, 'New World Cameroon Short Robusto');
+  assert.equal(patch.smokeTime, '40–55 min smoke');
+  assert.deepEqual(patch.experienceTags, ['Nicotine: Medium']);
+});
+
+test('preview reports every field it would rewrite and writes nothing', () => {
+  const state = {
+    cards: {},
+    entries: {
+      x: { key:'x', title:'Example Corona — Single', smokeTime:'30 min smoke (projected)' }
+    }
+  };
+  const preview = buildCleanupPreview(state, { cards:{} });
+  assert.equal(preview.length, 1);
+  assert.equal(preview[0].key, 'x');
+  const byField = Object.fromEntries(preview[0].fields.map(f => [f.field, f]));
+  assert.equal(byField.title.before, 'Example Corona — Single');
+  assert.equal(byField.title.after, 'Example Corona');
+  assert.equal(byField.smokeTime.after, '30 min smoke');
 });
