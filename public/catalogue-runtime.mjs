@@ -3,7 +3,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-direct-persistence.mjs');
   import('./catalogue-flavour.mjs?v=laurel-badge-1');
   import('./catalogue-size-value-runtime.mjs?v=value-single-writer-1');
-  import('./catalogue-card-layout.mjs?v=visible-grid-1');
+  import('./catalogue-card-layout.mjs?v=mobile-one-column-1');
   import('./catalogue-legacy-copy.mjs');
   import('./catalogue-size-presentation.mjs');
   import('./catalogue-presentation.mjs');

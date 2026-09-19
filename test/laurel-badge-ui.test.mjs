@@ -96,7 +96,7 @@ test('losing a laurel clears the badge rather than leaving a stale one', async (
   assert.equal(card.classList.contains('crown-laurel'), false);
 });
 
-test('the overall score renders under the medals and updates with the ratings', async () => {
+test('the overall score renders left of the flag and updates with the ratings', async () => {
   const dom = fixture();
   const { refreshLaurelForCard } = await import('../public/catalogue-flavour.mjs');
   const card = dom.window.document.querySelector('.card');
@@ -104,15 +104,35 @@ test('the overall score renders under the medals and updates with the ratings', 
   refreshLaurelForCard(card, {});
   const score = card.querySelector('.overall-score');
   assert.ok(score, 'the score should render');
-  assert.equal(score.previousElementSibling.className, 'medals', 'it sits directly under the medals');
+  const row = card.querySelector('.country-row');
+  assert.equal(score.parentElement, row, 'it belongs in the country row');
+  assert.equal(row.firstElementChild, score, 'and sits to the left of the flag');
+  assert.equal(score.nextElementSibling.classList.contains('country-flag'), true);
   assert.ok(score.classList.contains('is-provisional'), 'Flavour is unrated here');
 
   // Q8 S9 V8 St8 with Flavour unrated: (24 + 18 + 9.6 + 6.4) / 70 * 100.
   assert.equal(card.dataset.overallScore, '83');
-  assert.equal(score.querySelector('b').textContent, '83');
+  assert.equal(score.textContent, '83', 'the number alone');
 
   // Rating Flavour makes it a full score and a Gem.
   refreshLaurelForCard(card, { flavour: 9 });
   assert.equal(card.querySelector('.overall-score').classList.contains('is-provisional'), false);
   assert.equal(card.querySelector('.laurel-badge').dataset.laurel, 'gem');
+});
+
+test('rerunning the refresh keeps the score first and does not duplicate it', async () => {
+  const dom = fixture();
+  const { refreshLaurelForCard } = await import('../public/catalogue-flavour.mjs');
+  const card = dom.window.document.querySelector('.card');
+
+  refreshLaurelForCard(card, {});
+  refreshLaurelForCard(card, {});
+  refreshLaurelForCard(card, { flavour: 9 });
+
+  const row = card.querySelector('.country-row');
+  assert.equal(card.querySelectorAll('.overall-score').length, 1);
+  assert.equal(card.querySelectorAll('.laurel-badge').length, 1);
+  assert.equal(row.firstElementChild.className.split(' ')[0], 'overall-score');
+  // The laurel stays on the other side of the name.
+  assert.equal(row.lastElementChild.classList.contains('laurel-badge'), true);
 });

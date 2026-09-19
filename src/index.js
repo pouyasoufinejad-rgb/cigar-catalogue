@@ -764,13 +764,13 @@ export function renderEntryCard(rawEntry) {
   const sizeFootprint = Math.max(0.32, Math.min(1.15, (Math.max(entry.length, 1) / 5) * (Math.max(entry.ring, 1) / 50))).toFixed(4);
   return `<article class="card" data-dynamic-entry="1" data-key="${esc(entry.key)}" data-expected="${valueInfo.benchmark}" data-format="${sizeBucket(entry.size)}" data-price="${entry.price.toFixed(2)}"${entry.priceChecked ? ` data-price-checked="${esc(entry.priceChecked)}"` : ''} data-quality="${scoreBucket(entry.quality)}" data-rank="${entry.rank}" data-ratio="${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : ''}" data-risk="${entry.risk}" data-stock="${esc(entry.stock)}"${entry.stockChecked ? ` data-stock-checked="${esc(entry.stockChecked)}"` : ''} data-strength="${scoreBucket(entry.strength)}" data-value="${scoreBucket(valueScore)}"${tasterAttr}${archivedAttrs}${pinAttr}>
 <div class="artframe size-normalized" data-visual-length="${entry.length}" data-visual-ring="${entry.ring}" style="--visual-footprint:${sizeFootprint}">${imageMarkup}<div class="rankflag"><span>${rankLabel}</span><b>${rankValue}</b></div>${riskHtml(entry.risk)}<div class="artmeta artmeta-left"><span class="artmeta-title">Production</span>${production}</div><div class="artmeta artmeta-right"><span class="artmeta-title">Practical</span>${practical}</div>${entry.smokeTime ? `<div class="artmeta artmeta-bottom">${esc(entry.smokeTime)}</div>` : ''}</div>
-<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3><div class="country-above"><div class="country-row">${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div><div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${medalRating('Value', valueScore)}</div>${overallScoreMarkup({
+<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3><div class="country-above"><div class="country-row">${overallScoreMarkup({
     strength: entry.strength,
     quality: entry.quality,
     flavour: entry.flavour,
     size: sizeScoreForRing(entry.ring),
     value: valueScore
-  })}${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
+  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div><div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${medalRating('Value', valueScore)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
 }
 
 function setHtmlAttribute(tag, name, value) {
@@ -902,7 +902,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=144"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=145"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;

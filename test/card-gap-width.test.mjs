@@ -13,7 +13,7 @@ test('desktop catalogue keeps three columns with an 8px gap and a 60px width ext
 });
 
 test('mobile catalogue remains one full-width column', () => {
-  assert.match(layoutSource, /@media\(max-width:700px\)[\s\S]*grid-template-columns:minmax\(0,1fr\)!important/);
-  assert.match(layoutSource, /@media\(max-width:700px\)[\s\S]*width:100%!important/);
-  assert.match(layoutSource, /@media\(max-width:700px\)[\s\S]*margin-inline:0!important/);
+  assert.match(layoutSource, /@media\(max-width:900px\)[\s\S]*grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(layoutSource, /@media\(max-width:900px\)[\s\S]*width:100%!important/);
+  assert.match(layoutSource, /@media\(max-width:900px\)[\s\S]*margin-inline:0!important/);
 });

@@ -40,7 +40,7 @@ html body article.card .medals .rating b{font-size:11px!important;margin-top:-2p
 html body article.card .medals .subscore{font-size:9px!important;margin-top:-1px!important}
 html body article.card .cardbody .summary{font-size:14px!important;line-height:1.5!important}
 html body article.card .artmeta{font-size:11px!important;line-height:1.35!important}
-@media(max-width:700px){
+@media(max-width:900px){
   html body .grid{
     grid-template-columns:minmax(0,1fr)!important;
     gap:6px!important;

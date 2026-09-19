@@ -43,13 +43,21 @@ export function deriveOverallScore(ratings = {}) {
   return { score, provisional: missing.length > 0, missing };
 }
 
+export function overallScoreTier(score) {
+  return score >= 80 ? 'gold' : score >= 65 ? 'silver' : 'bronze';
+}
+
+export function overallScoreTitle(provisional) {
+  return provisional
+    ? 'Overall rating out of 100, scaled across the rated categories while Flavour is unrated'
+    : 'Overall rating out of 100 across all five categories';
+}
+
+// The number carries the meaning on its own, so the card shows the figure and nothing
+// else. The denominator and the word live in the title attribute.
 export function overallScoreMarkup(ratings = {}) {
   const { score, provisional } = deriveOverallScore(ratings);
   if (score === null) return '';
-  const tier = score >= 80 ? 'gold' : score >= 65 ? 'silver' : 'bronze';
-  const title = provisional
-    ? 'Overall rating, scaled across the rated categories while Flavour is unrated'
-    : 'Overall rating across all five categories';
-  return `<div class="overall-score ${tier}${provisional ? ' is-provisional' : ''}" title="${title}">`
-    + `<span>Overall</span><b>${score}</b><small>/100</small></div>`;
+  return `<span class="overall-score ${overallScoreTier(score)}${provisional ? ' is-provisional' : ''}"`
+    + ` title="${overallScoreTitle(provisional)}">${score}</span>`;
 }

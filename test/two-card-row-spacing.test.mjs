@@ -12,5 +12,5 @@ test('two-card desktop rows count only visible cards before applying inward offs
 });
 
 test('mobile removes desktop grid-column and transform offsets from every card', () => {
-  assert.match(layoutSource, /@media\(max-width:700px\)[\s\S]*html body \.grid > article\.card\{[\s\S]*grid-column:auto!important;[\s\S]*transform:none!important/);
+  assert.match(layoutSource, /@media\(max-width:900px\)[\s\S]*html body \.grid > article\.card\{[\s\S]*grid-column:auto!important;[\s\S]*transform:none!important/);
 });

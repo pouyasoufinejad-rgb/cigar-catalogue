@@ -61,7 +61,7 @@ article.card{
 article.card .artframe{
   min-height:var(--catalogue-artframe-min-height)!important;
 }
-@media (max-width:700px){
+@media (max-width:900px){
   .grid{
     grid-template-columns:minmax(0, 1fr)!important;
   }

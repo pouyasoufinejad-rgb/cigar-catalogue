@@ -45,14 +45,15 @@ test('a cigar with nothing rated has no score rather than a zero', () => {
   assert.equal(overallScoreMarkup({}), '');
 });
 
-test('the markup renders the score, the denominator and a tier', () => {
+test('the markup is the number alone, with the wording kept in the title', () => {
   const dom = new JSDOM(`<!doctype html><body>${overallScoreMarkup({
     quality: 9, flavour: 9, size: 9, value: 8, strength: 9
   })}</body>`);
   const node = dom.window.document.querySelector('.overall-score');
   assert.ok(node);
-  assert.equal(node.querySelector('b').textContent, '89');
-  assert.equal(node.querySelector('small').textContent, '/100');
+  assert.equal(node.textContent, '89', 'no label and no denominator on the card');
+  assert.doesNotMatch(node.textContent, /overall|\/100/i);
+  assert.match(node.getAttribute('title'), /out of 100/);
   assert.ok(node.classList.contains('gold'));
   assert.equal(node.classList.contains('is-provisional'), false);
 });

@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveOverallScore } from './catalogue-overall-score.mjs';
+import { deriveOverallScore, overallScoreTier, overallScoreTitle } from './catalogue-overall-score.mjs';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -274,27 +274,23 @@ function cardRatingScores(card, saved = {}) {
   };
 }
 
+// The score sits to the left of the flag and shows the figure alone.
 function refreshOverallScoreForCard(card, saved = {}) {
   if (!card?.querySelector) return null;
   const { score, provisional } = deriveOverallScore(cardRatingScores(card, saved));
   const existing = card.querySelector('.overall-score');
-  if (score === null) {
+  const row = card.querySelector('.country-row');
+  if (score === null || !row) {
     existing?.remove();
     delete card.dataset.overallScore;
     return null;
   }
-  const tier = score >= 80 ? 'gold' : score >= 65 ? 'silver' : 'bronze';
-  const node = existing || document.createElement('div');
-  node.className = `overall-score ${tier}${provisional ? ' is-provisional' : ''}`;
-  node.setAttribute('title', provisional
-    ? 'Overall rating, scaled across the rated categories while Flavour is unrated'
-    : 'Overall rating across all five categories');
-  node.innerHTML = `<span>Overall</span><b>${score}</b><small>/100</small>`;
-  if (!node.isConnected) {
-    const medals = card.querySelector('.medals');
-    if (!medals) return null;
-    medals.insertAdjacentElement('afterend', node);
-  }
+  const node = existing || document.createElement('span');
+  node.className = `overall-score ${overallScoreTier(score)}${provisional ? ' is-provisional' : ''}`;
+  node.setAttribute('title', overallScoreTitle(provisional));
+  node.textContent = String(score);
+  // Always the first child, so it stays left of the flag however often this reruns.
+  if (node.parentElement !== row || row.firstElementChild !== node) row.prepend(node);
   card.dataset.overallScore = String(score);
   return score;
 }

@@ -12,7 +12,7 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 });
 
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
-  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=visible-grid-1'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=mobile-one-column-1'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
   assert.match(wideLayout, /width:\s*calc\(100% \+ 60px\)!important/);
@@ -43,13 +43,13 @@ test('wider cards keep readable rating and copy text', () => {
 });
 
 test('mobile remains one full-width column with no horizontal overhang and compact laurels', () => {
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*grid-template-columns:\s*minmax\(0,1fr\)!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*gap:\s*6px!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*width:\s*100%!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*margin-inline:\s*0!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*html body \.grid > article\.card\{[\s\S]*grid-column:\s*auto!important;[\s\S]*transform:\s*none!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:140px!important/);
-  assert.match(wideLayout, /@media\(max-width:700px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:84px!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*grid-template-columns:\s*minmax\(0,1fr\)!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*gap:\s*6px!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*width:\s*100%!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*margin-inline:\s*0!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*html body \.grid > article\.card\{[\s\S]*grid-column:\s*auto!important;[\s\S]*transform:\s*none!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:140px!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:84px!important/);
 });
 
 test('existing art-frame heights and mobile metadata placement remain unchanged', () => {
