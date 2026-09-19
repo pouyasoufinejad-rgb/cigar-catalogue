@@ -369,3 +369,59 @@ test('API failure text redacts the admin token', async () => {
     }
   );
 });
+
+test('inserting a card resyncs the ranks of the dynamic entries it displaces', async () => {
+  const calls = [];
+  const entryAt = (key, rank) => ({
+    key, brand: 'Brand', title: key, quality: 7, strength: 6, price: 12, packagePrice: 120,
+    packageLabel: 'tin of 10', length: 4, ring: 32, country: 'Nicaragua', risk: 1, rank,
+    taster: false, archived: false, archivedAt: '', experienceTags: [], summaryHtml: '',
+    noteHtml: '', productionLines: ['Handmade'], practicalLines: ['Tin of 10'],
+    smokeTime: '20 min', retailerLinks: [], imageUrl: '', imageSourceKey: '', imageVersion: 0,
+    stock: 'in', stockPin: '', priceChecked: '2026-09-19', stockChecked: '2026-09-19', size: 'gold'
+  });
+  const state = baseState({
+    entries: { incumbent: entryAt('incumbent', 1), trailing: entryAt('trailing', 2) },
+    cards: {
+      incumbent: { rank: 1, quality: 7, taster: false, archived: false },
+      trailing: { rank: 2, quality: 7, taster: false, archived: false }
+    }
+  });
+
+  const writtenEntries = {};
+  let writtenState;
+  const entryRoute = key => ({
+    method: 'PUT', url: `${BASE}/api/catalogue-entry/${key}`,
+    response: ({ options }) => {
+      writtenEntries[key] = JSON.parse(options.body);
+      return jsonResponse({ ok: true, entry: writtenEntries[key] });
+    }
+  });
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    entryRoute('newcomer'), entryRoute('incumbent'), entryRoute('trailing'),
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
+      writtenState = JSON.parse(options.body);
+      return jsonResponse({ ok: true });
+    } },
+    { method: 'GET', url: `${BASE}/api/catalogue-entry/newcomer`, response: () => jsonResponse(writtenEntries.newcomer) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...writtenState, entries: { ...state.entries, ...writtenEntries } }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=newcomer`, response: new Response('<div id="flat-main"><article class="card" data-key="newcomer"></article></div>', { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  await publishRequestDocument({
+    operation: 'upsert-entry', key: 'newcomer',
+    entry: { brand: 'Brand', title: 'Newcomer', rank: 1, quality: 7, strength: 6, price: 12, ring: 32 }
+  }, { fetchImpl: createFetchRouter(routes, calls), baseUrl: BASE, token: TOKEN, now: () => new Date('2026-09-19T00:00:00Z') });
+
+  // The newcomer takes rank 1, so the other two shift down. A dynamic entry renders from
+  // its own rank, so leaving them untouched made two cards claim the same position.
+  assert.equal(writtenEntries.newcomer.rank, 1);
+  assert.equal(writtenState.cards.incumbent.rank, 2, 'the card map shifts the incumbent');
+  assert.ok(writtenEntries.incumbent, 'the displaced entry must be rewritten, not just its card');
+  assert.equal(writtenEntries.incumbent.rank, 2, 'and its rank must match its card');
+  assert.equal(writtenEntries.trailing.rank, 3);
+  // Everything else on a displaced entry survives the resync.
+  assert.equal(writtenEntries.incumbent.title, 'incumbent');
+  assert.equal(writtenEntries.incumbent.price, 12);
+});

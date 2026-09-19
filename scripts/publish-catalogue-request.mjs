@@ -527,6 +527,26 @@ export async function publishRequestDocument(input, options = {}) {
   }
 
   assertRankingInvariant(state.cards, 'Catalogue write', state.sections);
+
+  // Inserting or moving a card shifts the ranks of the others in its cohort, but only the
+  // published key's entry was being resynced. A dynamic entry renders from its own rank,
+  // not its card's, so every displaced entry kept its old number and two cards ended up
+  // claiming the same position. putState writes cards and sections only, so each displaced
+  // entry needs its own write.
+  const displacedEntries = [];
+  for (const [key, entry] of Object.entries(state.entries)) {
+    if (key === request.key || !isRecord(entry)) continue;
+    const card = state.cards[key];
+    if (!isRecord(card) || card.archived) continue;
+    const cardRank = Number(card.rank);
+    if (!Number.isFinite(cardRank) || Number(entry.rank) === cardRank) continue;
+    displacedEntries.push([key, { ...entry, rank: cardRank }]);
+  }
+  for (const [key, entry] of displacedEntries) {
+    await putEntry(fetchImpl, baseUrl, token, key, entry);
+    state.entries[key] = entry;
+  }
+
   if (target === 'dynamic') await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry);
   await putState(fetchImpl, baseUrl, token, state);
 

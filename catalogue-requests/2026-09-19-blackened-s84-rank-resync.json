@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-19-blackened-s84-rank-resync",
+  "operation": "upsert-entry",
+  "key": "blackened-s84-shade-to-black-coronets",
+  "entry": {
+    "rank": 15
+  },
+  "note": "Repair the live rank of Blackened S84 Coronets. Adding Undercrown Shade Coronets at rank 14 shifted S84's card to 15, but the publisher only resynced the rank of the key it was publishing, so S84's dynamic entry kept 14. A dynamic entry renders from its own rank, so production showed both cards as No. 14. The publisher now rewrites every displaced entry; this request repairs the one record that was already wrong. Rank is the only field sent, so every other field is preserved."
+}
