@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-19-new-world-cameroon-move-to-cohort-bottom",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-cameroon-short-robusto",
+  "entry": {
+    "rank": 20
+  },
+  "note": "Move the newly added New World Cameroon Short Robusto to the bottom of Panatelas, Coronas & Robustos, which is where it was asked to go. The original request omitted rank on the assumption that the publisher would append it; that assumption was wrong. publish-catalogue-request.mjs resolves a new dynamic entry's rank with `nextEntry.rank ?? nextCard.rank ?? 1` before reorderPublisherTarget runs, so an omitted rank becomes 1 and the card is inserted at the top of the subsection rather than appended. The MAX_SAFE_INTEGER append path in reorderPublisherTarget is therefore unreachable for a new dynamic upsert. The subsection currently holds 20 entries with this card at position 1, so rank 20 moves it last and restores the previous relative order of the other 19. Rank is the only field sent; every other field is left untouched."
+}
