@@ -25,6 +25,18 @@ const [htmlResponse, stateResponse, stockResponse] = await Promise.all([
   fetchOk(`${base}/api/stock?github-stock-refresh=${nonce}`)
 ]);
 const html = await htmlResponse.text();
+const renderedCards = [];
+for (const match of html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^>]*>/gi)) {
+  const tag = match[0];
+  renderedCards.push({
+    key: match[1],
+    archived: /\bdata-archived=["']1["']/i.test(tag),
+    taster: /\bdata-taster=["']1["']/i.test(tag),
+    catalogueType: tag.match(/\bdata-catalogue-type=["']([^"']+)["']/i)?.[1] || '',
+    rank: tag.match(/\bdata-rank=["']([^"']+)["']/i)?.[1] || ''
+  });
+}
+console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));
 const state = await stateResponse.json();
 const prior = await stockResponse.json();
 const liveRows = [];
