@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-20-price-audit-undercrown-maduro-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-maduro-coronets",
+  "entry": {
+    "packagePrice": 119,
+    "price": 11.9,
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "stock": "in",
+    "noteHtml": "The Index currently lists the exact 4″ × 32 tin of 10 at A$119 and available. Cigar Hut's cheaper tin listing is unavailable.",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/undercrown-maduro-coronet-tin-of-10",
+      "https://www.cigarhut.com.au/undercrown-maduro-coronets/",
+      "https://www.cigarworld.com.au/aud/categories/cigars/drew-estate-%28nicaragua%29/undercrown/"
+    ]
+  },
+  "note": "2026-09-20 Australian retailer audit: The Index is the best verified currently available tin at A$119; Cigar Hut's cheaper listing is unavailable. SmokingPipes is excluded from best-price selection."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-price-audit-blackened-s84-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-s84-shade-to-black-coronets",
+  "entry": {
+    "packagePrice": 105,
+    "price": 10.5,
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "stock": "in",
+    "noteHtml": "Cigar Hut currently lists the exact 4″ × 32 tin of 10 at A$105 and available. The Index tin is A$119 and currently unavailable.",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/blackened-s84-coronets/",
+      "https://www.theindexcigars.com.au/products/blackened-s84-shade-to-black-coronets"
+    ]
+  },
+  "note": "2026-09-20 Australian retailer audit: Cigar Hut is the best verified available price at A$105 per tin of 10; active stock restored. SmokingPipes is excluded from best-price selection."
+}

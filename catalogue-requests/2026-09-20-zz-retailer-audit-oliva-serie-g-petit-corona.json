@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-oliva-serie-g-petit-corona",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-petit-corona",
+  "entry": {
+    "packagePrice": 29,
+    "price": 29,
+    "packageLabel": "single cigar",
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/oliva-serie-g-petit-corona/"
+    ]
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

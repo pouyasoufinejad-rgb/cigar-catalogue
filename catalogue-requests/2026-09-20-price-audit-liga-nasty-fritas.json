@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-20-price-audit-liga-nasty-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-nasty-fritas",
+  "entry": {
+    "packagePrice": 29,
+    "price": 29,
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "stock": "in",
+    "noteHtml": "Cigar Hut currently lists the Nasty Fritas single at A$29 and available, below The Index at A$30.70.",
+    "practicalLines": [
+      "Single cigar",
+      "4″ short pyramid",
+      "Pigtail cap + closed foot",
+      "Mixed / short filler"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-unico-serie-nasty-fritas/",
+      "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-nasty-fritas"
+    ]
+  },
+  "note": "2026-09-20 Australian retailer audit: Cigar Hut is the best verified available single at A$29, with The Index retained as a fallback. SmokingPipes is excluded from best-price selection."
+}

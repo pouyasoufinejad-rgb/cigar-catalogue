@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-my-father-no-4-lancero",
+  "operation": "upsert-entry",
+  "key": "my-father-no-4-lancero",
+  "entry": {
+    "packagePrice": 59,
+    "price": 59,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.sydneycigar.com.au/my-father-no-4-lancero/",
+      "https://www.cigarhut.com.au/my-father-no-4-lancero/"
+    ],
+    "noteHtml": "Sydney Cigar House currently lists the exact 7½″ × 38 My Father No.4 Lancero single at A$59 and available. Cigar Hut's lower A$56 listing is currently sold out."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-20-price-audit-blackened-m81-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-m81-coronets",
+  "entry": {
+    "packagePrice": 105,
+    "price": 10.5,
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "noteHtml": "Cigar Hut currently lists the exact 4″ × 32 tin of 10 at A$105 and available; The Index remains a secondary retailer.",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/blackened-m81-coronets/",
+      "https://www.theindexcigars.com.au/products/blackened-m81-coronet?variant=47094620061945"
+    ]
+  },
+  "note": "2026-09-20 Australian retailer audit: Cigar Hut is the best verified available price at A$105 per tin of 10. SmokingPipes is excluded from best-price selection."
+}

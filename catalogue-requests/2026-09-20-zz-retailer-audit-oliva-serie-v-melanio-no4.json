@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "packagePrice": 49.9,
+    "price": 49.9,
+    "packageLabel": "single cigar",
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/oliva-serie-v-melanio-4-petit-corona-4-5-x-46rg",
+      "https://www.cigarhut.com.au/oliva-serie-v-melanio-no-4/"
+    ],
+    "noteHtml": "CigarBox currently lists the exact 4½″ × 46 Melanio No.4 single at A$49.90 and available. Cigar Hut's lower A$39 listing is currently sold out."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

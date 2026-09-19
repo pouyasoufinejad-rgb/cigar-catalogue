@@ -36,20 +36,22 @@ test('recent Drew Estate cards resolve to product-level retailer links rather th
   }
 });
 
-test('Nasty Fritas resolves to the verified available Index single and current price', async () => {
+test('Nasty Fritas resolves to the best available Cigar Hut single and retains Index fallback', async () => {
   const entry = await effectiveEntry('liga-privada-unico-nasty-fritas');
-  assert.equal(entry.price, 30.7);
-  assert.equal(entry.packagePrice, 30.7);
+  assert.equal(entry.price, 29);
+  assert.equal(entry.packagePrice, 29);
   assert.deepEqual(entry.retailerLinks, [
+    'https://www.cigarhut.com.au/liga-privada-unico-serie-nasty-fritas/',
     'https://www.theindexcigars.com.au/products/liga-privada-unico-serie-nasty-fritas'
   ]);
 });
 
-test('H99 Papas Fritas resolves to the verified exact Index product page', async () => {
+test('H99 Papas Fritas resolves to the best available Cigar Hut single and retains Index fallback', async () => {
   const entry = await effectiveEntry('liga-privada-h99-papas-fritas');
-  assert.equal(entry.price, 30.7);
-  assert.equal(entry.packagePrice, 30.7);
+  assert.equal(entry.price, 29);
+  assert.equal(entry.packagePrice, 29);
   assert.deepEqual(entry.retailerLinks, [
+    'https://www.cigarhut.com.au/liga-privada-h99-connecticut-corojo-papas-fritas/',
     'https://www.theindexcigars.com.au/products/liga-privada-h99-papa-fritas'
   ]);
 });
