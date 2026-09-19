@@ -33,7 +33,12 @@ for (const match of html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^>
     archived: /\bdata-archived=["']1["']/i.test(tag),
     taster: /\bdata-taster=["']1["']/i.test(tag),
     catalogueType: tag.match(/\bdata-catalogue-type=["']([^"']+)["']/i)?.[1] || '',
-    rank: tag.match(/\bdata-rank=["']([^"']+)["']/i)?.[1] || ''
+    rank: tag.match(/\bdata-rank=["']([^"']+)["']/i)?.[1] || '',
+    price: tag.match(/\bdata-price=["']([^"']+)["']/i)?.[1] || '',
+    packagePrice: tag.match(/\bdata-package-price=["']([^"']+)["']/i)?.[1] || '',
+    packageLabel: tag.match(/\bdata-package-label=["']([^"']+)["']/i)?.[1] || '',
+    length: tag.match(/\bdata-length=["']([^"']+)["']/i)?.[1] || '',
+    ring: tag.match(/\bdata-ring=["']([^"']+)["']/i)?.[1] || ''
   });
 }
 console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));
