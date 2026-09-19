@@ -14,7 +14,7 @@ test('removes projected markers without changing the substantive tag', () => {
   assert.equal(cleanCatalogueText('25–35 min smoke (projected)'), '25–35 min smoke');
 });
 
-test('removes untasted/projection status filler while preserving useful prose', () => {
+test('removes untasted/projection status filler while preserving useful prose, when asked', () => {
   const input = '<strong>Dark tobacco, espresso and cocoa</strong> are the projected centre of this compact blend. AJ Fernandez specifies a dark Nicaraguan wrapper. It remains untasted, so the intensity, finish and pairing calls are projections rather than palate-confirmed claims.';
   assert.equal(
     cleanCatalogueText(input),
@@ -30,13 +30,13 @@ test('preserves the useful first half of a sentence before an untasted disclaime
   );
 });
 
-test('cleans notes and eyebrow text rather than deleting useful facts', () => {
+test('cleans notes and eyebrow text rather than deleting useful facts, when asked', () => {
   assert.equal(
     cleanCatalogueText('Untasted projection. Exact-vitola reviews have repeatedly landed around 88–90 points.'),
     'Exact-vitola reviews have repeatedly landed around 88–90 points.'
   );
   assert.equal(
-    cleanCatalogueText('No. 5 — Untasted; premium full-bodied Nicaraguan tin'),
+    cleanCatalogueText('No. 5 — Untasted; premium full-bodied Nicaraguan tin', { stripUntasted: true }),
     'No. 5 — premium full-bodied Nicaraguan tin'
   );
 });
@@ -74,7 +74,7 @@ test('buildCleanupPatch only returns visible fields whose current effective valu
   const card = {
     summaryHtml: '<strong>Cocoa</strong> and pepper with a sweeter finish.'
   };
-  assert.deepEqual(buildCleanupPatch(card, entry), {
+  assert.deepEqual(buildCleanupPatch(card, entry, {}, { stripUntasted: true }), {
     noteHtml: 'The Index lists the single at A$30.',
     smokeTime: '30–40 min smoke',
     experienceTags: ['Nicotine: High', 'Occasion: Evening smoke']
@@ -105,7 +105,9 @@ test('findAffectedKeys scans the current effective live copy across cards and dy
       clean: { noteHtml: 'Current retailer price A$30.' }
     }
   };
-  assert.deepEqual(findAffectedKeys(state), ['dynamicOld', 'metaOld', 'staticOld']);
+  assert.deepEqual(findAffectedKeys(state, {}, { stripUntasted: true }), ['dynamicOld', 'metaOld', 'staticOld']);
+  // By default an untasted-only field is left alone, so that card is not swept.
+  assert.deepEqual(findAffectedKeys(state), ['dynamicOld', 'metaOld']);
 });
 
 test('a title never repeats the package when the package is a single', () => {
@@ -149,4 +151,38 @@ test('preview reports every field it would rewrite and writes nothing', () => {
   assert.equal(byField.title.before, 'Example Corona — Single');
   assert.equal(byField.title.after, 'Example Corona');
   assert.equal(byField.smokeTime.after, '30 min smoke');
+});
+
+test('untasted status survives a default sweep and only projection wording is removed', () => {
+  assert.equal(cleanCatalogueText('Untasted.'), 'Untasted.');
+  assert.equal(
+    cleanCatalogueText('Untasted. The Index lists the single at A$30.'),
+    'Untasted. The Index lists the single at A$30.'
+  );
+  // A sentence carrying both still goes, because it carries the projection wording.
+  assert.equal(
+    cleanCatalogueText('Untasted projection. The Index lists it at A$13.'),
+    'The Index lists it at A$13.'
+  );
+  assert.equal(
+    cleanCatalogueText('Rich and dark. Untasted here, so Strength 8 and Quality 8 remain projections and Flavour stays unrated.'),
+    'Rich and dark.'
+  );
+  assert.equal(cleanCatalogueText('Untasted.', { stripUntasted: true }), '');
+});
+
+test('a factual sentence is not mistaken for catalogue-placement commentary', () => {
+  // "sits" next to the word catalogue used to be enough to delete this whole sentence.
+  const input = "Its 5″ × 44 Chiselito shape sits in a comfortable ring gauge but makes this a longer, more serious session than the catalogue's compact tins.";
+  assert.equal(cleanSummaryMeta(input), input);
+  // A real placement statement is still removed.
+  assert.equal(
+    cleanSummaryMeta('Dense cocoa leads. It currently sits at No. 9 in the catalogue.'),
+    'Dense cocoa leads.'
+  );
+});
+
+test('a stray editing bullet is stripped from a title', () => {
+  assert.equal(cleanCatalogueTitle('*  Maduro Gran Corona — Single'), 'Maduro Gran Corona');
+  assert.equal(cleanCatalogueTitle('* Serie V Melanio'), 'Serie V Melanio');
 });

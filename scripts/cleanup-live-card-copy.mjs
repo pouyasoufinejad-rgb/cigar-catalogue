@@ -23,6 +23,8 @@ const ARRAY_FIELDS = Object.freeze([
   'practicalLines'
 ]);
 
+const PROJECTION_COPY = /\b(?:projected|projections?)\b/i;
+const UNTASTED_COPY = /\buntasted\b/i;
 const REDUNDANT_COPY = /\b(?:untasted|projected|projections?)\b/i;
 
 function plainText(value) {
@@ -45,9 +47,14 @@ function splitSummarySentences(value) {
     .map(sentence => sentence.replaceAll(marker, '.'));
 }
 
-export function cleanCatalogueText(input) {
+// Strips projection wording from a rendered field. Untasted wording is a separate rule:
+// "Untasted." is a real status the catalogue cares about, not a redundancy, so it is only
+// removed when a caller explicitly asks. A sentence carrying both goes either way.
+export function cleanCatalogueText(input, options = {}) {
+  const stripUntasted = options.stripUntasted === true;
+  const target = stripUntasted ? REDUNDANT_COPY : PROJECTION_COPY;
   if (typeof input !== 'string') return input;
-  if (!REDUNDANT_COPY.test(plainText(input))) return input;
+  if (!target.test(plainText(input))) return input;
 
   let text = input;
 
@@ -66,34 +73,38 @@ export function cleanCatalogueText(input) {
     .filter(sentence => {
       const plain = plainText(sentence).trim();
       if (!plain) return false;
+      if (PROJECTION_COPY.test(plain)) {
+        if (/^untasted\b/i.test(plain)) return false;
+        if (UNTASTED_COPY.test(plain)) return false;
+        if (/\b(?:strength|quality|flavour|intensity|finish|pairings?|claims?)\b/i.test(plain)) return false;
+      }
+      if (!stripUntasted) return true;
       if (/^untasted(?:\s+projection)?[.!?]?$/i.test(plain)) return false;
       if (/^untasted\b/i.test(plain)) return false;
-      if (/\buntasted\b/i.test(plain) && /\bprojections?\b/i.test(plain)) return false;
-      if (
-        /\bprojections?\b/i.test(plain)
-        && /\b(?:strength|quality|flavour|intensity|finish|pairings?|claims?)\b/i.test(plain)
-      ) return false;
       if (/^flavour\s+(?:remains|stays)\s+unrated\b/i.test(plain)) return false;
       return true;
     })
     .join(' ');
 
   // Remove residual inline labels while keeping the substantive wording.
+  if (stripUntasted) {
+    text = text
+      .replace(/\buntasted\s*;\s*/gi, '')
+      .replace(/\buntasted\b\s*/gi, '');
+  }
   text = text
-    .replace(/\buntasted\s*;\s*/gi, '')
-    .replace(/\buntasted\b\s*/gi, '')
     .replace(/\bprojected\b\s*/gi, '')
     .replace(/\bprojections?\b\s*/gi, '');
 
   text = cleanSpacing(text);
 
-  // Defensive final pass: never publish a visible field that still contains
-  // one of the redundant status terms. Drop only the sentence containing it.
-  if (REDUNDANT_COPY.test(plainText(text))) {
+  // Defensive final pass: never publish a visible field that still contains one of the
+  // terms this call is responsible for. Drop only the sentence containing it.
+  if (target.test(plainText(text))) {
     text = cleanSpacing(
       text
         .split(/(?<=[.!?])\s+/)
-        .filter(sentence => !REDUNDANT_COPY.test(plainText(sentence)))
+        .filter(sentence => !target.test(plainText(sentence)))
         .join(' ')
     );
   }
@@ -106,8 +117,9 @@ export function cleanCatalogueText(input) {
 // says nothing. A titled package that is not a single ("— Tin of 10") is left alone.
 export function cleanCatalogueTitle(input) {
   if (typeof input !== 'string') return input;
-  if (!/\bsingles?\b/i.test(plainText(input))) return input;
+  if (!/\bsingles?\b/i.test(plainText(input)) && !/^\s*[*•·]/.test(input)) return input;
   const text = input
+    .replace(/^\s*[*•·]+\s*/, '')
     .replace(/\s*[—–-]\s*singles?(?:\s+cigars?)?\s*$/i, '')
     .replace(/\s*\bsingles?\b\s*/gi, ' ')
     .replace(/\s*[—–]\s*$/, '');
@@ -119,7 +131,7 @@ function isCataloguePlacementSentence(sentence) {
   if (!plain) return false;
 
   const explicitCataloguePlacement = /\b(?:catalogue|catalog)\b/i.test(plain)
-    && /\b(?:rank(?:ed|ing|s)?|placement|position|sits?|placed|above|below|ahead|behind|moves?|moved|slot|spot|no\.\s*\d+|#\s*\d+)\b/i.test(plain);
+    && /\b(?:rank(?:ed|ing|s)?|placement|position|placed|ahead|behind|moves?|moved|slot|spot|no\.\s*\d+|#\s*\d+)\b/i.test(plain);
 
   const shortPlacementStatement = /\b(?:that|this)\s+(?:puts?|places?)\s+it\s+(?:at|in)\s+(?:no\.\s*\d+|#\s*\d+|\w+\s+place)\b/i.test(plain)
     || /\b(?:it|this cigar)\s+(?:currently\s+)?sits?\s+at\s+(?:no\.\s*\d+|#\s*\d+)\b/i.test(plain)
@@ -144,13 +156,13 @@ function effectiveRecord(card = {}, entry = {}, base = {}) {
   };
 }
 
-export function buildCleanupPatch(card = {}, entry = {}, base = {}) {
+export function buildCleanupPatch(card = {}, entry = {}, base = {}, options = {}) {
   const effective = effectiveRecord(card, entry, base);
   const patch = {};
 
   for (const field of TEXT_FIELDS) {
     if (typeof effective[field] !== 'string') continue;
-    let cleaned = cleanCatalogueText(effective[field]);
+    let cleaned = cleanCatalogueText(effective[field], options);
     if (field === 'summaryHtml') cleaned = cleanSummaryMeta(cleaned);
     if (field === 'title') cleaned = cleanCatalogueTitle(cleaned);
     if (cleaned !== effective[field]) patch[field] = cleaned;
@@ -159,7 +171,7 @@ export function buildCleanupPatch(card = {}, entry = {}, base = {}) {
   for (const field of ARRAY_FIELDS) {
     if (!Array.isArray(effective[field])) continue;
     const cleaned = effective[field].map(value =>
-      typeof value === 'string' ? cleanCatalogueText(value) : value
+      typeof value === 'string' ? cleanCatalogueText(value, options) : value
     );
     if (JSON.stringify(cleaned) !== JSON.stringify(effective[field])) patch[field] = cleaned;
   }
@@ -167,7 +179,7 @@ export function buildCleanupPatch(card = {}, entry = {}, base = {}) {
   return patch;
 }
 
-export function findAffectedKeys(state = {}, baseState = {}) {
+export function findAffectedKeys(state = {}, baseState = {}, options = {}) {
   const cards = state?.cards && typeof state.cards === 'object' ? state.cards : {};
   const entries = state?.entries && typeof state.entries === 'object' ? state.entries : {};
   const baseCards = baseState?.cards && typeof baseState.cards === 'object' ? baseState.cards : {};
@@ -178,7 +190,7 @@ export function findAffectedKeys(state = {}, baseState = {}) {
   ]);
 
   return [...keys]
-    .filter(key => Object.keys(buildCleanupPatch(cards[key], entries[key], baseCards[key])).length > 0)
+    .filter(key => Object.keys(buildCleanupPatch(cards[key], entries[key], baseCards[key], options)).length > 0)
     .sort();
 }
 
@@ -204,10 +216,10 @@ async function readLiveState(fetchImpl, baseUrl) {
 // A preview run reads live state and prints the exact before/after for every field it
 // would rewrite, without sending a write. Copy changes are not recoverable from KV, which
 // keeps no history, so a sweep this broad is reviewable first.
-export function buildCleanupPreview(state = {}, seed = {}) {
-  return findAffectedKeys(state, seed).map(key => {
+export function buildCleanupPreview(state = {}, seed = {}, options = {}) {
+  return findAffectedKeys(state, seed, options).map(key => {
     const effective = effectiveRecord(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key]);
-    const patch = buildCleanupPatch(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key]);
+    const patch = buildCleanupPatch(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key], options);
     return {
       key,
       fields: Object.entries(patch).map(([field, after]) => ({ field, before: effective[field], after }))
@@ -230,6 +242,11 @@ export async function runLiveCleanup(options = {}) {
   if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable.');
   const baseUrl = String(options.baseUrl || DEFAULT_BASE_URL).replace(/\/$/, '');
   const dryRun = options.dryRun ?? /^(1|true|yes)$/i.test(String(process.env.CLEANUP_DRY_RUN || ''));
+  // Untasted wording is a real status, so a sweep only removes it when asked.
+  const cleanOptions = {
+    stripUntasted: options.stripUntasted
+      ?? /^(1|true|yes)$/i.test(String(process.env.CLEANUP_STRIP_UNTASTED || ''))
+  };
   const token = String(options.token ?? process.env.CATALOGUE_ADMIN_TOKEN ?? '').trim();
   if (!token && !dryRun) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
   const repoRoot = resolve(options.repoRoot || process.cwd());
@@ -237,12 +254,12 @@ export async function runLiveCleanup(options = {}) {
   const html = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8');
   const seed = parseCatalogueSeed(html);
   const initialState = await readLiveState(fetchImpl, baseUrl);
-  const initialKeys = findAffectedKeys(initialState, seed);
+  const initialKeys = findAffectedKeys(initialState, seed, cleanOptions);
 
   console.log(`Found ${initialKeys.length} catalogue card(s) with redundant visible copy.`);
 
   if (dryRun) {
-    const preview = buildCleanupPreview(initialState, seed);
+    const preview = buildCleanupPreview(initialState, seed, cleanOptions);
     printCleanupPreview(preview);
     console.log(`\nDry run only: ${preview.length} card(s) would change and nothing was written to KV.`);
     return { published: [], remaining: initialKeys, preview, dryRun: true };
@@ -256,7 +273,8 @@ export async function runLiveCleanup(options = {}) {
     const patch = buildCleanupPatch(
       currentState?.cards?.[key],
       currentState?.entries?.[key],
-      seed?.cards?.[key]
+      seed?.cards?.[key],
+      cleanOptions
     );
     if (!Object.keys(patch).length) continue;
 
@@ -282,7 +300,7 @@ export async function runLiveCleanup(options = {}) {
   }
 
   const finalState = await readLiveState(fetchImpl, baseUrl);
-  const remaining = findAffectedKeys(finalState, seed);
+  const remaining = findAffectedKeys(finalState, seed, cleanOptions);
   if (remaining.length) {
     throw new Error(`Cleanup verification failed; redundant copy remains for: ${remaining.join(', ')}`);
   }
