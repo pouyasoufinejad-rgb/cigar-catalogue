@@ -1,0 +1,45 @@
+name: Clean catalogue copy
+
+# Runs the visible-copy cleanup against live state on demand: strips projection and
+# untasted status wording from every rendered field, and drops a redundant package
+# suffix from card titles. Defaults to a dry run, because KV keeps no history and
+# rewritten copy cannot be recovered from it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview the before/after for every field without writing to KV'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cigar-catalogue-production-publisher
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Clean redundant live catalogue copy
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run test suite
+        run: npm test
+      - name: Clean live catalogue copy
+        env:
+          CLEANUP_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: node scripts/cleanup-live-card-copy.mjs
