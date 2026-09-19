@@ -225,8 +225,8 @@ article.card[data-personal-filter-hidden="1"]{display:none!important}
 article.card.convenience-compact .value-calc,
 article.card.convenience-compact .tag-groups,
 article.card.convenience-compact .summary,
-article.card.convenience-compact .mog-note,
 article.card.convenience-compact .artmeta,
+article.card.convenience-compact .retailer-matrix,
 article.card.convenience-compact .shop{display:none!important}
 article.card.convenience-compact .cardbody{padding-bottom:12px!important}
 .retailer-matrix{margin:12px 0 4px;border:1px solid rgba(217,188,112,.18);border-radius:10px;overflow:hidden;background:rgba(12,10,8,.55);font:10px/1.3 system-ui,sans-serif}

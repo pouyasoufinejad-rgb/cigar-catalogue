@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { JSDOM } from 'jsdom';
 
 import {
   normaliseConvenienceState,
@@ -143,14 +144,60 @@ test('card UI contract includes four status chips plus Compare and Details contr
   assert.match(source, /stopPropagation\(\)/);
 });
 
+// The old version of this test only checked that each selector appeared somewhere in the
+// module source, which every one of them does in the plain .retailer-matrix styling block.
+// It passed happily while the matrix was fully visible in compact mode. These assert the
+// rendered display instead, by applying the stylesheet the module actually ships.
+function compactCard(source, compact = true) {
+  const css = source.match(/style\.textContent\s*=\s*`([\s\S]*?)`;/)?.[1];
+  assert.ok(css, 'the module should ship its styles as a template literal');
+  const dom = new JSDOM(`<!doctype html><html><head><style>${css}</style></head><body>
+    <article class="card${compact ? ' convenience-compact' : ' convenience-expanded'}" data-key="x">
+      <div class="artmeta artmeta-left"></div>
+      <div class="cardbody">
+        <h3><span>Brand</span>Title</h3>
+        <div class="value-calc"></div>
+        <div class="medals"></div>
+        <div class="tag-groups"></div>
+        <p class="summary">Summary prose.</p>
+        <p class="mog-note">The note.</p>
+        <div class="retailer-matrix"><div class="retailer-matrix-title">Retailers</div></div>
+        <a class="shop" href="https://example.test">View at Example</a>
+      </div>
+    </article>
+  </body></html>`, { url: 'https://example.test/' });
+  const shown = selector => dom.window.getComputedStyle(dom.window.document.querySelector(selector)).display !== 'none';
+  return { dom, shown };
+}
+
+test('compact cards hide the retailer matrix but keep the note visible', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  const { shown } = compactCard(source);
+
+  assert.equal(shown('.retailer-matrix'), false, 'the retailer matrix must be off screen in compact mode');
+  assert.equal(shown('.shop'), false, 'the legacy retailer links go with it');
+  assert.equal(shown('.mog-note'), true, 'the note must stay on screen in compact mode');
+});
+
 test('compact presentation hides only secondary detail groups and keeps core card identity/ratings visible', async () => {
   const source = await readFile(moduleUrl, 'utf8');
-  assert.match(source, /convenience-compact/);
-  for (const selector of ['.value-calc', '.tag-groups', '.summary', '.mog-note', '.artmeta', '.retailer-matrix']) {
-    assert.ok(source.includes(selector), `compact CSS should account for ${selector}`);
+  const { shown } = compactCard(source);
+
+  for (const selector of ['.value-calc', '.tag-groups', '.summary', '.artmeta', '.retailer-matrix', '.shop']) {
+    assert.equal(shown(selector), false, `${selector} should be hidden in compact mode`);
   }
-  assert.doesNotMatch(source, /convenience-compact[^}]*h3\s*\{[^}]*display\s*:\s*none/is);
-  assert.doesNotMatch(source, /convenience-compact[^}]*\.medals\s*\{[^}]*display\s*:\s*none/is);
+  for (const selector of ['h3', '.medals', '.mog-note']) {
+    assert.equal(shown(selector), true, `${selector} should stay visible in compact mode`);
+  }
+});
+
+test('an expanded card shows everything, so the compact rules are what does the hiding', async () => {
+  const source = await readFile(moduleUrl, 'utf8');
+  const { shown } = compactCard(source, false);
+
+  for (const selector of ['.value-calc', '.tag-groups', '.summary', '.artmeta', '.retailer-matrix', '.mog-note', 'h3', '.medals']) {
+    assert.equal(shown(selector), true, `${selector} should be visible on an expanded card`);
+  }
 });
 
 test('convenience rendering respects the direct editor temporary expansion instead of immediately re-collapsing the selected card', async () => {
