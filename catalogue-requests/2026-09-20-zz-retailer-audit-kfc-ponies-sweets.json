@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-kfc-ponies-sweets",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies-sweets",
+  "entry": {
+    "packagePrice": 86,
+    "price": 8.6,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/kentucky-fire-cured-ponies-sweets-tins/",
+      "https://www.theindexcigars.com.au/products/kentucky-fired-cured-sweets-ponies"
+    ]
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

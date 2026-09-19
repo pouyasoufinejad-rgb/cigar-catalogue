@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-arturo-fuente-cubanitos-10",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "packagePrice": 140,
+    "price": 14,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://firmincigars.com.au/product/arturo-fuente-cubanitos-natural-10s-dominican/?v=2c18c36508d1",
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-cubanitos-%252d-pack-of-10-%252d-%284-1%7B47%7D2%22-x-32%29.html",
+      "https://www.cigarhut.com.au/arturo-fuente-cubanitos/"
+    ],
+    "noteHtml": "Firmin Cigars currently lists the exact 4½″ × 32 pack of 10 at A$140 and available, making it the best verified Australian pack price. Firmin also lists the exact single at A$15.50."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

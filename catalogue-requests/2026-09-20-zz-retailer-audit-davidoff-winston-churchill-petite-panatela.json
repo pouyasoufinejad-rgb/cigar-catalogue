@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-davidoff-winston-churchill-petite-panatela",
+  "operation": "upsert-entry",
+  "key": "davidoff-winston-churchill-petite-panatela",
+  "entry": {
+    "packagePrice": 105,
+    "price": 21,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://corporatecigar.com/product/davidoff-wsc-petit-panetela-5s/",
+      "https://www.cigarworld.com.au/aud/products/davidoff-%252d-winston-churchill-%252d-petite-panatela-%284-x-38%29-%252d-5-pack-tin.html"
+    ],
+    "noteHtml": "Corporate Cigar currently lists the exact 4″ × 38 five-cigar tin at A$105 and available, below CigarWorld at A$139. CigarWorld also lists the exact single at A$28.95."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

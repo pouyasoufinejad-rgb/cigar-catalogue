@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-partagas-serie-club-10",
+  "operation": "upsert-entry",
+  "key": "partagas-serie-club-10",
+  "entry": {
+    "packagePrice": 52,
+    "price": 5.2,
+    "packageLabel": "pack of 10",
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/partagas-serie-club-10/"
+    ]
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

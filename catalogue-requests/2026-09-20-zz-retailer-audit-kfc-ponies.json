@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-kfc-ponies",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies",
+  "entry": {
+    "packagePrice": 119,
+    "price": 11.9,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/kentucky-fire-cured-ponies",
+      "https://www.cigarhut.com.au/kfc-ponies/"
+    ],
+    "noteHtml": "The Index currently lists the exact 4″ × 32 tin of 10 at A$119 and available. Cigar Hut's lower A$96 tin is currently unavailable."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-liga-t52-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-t52-coronets",
+  "entry": {
+    "packagePrice": 113,
+    "price": 11.3,
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-t52-coronets-tins-10-cigars/",
+      "https://firmincigars.com.au/product/drew-estate-liga-privada-t52-coronets-single-cigar-nicaragua/",
+      "https://www.cigarworld.com.au/aud/products/liga-privada-t52-coronet-%284%22-x-32%29-%252d-single.html"
+    ]
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

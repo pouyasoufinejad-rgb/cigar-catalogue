@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-davidoff-nicaragua-mini-cigarillos",
+  "operation": "upsert-entry",
+  "key": "davidoff-nicaragua-mini-cigarillos",
+  "entry": {
+    "packagePrice": 110,
+    "price": 5.5,
+    "packageLabel": "pack of 20",
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.sydneycigar.com.au/davidoff-nicaragua-mini-cigarillos/",
+      "https://www.cigarhut.com.au/davidoff-nicaragua-mini-cigarillos/"
+    ],
+    "noteHtml": "Sydney Cigar House currently lists the exact pack of 20 at A$110 and available. Cigar Hut's lower A$96 listing is unavailable."
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-20-zz-retailer-audit-oliva-serie-g",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g",
+  "entry": {
+    "packagePrice": 96,
+    "price": 19.2,
+    "packageLabel": "tin of 5",
+    "stock": "in",
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/oliva-serie-g-cigarillos-tin-of-5-cameroon/",
+      "https://cigarbox.com.au/products/oliva-serie-g-cigarillos-tin-of-5-cameroon"
+    ]
+  },
+  "note": "2026-09-20 full Australian retailer audit. Uses the best verified currently available Australian price for the exact catalogue product/package where confirmed; retains useful secondary Australian retailer links. SmokingPipes is excluded from best-price selection."
+}
