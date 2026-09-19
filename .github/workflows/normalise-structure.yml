@@ -42,3 +42,11 @@ jobs:
         env:
           NORMALISE_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
         run: node scripts/normalise-live-card-structure.mjs
+
+      - name: Upload pre-normalisation live-state backup
+        if: ${{ always() && hashFiles('pre-repair-live-state.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-normalisation-live-state-${{ github.run_id }}
+          path: pre-repair-live-state.json
+          retention-days: 30

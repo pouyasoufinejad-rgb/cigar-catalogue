@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -182,6 +182,9 @@ function cleanFactValue(value) {
     .replace(/^and\s+/i, '')
     .replace(/\s+tobaccos?\b.*$/i, '')
     .replace(/[.;]+$/g, '')
+    // Trimming the trailing "tobaccos" clause can leave the conjunction that joined it,
+    // e.g. "Selected Vuelta Abajo short-filler and ligero tobaccos" -> "... and".
+    .replace(/[,\s]+(?:and|or|with|plus)$/i, '')
     .trim();
 }
 
@@ -453,6 +456,16 @@ export async function runLiveStructureNormalisation(options = {}) {
     printPreview(preview);
     console.log(`\nDry run only: ${preview.length} card(s) would change and nothing was written to KV.`);
     return { published:[], remaining:initialKeys, preview, dryRun:true };
+  }
+
+  // KV keeps no history, so a run this broad writes its own rollback point first. The
+  // repair uses the same filename and runs before this, so do not clobber an earlier one:
+  // the oldest snapshot in a publish run is the one worth keeping.
+  const backupPath = resolve(repoRoot, 'pre-repair-live-state.json');
+  const backupExists = await access(backupPath).then(() => true, () => false);
+  if (initialKeys.length && !backupExists) {
+    await writeFile(backupPath, JSON.stringify(initialState, null, 2) + '\n', 'utf8');
+    console.log(`Saved pre-normalisation live-state backup to ${backupPath}.`);
   }
 
   const published = [];

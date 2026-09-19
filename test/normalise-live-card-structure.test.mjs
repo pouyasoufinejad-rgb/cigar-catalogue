@@ -93,6 +93,23 @@ test('Production shows Flavoured on infused blends and prints nothing for the re
   ]);
 });
 
+test('a fact does not keep the conjunction that joined a trimmed clause', () => {
+  const record = {
+    key:'regular',
+    productionLines:[
+      'Handmade',
+      'Wrapper: Cuban',
+      'Binder: Selected Vuelta Abajo short-filler and tobaccos from the same farm',
+      'Filler: Cuban ligero and seco tobaccos'
+    ]
+  };
+  const lines = normaliseProductionLines(record, context);
+  // The trimmed "tobaccos" clause must not leave its conjunction stranded...
+  assert.deepEqual(lines[2], 'Binder: Selected Vuelta Abajo short-filler');
+  // ...but a conjunction joining two real values is part of the value.
+  assert.deepEqual(lines[3], 'Filler: Cuban ligero and seco');
+});
+
 test('regular-main Production is the same four-line block as every other section', () => {
   const record = {
     key:'regular',

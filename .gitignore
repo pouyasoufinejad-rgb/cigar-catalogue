@@ -4,3 +4,4 @@ node_modules/
 .env
 .catalogue-bootstrap-backup/
 .catalogue-bootstrap/
+pre-repair-live-state.json
