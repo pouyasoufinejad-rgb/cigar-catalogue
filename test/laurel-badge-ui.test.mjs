@@ -110,9 +110,9 @@ test('the overall score renders left of the flag and updates with the ratings', 
   assert.equal(score.nextElementSibling.classList.contains('country-flag'), true);
   assert.ok(score.classList.contains('is-provisional'), 'Flavour is unrated here');
 
-  // Q8 S9 V8 St8 with Flavour unrated: (24 + 18 + 9.6 + 6.4) / 70 * 100.
-  assert.equal(card.dataset.overallScore, '83');
-  assert.equal(score.textContent, '83', 'the number alone');
+  // Q8 S9 V8 St8 with Flavour unrated: (24 + 14.4 + 9.6 + 6.4) / 66 * 100.
+  assert.equal(card.dataset.overallScore, '82');
+  assert.equal(score.textContent, '82', 'the number alone');
 
   // Rating Flavour makes it a full score and a Gem.
   refreshLaurelForCard(card, { flavour: 9 });

@@ -4,11 +4,14 @@
 // eligibility, which counts Gold fields and nothing else. Keeping them in different modules
 // makes it hard to accidentally wire one into the other.
 
-// Each field is scored 1-10, so the weights sum to 100 exactly.
+// Each field is scored 1-10, so the weights sum to 100 exactly. Flavour carries the
+// heaviest single share because the catalogue rates flavour intensity and complexity above
+// everything else; the 0.4 it gained came straight out of Size, which describes the format
+// rather than the smoke.
 export const SCORE_WEIGHTS = Object.freeze({
+  flavour: 3.4,
   quality: 3,
-  flavour: 3,
-  size: 2,
+  size: 1.6,
   value: 1.2,
   strength: 0.8
 });
@@ -19,7 +22,7 @@ function ratedScore(value) {
   return Math.min(10, Math.max(1, number));
 }
 
-// Flavour stays unrated until a cigar is personally tasted, and it carries 30% of the
+// Flavour stays unrated until a cigar is personally tasted, and it carries 34% of the
 // weight. Scoring an unrated field as zero would cap an untasted cigar at 70 and read as a
 // judgement the catalogue has not made, so the weights that are present are rescaled back
 // up to 100 instead. A card with every field rated is scored by the plain formula.

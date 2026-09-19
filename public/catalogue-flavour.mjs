@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveOverallScore, overallScoreTier, overallScoreTitle } from './catalogue-overall-score.mjs';
+import { deriveOverallScore, overallScoreTier, overallScoreTitle } from './catalogue-overall-score.mjs?v=flavour-weight-1';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -352,6 +352,12 @@ function ensureStyle() {
   html body .grid.grid.grid>article.card{grid-column:auto!important;transform:none!important;width:100%!important;max-width:100%!important;margin-inline:auto!important}
   html body article.card .artframe{min-height:400px!important}
 }
+/* Score, flag and laurel centred across the card at every width, and a laurel large enough
+   to read at a glance. Repeated here for the same reason as the rule above: a browser
+   holding the old document keeps the old stylesheet while still fetching fresh modules. */
+html body .country-above .country-row{grid-column:1/-1}
+html body .laurel-badge{width:27px;height:25px}
+html body .laurel-badge i{font-size:16px}
 `;
   document.head.appendChild(style);
 }

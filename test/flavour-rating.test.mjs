@@ -92,7 +92,7 @@ test('browser runtime loads Flavour UI, card hydration and save interception', (
   // Versioned because the size runtime registers the single Value writer on this exact
   // module instance; see test/value-single-writer.test.mjs, which pins every importer to
   // one specifier.
-  assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs\?v=mobile-one-column-1'\)/);
+  assert.match(loaderSource, /import\('\.\/catalogue-flavour\.mjs\?v=flavour-weight-1'\)/);
   assert.match(flavourSource, /catalogue-admin-flavour/);
   assert.match(flavourSource, /ensureFlavourRating/);
   assert.match(flavourSource, /MutationObserver/);
