@@ -1,0 +1,45 @@
+name: Mobile layout check
+
+# Renders the live production page in a real browser at phone widths and reports how many
+# cards actually sit on a row. Every earlier check used a local copy of public/index.html
+# served by a local server, which is not the same DOM: production carries the Worker's
+# injected dynamic entries and the subsection module then moves cards between grids.
+# Read-only, needs no secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      widths:
+        description: 'Comma-separated CSS viewport widths to measure'
+        required: false
+        default: '360,412,540,900'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure the live page at phone widths
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: npm install --no-audit --no-fund playwright && npx playwright install --with-deps chromium
+      - name: Measure
+        env:
+          WIDTHS: ${{ inputs.widths }}
+        run: node scripts/measure-live-mobile-layout.mjs
+      - name: Upload screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-layout-${{ github.run_id }}
+          path: mobile-layout-*.png
+          retention-days: 14
+          if-no-files-found: warn
