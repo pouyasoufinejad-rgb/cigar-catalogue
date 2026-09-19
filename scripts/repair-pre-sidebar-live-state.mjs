@@ -185,7 +185,7 @@ function fieldChange(changes, key, field, before, after) {
   changes.push({ key, field, before:clone(before), after:clone(after) });
 }
 
-export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
+export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput, html = '') {
   const current = clone(isRecord(currentInput) ? currentInput : {});
   current.cards = isRecord(current.cards) ? current.cards : {};
   current.entries = isRecord(current.entries) ? current.entries : {};
@@ -194,7 +194,9 @@ export function buildPreSidebarRepair(currentInput, seedInput, ledgerInput) {
   const seed = isRecord(seedInput) ? seedInput : { cards:{}, entries:{}, sections:{} };
   const seedCards = isRecord(seed.cards) ? seed.cards : {};
   const ledger = ledgerInput instanceof Map ? ledgerInput : replayRequestDocuments(ledgerInput || []);
-  const structureContext = buildStructureContext(current, seed);
+  // The page markup carries the dimensions of unedited static cards, and cadence is
+  // derived from ring gauge, so the repair must see the same source the normaliser does.
+  const structureContext = buildStructureContext(current, seed, html);
   const keys = new Set([
     ...Object.keys(seedCards),
     ...Object.keys(current.cards),
@@ -339,7 +341,7 @@ export async function runPreSidebarRepair(options = {}) {
   const html = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8');
   const seed = parseCatalogueSeed(html);
   const ledger = options.ledger || await loadPreSidebarRequestLedger(repoRoot);
-  const { state, changes } = buildPreSidebarRepair(current, seed, ledger);
+  const { state, changes } = buildPreSidebarRepair(current, seed, ledger, html);
   const info = summary(changes);
 
   console.log('PRE_SIDEBAR_REPAIR_SUMMARY ' + JSON.stringify({

@@ -6,6 +6,11 @@ name: Normalise catalogue structure
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview the before/after for every card without writing to KV'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -34,4 +39,6 @@ jobs:
       - name: Run test suite
         run: npm test
       - name: Normalise live structure
+        env:
+          NORMALISE_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
         run: node scripts/normalise-live-card-structure.mjs

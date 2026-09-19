@@ -97,8 +97,37 @@ function subsectionMapFromState(state = {}, baseState = {}) {
   return map;
 }
 
-export function buildStructureContext(state = {}, baseState = {}) {
-  return { subsectionByKey: subsectionMapFromState(state, baseState) };
+// Static cards keep their dimensions on the article markup rather than in the override
+// seed, so a card that has never been edited has no ring gauge in any state object. The
+// cadence rule is driven entirely by ring gauge, so read them out of the page.
+export function parseStaticCardDimensions(html) {
+  const source = String(html || '');
+  const articles = [...source.matchAll(/<article\b[^>]*\bdata-key="([a-z0-9_-]+)"[^>]*>/gi)];
+  const map = new Map();
+  for (let index = 0; index < articles.length; index += 1) {
+    const start = articles[index].index;
+    const end = index + 1 < articles.length ? articles[index + 1].index : source.length;
+    const match = source.slice(start, end).match(/data-visual-length="([0-9.]+)"\s+data-visual-ring="([0-9]+)"/);
+    if (!match) continue;
+    map.set(articles[index][1], { length: Number(match[1]), ring: Number(match[2]) });
+  }
+  return map;
+}
+
+export function buildStructureContext(state = {}, baseState = {}, html = '') {
+  return {
+    subsectionByKey: subsectionMapFromState(state, baseState),
+    dimensionsByKey: parseStaticCardDimensions(html)
+  };
+}
+
+// The ring gauge the cadence rule is applied to: an explicit override wins, otherwise the
+// static card markup, so an unedited card is still classified from its real dimensions.
+function effectiveRing(record = {}, context = {}) {
+  const own = Number(record.ring);
+  if (Number.isFinite(own) && own > 0) return own;
+  const fallback = context?.dimensionsByKey?.get?.(String(record.key || ''))?.ring;
+  return Number.isFinite(fallback) ? fallback : NaN;
 }
 
 function explicitCatalogueType(record = {}) {
@@ -125,7 +154,7 @@ export function classifyStructureFamily(record = {}, context = {}) {
   if (subsection === 'petit-panatelas') return REGULAR_FAMILY;
 
   if (exactFlavourStatus(sourceLines(record, 'production')) === 'Flavoured') return SMALL_FAMILY;
-  const ring = Number(record.ring);
+  const ring = effectiveRing(record, context);
   if (Number.isFinite(ring) && ring <= 34) return SMALL_FAMILY;
   return REGULAR_FAMILY;
 }
@@ -134,11 +163,8 @@ function firstMatch(lines, pattern) {
   return lines.find(line => pattern.test(line)) || '';
 }
 
-function normaliseConstruction(lines, family) {
+function normaliseConstruction(lines) {
   if (lines.some(line => /machine[\s-]?made/i.test(line))) return 'Machine-made';
-  if (lines.some(line => /hand[\s-]?made/i.test(line))) return 'Handmade';
-  if (lines.some(line => /^made\s+in\b.*\bat\b.*\bcigars?\b/i.test(line))) return 'Handmade';
-  if (family === HALF_FAMILY || family === REGULAR_FAMILY) return 'Handmade';
   return 'Handmade';
 }
 
@@ -178,17 +204,22 @@ function productionFact(lines, label, term = label.toLowerCase()) {
   return prefixedFact(lines, label) || proseFact(lines, term) || 'Undisclosed';
 }
 
+// The reference cards print a "Flavoured" banner on infused blends and print nothing at
+// all on the rest, so an "Unflavoured" line is never emitted regardless of family.
+function isFlavoured(record, lines, context) {
+  if (exactFlavourStatus(lines) === 'Flavoured') return true;
+  return context?.subsectionByKey?.get?.(String(record.key || '')) === 'flavoured-infused';
+}
+
 export function normaliseProductionLines(record = {}, context = {}) {
-  const family = classifyStructureFamily(record, context);
   const lines = sourceLines(record, 'production');
-  const status = exactFlavourStatus(lines)
-    || ((context?.subsectionByKey?.get?.(String(record.key || '')) === 'flavoured-infused') ? 'Flavoured' : 'Unflavoured');
-  const construction = normaliseConstruction(lines, family);
-  const wrapper = productionFact(lines, 'Wrapper');
-  const binder = productionFact(lines, 'Binder');
-  const filler = productionFact(lines, 'Filler');
-  const core = [construction, `Wrapper: ${wrapper}`, `Binder: ${binder}`, `Filler: ${filler}`];
-  return (family === SMALL_FAMILY || family === TASTER_FAMILY) ? [status, ...core] : core;
+  const core = [
+    normaliseConstruction(lines),
+    `Wrapper: ${productionFact(lines, 'Wrapper')}`,
+    `Binder: ${productionFact(lines, 'Binder')}`,
+    `Filler: ${productionFact(lines, 'Filler')}`
+  ];
+  return isFlavoured(record, lines, context) ? ['Flavoured', ...core] : core;
 }
 
 function packageLine(record, lines, family) {
@@ -222,7 +253,7 @@ function protectionLine(record, lines, family, first) {
   const protectedLine = firstMatch(lines, /^(?:protected|fragile|dry[- ]cured)$/i);
   if (family === SMALL_FAMILY) {
     if (protectedLine) return protectedLine.replace(/^dry cured$/i, 'Dry-cured');
-    if (/^(?:tin|box|case)\b/i.test(first) || /\btubo\b/i.test(String(record.title || ''))) return 'Protected';
+    if (/^(?:tin|box|case|pack)\b/i.test(first) || /\btubo\b/i.test(String(record.title || ''))) return 'Protected';
     return 'Fragile';
   }
   if (/^(?:protected|fragile)$/i.test(protectedLine)) return /^protected$/i.test(protectedLine) ? 'Protected' : 'Fragile';
@@ -230,10 +261,15 @@ function protectionLine(record, lines, family, first) {
   return 'Fragile';
 }
 
-function cadenceLine(lines, family) {
-  const existing = firstMatch(lines, /\bcadence\b/i);
-  if (existing) return existing;
-  return (family === REGULAR_FAMILY || family === HALF_FAMILY) ? 'Slow Cadence' : 'Lenient Cadence';
+// Cadence is a property of the ring gauge alone: a narrow stick overheats if it is pushed,
+// a fat one tolerates a faster draw. Whatever wording a card carried before is discarded,
+// because the old copy was written per-card and drifted.
+export function cadenceForRing(ring) {
+  const value = Number(ring);
+  if (!Number.isFinite(value)) return 'Lenient Cadence';
+  if (value <= 32) return 'Sensitive Cadence';
+  if (value <= 40) return 'Lenient Cadence';
+  return 'Forgiving Cadence';
 }
 
 function numberWithFraction(value) {
@@ -266,49 +302,7 @@ function vitolaFromTitle(title = '') {
   return names.find(name => new RegExp(`\\b${name.replace(/\s+/g, '\\s+')}\\b`, 'i').test(source)) || 'Cigar';
 }
 
-function dimensionsLine(record) {
-  const length = numberWithFraction(record.length);
-  const ring = Number(record.ring);
-  if (!length || !Number.isFinite(ring)) return '';
-  return `${length}″ × ${Math.round(ring)} ${vitolaFromTitle(record.title)}`;
-}
-
-function isStructuralPracticalLine(line) {
-  return /^(?:tin|pack|box|case|bundle|single\b|two\s+halves$|cut$|uncut$|protected$|fragile$|dry[- ]cured$)/i.test(line)
-    || /\bcadence\b/i.test(line);
-}
-
-function isPriceLine(line) {
-  return /A\$|\bprice\b|\bbuy\b|per\s+(?:cigar|session|stick)/i.test(line);
-}
-
-function detailCandidates(lines) {
-  return lines.filter(line => !isStructuralPracticalLine(line) && !isPriceLine(line));
-}
-
-function deriveRoleDetail(record) {
-  const length = Number(record.length);
-  const ring = Number(record.ring);
-  if (Number.isFinite(ring) && ring >= 56) return 'Very large ring gauge';
-  if (Number.isFinite(length) && Number.isFinite(ring) && length >= 6.5 && ring <= 42) return 'Long, narrow format';
-  if (Number.isFinite(ring) && ring <= 40) return 'Narrow-ring format';
-  if (Number.isFinite(length) && length <= 4.5) return 'Compact format';
-  if (Number.isFinite(ring) && ring <= 46) return 'Slim traditional format';
-  return 'Traditional full-size format';
-}
-
-function regularDetails(record, lines) {
-  const candidates = detailCandidates(lines);
-  const construction = candidates.find(line => /construction|box[- ]?press|chisel|taper|perfecto|pigtail|closed foot|open foot|long[- ]filler|short[- ]filler|shape/i.test(line))
-    || candidates.find(line => /\d+(?:[.¼½¾⅛⅜⅝⅞]+)?\s*″?\s*[×x]\s*\d{2}/i.test(line))
-    || dimensionsLine(record)
-    || 'Standard cigar construction';
-  const role = candidates.find(line => line !== construction && /taster|format|ring gauge|ring|session|wrapper|blend|compact|narrow|large|traditional|quick|premium|full-bodied|mellow/i.test(line))
-    || deriveRoleDetail(record);
-  return [construction, role];
-}
-
-function fullHalfDimensions(record, lines) {
+function fullHalfDimensions(record, lines, context) {
   const patterns = [
     /full(?:-size)?(?:\s+vitola|\s+cigar)?\s*:\s*([0-9.¼½¾⅛⅜⅝⅞]+)\s*″?\s*[×x]\s*(\d{2})/i,
     /^single\s+([0-9.¼½¾⅛⅜⅝⅞]+)\s*″?\s*[×x]\s*(\d{2})/i
@@ -319,27 +313,22 @@ function fullHalfDimensions(record, lines) {
       if (match) return { length:parseFractionNumber(match[1]), ring:Number(match[2]) };
     }
   }
-  const halfLength = Number(record.length);
-  const ring = Number(record.ring);
+  const fallback = context?.dimensionsByKey?.get?.(String(record.key || '')) || {};
+  const halfLength = Number.isFinite(Number(record.length)) ? Number(record.length) : Number(fallback.length);
+  const ring = effectiveRing(record, context);
   return {
     length:Number.isFinite(halfLength) ? halfLength * 2 : NaN,
     ring:Number.isFinite(ring) ? ring : NaN
   };
 }
 
-function halfDetails(record, lines) {
-  const full = fullHalfDimensions(record, lines);
-  const ring = Number.isFinite(full.ring) ? Math.round(full.ring) : Math.round(Number(record.ring));
+function fullCigarLine(record, lines, context) {
+  const full = fullHalfDimensions(record, lines, context);
+  const ring = Number.isFinite(full.ring) ? Math.round(full.ring) : Math.round(effectiveRing(record, context));
   const fullLength = numberWithFraction(full.length);
-  const sessionLength = numberWithFraction(Number.isFinite(full.length) ? full.length / 2 : record.length);
-  const vitola = vitolaFromTitle(record.title);
-  const fullLine = fullLength && Number.isFinite(ring)
-    ? `Full cigar: ${fullLength}″ × ${ring} ${vitola}`
+  return fullLength && Number.isFinite(ring)
+    ? `Full cigar: ${fullLength}″ × ${ring} ${vitolaFromTitle(record.title)}`
     : 'Full cigar split before lighting';
-  const sessionLine = sessionLength && Number.isFinite(ring)
-    ? `Two ${sessionLength}″ × ${ring} sessions`
-    : 'Two practical smoking sessions';
-  return [fullLine, sessionLine];
 }
 
 export function normalisePracticalLines(record = {}, context = {}) {
@@ -348,11 +337,9 @@ export function normalisePracticalLines(record = {}, context = {}) {
   const first = packageLine(record, lines, family);
   const cut = cutLine(lines, family);
   const protection = protectionLine(record, lines, family, first);
-  const cadence = cadenceLine(lines, family);
-
-  if (family === SMALL_FAMILY || family === TASTER_FAMILY) return [first, cut, protection, cadence];
-  const [construction, role] = family === HALF_FAMILY ? halfDetails(record, lines) : regularDetails(record, lines);
-  return [first, cut, protection, construction, role, cadence];
+  const cadence = cadenceForRing(effectiveRing(record, context));
+  if (family === HALF_FAMILY) return [first, cut, protection, fullCigarLine(record, lines, context), cadence];
+  return [first, cut, protection, cadence];
 }
 
 function currentEffectiveLines(record, kind) {
@@ -393,25 +380,75 @@ async function readLiveState(fetchImpl, baseUrl) {
   return response.json();
 }
 
+function currentLinesForKey(state, seed, key) {
+  const record = effectiveRecord(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key], key);
+  return {
+    production: currentEffectiveLines(record, 'production'),
+    practical: currentEffectiveLines(record, 'practical')
+  };
+}
+
+// A preview run reads live state and prints the exact before/after for every card it would
+// touch, without sending a single write. The format change strips lines that were authored
+// by hand, so the diff is reviewable before anything is committed to KV.
+export function buildStructurePreview(state = {}, seed = {}, html = '') {
+  const context = buildStructureContext(state, seed, html);
+  const keys = findNonCompliantKeys(state, seed, context);
+  return keys.map(key => {
+    const before = currentLinesForKey(state, seed, key);
+    const patch = buildStructurePatch(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key], context, key);
+    return {
+      key,
+      before,
+      after: {
+        production: patch.productionLines || before.production,
+        practical: patch.practicalLines || before.practical
+      }
+    };
+  });
+}
+
+function printPreview(preview) {
+  for (const row of preview) {
+    console.log(`\n--- ${row.key}`);
+    if (JSON.stringify(row.before.production) !== JSON.stringify(row.after.production)) {
+      console.log(`  Production before: ${JSON.stringify(row.before.production)}`);
+      console.log(`  Production after : ${JSON.stringify(row.after.production)}`);
+    }
+    if (JSON.stringify(row.before.practical) !== JSON.stringify(row.after.practical)) {
+      console.log(`  Practical before : ${JSON.stringify(row.before.practical)}`);
+      console.log(`  Practical after  : ${JSON.stringify(row.after.practical)}`);
+    }
+  }
+}
+
 export async function runLiveStructureNormalisation(options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable.');
   const baseUrl = String(options.baseUrl || DEFAULT_BASE_URL).replace(/\/$/, '');
+  const dryRun = options.dryRun ?? /^(1|true|yes)$/i.test(String(process.env.NORMALISE_DRY_RUN || ''));
   const token = String(options.token ?? process.env.CATALOGUE_ADMIN_TOKEN ?? '').trim();
-  if (!token) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
+  if (!token && !dryRun) throw new Error('CATALOGUE_ADMIN_TOKEN is required for publication.');
   const repoRoot = resolve(options.repoRoot || process.cwd());
 
   const html = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8');
   const seed = parseCatalogueSeed(html);
   const initialState = await readLiveState(fetchImpl, baseUrl);
-  const initialContext = buildStructureContext(initialState, seed);
+  const initialContext = buildStructureContext(initialState, seed, html);
   const initialKeys = findNonCompliantKeys(initialState, seed, initialContext);
   console.log(`Found ${initialKeys.length} catalogue card(s) with non-compliant Production/Practical structure.`);
+
+  if (dryRun) {
+    const preview = buildStructurePreview(initialState, seed, html);
+    printPreview(preview);
+    console.log(`\nDry run only: ${preview.length} card(s) would change and nothing was written to KV.`);
+    return { published:[], remaining:initialKeys, preview, dryRun:true };
+  }
 
   const published = [];
   for (const key of initialKeys) {
     const currentState = await readLiveState(fetchImpl, baseUrl);
-    const context = buildStructureContext(currentState, seed);
+    const context = buildStructureContext(currentState, seed, html);
     const patch = buildStructurePatch(
       currentState?.cards?.[key],
       currentState?.entries?.[key],
@@ -439,7 +476,7 @@ export async function runLiveStructureNormalisation(options = {}) {
   }
 
   const finalState = await readLiveState(fetchImpl, baseUrl);
-  const finalContext = buildStructureContext(finalState, seed);
+  const finalContext = buildStructureContext(finalState, seed, html);
   const remaining = findNonCompliantKeys(finalState, seed, finalContext);
   if (remaining.length) {
     throw new Error(`Structure verification failed; non-compliant entries remain: ${remaining.join(', ')}`);

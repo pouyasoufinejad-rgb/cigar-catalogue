@@ -67,8 +67,10 @@ test('repair restores request-ledger Production, Practical and retailers without
   assert.deepEqual(state.entries.x.productionLines, [
     'Handmade','Wrapper: New Wrapper','Binder: New Binder','Filler: New Filler'
   ]);
+  // Ring 44 is in the forgiving band, and the ledger's own "Slow Cadence" wording is
+  // discarded along with the form and role lines the house format no longer carries.
   assert.deepEqual(state.entries.x.practicalLines, [
-    'Single cigar','Uncut','Protected','5″ × 44 Corona','Compact format','Slow Cadence'
+    'Single cigar','Uncut','Protected','Forgiving Cadence'
   ]);
   assert.deepEqual(state.entries.x.retailerLinks, [
     'https://www.smokingpipes.com/example/x','https://www.cigarhut.com.au/x/'
@@ -116,7 +118,7 @@ test('repair uses seed data only when live/request data is missing and preserves
   // Cards carry the rendered markup; only dynamic entries carry the line arrays.
   assert.equal(
     state.cards.static.productionHtml,
-    ['Unflavoured','Machine-made','Wrapper: Seed','Binder: Seed','Filler: Seed']
+    ['Machine-made','Wrapper: Seed','Binder: Seed','Filler: Seed']
       .map(line => `<span class="artmeta-line">${line}</span>`).join('')
   );
   assert.equal(state.cards.static.productionLines, undefined, 'cards must not carry line arrays');

@@ -1,10 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  cadenceForRing,
   classifyStructureFamily,
   normaliseProductionLines,
   normalisePracticalLines,
+  parseStaticCardDimensions,
+  buildStructureContext,
   buildStructurePatch,
+  buildStructurePreview,
   findNonCompliantKeys
 } from '../scripts/normalise-live-card-structure.mjs';
 
@@ -13,7 +17,8 @@ const context = {
     ['liga-no9', 'coronets-cigarillos'],
     ['regular', 'petit-panatelas'],
     ['flavoured-main', 'flavoured-infused']
-  ])
+  ]),
+  dimensionsByKey: new Map()
 };
 
 test('classifies the four approved structure families from live catalogue role and subsection', () => {
@@ -24,31 +29,74 @@ test('classifies the four approved structure families from live catalogue role a
   assert.equal(classifyStructureFamily({ key:'h', catalogueType:'half' }, context), 'half');
 });
 
-test('coronet/flavoured Production follows status, construction, wrapper, binder, filler and strips country wording', () => {
+test('cadence is decided by ring gauge alone at the stated boundaries', () => {
+  assert.equal(cadenceForRing(20), 'Sensitive Cadence');
+  assert.equal(cadenceForRing(32), 'Sensitive Cadence');
+  assert.equal(cadenceForRing(33), 'Lenient Cadence');
+  assert.equal(cadenceForRing(40), 'Lenient Cadence');
+  assert.equal(cadenceForRing(41), 'Forgiving Cadence');
+  assert.equal(cadenceForRing(60), 'Forgiving Cadence');
+});
+
+test('cadence ignores whatever wording the card already carried', () => {
   const record = {
+    key:'regular',
+    ring:46,
+    practicalLines:['Single cigar','Uncut','Fragile','Slow Cadence']
+  };
+  assert.equal(normalisePracticalLines(record, context).at(-1), 'Forgiving Cadence');
+});
+
+test('an unedited static card takes its cadence from the page markup, not a default', () => {
+  const html = '<article class="card" data-key="static-coronet"><div class="artframe" data-visual-length="4" data-visual-ring="32"></div></article>';
+  const live = buildStructureContext({}, {}, html);
+  assert.deepEqual(parseStaticCardDimensions(html).get('static-coronet'), { length:4, ring:32 });
+  // No ring anywhere on the record: without the markup fallback this would silently fall
+  // back to Lenient and relabel a narrow cigar.
+  assert.equal(normalisePracticalLines({ key:'static-coronet' }, live).at(-1), 'Sensitive Cadence');
+});
+
+test('Production shows Flavoured on infused blends and prints nothing for the rest', () => {
+  const flavoured = {
+    key:'flavoured-main',
+    productionLines:[
+      'Flavoured',
+      'Handmade in Nicaragua',
+      'Wrapper: Mexican San Andrés maduro',
+      'Binder: Indonesian',
+      'Filler: Indonesian and Nicaraguan'
+    ]
+  };
+  assert.deepEqual(normaliseProductionLines(flavoured, context), [
+    'Flavoured',
+    'Handmade',
+    'Wrapper: Mexican San Andrés maduro',
+    'Binder: Indonesian',
+    'Filler: Indonesian and Nicaraguan'
+  ]);
+
+  const unflavoured = {
     key:'liga-no9',
     productionLines:[
       'Unflavoured',
       'Handmade in Nicaragua',
-      'Wrapper: Connecticut River Valley Broadleaf Oscuro',
-      'Binder: Brazilian Mata Fina',
-      'Filler: Nicaraguan and Honduran'
+      'Wrapper: Ecuadorian Habano',
+      'Binder: Brazilian Cubra',
+      'Filler: Brazilian and Dominican'
     ]
   };
-  assert.deepEqual(normaliseProductionLines(record, context), [
-    'Unflavoured',
+  assert.deepEqual(normaliseProductionLines(unflavoured, context), [
     'Handmade',
-    'Wrapper: Connecticut River Valley Broadleaf Oscuro',
-    'Binder: Brazilian Mata Fina',
-    'Filler: Nicaraguan and Honduran'
+    'Wrapper: Ecuadorian Habano',
+    'Binder: Brazilian Cubra',
+    'Filler: Brazilian and Dominican'
   ]);
 });
 
-test('regular-main Production omits flavour status and country', () => {
+test('regular-main Production is the same four-line block as every other section', () => {
   const record = {
     key:'regular',
     productionLines:[
-      'Unflavoured',
       'Handmade in Nicaragua',
       'Wrapper: Mexican San Andrés',
       'Binder: Connecticut Broadleaf',
@@ -63,15 +111,33 @@ test('regular-main Production omits flavour status and country', () => {
   ]);
 });
 
-test('taster Production keeps flavoured/unflavoured but Practical collapses to the Isla del Sol four-line structure', () => {
+test('regular-main Practical is package, cut, protection, cadence with no form or role lines', () => {
+  const record = {
+    key:'regular',
+    title:'Undercrown 10 Corona Viva — Single',
+    packageLabel:'single cigar',
+    length:5,
+    ring:43,
+    practicalLines:['Single cigar','5″ × 43 Corona Viva','A$39 single','Long-filler construction','Direct Undercrown 10 blend taster','Slow cadence recommended']
+  };
+  assert.deepEqual(normalisePracticalLines(record, context), [
+    'Single cigar',
+    'Uncut',
+    'Fragile',
+    'Forgiving Cadence'
+  ]);
+});
+
+test('taster Practical collapses to the same four lines', () => {
   const record = {
     key:'t',
     catalogueType:'taster',
     taster:true,
     title:'Isla del Sol Maduro Gran Corona — Single',
     packageLabel:'single cigar',
+    ring:46,
     productionLines:['Flavoured','Handmade in Nicaragua','Wrapper: Mexican San Andrés maduro','Binder: Indonesian','Filler: Indonesian and Nicaraguan'],
-    practicalLines:['Single cigar','5″ × 44 Gran Corona','A$37.39 single','Uncut','Protected','Long-filler construction','Forgiving Cadence']
+    practicalLines:['Single cigar','5″ × 46 Gran Corona','A$37.39 single','Uncut','Protected','Long-filler construction','Forgiving Cadence']
   };
   assert.deepEqual(normaliseProductionLines(record, context), [
     'Flavoured','Handmade','Wrapper: Mexican San Andrés maduro','Binder: Indonesian','Filler: Indonesian and Nicaraguan'
@@ -81,27 +147,12 @@ test('taster Production keeps flavoured/unflavoured but Practical collapses to t
   ]);
 });
 
-test('regular-main Practical uses package, cut, protection, form/construction, useful role, cadence in that order', () => {
-  const record = {
-    key:'regular',
-    title:'Undercrown 10 Corona Viva — Single',
-    packageLabel:'single cigar',
-    length:5,
-    ring:43,
-    productionLines:['Handmade','Wrapper: Mexican San Andrés','Binder: Connecticut Broadleaf','Filler: Nicaraguan long-filler'],
-    practicalLines:['Single cigar','5″ × 43 Corona Viva','A$39 single','Long-filler construction','Direct Undercrown 10 blend taster','Slow cadence recommended']
-  };
-  assert.deepEqual(normalisePracticalLines(record, context), [
-    'Single cigar',
-    'Uncut',
-    'Fragile',
-    'Long-filler construction',
-    'Direct Undercrown 10 blend taster',
-    'Slow cadence recommended'
-  ]);
+test('a sealed pack protects its contents the same way a tin does', () => {
+  const record = { key:'flavoured-main', packageLabel:'pack of 10', ring:32, practicalLines:['Pack of 10'] };
+  assert.deepEqual(normalisePracticalLines(record, context), ['Pack of 10','Uncut','Protected','Sensitive Cadence']);
 });
 
-test('half Production parses legacy prose and Practical becomes Two Halves first with full/session form details', () => {
+test('half Practical keeps the full-cigar line before cadence and drops the sessions line', () => {
   const record = {
     key:'h',
     catalogueType:'half',
@@ -117,7 +168,7 @@ test('half Production parses legacy prose and Practical becomes Two Halves first
     practicalLines:[
       'Buy the full Wise Man Maduro Lancero at Cigar Hut for ~A$49 each.',
       'Cut it cleanly in half before lighting: ~A$24.50 per ~3½″ × 40 session.',
-      'This keeps the current full-bodied Broadleaf blend inside the catalogue’s practical-session target while preserving the concentrated lancero format.'
+      'This keeps the current full-bodied Broadleaf blend inside the catalogue’s practical-session target.'
     ]
   };
   assert.deepEqual(normaliseProductionLines(record, context), [
@@ -131,23 +182,37 @@ test('half Production parses legacy prose and Practical becomes Two Halves first
     'Cut',
     'Fragile',
     'Full cigar: 7″ × 40 Lancero',
-    'Two 3½″ × 40 sessions',
-    'Slow Cadence'
+    'Lenient Cadence'
   ]);
 });
 
-test('coronet/flavoured Practical preserves package taxonomy and ends with cadence', () => {
-  const record = {
-    key:'liga-no9',
-    packageLabel:'tin of 10',
-    practicalLines:['Tin of 10','Uncut','Protected','Lenient Cadence']
-  };
-  assert.deepEqual(normalisePracticalLines(record, context), ['Tin of 10','Uncut','Protected','Lenient Cadence']);
+test('normalisation is idempotent, so a published card never needs a second write', () => {
+  const records = [
+    { key:'regular', title:'Undercrown 10 Corona Viva — Single', ring:43, length:5,
+      productionLines:['Handmade','Wrapper: A','Binder: B','Filler: C'],
+      practicalLines:['Single cigar','Uncut','Fragile','Slow Cadence'] },
+    { key:'flavoured-main', ring:32, packageLabel:'pack of 10',
+      productionLines:['Flavoured','Handmade','Wrapper: A','Binder: B','Filler: C'],
+      practicalLines:['Pack of 10','Uncut','Protected','Lenient Cadence'] },
+    { key:'h', catalogueType:'half', title:'Example Lancero', ring:40, length:3.5,
+      productionLines:['Handmade','Wrapper: A','Binder: B','Filler: C'],
+      practicalLines:['Two Halves','Cut','Fragile','Full cigar: 7″ × 40 Lancero','Slow Cadence'] }
+  ];
+  for (const record of records) {
+    const once = {
+      ...record,
+      productionLines:normaliseProductionLines(record, context),
+      practicalLines:normalisePracticalLines(record, context)
+    };
+    assert.deepEqual(normaliseProductionLines(once, context), once.productionLines, `${record.key} Production must settle`);
+    assert.deepEqual(normalisePracticalLines(once, context), once.practicalLines, `${record.key} Practical must settle`);
+    assert.deepEqual(buildStructurePatch({}, once, {}, context, record.key), {}, `${record.key} must not need a second write`);
+  }
 });
 
 test('buildStructurePatch is minimal and never alters rank or ratings', () => {
   const entry = {
-    key:'regular', rank:7, strength:8, quality:9,
+    key:'regular', rank:7, strength:8, quality:9, ring:43,
     productionLines:['Handmade in Nicaragua','Wrapper: A','Binder: B','Filler: C'],
     practicalLines:['Single cigar','5″ × 43 Corona','Slow Cadence']
   };
@@ -162,10 +227,28 @@ test('compliant entries are no-ops and live audit only returns non-compliant key
   const state = {
     cards:{},
     entries:{
-      good:{ key:'good', catalogueType:'taster', taster:true, productionLines:['Unflavoured','Handmade','Wrapper: A','Binder: B','Filler: C'], practicalLines:['Single cigar','Uncut','Protected','Lenient Cadence'] },
+      good:{ key:'good', catalogueType:'taster', taster:true, ring:46, productionLines:['Handmade','Wrapper: A','Binder: B','Filler: C'], practicalLines:['Single cigar','Uncut','Protected','Forgiving Cadence'] },
       bad:{ key:'bad', catalogueType:'half', title:'Example Lancero', length:3.5, ring:40, productionLines:['Handmade in Nicaragua','Wrapper: A','Binder: B','Filler: C'], practicalLines:['Two halves from one cigar','Pre-cut before lighting'] }
     }
   };
   assert.deepEqual(buildStructurePatch({}, state.entries.good, {}, context), {});
   assert.deepEqual(findNonCompliantKeys(state, { cards:{} }, context), ['bad']);
+});
+
+test('preview reports the before and after for every card it would touch and writes nothing', () => {
+  const state = {
+    cards:{},
+    entries:{
+      bad:{ key:'bad', ring:43, subsection:'petit-panatelas', title:'Example Corona',
+        productionLines:['Unflavoured','Handmade','Wrapper: A','Binder: B','Filler: C'],
+        practicalLines:['Single cigar','Uncut','Fragile','Long-filler construction','Compact format','Slow Cadence'] }
+    },
+    sections:{ recommendationSubsections:[{ id:'petit-panatelas', entryKeys:['bad'] }] }
+  };
+  const preview = buildStructurePreview(state, { cards:{} }, '');
+  assert.equal(preview.length, 1);
+  assert.equal(preview[0].key, 'bad');
+  assert.deepEqual(preview[0].before.practical, ['Single cigar','Uncut','Fragile','Long-filler construction','Compact format','Slow Cadence']);
+  assert.deepEqual(preview[0].after.practical, ['Single cigar','Uncut','Fragile','Forgiving Cadence']);
+  assert.deepEqual(preview[0].after.production, ['Handmade','Wrapper: A','Binder: B','Filler: C']);
 });
