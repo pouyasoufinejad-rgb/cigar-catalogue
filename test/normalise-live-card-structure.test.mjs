@@ -256,6 +256,35 @@ test('normalisation is idempotent, so a published card never needs a second writ
   }
 });
 
+test('compliance is measured against what renders, not the publisher-derived card line array', () => {
+  const compliant = ['Handmade','Wrapper: Mexican San Andrés','Binder: Connecticut Broadleaf','Filler: Nicaraguan'];
+  const card = {
+    // What the page renders for this card: already in house format.
+    productionHtml: compliant.map(line => `<span class="artmeta-line">${line}</span>`).join(''),
+    practicalHtml: ['Tin of 10','Uncut','Protected','Sensitive Cadence'].map(line => `<span class="artmeta-line">${line}</span>`).join(''),
+    // What the publisher re-derives from public/index.html on every publish and never
+    // renders. Reading this made the card look non-compliant forever: the normaliser
+    // rewrote it, the next publish put the stale array back, and round it went.
+    productionLines: ['Unflavoured','Handmade','San Andrés maduro wrapper.'],
+    ring: 32
+  };
+  assert.deepEqual(buildStructurePatch(card, undefined, {}, context, 'liga-no9'), {});
+});
+
+test('a dynamic entry is still measured by its own line array', () => {
+  const entry = {
+    key:'liga-no9', ring:32,
+    productionLines:['Handmade','Wrapper: A','Binder: B','Filler: C'],
+    practicalLines:['Tin of 10','Uncut','Protected','Lenient Cadence']
+  };
+  // The card markup agrees on Production but the entry's cadence is wrong for ring 32,
+  // and the entry is what renders, so the patch must still correct it.
+  const card = { productionHtml:'<span class="artmeta-line">Handmade</span>' };
+  const patch = buildStructurePatch(card, entry, {}, context, 'liga-no9');
+  assert.deepEqual(Object.keys(patch), ['practicalLines']);
+  assert.deepEqual(patch.practicalLines, ['Tin of 10','Uncut','Protected','Sensitive Cadence']);
+});
+
 test('buildStructurePatch is minimal and never alters rank or ratings', () => {
   const entry = {
     key:'regular', rank:7, strength:8, quality:9, ring:43,

@@ -355,18 +355,31 @@ export function normalisePracticalLines(record = {}, context = {}) {
   return [first, cut, protection, cadence];
 }
 
-function currentEffectiveLines(record, kind) {
-  const direct = arrayLines(record?.[`${kind}Lines`]);
-  if (direct.length) return direct;
-  return linesFromHtml(record?.[`${kind}Html`]);
+// What the page actually renders for this key, which is what compliance is measured
+// against.
+//
+// A dynamic entry renders its own line array. A static card renders its *Html override.
+// card.*Lines is neither: the publisher derives it from public/index.html on every publish
+// (parseStaticRankingCards) or copies it off the entry (rankingCardFromEntry), as a ranking
+// input, and nothing ever renders it. Reading it here compared live cards against the stale
+// copy baked into the page, so the normaliser rewrote them, the next publish re-derived the
+// stale array, and they were non-compliant again. That loop is why this never converged.
+function renderedLines(card, entry, base, kind) {
+  const entryLines = arrayLines(entry?.[`${kind}Lines`]);
+  if (entryLines.length) return entryLines;
+  const cardHtml = linesFromHtml(card?.[`${kind}Html`]);
+  if (cardHtml.length) return cardHtml;
+  const baseHtml = linesFromHtml(base?.[`${kind}Html`]);
+  if (baseHtml.length) return baseHtml;
+  return arrayLines(base?.[`${kind}Lines`]);
 }
 
 export function buildStructurePatch(card = {}, entry = {}, base = {}, context = {}, key = '') {
   const record = effectiveRecord(card, entry, base, key || entry?.key || card?.key || base?.key || '');
   const desiredProduction = normaliseProductionLines(record, context);
   const desiredPractical = normalisePracticalLines(record, context);
-  const currentProduction = currentEffectiveLines(record, 'production');
-  const currentPractical = currentEffectiveLines(record, 'practical');
+  const currentProduction = renderedLines(card, entry, base, 'production');
+  const currentPractical = renderedLines(card, entry, base, 'practical');
   const patch = {};
   if (JSON.stringify(currentProduction) !== JSON.stringify(desiredProduction)) patch.productionLines = desiredProduction;
   if (JSON.stringify(currentPractical) !== JSON.stringify(desiredPractical)) patch.practicalLines = desiredPractical;
@@ -394,10 +407,12 @@ async function readLiveState(fetchImpl, baseUrl) {
 }
 
 function currentLinesForKey(state, seed, key) {
-  const record = effectiveRecord(state?.cards?.[key], state?.entries?.[key], seed?.cards?.[key], key);
+  const card = state?.cards?.[key];
+  const entry = state?.entries?.[key];
+  const base = seed?.cards?.[key];
   return {
-    production: currentEffectiveLines(record, 'production'),
-    practical: currentEffectiveLines(record, 'practical')
+    production: renderedLines(card, entry, base, 'production'),
+    practical: renderedLines(card, entry, base, 'practical')
   };
 }
 
