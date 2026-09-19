@@ -41,6 +41,7 @@ const env = { CATALOGUE_STATE: kv };
 const now = Date.now();
 const run = await runStockCheck(env, state, 'full', { html, now, fetchImpl: fetch, cigarHutExactSearch: true });
 const snapshot = await readStockCache(env);
+console.log('[github-stock] FULL_SNAPSHOT ' + JSON.stringify(snapshot));
 console.log(`[github-stock] full crawl checked=${run.checked} failed=${run.counters.failed}`);
 
 const cigarHutRows = [];
@@ -85,5 +86,3 @@ if (Number(live?.meta?.lastFullAt) !== Number(snapshot.meta.lastFullAt)) throw n
 const liveHutUnknown = Object.entries(live.results || {}).flatMap(([key, result]) => (result?.retailers || []).filter(row => row.retailer === 'CigarHut' && row.status === 'unknown').map(row => [key, row]));
 if (liveHutUnknown.length) throw new Error(`Live cache still has ${liveHutUnknown.length} CigarHut unknown rows.`);
 console.log('[github-stock] production snapshot imported and verified');
-
-console.log('[github-stock] FULL_SNAPSHOT ' + JSON.stringify(live));
