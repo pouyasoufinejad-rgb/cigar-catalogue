@@ -20,5 +20,5 @@
       "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-nasty-fritas"
     ]
   },
-  "note": "Price audit: add Cigar Hut and use its A$29 single as the current best available Australian price."
+  "note": "2026-09-20 Australian retailer audit: Cigar Hut is the best verified available single at A$29, with The Index retained as a fallback. SmokingPipes is excluded from best-price selection."
 }

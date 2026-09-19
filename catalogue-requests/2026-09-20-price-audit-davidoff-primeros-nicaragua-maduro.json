@@ -4,7 +4,7 @@
   "key": "davidoff-primeros-nicaragua-maduro",
   "entry": {
     "packagePrice": 115,
-    "price": 19.166666666666668,
+    "price": 19.17,
     "priceChecked": "2026-09-20",
     "stockChecked": "2026-09-20",
     "noteHtml": "Corporate Cigar currently lists the exact tin of 6 at A$115 and available, below the A$132 Cigar Hut listing.",
@@ -15,5 +15,5 @@
       "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/primeros/"
     ]
   },
-  "note": "Price audit: add Corporate Cigar as the current best available Australian price at A$115 per tin of 6. SmokingPipes is excluded from best-price selection."
+  "note": "2026-09-20 Australian retailer audit: Corporate Cigar is the best verified available price at A$115 per tin of 6. SmokingPipes is excluded from best-price selection."
 }
