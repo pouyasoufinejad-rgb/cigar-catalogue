@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-19-aj-fernandez-new-world-cameroon-short-robusto",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-cameroon-short-robusto",
+  "entry": {
+    "brand": "AJ Fernandez",
+    "title": "New World Cameroon Short Robusto — Single",
+    "eyebrow": "Cameroon-wrapped compact Nicaraguan",
+    "packagePrice": 39.32,
+    "packageLabel": "single cigar",
+    "price": 39.32,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 48,
+    "strength": 6,
+    "quality": 8,
+    "risk": 2,
+    "size": "gold",
+    "subsection": "petit-panatelas",
+    "taster": false,
+    "archived": false,
+    "experienceTags": [
+      "Nicotine: Medium (projected)",
+      "Pairings: Coffee, dark chocolate, aged rum (projected)",
+      "Occasion: Short session, after a meal, daytime smoke"
+    ],
+    "summaryHtml": "<strong>Cedar, sweet spice, cinnamon, roasted nuts, cocoa and a floral top note</strong> are the reported signature of the Cameroon Selection, the only New World blend to use an African Cameroon wrapper over AJ Fernandez's Estelí-grown Nicaraguan binder and filler. The wrapper is expected to push the blend toward sweetness and aromatic spice rather than the dark earth of the Oscuro, with medium body and a balance that earned the line multiple 90-point ratings. At 4 × 48 the format should concentrate that sweetness into a short session, and the soft box press is reported to draw cleanly and burn evenly.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Unflavoured",
+      "Handmade",
+      "Wrapper: Cameroon",
+      "Binder: Nicaraguan Estelí",
+      "Filler: Nicaraguan Estelí long-filler"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Fragile",
+      "4″ × 48 Robusto",
+      "Compact format",
+      "Slow Cadence"
+    ],
+    "smokeTime": "40–55 min smoke (projected)",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/NEW-WORLD-%252d-Cameroon-Short-Robusto-%252d-%284%22-x-48%29-Single.html"
+    ],
+    "priceChecked": "2026-09-19"
+  },
+  "note": "Add AJ Fernandez New World Cameroon Short Robusto as an untasted candidate in Panatelas, Coronas & Robustos. Cigarworld Australia lists the exact 4 x 48 single at A$39.32, confirmed by the catalogue owner on 2026-09-19; the Cigarworld product URL follows the same pattern as the existing New World Oscuro and Last Call Flaquitas links. Vitola and dimensions verified at 4 x 48 across Neptune, Atlantic and Cigar Aficionado. Blend verified as an aged African Cameroon wrapper over Nicaraguan binder and filler from the AJ Fernandez farm in Esteli, handmade in Nicaragua, and is the only New World blend using a Cameroon wrapper. Rank is deliberately omitted so the publisher appends it to the end of the subsection and leaves every existing rank untouched. Size tier gold is the derived value for a 48 ring. Strength 6 and Quality 8 are untasted projections from a medium-bodied, 90-point-rated profile; Flavour is left unrated until personally tasted and Value stays automatically derived. Stock fields are omitted so the retailer crawler determines availability."
+}
