@@ -25,41 +25,8 @@ const [htmlResponse, stateResponse, stockResponse] = await Promise.all([
   fetchOk(`${base}/api/stock?github-stock-refresh=${nonce}`)
 ]);
 const html = await htmlResponse.text();
-const renderedCards = [];
-for (const match of html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^>]*>/gi)) {
-  const tag = match[0];
-  renderedCards.push({
-    key: match[1],
-    archived: /\bdata-archived=["']1["']/i.test(tag),
-    taster: /\bdata-taster=["']1["']/i.test(tag),
-    catalogueType: tag.match(/\bdata-catalogue-type=["']([^"']+)["']/i)?.[1] || '',
-    rank: tag.match(/\bdata-rank=["']([^"']+)["']/i)?.[1] || '',
-    price: tag.match(/\bdata-price=["']([^"']+)["']/i)?.[1] || '',
-    packagePrice: tag.match(/\bdata-package-price=["']([^"']+)["']/i)?.[1] || '',
-    packageLabel: tag.match(/\bdata-package-label=["']([^"']+)["']/i)?.[1] || '',
-    length: tag.match(/\bdata-length=["']([^"']+)["']/i)?.[1] || '',
-    ring: tag.match(/\bdata-ring=["']([^"']+)["']/i)?.[1] || ''
-  });
-}
-console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));
-const auditKeys = ["ashton-aged-maduro-esquire","curivari-fuerte-chicos","don-pepin-garcia-demi-tasse","oliva-serie-g","oliva-serie-g-maduro-special-g","oliva-serie-g-petit-corona","oliva-serie-o","oliva-serie-o-petit-corona","oliva-serie-v-club-20","oliva-serie-v-melanio-no4","cohiba-short-10","cohiba-short-single","kfc-ponies-sweets","davidoff-nicaragua-mini-cigarillos","partagas-serie-club-10","tabak-especial-cafecita-negra","cao-moontrance","cao-moontrance-tubos","isla-del-sol-maduro-coronets","isla-del-sol-maduro-gran-corona"];
-for (const key of auditKeys) {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\console.log('[github-stock] RENDERED_CARDS ' + JSON.stringify(renderedCards));');
-  const rx = new RegExp('<article\\b[^>]*\\bdata-key=["\\\']' + escaped + '["\\\'][^>]*>[\\s\\S]*?<\\/article>', 'i');
-  const block = html.match(rx)?.[0] || '';
-  const textBlock = block.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ').replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\\s+/g,' ').trim();
-  console.log('[github-stock] CARD_TEXT ' + key + ' ' + JSON.stringify(textBlock.slice(0,3500)));
-}
 const state = await stateResponse.json();
 const prior = await stockResponse.json();
-const liveRows = [];
-for (const [key, value] of Object.entries(state.cards || {})) {
-  liveRows.push({ key, source:'card', brand:value?.brand, title:value?.title, archived:Boolean(value?.archived), catalogueType:value?.catalogueType, taster:Boolean(value?.taster), packagePrice:value?.packagePrice, price:value?.price, packageLabel:value?.packageLabel, length:value?.length, ring:value?.ring, retailerLinks:value?.retailerLinks || [] });
-}
-for (const [key, value] of Object.entries(state.entries || {})) {
-  liveRows.push({ key, source:'entry', brand:value?.brand, title:value?.title, archived:Boolean(value?.archived), catalogueType:value?.catalogueType, taster:Boolean(value?.taster), packagePrice:value?.packagePrice, price:value?.price, packageLabel:value?.packageLabel, length:value?.length, ring:value?.ring, retailerLinks:value?.retailerLinks || [] });
-}
-console.log('[github-stock] STATE_SUMMARY ' + JSON.stringify(liveRows));
 
 class MemoryKv {
   constructor(values) { this.values = new Map(Object.entries(values)); }
@@ -74,7 +41,6 @@ const env = { CATALOGUE_STATE: kv };
 const now = Date.now();
 const run = await runStockCheck(env, state, 'full', { html, now, fetchImpl: fetch, cigarHutExactSearch: true });
 const snapshot = await readStockCache(env);
-console.log('[github-stock] FULL_SNAPSHOT ' + JSON.stringify(snapshot));
 console.log(`[github-stock] full crawl checked=${run.checked} failed=${run.counters.failed}`);
 
 const cigarHutRows = [];
