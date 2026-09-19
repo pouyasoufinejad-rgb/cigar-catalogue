@@ -205,10 +205,15 @@ header::after{
   border:0!important;
   box-shadow:none!important;
 }
+/* Two columns is a wide-screen layout. This carried no media query at all, so it forced
+   two columns at every width and was only ever undone by later rules that happened to
+   match; anywhere they did not, a phone got two cramped columns. */
+@media(min-width:901px){
 .grid{
   grid-template-columns:repeat(2,minmax(0,560px))!important;
   justify-content:center;
   gap:18px!important;
+}
 }
 .artframe{height:330px!important}
 .cardbody{padding:18px 20px 20px!important}
