@@ -16,12 +16,14 @@ html body article.card{
   max-width:none!important;
   margin:0!important;
 }
+@media(min-width:901px){
 html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"]):nth-last-child(2 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])):nth-child(3n + 1 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])){
   transform:translateX(30%)!important;
 }
 html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"]):nth-last-child(1 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])):nth-child(3n + 2 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])){
   grid-column:3!important;
   transform:translateX(-30%)!important;
+}
 }
 html body article.card .medals{
   gap:4px!important;
