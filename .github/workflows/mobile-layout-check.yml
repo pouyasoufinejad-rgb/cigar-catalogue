@@ -35,11 +35,16 @@ jobs:
         env:
           WIDTHS: ${{ inputs.widths }}
         run: node scripts/measure-live-mobile-layout.mjs
+      - name: Check the card country strip
+        if: ${{ always() }}
+        run: node scripts/verify-live-card-strip.mjs
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: mobile-layout-${{ github.run_id }}
-          path: mobile-layout-*.png
+          path: |
+            mobile-layout-*.png
+            card-strip-*.png
           retention-days: 14
           if-no-files-found: warn
