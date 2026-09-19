@@ -166,6 +166,15 @@ export async function runAudit(options = {}) {
       console.log(`HEADER ${header}: ${page.headers.get(header) ?? '(absent)'}`);
     }
     console.log(`HTML_BYTES ${html.length}`);
+    // The rank a reader actually sees, for any keys named in AUDIT_KEYS. A dynamic entry
+    // renders from the entry while ranking normalisation runs over the cards, so the two
+    // can disagree and only the rendered value settles it.
+    for (const key of String(process.env.AUDIT_KEYS || '').split(',').map(k => k.trim()).filter(Boolean)) {
+      const article = html.match(new RegExp(`<article\\b[^>]*\\bdata-key="${escapeRegex(key)}"[^>]*>`, 'i'))?.[0] || '';
+      const rendered = article.match(/data-rank="(\d+)"/)?.[1] || '(none)';
+      const eyebrow = html.slice(html.indexOf(article)).match(/<div class="eyebrow">([^<]*)</)?.[1] || '(none)';
+      console.log(`RENDERED_RANK ${key}: data-rank=${rendered} eyebrow="${eyebrow.trim()}"`);
+    }
     const cards = new Set([...html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["']/gi)].map(m => m[1]));
     // Read the expected bootstrap version out of the Worker source rather than pinning it
     // here, so a routine cache-bump does not fail the audit for the wrong reason.
