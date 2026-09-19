@@ -152,6 +152,34 @@ export async function runAudit(options = {}) {
   const rows = await loadTargetRequests(repoRoot);
   const ledger = replayLedger(rows);
 
+  // Read-only check that the deployed page is actually serving the current card markup.
+  // The audit above reads the state API, which says nothing about whether the Worker and
+  // its static assets have been redeployed.
+  if ((options.mode ?? process.env.AUDIT_MODE ?? '') === 'render') {
+    const page = await fetch(`${baseUrl}/?render_audit=${Date.now()}`, { cache: 'no-store' });
+    if (!page.ok) throw new Error(`Production render read failed with HTTP ${page.status}.`);
+    const html = await page.text();
+    const cards = new Set([...html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["']/gi)].map(m => m[1]));
+    const checks = {
+      RENDERED_CARDS: cards.size,
+      BOOTSTRAP_V144: /catalogue-runtime\.mjs\?v=144/.test(html),
+      LAUREL_BADGE_CSS: /\.laurel-badge\{/.test(html),
+      OVERALL_SCORE_CSS: /\.overall-score\{/.test(html),
+      AWARD_BOX_HIDDEN_IN_CSS: /\.gem-award\{display:none!important\}/.test(html),
+      OVERALL_SCORE_RENDERED: (html.match(/class="overall-score/g) || []).length,
+      DOMINICAN_REPUBLIC_LEFT_LONG: (html.match(/<span class="country-name">[^<]*Dominican Republic[^<]*<\/span>/g) || []).length
+    };
+    for (const [name, value] of Object.entries(checks)) console.log(`${name} ${json(value)}`);
+    const failed = Object.entries(checks).filter(([name, value]) =>
+      (typeof value === 'boolean' && !value)
+      || (name === 'DOMINICAN_REPUBLIC_LEFT_LONG' && value > 0)
+      || (name === 'RENDERED_CARDS' && value < 90));
+    if (failed.length) throw new Error(`Production render audit failed: ${json(failed)}`);
+    console.log('RENDER_AUDIT_PASSED');
+    console.log('AUDIT_COMPLETE_READ_ONLY');
+    return { live, checks };
+  }
+
   // Read-only check of the laurel and overall-score rules against what is actually live.
   if ((options.mode ?? process.env.AUDIT_MODE ?? '') === 'laurels') {
     const keys = [...new Set([...Object.keys(seedCards), ...Object.keys(liveEntries), ...Object.keys(liveCards)])].sort();

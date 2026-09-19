@@ -11,7 +11,7 @@ on:
         required: false
         type: string
       mode:
-        description: 'summary (default), noncompliant, or laurels to check the Gold-count and score rules'
+        description: 'summary (default), noncompliant, laurels, or render to check the deployed page'
         required: false
         default: 'summary'
         type: choice
@@ -19,6 +19,7 @@ on:
           - summary
           - noncompliant
           - laurels
+          - render
 
 permissions:
   contents: read
