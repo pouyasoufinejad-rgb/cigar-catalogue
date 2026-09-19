@@ -2033,4 +2033,59 @@ window.CATALOGUE_OVERRIDE_SEED = {"version":2,"updatedAt":"2026-08-21T22:10:00+0
 </script>
 <script type="module" src="/catalogue-admin-unified-v139.mjs?v=145"></script>
 <script type="module" src="/catalogue-stock-client.mjs?v=146"></script><!-- CATALOGUE_V139_UNIFIED_ADMIN -->
+<script>
+/* Opt-in layout diagnostic. Inert unless the URL carries ?debug=layout, so it costs a
+   normal visitor nothing. Four attempts at the mobile grid failed because every theory
+   about the viewport was reasoning rather than measurement; this reports what the device
+   actually does. */
+(function(){
+  if (!/[?&]debug=layout\b/.test(location.search)) return;
+  function render(){
+    var grid = document.getElementById('recommendation-petit-panatelas')
+            || document.querySelector('#cards .grid');
+    var out = [];
+    out.push('innerWidth ' + window.innerWidth);
+    out.push('outerWidth ' + window.outerWidth);
+    out.push('screen.width ' + (screen && screen.width));
+    out.push('dpr ' + window.devicePixelRatio);
+    out.push('visualViewport ' + (window.visualViewport ? Math.round(window.visualViewport.width) : 'n/a'));
+    out.push('matches max-900 ' + window.matchMedia('(max-width:900px)').matches);
+    out.push('matches max-560 ' + window.matchMedia('(max-width:560px)').matches);
+    if (grid) {
+      var cs = getComputedStyle(grid);
+      out.push('grid id ' + (grid.id || grid.className));
+      out.push('grid width ' + Math.round(grid.getBoundingClientRect().width));
+      out.push('COLUMNS ' + cs.gridTemplateColumns);
+      var cards = grid.querySelectorAll(':scope > article.card');
+      var tops = [];
+      for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].getBoundingClientRect();
+        if (r.height > 40) tops.push(Math.round(r.top));
+      }
+      var min = Math.min.apply(null, tops);
+      var perRow = tops.filter(function(t){ return t - min < 20; }).length;
+      out.push('PER ROW ' + perRow + ' of ' + tops.length);
+    } else {
+      out.push('grid NOT FOUND');
+    }
+    out.push('styles ' + document.querySelectorAll('style').length
+             + ' links ' + document.querySelectorAll('link[rel=stylesheet]').length);
+    out.push('has900rule ' + /max-width:900px/.test(document.documentElement.innerHTML.slice(0, 400000)));
+    out.push(navigator.userAgent);
+    var box = document.getElementById('layout-debug-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'layout-debug-box';
+      box.setAttribute('style', 'position:fixed;z-index:2147483647;left:4px;right:4px;top:4px;'
+        + 'background:#000;color:#0f0;font:11px/1.35 monospace;padding:8px;border:1px solid #0f0;'
+        + 'white-space:pre-wrap;word-break:break-word;max-height:60vh;overflow:auto');
+      document.body.appendChild(box);
+    }
+    box.textContent = out.join('\n');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(render, 1200); });
+  else setTimeout(render, 1200);
+  window.addEventListener('resize', function(){ setTimeout(render, 200); });
+})();
+</script>
 </body></html>
