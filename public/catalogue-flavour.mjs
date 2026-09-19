@@ -341,6 +341,17 @@ function ensureStyle() {
 .rating.flavour-unrated b,.rating.flavour-unrated .subscore{color:inherit;opacity:.72}
 .medals{grid-template-columns:repeat(5,minmax(0,1fr))!important}
 @media(max-width:700px){.medals{gap:4px!important}.medals .rating{min-width:0!important}.medals .rating>span{font-size:8px!important}.medals .rating b{font-size:9px!important}.medals .subscore{font-size:8px!important}}
+/* One card per row on a phone.
+   This rule also lives in the page stylesheet, but the page is the one URL that never
+   changes: a browser holding the document in a tab keeps the old CSS while still fetching
+   fresh modules, which is how a phone ends up with the current script and a two-column
+   layout. This module is proven to run whenever a card renders, so the rule is repeated
+   here where a stale document cannot strand it. */
+@media(max-width:900px){
+  html body .grid.grid.grid{grid-template-columns:minmax(0,1fr)!important;width:100%!important;margin-inline:0!important}
+  html body .grid.grid.grid>article.card{grid-column:auto!important;transform:none!important;width:100%!important;max-width:100%!important;margin-inline:auto!important}
+  html body article.card .artframe{min-height:400px!important}
+}
 `;
   document.head.appendChild(style);
 }

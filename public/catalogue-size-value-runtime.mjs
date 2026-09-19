@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=laurel-badge-1';
+import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=mobile-one-column-1';
 import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 
 const STATE_API = '/api/catalogue-overrides';

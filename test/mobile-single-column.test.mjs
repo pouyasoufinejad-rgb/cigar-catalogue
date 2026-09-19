@@ -40,3 +40,14 @@ test('the mobile art box is tall enough that portrait artwork is not letterboxed
   const block = page.match(/@media\(max-width:900px\)\{([\s\S]*?)\}\s*(?:@|\.|<)/)?.[1] || '';
   assert.match(block, /html body article\.card \.artframe\{min-height:400px!important\}/);
 });
+
+test('the one-column rule is also delivered by a module, so a stale document cannot strand it', async () => {
+  const flavour = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
+  // The page document is the only URL that never changes. A browser holding it in a tab
+  // keeps the old stylesheet while still fetching fresh modules, which is exactly how a
+  // phone ends up running the current script against a two-column layout.
+  assert.match(flavour, /@media\(max-width:900px\)\{[\s\S]*html body \.grid\.grid\.grid\{[^}]*grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(flavour, /html body article\.card \.artframe\{min-height:400px!important\}/);
+  // It has to outrank the page's own copy, which is itself already above the layout module.
+  assert.ok(flavour.includes('.grid.grid.grid'), 'the module copy must be the most specific of the three');
+});
