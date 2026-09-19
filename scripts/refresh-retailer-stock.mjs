@@ -85,3 +85,5 @@ if (Number(live?.meta?.lastFullAt) !== Number(snapshot.meta.lastFullAt)) throw n
 const liveHutUnknown = Object.entries(live.results || {}).flatMap(([key, result]) => (result?.retailers || []).filter(row => row.retailer === 'CigarHut' && row.status === 'unknown').map(row => [key, row]));
 if (liveHutUnknown.length) throw new Error(`Live cache still has ${liveHutUnknown.length} CigarHut unknown rows.`);
 console.log('[github-stock] production snapshot imported and verified');
+
+console.log('[github-stock] FULL_SNAPSHOT ' + JSON.stringify(live));
