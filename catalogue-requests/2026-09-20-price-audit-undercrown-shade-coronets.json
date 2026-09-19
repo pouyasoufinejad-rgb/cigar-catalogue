@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-20-price-audit-undercrown-shade-coronets",
+  "operation": "upsert-entry",
+  "key": "undercrown-shade-coronets",
+  "entry": {
+    "packagePrice": 119,
+    "price": 11.9,
+    "priceChecked": "2026-09-20",
+    "stockChecked": "2026-09-20",
+    "stock": "in",
+    "noteHtml": "The Index currently lists the exact 4″ × 32 tin of 10 at A$119 and available. Cigar Hut's lower listing is unavailable.",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/undercrown-shade-coronets-tin-of-10/",
+      "https://www.theindexcigars.com.au/products/connecticut-shade-coronet-tin-of-10",
+      "https://www.cigarworld.com.au/aud/categories/Cigars/UNDERCROWN-(Drew-Estate)/"
+    ]
+  },
+  "note": "Price audit: remove the stale A$100 best-price assumption and use the current available A$119 tin at The Index."
+}
