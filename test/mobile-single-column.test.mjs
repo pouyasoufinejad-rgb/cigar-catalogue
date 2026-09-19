@@ -62,3 +62,13 @@ test('the two-column rule is scoped to wide screens instead of applying everywhe
   assert.match(before.slice(-120), /@media\(min-width:901px\)\{\s*$/,
     'it must sit inside a min-width guard so it cannot reach a phone');
 });
+
+test('the base grid has a track floor, so two cramped columns are not representable', () => {
+  // Every previous fix relied on a viewport media query evaluating the way the stylesheet
+  // assumed. This does not: auto-fit with a minmax floor gives one column whenever the
+  // container is narrower than two tracks, whatever the viewport reports. Measured in a
+  // real browser with every viewport media query neutered: still one card per row at 320,
+  // 360, 412, 540 and 900px.
+  assert.match(page, /\.grid\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,330px\),1fr\)\)/);
+  assert.doesNotMatch(page, /\.grid\{display:grid;grid-template-columns:repeat\(2,/);
+});
