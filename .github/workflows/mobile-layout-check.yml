@@ -44,6 +44,9 @@ jobs:
         env:
           STRIP_NEIGHBOUR_KEYS: ${{ inputs.neighbour_keys }}
         run: node scripts/verify-live-card-strip.mjs
+      - name: Check the size-variant system
+        if: ${{ always() }}
+        run: node scripts/verify-live-variants.mjs
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -52,5 +55,6 @@ jobs:
           path: |
             mobile-layout-*.png
             card-strip-*.png
+            variant-*.png
           retention-days: 14
           if-no-files-found: warn
