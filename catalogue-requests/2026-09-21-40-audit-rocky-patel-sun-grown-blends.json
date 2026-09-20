@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-21-40-audit-rocky-patel-sun-grown-blends",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "sun-grown",
+        "label": "Sun Grown"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "title": "Sun Grown Maduro Robusto",
+        "eyebrow": "Broadleaf Maduro counterpart to Sun Grown",
+        "packagePrice": 47.3,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 47.3,
+        "country": "Nicaragua",
+        "length": 5,
+        "ring": 50,
+        "strength": 8,
+        "quality": 9,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Dark-roasted coffee, earth, cocoa, caramel, black licorice and pepper</strong> make the Sun Grown Maduro darker and sweeter than the standard Ecuadorian-Sumatra Sun Grown line. The oily Broadleaf wrapper sits over a Nicaraguan core, giving the Robusto dense body, roasted sweetness and a peppery finish without losing the line’s dry, earthy backbone.",
+        "noteHtml": "Untasted. Catalogue pricing uses the currently available A$47.30 single rather than the A$906 box of 20 because single-cigars above A$30 are not benchmarked against bulk box/pack discounts.",
+        "productionLines": [
+          "Handmade in Estelí, Nicaragua",
+          "Wrapper: Broadleaf Maduro",
+          "Binder: Nicaraguan",
+          "Filler: Nicaraguan"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "smokeTime": "About 60 min smoke",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/sun-grown-maduro-robusto",
+          "https://www.cigarhut.com.au/rocky-patel-sun-grown-maduro-robusto/"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21",
+        "priceNote": "The Index single A$47.30 is in stock. Cigar Hut's exact page is also linked but its A$40 single is sold out, so it is not used for Value."
+      }
+    ],
+    "defaultBlendVariantId": "sun-grown"
+  },
+  "note": "Adds the exact Cigar Hut Maduro Robusto page without using its sold-out price."
+}
