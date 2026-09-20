@@ -785,10 +785,35 @@ function applyEditorialToCard(card, saved = {}) {
   resetDynamicFreshness(card, saved);
 }
 
+function activeCardHost(saved = {}, root = document) {
+  const type = String(saved.catalogueType || '').trim().toLowerCase();
+  if (type === 'half' || type === 'half-cigar' || type === 'halfcigar') {
+    return root.getElementById('half-cigar-cards') || root.getElementById('flat-main') || root.querySelector('.grid');
+  }
+  if (type === 'taster' || saved.taster) {
+    return root.getElementById('taster-cards') || root.getElementById('flat-main') || root.querySelector('.grid');
+  }
+  return root.getElementById('flat-main') || root.getElementById('tier-neither') || root.querySelector('.grid');
+}
+export function rehomeCardForSavedState(card, saved = {}, root = document) {
+  if (!card) return null;
+  const archived = Object.prototype.hasOwnProperty.call(saved, 'archived')
+    ? Boolean(saved.archived)
+    : card.dataset.archived === '1';
+  let host = null;
+  if (archived) {
+    host = root.getElementById('archived-cards') || root.getElementById('flat-main') || root.querySelector('.grid');
+  } else {
+    const currentlyArchived = card.parentElement?.id === 'archived-cards' || Boolean(card.closest?.('#archived-section'));
+    if (!currentlyArchived) return card.parentElement || null;
+    host = activeCardHost(saved, root);
+  }
+  if (host && card.parentElement !== host) host.appendChild(card);
+  return host || card.parentElement || null;
+}
 function dynamicCardHost(saved = {}) {
   if (saved.archived) return document.getElementById('archived-cards') || document.getElementById('flat-main');
-  if (saved.taster) return document.getElementById('taster-cards') || document.getElementById('flat-main');
-  return document.getElementById('flat-main') || document.getElementById('tier-neither') || document.querySelector('.grid');
+  return activeCardHost(saved, document);
 }
 function createDynamicCard(key, entry, state) {
   const template = document.querySelector('article.card[data-key="curivari-fuerte-chicos"]') ||
@@ -878,6 +903,7 @@ async function loadStateForBrowser({ showMessage = false, applyStructural = true
       if (applyStructural) applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
       const editorial = card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key] ? { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) } : (stateForBrowser.cards?.[key] || {});
       applyEditorialToCard(card, editorial);
+      rehomeCardForSavedState(card, editorial, document);
     }
     refreshAllValueDisplays();
     if (typeof window.catalogueRefreshCardCollections === 'function') window.catalogueRefreshCardCollections();
