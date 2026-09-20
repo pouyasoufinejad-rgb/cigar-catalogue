@@ -1,0 +1,79 @@
+{
+  "id": "2026-09-20-variant-audit-paradiso-elegancia-corona",
+  "operation": "upsert-entry",
+  "key": "paradiso-elegancia-corona",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona",
+        "label": "Corona",
+        "title": "Elegancia Corona",
+        "length": 5.5,
+        "ring": 46,
+        "packagePrice": 37,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-corona/"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Elegancia Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-robusto/"
+        ],
+        "priceNote": "Cigar Hut lists the exact Elegancia Robusto as 5″ × 50 at A$47.",
+        "length": 5,
+        "ring": 50,
+        "packagePrice": 47,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 50–65 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "churchill",
+        "label": "Churchill",
+        "title": "Elegancia Churchill",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-churchill/"
+        ],
+        "priceNote": "Cigar Hut lists the exact Elegancia Churchill as 7″ × 50 at A$54.",
+        "length": 7,
+        "ring": 50,
+        "packagePrice": 54,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 75–95 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "corona"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}

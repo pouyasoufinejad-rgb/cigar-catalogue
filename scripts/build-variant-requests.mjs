@@ -20,6 +20,25 @@ const research = JSON.parse(await readFile(
 const byKey = new Map(research.entries.map(entry => [entry.key, entry]));
 const TODAY = '2026-09-20';
 
+// Audited corrections are kept as publication requests so the exact data that reached KV is
+// also what this generator will reproduce. Without this, rerunning the older research table
+// would reintroduce missing dimensions, missing prices and the incorrect T52/No. 9 sizes.
+const AUDIT_REQUESTS = [
+  'catalogue-requests/2026-09-20-variant-audit-ashton-vsg-enchantment.json',
+  'catalogue-requests/2026-09-20-variant-audit-foundation-charter-oak-maduro-rothschild.json',
+  'catalogue-requests/2026-09-20-variant-audit-liga-privada-no-9-petit-corona-oscuro.json',
+  'catalogue-requests/2026-09-20-variant-audit-liga-privada-t52-short-panatela.json',
+  'catalogue-requests/2026-09-20-variant-audit-nica-rustica-broadleaf-short-robusto.json',
+  'catalogue-requests/2026-09-20-variant-audit-paradiso-elegancia-corona.json',
+  'catalogue-requests/2026-09-20-variant-audit-paradiso-quintessence-robusto.json',
+  'catalogue-requests/2026-09-20-variant-audit-undercrown-10-corona-viva.json'
+];
+const auditedVariants = new Map();
+for (const requestPath of AUDIT_REQUESTS) {
+  const request = JSON.parse(await readFile(resolve(repoRoot, requestPath), 'utf8'));
+  auditedVariants.set(request.key, request.entry?.sizeVariants || []);
+}
+
 // Ring gauge decides the cadence band, so it is restated per size rather than inherited.
 const cadence = ring => (ring <= 32 ? 'Sensitive Cadence' : ring <= 40 ? 'Lenient Cadence' : 'Forgiving Cadence');
 const practical = (packageLabel, ring, cut = 'Uncut') =>
@@ -432,7 +451,8 @@ const written = [];
 
 for (const plan of PLAN) {
   const source = byKey.get(plan.key);
-  const variants = plan.variants.map(buildVariant);
+  const audited = auditedVariants.get(plan.key);
+  const variants = (audited?.length ? audited : plan.variants).map(buildVariant);
   const entry = { sizeVariants: variants, defaultVariantId: plan.defaultVariantId };
   if (plan.rank) entry.rank = plan.rank;
   if (plan.eyebrow) entry.eyebrow = plan.eyebrow;

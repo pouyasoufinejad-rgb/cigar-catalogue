@@ -1,0 +1,106 @@
+{
+  "id": "2026-09-20-variant-audit-undercrown-10-corona-viva",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "Undercrown 10 Corona Viva",
+        "length": 5,
+        "ring": 43,
+        "packagePrice": 39,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-viva/",
+          "https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=433680"
+        ],
+        "smokeTime": "About 40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "stock": "in",
+        "stockChecked": "2026-09-20"
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Undercrown 10 Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-robusto/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 5″ × 50 Robusto single at A$49.",
+        "length": 5,
+        "ring": 50,
+        "packagePrice": 49,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 50–65 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Undercrown 10 Toro",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-toro/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 52 Toro single at A$70.",
+        "packagePrice": 70,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "Undercrown 10 Corona Doble",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-doble/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 7″ × 50 Corona Doble single at A$78; it is currently sold out.",
+        "length": 7,
+        "ring": 50,
+        "packagePrice": 78,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "smokeTime": "About 75–95 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "corona-viva"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}

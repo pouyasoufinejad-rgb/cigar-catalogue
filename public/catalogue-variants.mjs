@@ -19,7 +19,7 @@ import { sizeTierForRing } from './catalogue-size-rules.mjs';
 export const VARIANT_FIELDS = Object.freeze([
   'title', 'eyebrow', 'length', 'ring', 'packageLabel', 'packagePrice', 'price',
   'retailerLinks', 'stock', 'smokeTime', 'imageUrl', 'summaryHtml', 'noteHtml', 'size',
-  'practicalLines'
+  'practicalLines', 'packageCount', 'priceChecked', 'priceNote', 'stockChecked'
 ]);
 
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
@@ -87,6 +87,7 @@ export function normaliseVariant(input, index = 0) {
   }
   if (raw.priceNote) variant.priceNote = text(raw.priceNote).trim();
   if (raw.priceChecked) variant.priceChecked = text(raw.priceChecked).trim();
+  if (raw.stockChecked) variant.stockChecked = text(raw.stockChecked).trim();
   // A Size medal follows from the ring gauge, so a variant that changes ring gets its own
   // medal without anyone restating it. An explicit tier still wins if one is given.
   if (['gold', 'silver', 'bronze'].includes(raw.size)) variant.size = raw.size;
@@ -142,6 +143,24 @@ export function variantEffectiveRecord(record, requestedId = '') {
   for (const field of VARIANT_FIELDS) {
     if (own(variant, field)) merged[field] = variant[field];
   }
+
+  // The parent record describes its original/default vitola. Alternate sizes must never
+  // silently borrow another vitola's dimensions, stock, retailer or freshness metadata.
+  const isSavedDefault = variant.id === defaultVariantId(base);
+  if (!isSavedDefault) {
+    if (!own(variant, 'length')) merged.length = 0;
+    if (!own(variant, 'ring')) merged.ring = 0;
+    if (!own(variant, 'packageLabel')) merged.packageLabel = '';
+    if (!own(variant, 'packageCount')) merged.packageCount = 1;
+    if (!own(variant, 'retailerLinks')) merged.retailerLinks = [];
+    if (!own(variant, 'stock')) merged.stock = 'unknown';
+    if (!own(variant, 'stockChecked')) merged.stockChecked = '';
+    if (!own(variant, 'priceChecked')) merged.priceChecked = '';
+    if (!own(variant, 'priceNote')) merged.priceNote = '';
+    if (!own(variant, 'smokeTime')) merged.smokeTime = '';
+    if (!own(variant, 'practicalLines')) merged.practicalLines = [];
+  }
+
   // A variant with no verified price must not inherit the parent's: that would price one
   // vitola at another's figure. It carries no price, and Value reads as unrated.
   if (variant.priceUnverified) {

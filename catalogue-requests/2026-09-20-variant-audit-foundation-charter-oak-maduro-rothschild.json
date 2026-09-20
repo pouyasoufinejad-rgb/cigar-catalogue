@@ -1,0 +1,128 @@
+{
+  "id": "2026-09-20-variant-audit-foundation-charter-oak-maduro-rothschild",
+  "operation": "upsert-entry",
+  "key": "foundation-charter-oak-maduro-rothschild",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "rothschild",
+        "label": "Rothschild",
+        "title": "Charter Oak Maduro Rothschild",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 34,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-rothschild/",
+          "https://www.smokingpipes.com/cigars/foundation-cigar-company/moreinfo.cfm?product_id=333828"
+        ],
+        "smokeTime": "About 35–45 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "petite-corona",
+        "label": "Petite Corona",
+        "title": "Charter Oak Maduro Petite Corona",
+        "length": 5.25,
+        "ring": 42,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-petite-corona/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 5¼″ × 42 single at A$37.",
+        "packagePrice": 37,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "lonsdale",
+        "label": "Lonsdale",
+        "title": "Charter Oak Maduro Lonsdale",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-lonsdale/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6¼″ × 42 single at A$54.",
+        "length": 6.25,
+        "ring": 42,
+        "packagePrice": 54,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 60–75 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Charter Oak Maduro Toro",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-toro/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 52 single at A$56; it is currently sold out.",
+        "length": 6,
+        "ring": 52,
+        "packagePrice": 56,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "grande",
+        "label": "Grande",
+        "title": "Charter Oak Maduro Grande",
+        "length": 6,
+        "ring": 60,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-grande/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 60 single at A$55.",
+        "packagePrice": 55,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 70–90 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "rothschild"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}

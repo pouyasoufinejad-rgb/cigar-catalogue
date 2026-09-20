@@ -294,3 +294,34 @@ test('a size can carry its own eyebrow caption while keeping the entry rank', as
   api.selectVariant(NO_9.key, 'petit-corona');
   assert.equal(card.querySelector('.eyebrow').textContent, 'No. 7 — Fullest-ring exact No. 9 short');
 });
+
+
+test('selecting a size switches stock and freshness metadata with the vitola', async () => {
+  const dom = mount();
+  const api = await runtime();
+  const state = STATE();
+  const variants = state.entries[NO_9.key].sizeVariants.map(variant => variant.id === 'short-panatela'
+    ? { ...variant, stock: 'out', priceChecked: '2026-09-20', stockChecked: '2026-09-20' }
+    : variant.id === 'petit-corona'
+      ? { ...variant, stock: 'in', priceChecked: '2026-09-19', stockChecked: '2026-09-19' }
+      : variant);
+  state.entries[NO_9.key] = { ...state.entries[NO_9.key], sizeVariants: variants };
+  state.cards[NO_9.key] = state.entries[NO_9.key];
+  api.setVariantState(state);
+
+  const card = cardOf(dom, NO_9.key);
+  let events = 0;
+  card.addEventListener('catalogue:variant-changed', () => { events += 1; });
+
+  api.selectVariant(NO_9.key, 'short-panatela');
+  assert.equal(card.dataset.stock, 'out');
+  assert.equal(card.dataset.priceChecked, '2026-09-20');
+  assert.equal(card.dataset.stockChecked, '2026-09-20');
+  assert.match(card.querySelector('.stock-state').textContent, /Out of stock/);
+
+  api.selectVariant(NO_9.key, 'petit-corona');
+  assert.equal(card.dataset.stock, 'in');
+  assert.equal(card.dataset.priceChecked, '2026-09-19');
+  assert.match(card.querySelector('.stock-state').textContent, /In stock/);
+  assert.equal(events, 2);
+});

@@ -265,7 +265,10 @@ function applyCachedResults(fromManualRun = false) {
   cards = Array.from(document.querySelectorAll('article.card[data-key]'));
   cards.forEach(card => {
     if (!stockPin(card) && !card.dataset.stockChecked) card.dataset.stockChecked = card.dataset.priceChecked || '';
-    const saved = cache.results?.[card.dataset.key];
+    // One parent-key cache result cannot represent several nested vitolas. Variant cards
+    // carry the selected size's own stock state instead of inheriting a cache entry for
+    // whichever size happened to be checked under the parent key.
+    const saved = card.dataset.activeVariant ? null : cache.results?.[card.dataset.key];
     if (saved) applyStatus(card, saved, fromManualRun);
     else renderFreshness(card, effectiveStatus(card), []);
   });
@@ -365,6 +368,10 @@ async function init() {
   fullButton?.addEventListener('click', () => runCheck('full'));
   [sort, sortSecondary].forEach(control => control?.addEventListener('change', () => setTimeout(restoreAndSeparate, 0)));
   document.querySelectorAll('.toggle button[data-filter]').forEach(button => button.addEventListener('click', () => setTimeout(updateDividerVisibility, 0)));
+  document.addEventListener('catalogue:variant-changed', () => {
+    tidyCardPresentation();
+    restoreAndSeparate();
+  });
   document.addEventListener('catalogue:cards-refreshed', () => {
     cards = Array.from(document.querySelectorAll('article.card[data-key]'));
     tidyCardPresentation();

@@ -324,3 +324,49 @@ test('the size selector does not overflow a phone-width card', async () => {
   // And the phone rule releases the desktop cap so the control fills the card.
   assert.match(variantCss, /@media\(max-width:900px\)\{[^}]*\.size-variant-select\{max-width:none\}/);
 });
+
+
+test('per-size stock and freshness metadata follow the selected vitola', () => {
+  const record = {
+    ...NO_9,
+    stock: 'in',
+    priceChecked: '2026-09-01',
+    stockChecked: '2026-09-01',
+    sizeVariants: NO_9.sizeVariants.map(variant => variant.id === 'short-panatela'
+      ? {
+          ...variant,
+          stock: 'out',
+          priceChecked: '2026-09-20',
+          stockChecked: '2026-09-20',
+          priceNote: 'Exact product-page price',
+          packageCount: 1
+        }
+      : variant)
+  };
+  const short = variantEffectiveRecord(record, 'short-panatela').record;
+  assert.equal(short.stock, 'out');
+  assert.equal(short.priceChecked, '2026-09-20');
+  assert.equal(short.stockChecked, '2026-09-20');
+  assert.equal(short.priceNote, 'Exact product-page price');
+  assert.equal(short.packageCount, 1);
+});
+
+test('an incomplete alternate size cannot borrow another vitola\'s dimensions or stock', () => {
+  const record = {
+    ...NO_9,
+    stock: 'in',
+    priceChecked: '2026-09-01',
+    stockChecked: '2026-09-01',
+    sizeVariants: [
+      ...NO_9.sizeVariants,
+      { id: 'mystery', label: 'Mystery', packagePrice: 50 }
+    ]
+  };
+  const mystery = variantEffectiveRecord(record, 'mystery').record;
+  assert.equal(mystery.length, 0);
+  assert.equal(mystery.ring, 0);
+  assert.equal(mystery.stock, 'unknown');
+  assert.equal(mystery.priceChecked, '');
+  assert.equal(mystery.stockChecked, '');
+  assert.deepEqual(mystery.retailerLinks, []);
+});
