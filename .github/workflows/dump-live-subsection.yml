@@ -16,6 +16,10 @@ on:
         description: 'Optional comma-separated entry fields to print'
         required: false
         type: string
+      keys:
+        description: 'Optional comma-separated entry keys to limit the dump to'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,4 +39,5 @@ jobs:
         env:
           SUBSECTION_ID: ${{ inputs.subsection }}
           DUMP_FIELDS: ${{ inputs.fields }}
+          DUMP_KEYS: ${{ inputs.keys }}
         run: node scripts/dump-live-subsection.mjs

@@ -25,11 +25,14 @@ console.log(`SECTION ${sectionId} title=${JSON.stringify(section?.title)} entryK
 
 const cards = state.cards || {};
 const entries = state.entries || {};
+// Actions log reads return the tail, so a long subsection loses its first entries. Naming
+// keys narrows the dump to exactly what is being looked at.
+const wanted = new Set(String(process.env.DUMP_KEYS || '').split(',').map(v => v.trim()).filter(Boolean));
 const keys = section?.entryKeys?.length
   ? section.entryKeys
   : Object.keys(cards).filter(key => (cards[key]?.subsection || entries[key]?.subsection) === sectionId).sort();
 
-for (const key of keys) {
+for (const key of (wanted.size ? keys.filter(key => wanted.has(key)) : keys)) {
   const card = cards[key] || {};
   const entry = entries[key] || null;
   const merged = { ...card, ...(entry || {}) };
