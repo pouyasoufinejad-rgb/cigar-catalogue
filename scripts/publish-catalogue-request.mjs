@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { readFile, realpath, stat } from 'node:fs/promises';
-import { defaultVariantId, normaliseVariants } from '../public/catalogue-variants.mjs';
+import {
+  defaultBlendVariantId,
+  defaultVariantId,
+  normaliseBlendVariants,
+  normaliseVariants
+} from '../public/catalogue-variants.mjs';
 import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -26,7 +31,7 @@ const CARD_STRUCTURAL_FIELDS = new Set([
   // The sizes an entry covers and which one it shows first. These filter lists drop
   // anything they do not name, so leaving them out would discard every variant on the way
   // to KV without any error to show for it.
-  'sizeVariants', 'defaultVariantId'
+  'sizeVariants', 'defaultVariantId', 'blendVariants', 'defaultBlendVariantId'
 ]);
 const DYNAMIC_ONLY_FIELDS = new Set([
   'stock', 'imageSourceKey', 'imageVersion', 'priceChecked', 'stockChecked', 'productionLines', 'practicalLines'
@@ -417,6 +422,26 @@ function assertSubset(actual, expected, keys, label) {
         assert.equal(
           defaultVariantId({ sizeVariants: actual?.sizeVariants, defaultVariantId: actual?.[key] }),
           defaultVariantId({ sizeVariants: expected.sizeVariants, defaultVariantId: expected[key] })
+        );
+        continue;
+      }
+      if (key === 'blendVariants') {
+        assert.deepEqual(
+          normaliseBlendVariants({ blendVariants: actual?.[key] }),
+          normaliseBlendVariants({ blendVariants: expected[key] })
+        );
+        continue;
+      }
+      if (key === 'defaultBlendVariantId') {
+        assert.equal(
+          defaultBlendVariantId({
+            blendVariants: actual?.blendVariants,
+            defaultBlendVariantId: actual?.[key]
+          }),
+          defaultBlendVariantId({
+            blendVariants: expected.blendVariants,
+            defaultBlendVariantId: expected[key]
+          })
         );
         continue;
       }
