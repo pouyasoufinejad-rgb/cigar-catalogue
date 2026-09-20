@@ -18,7 +18,7 @@ test('runtime version-busts the recommendation subsection module containing the 
 });
 
 test('runtime version-busts the half-cohort module containing the rank-bound repair', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-half-cohort\.mjs\?v=variant-edit-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-half-cohort\.mjs\?v=editor-repair-1['"]\)/);
 });
 
 // These checks intentionally pin the outer runtime key and editor ownership so this repair cannot silently regress.
