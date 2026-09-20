@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-21-40-audit-nica-rustica-broadleaf-variants",
+  "operation": "upsert-entry",
+  "key": "nica-rustica-broadleaf-short-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-robusto",
+        "label": "Short Robusto",
+        "title": "Broadleaf Short Robusto",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 39,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/nica-rustica-broadleaf-short-robusto",
+          "https://www.cigarhut.com.au/nica-rustica-connecticut-broadleaf-short-robusto/"
+        ],
+        "smokeTime": "About 50 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "The Index single A$39 is below Cigar Hut's A$42 single. The box of 25 is excluded.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Broadleaf Toro",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/nica-rustica-connecticut-broadleaf-toro/"
+        ],
+        "priceNote": "Cigar Hut exact Toro page lists the single at A$49. Packages above 10 are excluded.",
+        "packagePrice": 49,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "short-robusto"
+  },
+  "note": "Both Broadleaf sizes now point to exact products and use singles."
+}
