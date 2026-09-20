@@ -341,11 +341,20 @@ async function restoreSavedLayoutsAfterHydration() {
   await applySavedLayouts();
 }
 
+function onVariantChanged(event) {
+  if (!editMode || !selected) return;
+  const card = event.target?.closest?.('article.card[data-key]');
+  if (card !== selected) return;
+  setEditable(selected, true);
+  updatePanelFor(selected);
+}
+
 export function initDirectCardEditing() {
   ensureStyles();
   ensurePanel();
   document.addEventListener('click', onToggleCapture, { capture: true });
   document.addEventListener('click', onDocumentClick, true);
+  document.addEventListener('catalogue:variant-changed', onVariantChanged);
   restoreSavedLayoutsAfterHydration();
   document.addEventListener('catalogue:cards-refreshed', applySavedLayouts);
 }
