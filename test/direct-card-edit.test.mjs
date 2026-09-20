@@ -9,7 +9,7 @@ const fullEditor = await readFile(new URL('../public/catalogue-admin-unified-v13
 
 test('direct editor is loaded by the runtime and owns Edit catalogue', () => {
   assert.ok(directEdit.length > 0, 'direct editor module must remain present');
-  assert.match(runtimeModule, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=editor-repair-1['"]\)/);
+  assert.match(runtimeModule, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=variant-edit-1['"]\)/);
   assert.match(directEdit, /function onToggleCapture\(event\)[\s\S]*?if \(allowModalOpen\) return;[\s\S]*?event\.stopImmediatePropagation\(\);[\s\S]*?enterEditMode\(\)/);
   assert.match(directEdit, /document\.addEventListener\('click', onToggleCapture, \{ capture: true \}\)/);
 });
@@ -52,7 +52,7 @@ test('full editor exposes structural product fields rather than only inline text
 });
 
 test('verified layout persistence remains loaded alongside the direct editor', () => {
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs'\)/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs\?v=variant-edit-1'\)/);
   assert.match(persistence, /\/api\/catalogue-overrides/);
 });
 
@@ -63,7 +63,9 @@ test('saved layout overrides existing important transforms', () => {
 
 test('saved layout verifies layout fields by reading KV back', () => {
   assert.match(persistence, /verifySavedLayout/);
-  assert.match(persistence, /await\s+verifySavedLayout\(key, patch\)/);
+  assert.match(persistence, /arraysMatch/);
+  assert.match(persistence, /activeBlend/);
+  assert.match(persistence, /activeVariant/);
   assert.match(persistence, /imageScale/);
   assert.match(persistence, /imageX/);
   assert.match(persistence, /imageY/);
