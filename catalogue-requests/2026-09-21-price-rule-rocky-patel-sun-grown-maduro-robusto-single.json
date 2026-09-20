@@ -1,0 +1,18 @@
+{
+  "id": "2026-09-21-price-rule-rocky-patel-sun-grown-maduro-robusto-single",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-maduro-robusto",
+  "entry": {
+    "packagePrice": 47.3,
+    "packageLabel": "single cigar",
+    "price": 47.3,
+    "stock": "in",
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/sun-grown-maduro-robusto"
+    ],
+    "noteHtml": "Untasted. Catalogue pricing uses the currently available A$47.30 single rather than the A$906 box of 20 because single-cigars above A$30 are not benchmarked against bulk box/pack discounts."
+  },
+  "note": "Apply the catalogue rule that cigars over A$30 use the best available single price rather than a box/pack per-stick discount. The Index currently lists the exact single at A$47.30 and available."
+}

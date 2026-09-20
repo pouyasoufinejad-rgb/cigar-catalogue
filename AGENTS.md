@@ -21,6 +21,7 @@ Do not place `CATALOGUE_ADMIN_TOKEN` or any other credential in Git, request JSO
 - New catalogue products are dynamic entries.
 - Preserve unrelated fields on partial edits.
 - Use the site's existing automatic Value logic; never hard-code a stale Value score.
+- If the verified single-cigar price is over A$30, do not use a box/pack per-stick discount as the catalogue price benchmark. Use the best available single-cigar price instead. This does not override products whose normal retail form is inherently a tin/pack and no single is sold.
 - Keep main and taster ranking cohorts contiguous when changing ranks or archive status.
 - Prefer archive over deletion. Do not wipe KV or bulk-delete catalogue data.
 
