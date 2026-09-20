@@ -22,6 +22,16 @@ export const VARIANT_FIELDS = Object.freeze([
   'practicalLines', 'packageCount', 'priceChecked', 'priceNote', 'stockChecked'
 ]);
 
+// A blend variant is broader than a size variant. It can change the tobacco, ratings and
+// copy as well as price/stock, and it can carry its own sizeVariants when that blend has
+// more than one vitola. The parent card stays the catalogue identity; Blend and Size are
+// independent selectors layered on top of it.
+export const BLEND_VARIANT_FIELDS = Object.freeze([
+  ...VARIANT_FIELDS,
+  'productionLines', 'strength', 'quality', 'flavour', 'risk', 'country',
+  'experienceTags', 'sizeVariants', 'defaultVariantId'
+]);
+
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
 const text = value => (typeof value === 'string' ? value : value === 0 || value ? String(value) : '');
 const finite = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
@@ -184,6 +194,174 @@ export function promoteVariantPatch(record, variantId) {
   return { defaultVariantId: resolved };
 }
 
+
+function boundedScore(value, min = 1, max = 10) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.max(min, Math.min(max, Math.round(number)));
+}
+
+export function normaliseBlendVariant(input, index = 0) {
+  const raw = input && typeof input === 'object' ? input : {};
+  const label = text(raw.label || raw.name || raw.blend).trim();
+  const id = variantSlug(raw.id || label);
+  if (!id) return null;
+  void index;
+
+  const packageCount = Math.max(1, Math.round(finite(raw.packageCount, 1)));
+  const price = perStickPrice(raw);
+  const variant = {
+    id,
+    label: label || id,
+    priceUnverified: !(price > 0),
+    packageCount
+  };
+
+  if (raw.title) variant.title = text(raw.title).trim();
+  if (raw.eyebrow) variant.eyebrow = text(raw.eyebrow).trim();
+  if (finite(raw.length, 0) > 0) variant.length = finite(raw.length);
+  if (finite(raw.ring, 0) > 0) variant.ring = Math.round(finite(raw.ring));
+  if (raw.packageLabel) variant.packageLabel = text(raw.packageLabel).trim();
+  if (finite(raw.packagePrice, 0) > 0) variant.packagePrice = finite(raw.packagePrice);
+  if (price > 0) variant.price = price;
+  if (Array.isArray(raw.retailerLinks)) {
+    variant.retailerLinks = raw.retailerLinks.map(link => text(link).trim()).filter(Boolean);
+  }
+  if (['in', 'out', 'unknown'].includes(raw.stock)) variant.stock = raw.stock;
+  if (raw.smokeTime) variant.smokeTime = text(raw.smokeTime).trim();
+  if (text(raw.imageUrl).startsWith('/')) variant.imageUrl = text(raw.imageUrl);
+  if (raw.summaryHtml) variant.summaryHtml = text(raw.summaryHtml);
+  if (own(raw, 'noteHtml')) variant.noteHtml = text(raw.noteHtml);
+  if (Array.isArray(raw.practicalLines)) {
+    variant.practicalLines = raw.practicalLines.map(line => text(line).trim()).filter(Boolean);
+  }
+  if (Array.isArray(raw.productionLines)) {
+    variant.productionLines = raw.productionLines.map(line => text(line).trim()).filter(Boolean);
+  }
+  if (Array.isArray(raw.experienceTags)) {
+    variant.experienceTags = raw.experienceTags.map(line => text(line).trim()).filter(Boolean);
+  }
+  if (raw.priceNote) variant.priceNote = text(raw.priceNote).trim();
+  if (raw.priceChecked) variant.priceChecked = text(raw.priceChecked).trim();
+  if (raw.stockChecked) variant.stockChecked = text(raw.stockChecked).trim();
+  if (raw.country) variant.country = text(raw.country).trim();
+
+  const strength = boundedScore(raw.strength);
+  const quality = boundedScore(raw.quality);
+  const risk = boundedScore(raw.risk, 1, 3);
+  if (strength !== null) variant.strength = strength;
+  if (quality !== null) variant.quality = quality;
+  if (risk !== null) variant.risk = risk;
+  if (own(raw, 'flavour')) {
+    const flavour = raw.flavour === null || raw.flavour === '' ? null : boundedScore(raw.flavour);
+    variant.flavour = flavour;
+  }
+
+  if (['gold', 'silver', 'bronze'].includes(raw.size)) variant.size = raw.size;
+  else if (variant.ring) variant.size = sizeTierForRing(variant.ring);
+
+  if (Array.isArray(raw.sizeVariants)) {
+    variant.sizeVariants = normaliseVariants(raw);
+    variant.defaultVariantId = defaultVariantId(raw);
+  }
+  return variant;
+}
+
+export function normaliseBlendVariants(record) {
+  const list = Array.isArray(record?.blendVariants) ? record.blendVariants : [];
+  const seen = new Set();
+  const output = [];
+  for (const [index, raw] of list.entries()) {
+    const variant = normaliseBlendVariant(raw, index);
+    if (!variant || seen.has(variant.id)) continue;
+    seen.add(variant.id);
+    output.push(variant);
+  }
+  return output;
+}
+
+export function defaultBlendVariantId(record) {
+  const variants = normaliseBlendVariants(record);
+  if (!variants.length) return '';
+  const saved = variantSlug(record?.defaultBlendVariantId);
+  return variants.some(variant => variant.id === saved) ? saved : variants[0].id;
+}
+
+export function resolveBlendVariantId(record, requestedId = '') {
+  const variants = normaliseBlendVariants(record);
+  if (!variants.length) return '';
+  const requested = variantSlug(requestedId);
+  return variants.some(variant => variant.id === requested) ? requested : defaultBlendVariantId(record);
+}
+
+export function blendEffectiveRecord(record, requestedId = '') {
+  const base = record && typeof record === 'object' ? record : {};
+  const variants = normaliseBlendVariants(base);
+  if (!variants.length) {
+    return { record: { ...base }, blendVariant: null, blendVariantId: '', blendVariants: [] };
+  }
+
+  const blendVariantId = resolveBlendVariantId(base, requestedId);
+  const blendVariant = variants.find(item => item.id === blendVariantId) || variants[0];
+  const merged = { ...base };
+  const isSavedDefault = blendVariant.id === defaultBlendVariantId(base);
+
+  // The parent fields describe the saved/default blend. An alternate blend must not borrow
+  // tobacco, ratings, tasting copy, stock or sizes just because its own data omitted them.
+  if (!isSavedDefault) {
+    merged.length = 0;
+    merged.ring = 0;
+    merged.packageLabel = '';
+    merged.packageCount = 1;
+    merged.price = 0;
+    merged.packagePrice = 0;
+    merged.retailerLinks = [];
+    merged.stock = 'unknown';
+    merged.stockChecked = '';
+    merged.priceChecked = '';
+    merged.priceNote = '';
+    merged.smokeTime = '';
+    merged.practicalLines = [];
+    merged.productionLines = [];
+    merged.experienceTags = [];
+    merged.summaryHtml = '';
+    merged.noteHtml = '';
+    merged.strength = 0;
+    merged.quality = 0;
+    merged.flavour = null;
+    merged.sizeVariants = [];
+    merged.defaultVariantId = '';
+  }
+
+  for (const field of BLEND_VARIANT_FIELDS) {
+    if (own(blendVariant, field)) merged[field] = blendVariant[field];
+  }
+
+  if (!isSavedDefault && blendVariant.priceUnverified) {
+    merged.price = 0;
+    merged.packagePrice = 0;
+    merged.priceUnverified = true;
+  } else {
+    merged.priceUnverified = false;
+  }
+
+  merged.activeBlendVariantId = blendVariant.id;
+  merged.defaultBlendVariantId = defaultBlendVariantId(base);
+  return {
+    record: merged,
+    blendVariant,
+    blendVariantId: blendVariant.id,
+    blendVariants: variants
+  };
+}
+
+export function promoteBlendVariantPatch(record, blendVariantId) {
+  const resolved = resolveBlendVariantId(record, blendVariantId);
+  if (!resolved) return null;
+  if (resolved === defaultBlendVariantId(record)) return null;
+  return { defaultBlendVariantId: resolved };
+}
+
 const STOPWORDS = new Set(['the', 'a', 'an', 'and', 'of', 'no', 'nr', 'cigar', 'cigars']);
 
 function queryTokens(value) {
@@ -210,27 +388,47 @@ export function matchVariantQuery(query, records = []) {
     const key = text(record.key);
     if (!key) continue;
     const parentWords = haystack([record.brand, record.title, key.replace(/-/g, ' ')]);
-    const variants = normaliseVariants(record);
+    const blends = normaliseBlendVariants(record);
+    const blendCandidates = blends.length
+      ? blends.map(blend => {
+        const effective = blendEffectiveRecord(record, blend.id).record;
+        return {
+          blendVariantId: blend.id,
+          blend,
+          effective,
+          blendWords: haystack([blend.label, blend.title])
+        };
+      })
+      : [{ blendVariantId: '', blend: null, effective: record, blendWords: [] }];
 
-    const candidates = variants.length
-      ? variants.map(variant => ({
-        variantId: variant.id,
-        words: new Set([...parentWords, ...haystack([variant.label, variant.title])])
-      }))
-      : [{ variantId: '', words: new Set(parentWords) }];
+    for (const blendCandidate of blendCandidates) {
+      const sizes = normaliseVariants(blendCandidate.effective);
+      const sizeCandidates = sizes.length
+        ? sizes.map(variant => ({
+          variantId: variant.id,
+          sizeWords: haystack([variant.label, variant.title])
+        }))
+        : [{ variantId: '', sizeWords: [] }];
 
-    for (const candidate of candidates) {
-      const matched = tokens.filter(token =>
-        candidate.words.has(token) || [...candidate.words].some(word => word.startsWith(token)));
-      if (matched.length !== tokens.length) continue;
-      // A size that spells out every query word beats the parent matching the same words
-      // loosely, so "No 9 Petit Corona" opens the Petit Corona rather than whichever size
-      // happens to be the saved default.
-      const specificity = candidate.variantId
-        ? haystack([variants.find(item => item.id === candidate.variantId)?.label])
-          .filter(word => tokens.includes(word)).length
-        : 0;
-      results.push({ key, variantId: candidate.variantId, matched: matched.length, specificity });
+      for (const sizeCandidate of sizeCandidates) {
+        const words = new Set([
+          ...parentWords,
+          ...blendCandidate.blendWords,
+          ...sizeCandidate.sizeWords
+        ]);
+        const matched = tokens.filter(token =>
+          words.has(token) || [...words].some(word => word.startsWith(token)));
+        if (matched.length !== tokens.length) continue;
+        const specificity = [...blendCandidate.blendWords, ...sizeCandidate.sizeWords]
+          .filter(word => tokens.includes(word)).length;
+        results.push({
+          key,
+          blendVariantId: blendCandidate.blendVariantId,
+          variantId: sizeCandidate.variantId,
+          matched: matched.length,
+          specificity
+        });
+      }
     }
   }
 
