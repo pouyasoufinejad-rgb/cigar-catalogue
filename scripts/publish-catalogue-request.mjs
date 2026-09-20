@@ -420,6 +420,16 @@ async function putState(fetchImpl, baseUrl, token, state) {
   }, 'Catalogue state write', token);
 }
 
+function removeRecommendationMember(sectionsInput, key) {
+  const sections = isRecord(sectionsInput) ? clone(sectionsInput) : {};
+  if (!Array.isArray(sections.recommendationSubsections)) return sections;
+  sections.recommendationSubsections = sections.recommendationSubsections.map(section => {
+    if (!isRecord(section) || !Array.isArray(section.entryKeys)) return section;
+    return { ...section, entryKeys: section.entryKeys.filter(entryKey => entryKey !== key) };
+  });
+  return sections;
+}
+
 function intendedKeys(request) {
   const keys = new Set(Object.keys(request.entry || {}));
   if (request.operation === 'archive-entry') {
@@ -540,19 +550,30 @@ export async function publishRequestDocument(input, options = {}) {
   const existingCard = isRecord(state.cards[request.key]) ? clone(state.cards[request.key]) : null;
   const exists = Boolean(existingDynamic || existingCard);
 
-  if (!exists && request.operation !== 'upsert-entry') throw new Error(`Catalogue key "${request.key}" does not exist.`);
+  if (!exists && request.operation !== 'upsert-entry' && request.operation !== 'delete-entry') throw new Error(`Catalogue key "${request.key}" does not exist.`);
   const target = existingDynamic || !existingCard ? 'dynamic' : 'static';
 
   if (request.operation === 'delete-entry') {
     // A nested variant can supersede a former standalone dynamic card. Deletion removes
     // that obsolete record entirely instead of leaving a duplicate in the Archived grid.
-    if (!existingDynamic) throw new Error('delete-entry can only remove a dynamic catalogue entry.');
-    await deleteEntry(fetchImpl, baseUrl, token, request.key);
+    // It is intentionally idempotent so a retry can finish cleanup after a partial delete.
+    if (existingCard && !existingDynamic) throw new Error('delete-entry can only remove a dynamic catalogue entry.');
+    if (existingDynamic) await deleteEntry(fetchImpl, baseUrl, token, request.key);
 
-    const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
-    const verifiedState = normaliseStateShape(verifiedStateRaw);
+    let verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+    let verifiedState = normaliseStateShape(verifiedStateRaw);
     if (isRecord(verifiedState.entries[request.key]) || isRecord(verifiedState.cards[request.key])) {
       throw new Error(`Catalogue deletion read-back still contains "${request.key}".`);
+    }
+
+    const cleanedSections = removeRecommendationMember(verifiedState.sections, request.key);
+    if (JSON.stringify(cleanedSections) !== JSON.stringify(verifiedState.sections)) {
+      await putState(fetchImpl, baseUrl, token, { ...verifiedState, sections: cleanedSections });
+      verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+      verifiedState = normaliseStateShape(verifiedStateRaw);
+      if (isRecord(verifiedState.entries[request.key]) || isRecord(verifiedState.cards[request.key])) {
+        throw new Error(`Catalogue deletion read-back still contains "${request.key}".`);
+      }
     }
     assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back', verifiedState.sections);
 
