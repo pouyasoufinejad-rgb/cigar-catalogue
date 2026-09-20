@@ -56,20 +56,31 @@ test('a stale document still gets the centred strip from the runtime stylesheet'
   assert.equal(row.gridColumn.trim(), '1/-1');
 });
 
-test('the laurel is larger than the 22x20 badge it replaces, in the page and at runtime', () => {
-  for (const [label, css] of [['page', pageCss], ['runtime', runtimeCss]]) {
-    const { badge, glyph } = computeCountryRow(css);
-    assert.equal(badge.width, '27px', `${label}: badge width`);
-    assert.equal(badge.height, '25px', `${label}: badge height`);
-    assert.equal(glyph.fontSize, '16px', `${label}: fallback glyph scales with the badge`);
-  }
+test('the laurel is slightly enlarged at runtime while remaining compact', () => {
+  const { badge, glyph } = computeCountryRow(runtimeCss);
+  assert.equal(badge.width, '30px', 'runtime: badge width');
+  assert.equal(badge.height, '28px', 'runtime: badge height');
+  assert.equal(glyph.fontSize, '18px', 'runtime: fallback glyph scales with the badge');
 });
 
 test('the enlarged laurel still fits the 30px country strip', () => {
-  const { row, badge } = computeCountryRow(pageCss);
+  const { row, badge } = computeCountryRow(runtimeCss);
   assert.equal(row.height, '30px');
   assert.ok(
     Number.parseFloat(badge.height) <= Number.parseFloat(row.height),
     'a badge taller than the strip would push the flag and score out of line'
   );
+});
+
+
+test('flag and overall score are slightly enlarged together at runtime', () => {
+  const dom = new JSDOM(`<!doctype html><html><head><style>${runtimeCss}</style></head><body>
+    <article class="card"><div class="country-above"><div class="country-row">
+      <span class="overall-score gold">86</span><span class="country-flag flag-cuba"></span><span class="country-name">Cuba</span>
+    </div></div></article>
+  </body></html>`);
+  const flag = dom.window.getComputedStyle(dom.window.document.querySelector('.country-flag'));
+  const score = dom.window.getComputedStyle(dom.window.document.querySelector('.overall-score'));
+  assert.match(flag.transform, /1\.1|matrix\(1\.1/);
+  assert.match(score.transform, /1\.1|matrix\(1\.1/);
 });

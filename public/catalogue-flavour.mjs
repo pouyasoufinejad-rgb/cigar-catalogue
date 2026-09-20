@@ -356,8 +356,10 @@ function ensureStyle() {
    to read at a glance. Repeated here for the same reason as the rule above: a browser
    holding the old document keeps the old stylesheet while still fetching fresh modules. */
 html body .country-above .country-row{grid-column:1/-1}
-html body .laurel-badge{width:27px;height:25px}
-html body .laurel-badge i{font-size:16px}
+html body .country-above .country-flag{transform:scale(1.1);margin-inline:2px}
+html body .country-above .overall-score{transform:scale(1.1);margin-inline:2px}
+html body .laurel-badge{width:30px;height:28px}
+html body .laurel-badge i{font-size:18px}
 `;
   document.head.appendChild(style);
 }
