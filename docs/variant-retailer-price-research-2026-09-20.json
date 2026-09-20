@@ -1,0 +1,756 @@
+{
+  "generatedAt": "2026-09-20",
+  "scope": {
+    "subsectionId": "petit-panatelas",
+    "subsectionTitle": "Panatelas, Coronas & Robustos",
+    "liveEntryCount": 20,
+    "purpose": "Retailer and price research for Claude Code to implement the agreed size-variant system. Same-cigar size variants may be nested. Blend/format variants stay standalone and linked. Packaging-only differences are not variants."
+  },
+  "pricingRules": [
+    "Use exact current Australian retailer URLs wherever verified.",
+    "Store packagePrice and package quantity when known, and derive per-stick price from the package.",
+    "For catalogue Value, use the best currently available Australian per-stick price, excluding SmokingPipes.",
+    "Retain useful alternate Australian retailer links even when they are not the cheapest.",
+    "Do not treat sold-out pricing as the current best available price.",
+    "Do not infer option-level stock or exact package pricing from a broad min-max range.",
+    "Do not create a separate variant for packaging alone, such as tubo versus non-tubo, unless the cigar itself materially differs."
+  ],
+  "entries": [
+    {
+      "key": "la-flor-dominicana-double-ligero-chiselito-maduro",
+      "current": {
+        "name": "La Flor Dominicana Double Ligero Chiselito Maduro",
+        "size": "5 x 44",
+        "priceAUD": 36.2,
+        "retailer": "The Index",
+        "url": "https://www.theindexcigars.com.au/products/la-flor-dominicana-double-ligero-chiselito-maduro"
+      },
+      "sizeVariants": [
+        {
+          "name": "Double Ligero Chisel Maduro",
+          "size": "6 x 54",
+          "retailer": "CigarWorld",
+          "priceAUD": 55.21,
+          "package": "single",
+          "status": "sold out",
+          "url": "https://www.cigarworld.com.au/aud/products/la-flor-dominicana-double-ligero-%252d-chisel-maduro-%252d-single-%252d-%286%22-x-54%29.html",
+          "classificationNote": "Same Double Ligero Maduro line and same Chisel construction, scaled up from Chiselito. Reasonable nested size candidate; verify exact blend before nesting."
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Double Ligero Chiselito Natural",
+          "size": "5 x 44",
+          "retailer": "CigarWorld",
+          "priceAUD": 34.37,
+          "package": "single",
+          "status": "sold out",
+          "url": "https://www.cigarworld.com.au/aud/products/la-flor-dominicana-%252d-double-ligero-chiselito-natural-%252d-single-%252d-%285%22-x-44%29.html",
+          "relation": "blend variant"
+        }
+      ]
+    },
+    {
+      "key": "liga-privada-unico-nasty-fritas",
+      "current": {
+        "name": "Liga Privada Unico Serie Nasty Fritas",
+        "size": "4 x 52 tapered",
+        "priceAUD": 29,
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/liga-privada-unico-serie-nasty-fritas/"
+      },
+      "sizeVariants": [],
+      "relatedStandalone": [
+        {
+          "name": "Liga Privada Unico Serie Papas Fritas",
+          "relation": "format relative",
+          "url": "https://www.cigarhut.com.au/liga-privada-unico-serie-papas-fritas/"
+        },
+        {
+          "name": "Liga Privada Unico Serie Papas Bravas Robusto",
+          "relation": "format relative",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "42-779"
+        },
+        {
+          "name": "Liga Privada Unico Serie Papas Bravas",
+          "relation": "format relative",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "56-1049"
+        },
+        {
+          "name": "Liga Privada Unico Serie Bauhaus",
+          "relation": "format relative",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "52-589"
+        }
+      ],
+      "note": "No verified simple same-cigar alternate vitola found. Do not collapse other Unico formats into Nasty Fritas."
+    },
+    {
+      "key": "liga-privada-unico-papas-fritas",
+      "current": {
+        "name": "Liga Privada Unico Serie Papas Fritas",
+        "size": "4.5 x 44",
+        "bestPriceAUD": 26,
+        "bestPackagePriceAUD": 104,
+        "bestPackage": "tin of 4",
+        "bestRetailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/liga-privada-unico-serie-papas-fritas/",
+        "alternateRetailers": [
+          {
+            "retailer": "The Index",
+            "priceAUD": 30.7,
+            "package": "single",
+            "url": "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-papas-fritas"
+          }
+        ]
+      },
+      "sizeVariants": [],
+      "relatedStandalone": [
+        {
+          "key": "liga-privada-unico-nasty-fritas",
+          "relation": "format relative"
+        }
+      ],
+      "correction": "Catalogue/live copy previously showed A$30.70. Current best verified Australian per-stick price is A$26 from Cigar Hut's A$104 tin of four."
+    },
+    {
+      "key": "liga-privada-h99-papas-fritas",
+      "current": {
+        "name": "Liga Privada H99 Papas Fritas",
+        "size": "4.5 x 44",
+        "priceAUD": 29,
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/liga-privada-h99-connecticut-corojo-papas-fritas/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Liga Privada H99 Robusto",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "49-1099",
+          "classificationNote": "Likely exact H99 blend in standard parejo size; verify blend before nesting."
+        },
+        {
+          "name": "Liga Privada H99 Toro",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "55-1249",
+          "classificationNote": "Likely exact H99 blend in standard parejo size; verify blend before nesting."
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Liga Privada H99 Flying Pig",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "57-659",
+          "relation": "format variant"
+        },
+        {
+          "name": "Liga Privada H99 Coronets",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "119-559",
+          "relation": "compact format; verify construction before deciding whether standalone"
+        }
+      ]
+    },
+    {
+      "key": "undercrown-10-corona-viva",
+      "current": {
+        "name": "Undercrown 10 Corona Viva",
+        "size": "5 x 43",
+        "priceRangeAUD": "39-709",
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/undercrown-10-corona-viva/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Undercrown 10 Robusto",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "49-889",
+          "url": "https://www.cigarhut.com.au/undercrown-10-robusto/"
+        },
+        {
+          "name": "Undercrown 10 Toro",
+          "size": "6 x 52",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "70-1319",
+          "url": "https://www.cigarhut.com.au/undercrown-10-toro/"
+        },
+        {
+          "name": "Undercrown 10 Corona Doble",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "78-1449",
+          "status": "sold out",
+          "url": "https://www.cigarhut.com.au/undercrown-10-corona-doble/"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Undercrown 10 Coronets",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "119-559",
+          "relation": "compact/tinned format; verify construction before nesting"
+        },
+        {
+          "name": "Undercrown Maduro",
+          "relation": "blend line"
+        },
+        {
+          "name": "Undercrown Shade",
+          "relation": "blend line"
+        }
+      ]
+    },
+    {
+      "key": "liga-privada-no-9-petit-corona-oscuro",
+      "current": {
+        "name": "Liga Privada No. 9 Petit Corona Oscuro",
+        "size": "4.25 x 46",
+        "priceRangeAUD": "44-949",
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/liga-privada-no-9-petit-corona-oscuro/"
+      },
+      "sizeVariants": [
+        {
+          "name": "No. 9 Short Panatela Oscuro",
+          "size": "4.5 x 40",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "37-809",
+          "url": "https://www.cigarhut.com.au/liga-privada-no-9-short-panatela-oscuro/"
+        },
+        {
+          "name": "No. 9 Robusto",
+          "size": "5 x 54",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "61-1339",
+          "status": "sold out"
+        },
+        {
+          "name": "No. 9 Toro",
+          "size": "6 x 52",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "80-1799"
+        },
+        {
+          "name": "No. 9 Corona Viva",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "55-1199"
+        },
+        {
+          "name": "No. 9 Corona Doble",
+          "size": "7 x 52",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "85-1899"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "No. 9 Belicoso Oscuro",
+          "size": "6 x 52",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "73-1569",
+          "relation": "format/shape variant"
+        },
+        {
+          "name": "No. 9 Coronets",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "109-499",
+          "relation": "compact/tinned format; verify construction"
+        }
+      ],
+      "packagingNote": "No. 9 Toro Tubo is packaging-only relative to Toro if the cigar itself is identical; do not create a duplicate size variant solely for the tube."
+    },
+    {
+      "key": "liga-privada-t52-short-panatela",
+      "current": {
+        "name": "Liga Privada T52 Short Panatela",
+        "size": "4.25 x 46",
+        "priceRangeAUD": "42-939",
+        "currentSinglePriceAUD": 42,
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/liga-privada-t52-short-panatela/"
+      },
+      "sizeVariants": [
+        {
+          "name": "T52 Petit Corona",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "52-1009"
+        },
+        {
+          "name": "T52 Robusto",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "67-1469"
+        },
+        {
+          "name": "T52 Toro",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "64-1469"
+        },
+        {
+          "name": "T52 Corona Viva",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "52-1149"
+        },
+        {
+          "name": "T52 Corona Doble",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "85-1899"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "T52 Belicoso",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "62-1439",
+          "relation": "format/shape variant"
+        },
+        {
+          "name": "T52 Flying Pig",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "65-709",
+          "relation": "format/shape variant"
+        },
+        {
+          "name": "T52 Coronets",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "113-539",
+          "relation": "compact/tinned format; verify construction"
+        }
+      ],
+      "correction": "Current Cigar Hut crawl shows A$42 single, not A$47.",
+      "packagingNote": "T52 Toro Tubo is packaging-only relative to Toro if cigar construction/blend is otherwise identical."
+    },
+    {
+      "key": "rocky-patel-sun-grown-juniors",
+      "current": {
+        "name": "Rocky Patel Sun Grown Juniors",
+        "size": "4 x 38",
+        "retailer": "The Index",
+        "singlePriceAUD": 19.9,
+        "packagePriceAUD": 92.4,
+        "package": "tin of 5",
+        "bestConfirmedPerStickAUD": 18.48,
+        "url": "https://www.theindexcigars.com.au/products/rocky-patel-sun-grown-juniors"
+      },
+      "sizeVariants": [
+        {
+          "name": "Rocky Patel Sun Grown Robusto",
+          "size": "5.5 x 50",
+          "retailer": "The Index",
+          "singlePriceAUD": 47.3,
+          "box20PriceAUD": 906,
+          "boxStatus": "sold out",
+          "url": "https://www.theindexcigars.com.au/products/rocky-patel-sungrown-robusto"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Rocky Patel Sun Grown Maduro Robusto",
+          "retailer": "The Index",
+          "singlePriceAUD": 47.3,
+          "box20PriceAUD": 906,
+          "relation": "blend variant",
+          "url": "https://www.theindexcigars.com.au/products/sun-grown-maduro-robusto"
+        }
+      ],
+      "note": "Cigar Hut has additional standard Sun Grown sizes, but option-level package pricing was not safely resolved in this pass. Claude should probe those pages before claiming a cheaper per-stick price."
+    },
+    {
+      "key": "foundation-charter-oak-maduro-rothschild",
+      "current": {
+        "name": "Foundation Charter Oak Maduro Rothschild",
+        "retailer": "Cigar Hut",
+        "priceRangeAUD": "34-619",
+        "url": "https://www.cigarhut.com.au/charter-oak-maduro-rothschild/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Charter Oak Maduro Petite Corona",
+          "size": "5.25 x 42",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "37-679",
+          "url": "https://www.cigarhut.com.au/charter-oak-maduro-petite-corona/"
+        },
+        {
+          "name": "Charter Oak Maduro Toro",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "56-999",
+          "status": "sold out",
+          "url": "https://www.cigarhut.com.au/charter-oak-maduro-toro/"
+        },
+        {
+          "name": "Charter Oak Maduro Lonsdale",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "54-989",
+          "url": "https://www.cigarhut.com.au/charter-oak-maduro-lonsdale/"
+        },
+        {
+          "name": "Charter Oak Maduro Grande",
+          "size": "6 x 60",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "55-1039",
+          "url": "https://www.cigarhut.com.au/charter-oak-maduro-grande/"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Charter Oak Shade",
+          "relation": "blend line"
+        },
+        {
+          "name": "Charter Oak Habano",
+          "relation": "blend line"
+        }
+      ],
+      "familyUrl": "https://www.cigarhut.com.au/charter-oak/"
+    },
+    {
+      "key": "paradiso-elegancia-corona",
+      "current": {
+        "name": "Paradiso Elegancia Corona",
+        "retailer": "Cigar Hut",
+        "priceRangeAUD": "37-849",
+        "url": "https://www.cigarhut.com.au/paradiso-elegancia-corona/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Paradiso Elegancia Churchill",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "54-1275",
+          "url": "https://www.cigarhut.com.au/paradiso-elegancia-churchill/"
+        },
+        {
+          "name": "Paradiso Elegancia Robusto",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "47-1119",
+          "urlVerifiedViaFamilyPage": true
+        }
+      ],
+      "familyUrl": "https://www.cigarhut.com.au/paradiso/"
+    },
+    {
+      "key": "paradiso-quintessence-robusto",
+      "current": {
+        "name": "Paradiso Quintessence Robusto",
+        "retailer": "Cigar Hut",
+        "priceRangeAUD": "40-889",
+        "url": "https://www.cigarhut.com.au/paradiso-quintessence-robusto/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Paradiso Quintessence Majestic",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "52-1169",
+          "url": "https://www.cigarhut.com.au/paradiso-quintessence-majestic/"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Paradiso Quintessence Belicoso",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "56-1259",
+          "status": "out of stock",
+          "relation": "format/shape variant",
+          "url": "https://www.cigarhut.com.au/paradiso-quintessence-belicoso/"
+        }
+      ]
+    },
+    {
+      "key": "la-flor-dominicana-la-nox-petit",
+      "current": {
+        "name": "La Flor Dominicana La Nox Petit",
+        "size": "5 x 40",
+        "retailer": "CigarWorld",
+        "singlePriceAUD": 39.84,
+        "box50PriceAUD": 1891.87,
+        "boxPerStickAUD": 37.8374,
+        "familyUrl": "https://www.cigarworld.com.au/aud/categories/cigars/la-flor-dominicana-%28dominican-republic%29/"
+      },
+      "sizeVariants": [],
+      "note": "No additional exact La Nox vitola with a reliable current AU retailer price was verified in this pass."
+    },
+    {
+      "key": "la-flor-dominicana-reserva-especial-el-jocko-maduro",
+      "current": {
+        "name": "La Flor Dominicana Reserva Especial El Jocko Maduro",
+        "size": "4.5 x 32-54 perfecto",
+        "retailer": "CigarWorld",
+        "singlePriceAUD": 37.14,
+        "box24PriceAUD": 843.33,
+        "boxPerStickAUD": 35.13875,
+        "familyUrl": "https://www.cigarworld.com.au/aud/categories/cigars/la-flor-dominicana-%28dominican-republic%29/"
+      },
+      "sizeVariants": [],
+      "relatedStandalone": [
+        {
+          "name": "Reserva Especial El Jocko Natural",
+          "size": "4.5 x 32-54 perfecto",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 37.14,
+          "box24PriceAUD": 843.33,
+          "boxStatus": "temporarily unavailable",
+          "relation": "blend variant"
+        }
+      ]
+    },
+    {
+      "key": "deadwood-leather-rose-petite-corona",
+      "current": {
+        "name": "Deadwood Leather Rose Petite Corona",
+        "size": "4 x 43",
+        "retailer": "Cigar Hut",
+        "priceRangeAUD": "29-619",
+        "url": "https://www.cigarhut.com.au/deadwood-leather-rose-petite-corona/"
+      },
+      "sizeVariants": [],
+      "relatedStandalone": [
+        {
+          "name": "Deadwood Leather Rose Torpedo",
+          "size": "5 x 54",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "48-1049",
+          "status": "out of stock",
+          "relation": "format/shape variant",
+          "familyUrl": "https://www.cigarhut.com.au/deadwood/"
+        }
+      ],
+      "note": "The two Leather Rose vitolas use materially different shapes, so keep Torpedo standalone under the agreed format-variant rule."
+    },
+    {
+      "key": "ashton-vsg-enchantment",
+      "current": {
+        "name": "Ashton VSG Enchantment",
+        "retailer": "Cigar Hut",
+        "priceRangeAUD": "44-899",
+        "url": "https://www.cigarhut.com.au/ashton-vsg-enchantment/"
+      },
+      "sizeVariants": [
+        {
+          "name": "Ashton VSG Tres Mystique",
+          "size": "4.375 in",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "39-849",
+          "status": "out of stock",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-tres-mystique/"
+        },
+        {
+          "name": "Ashton VSG Eclipse",
+          "size": "6 x 52",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "62-1419",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-eclipse-tubo/",
+          "packagingNote": "The verified AU page is the tubo presentation; do not create a separate cigar variant solely because it is tubed."
+        },
+        {
+          "name": "Ashton VSG Sorcerer",
+          "size": "7 x 49",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "67-1499",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-sorcerer/"
+        },
+        {
+          "name": "Ashton VSG Wizard",
+          "size": "6 x 56",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "63-2099",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-wizard/"
+        },
+        {
+          "name": "Ashton VSG Robusto",
+          "size": "5.5 x 50",
+          "retailer": "CigarWorld",
+          "priceVerifiedViaSamplerOnly": false,
+          "note": "Existence/dimensions verified; obtain exact standalone AU price before adding price data."
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Ashton VSG Belicoso No. 1",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "56-1259",
+          "relation": "format/shape variant",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-belicoso-no-1/"
+        },
+        {
+          "name": "Ashton VSG Torpedo",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "69-1559",
+          "relation": "format/shape variant",
+          "url": "https://www.cigarhut.com.au/ashton-vsg-torpedo/"
+        }
+      ]
+    },
+    {
+      "key": "alonso-menendez-axe-charutos",
+      "current": {
+        "name": "Alonso Menendez Axe Charutos",
+        "size": "4.6 x 35",
+        "packagePriceAUD": 48,
+        "package": "pack of 5",
+        "perStickAUD": 9.6,
+        "retailer": "Cigar Hut",
+        "url": "https://www.cigarhut.com.au/alonso-menendez-axe-charutos/",
+        "status": "back in stock"
+      },
+      "sizeVariants": [],
+      "note": "No verified exact same-blend alternate vitola found. Do not treat Alonso Menendez Gold Cigarillo as the same cigar merely because it shares the brand."
+    },
+    {
+      "key": "nica-rustica-broadleaf-short-robusto",
+      "current": {
+        "name": "Nica Rustica Broadleaf Short Robusto",
+        "size": "4.5 x 50",
+        "retailer": "The Index",
+        "singlePriceAUD": 39,
+        "box25PriceAUD": 929.5,
+        "boxPerStickAUD": 37.18,
+        "url": "https://www.theindexcigars.com.au/products/nica-rustica-broadleaf-short-robusto"
+      },
+      "sizeVariants": [
+        {
+          "name": "Nica Rustica Broadleaf Toro",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "49-1149",
+          "familyUrl": "https://www.cigarhut.com.au/drew-estate-cigars/"
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Nica Rustica Broadleaf Belly Belicoso",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "59-1399",
+          "relation": "format/shape variant",
+          "familyUrl": "https://www.cigarhut.com.au/drew-estate-cigars/"
+        },
+        {
+          "name": "Nica Rustica Adobe Toro",
+          "retailer": "Cigar Hut",
+          "priceRangeAUD": "49-1149",
+          "relation": "blend variant",
+          "familyUrl": "https://www.cigarhut.com.au/drew-estate-cigars/"
+        }
+      ]
+    },
+    {
+      "key": "davidoff-winston-churchill-petite-panatela",
+      "current": {
+        "name": "Davidoff Winston Churchill Original Petite Panatela",
+        "size": "4 x 38",
+        "packagePriceAUD": 105,
+        "package": "tin of 5",
+        "perStickAUD": 21,
+        "retailer": "Corporate Cigar",
+        "url": "https://corporatecigar.com/product/davidoff-wsc-petit-panetela-5s/",
+        "alternateRetailer": {
+          "retailer": "CigarWorld",
+          "tin5PriceAUD": 139,
+          "singlePriceAUD": 28.95,
+          "familyUrl": "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/winston-churchill/"
+        }
+      },
+      "sizeVariants": [
+        {
+          "name": "Winston Churchill Original Petit Corona",
+          "size": "4.5 x 41",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 49.11,
+          "box20PriceAUD": 959.12,
+          "boxPerStickAUD": 47.956,
+          "url": "https://www.cigarworld.com.au/aud/products/davidoff-%252d-winston-churchill-%252d-petit-corona-%252d-box-of-20-%252d-%284-1%7B47%7D2-x-41%29.html"
+        },
+        {
+          "name": "Winston Churchill Original Robusto",
+          "size": "5.5 x 52",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 69.77,
+          "box20PriceAUD": 1326.47,
+          "boxPerStickAUD": 66.3235
+        },
+        {
+          "name": "Winston Churchill Original Churchill",
+          "size": "6.875 x 47",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 78.64,
+          "box20PriceAUD": 1503.84,
+          "boxPerStickAUD": 75.192
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "Davidoff Winston Churchill The Late Hour",
+          "relation": "different blend line; keep standalone"
+        }
+      ]
+    },
+    {
+      "key": "aj-fernandez-new-world-oscuro",
+      "current": {
+        "name": "AJ Fernandez New World Oscuro",
+        "size": "4 x 36",
+        "packagePriceAUD": 115.55,
+        "package": "pack of 5",
+        "perStickAUD": 23.11,
+        "singlePriceAUD": 24.11,
+        "retailer": "CigarWorld",
+        "familyUrl": "https://www.cigarworld.com.au/aud/categories/cigars/aj-fernandez-%28nicaragua%29/new-world/"
+      },
+      "sizeVariants": [
+        {
+          "name": "New World Oscuro Toro",
+          "size": "6.5 x 55",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 68.95,
+          "box21PriceAUD": 1339.1,
+          "boxPerStickAUD": 63.7667
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "New World Oscuro Belicoso",
+          "size": "5.5 x 55",
+          "relation": "format/shape variant",
+          "note": "AU existence verified via sampler; no reliable standalone AU price found in this pass."
+        }
+      ],
+      "note": "Cameroon, Puro Especial, Dorado and Connecticut New World lines are blend variants/related entries, not size variants."
+    },
+    {
+      "key": "aj-fernandez-new-world-cameroon-short-robusto",
+      "current": {
+        "name": "AJ Fernandez New World Cameroon Short Robusto",
+        "size": "4 x 48",
+        "retailer": "CigarWorld",
+        "singlePriceAUD": 39.32,
+        "box20PriceAUD": 746.42,
+        "boxPerStickAUD": 37.321,
+        "familyUrl": "https://www.cigarworld.com.au/aud/categories/cigars/aj-fernandez-%28nicaragua%29/new-world/"
+      },
+      "sizeVariants": [
+        {
+          "name": "New World Cameroon Double Robusto",
+          "size": "5.5 x 54",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 54.75,
+          "box20PriceAUD": 1054.92,
+          "boxPerStickAUD": 52.746
+        },
+        {
+          "name": "New World Cameroon Toro",
+          "size": "6 x 50",
+          "retailer": "CigarWorld",
+          "singlePriceAUD": 59.04,
+          "box20PriceAUD": 1140.9,
+          "boxPerStickAUD": 57.045
+        }
+      ],
+      "relatedStandalone": [
+        {
+          "name": "New World Cameroon Torpedo",
+          "size": "6.5 x 52",
+          "relation": "format/shape variant",
+          "note": "AU existence verified via sampler; no reliable standalone AU price found in this pass."
+        }
+      ]
+    }
+  ]
+}
