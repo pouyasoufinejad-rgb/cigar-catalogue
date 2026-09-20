@@ -6,7 +6,7 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=149\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=150\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
