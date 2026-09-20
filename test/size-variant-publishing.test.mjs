@@ -155,7 +155,7 @@ test('archiving the consolidated card leaves no second standalone entry for the 
 
 
 test('a publish carries blend variants through to the stored entry and card', async () => {
-  const key = 'rocky-patel-sun-grown-juniors';
+  const key = 'test-rocky-blend-parent';
   const blends = [
     { id: 'sun-grown', label: 'Sun Grown' },
     {
