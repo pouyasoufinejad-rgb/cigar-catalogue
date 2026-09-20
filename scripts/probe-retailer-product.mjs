@@ -55,6 +55,16 @@ for (const url of urls) {
     const hit = text.match(new RegExp(`${field}\\s*[:\\-\\u2013]?\\s*([^.|]{2,70})`, 'i'));
     if (hit) console.log(`   ${field.toUpperCase().replace(/ /g, '_')} ${hit[1].trim()}`);
   }
+  // A collection or search page is worth probing too: it names the product URL when the
+  // guessed one is wrong, which is otherwise a round of blind URL guessing.
+  const match = String(process.env.PROBE_LINK_MATCH || '').trim();
+  if (match) {
+    const needle = match.toLowerCase();
+    const links = [...new Set([...html.matchAll(/href="([^"]+)"/gi)].map(hit => hit[1])
+      .filter(href => href.toLowerCase().includes(needle)))]
+      .map(href => { try { return new URL(href, response.url).toString(); } catch { return href; } });
+    console.log(`   LINKS_MATCHING(${match}) ${JSON.stringify(links.slice(0, 12))}`);
+  }
   const body = text.replace(/^.*?(?=Liga|Drew|Undercrown)/s, '').slice(0, 700);
   console.log(`   TEXT ${body}`);
 }

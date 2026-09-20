@@ -12,6 +12,10 @@ on:
         description: 'Comma- or space-separated retailer product URLs'
         required: true
         type: string
+      link_match:
+        description: 'Optional substring: also print every link on the page containing it'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -30,4 +34,5 @@ jobs:
       - name: Probe
         env:
           PROBE_URLS: ${{ inputs.urls }}
+          PROBE_LINK_MATCH: ${{ inputs.link_match }}
         run: node scripts/probe-retailer-product.mjs
