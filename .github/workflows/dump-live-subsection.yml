@@ -1,0 +1,38 @@
+name: Dump live subsection
+
+# Read-only diagnostic. Prints a compact per-entry view of one recommendation subsection
+# from live KV. The full records are too large to read back through Actions logs, and the
+# agent sandbox's proxy refuses the Worker host. Writes nothing and needs no secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      subsection:
+        description: 'Recommendation subsection id'
+        required: false
+        default: 'petit-panatelas'
+        type: string
+      fields:
+        description: 'Optional comma-separated entry fields to print'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    name: Read the live subsection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dump
+        env:
+          SUBSECTION_ID: ${{ inputs.subsection }}
+          DUMP_FIELDS: ${{ inputs.fields }}
+        run: node scripts/dump-live-subsection.mjs
