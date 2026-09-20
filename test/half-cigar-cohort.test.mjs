@@ -146,3 +146,55 @@ test('rank visual refresh updates only the rank flag and leaves the editable eye
   assert.equal(eyebrowText, 'Untasted candidate');
   assert.equal(eyebrowWrites, 0);
 });
+
+
+test('archive state from the save payload is not overwritten by stale active DOM state', () => {
+  assert.ok(cohort, 'Half-Cigar cohort module must load');
+  const rows = [
+    { key:'main-a', rank:1, catalogueType:'main', archived:false },
+    { key:'archive-me', rank:2, catalogueType:'main', archived:false },
+    { key:'half-a', rank:1, catalogueType:'half', archived:false }
+  ];
+  const existingCards = {
+    'archive-me': {
+      rank:2,
+      subsection:'petit-panatelas',
+      archived:true,
+      archivedAt:'2026-09-21T02:00:00Z',
+      archivedRank:2,
+      catalogueType:'main',
+      taster:false
+    }
+  };
+
+  const updates = cohort.normaliseAllCohortRanks(rows, existingCards, 'archive-me', 'main', 2);
+
+  assert.equal(updates['archive-me'].archived, true);
+  assert.equal(updates['archive-me'].archivedAt, '2026-09-21T02:00:00Z');
+  assert.equal(updates['archive-me'].archivedRank, 2);
+  assert.equal(updates['archive-me'].rank, undefined);
+  assert.equal(updates['archive-me'].subsection, undefined);
+});
+
+test('unarchive state from the save payload wins over stale archived DOM state', () => {
+  assert.ok(cohort, 'Half-Cigar cohort module must load');
+  const rows = [
+    { key:'restore-me', rank:4, catalogueType:'main', archived:true },
+    { key:'half-a', rank:1, catalogueType:'half', archived:false }
+  ];
+  const existingCards = {
+    'restore-me': {
+      archived:false,
+      archivedAt:'',
+      archivedRank:4,
+      catalogueType:'main',
+      taster:false
+    }
+  };
+
+  const updates = cohort.normaliseAllCohortRanks(rows, existingCards, 'restore-me', 'main', 1);
+
+  assert.equal(updates['restore-me'].archived, false);
+  assert.equal(updates['restore-me'].catalogueType, 'main');
+  assert.equal(updates['restore-me'].taster, false);
+});

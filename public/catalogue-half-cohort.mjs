@@ -131,9 +131,20 @@ export function reorderCatalogueCohorts(rows, existingCards, options = {}) {
 
 export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', selectedType = MAIN_TYPE, selectedRank = 1) {
   const targetType = normaliseCatalogueType(selectedType);
-  const activeRows = compactCatalogueCohorts((Array.isArray(rows) ? rows : [])
-    .filter(row => !row.archived)
-    .map(row => row.key === selectedKey ? { ...row, catalogueType:targetType, taster:targetType === TASTER_TYPE } : { ...row }));
+  const selectedSaved = existingCards?.[selectedKey] && typeof existingCards[selectedKey] === 'object'
+    ? existingCards[selectedKey]
+    : {};
+  const selectedHasSavedArchiveState = Object.prototype.hasOwnProperty.call(selectedSaved, 'archived');
+  const preparedRows = (Array.isArray(rows) ? rows : []).map(row => {
+    if (row.key !== selectedKey) return { ...row };
+    return {
+      ...row,
+      archived:selectedHasSavedArchiveState ? Boolean(selectedSaved.archived) : Boolean(row.archived),
+      catalogueType:targetType,
+      taster:targetType === TASTER_TYPE
+    };
+  });
+  const activeRows = compactCatalogueCohorts(preparedRows.filter(row => !row.archived));
   const output = {};
   for (const type of [HALF_TYPE, TASTER_TYPE]) {
     const cohort = activeRows.filter(row => catalogueTypeForRow(row) === type).sort((a,b)=>finiteNumber(a.rank)-finiteNumber(b.rank));
@@ -148,8 +159,14 @@ export function normaliseAllCohortRanks(rows, existingCards, selectedKey = '', s
     cohort.forEach((row,index)=>{ output[row.key]=mergeOverride(existingCards?.[row.key], { rank:index+1, catalogueType:type, taster:type===TASTER_TYPE }); });
   }
   if (selectedKey && targetType === MAIN_TYPE) {
-    const main = mergeOverride(existingCards?.[selectedKey], { catalogueType:MAIN_TYPE, taster:false, archived:false });
-    delete main.subsection;
+    const main = mergeOverride(selectedSaved, { catalogueType:MAIN_TYPE, taster:false });
+    if (Boolean(selectedSaved.archived)) {
+      delete main.rank;
+      delete main.subsection;
+    } else {
+      main.archived = false;
+      delete main.subsection;
+    }
     output[selectedKey] = main;
   }
   return output;

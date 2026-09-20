@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 let behaviour = null;
+let admin = null;
 try {
   behaviour = await import('../public/catalogue-editor-behaviour.mjs');
+  admin = await import('../public/catalogue-admin-unified-v139.mjs');
 } catch (_) {
   behaviour = null;
+  admin = null;
 }
 const loaderSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const behaviourSource = await readFile(new URL('../public/catalogue-editor-behaviour.mjs', import.meta.url), 'utf8').catch(() => '');
@@ -72,4 +75,41 @@ test('Legend and Benchmarks full-editor fields are converted to explicit collaps
 
 test('browser module chain loads the catalogue editor behaviour guard', () => {
   assert.match(loaderSource, /import\('\.\/catalogue-editor-behaviour\.mjs'\)/);
+});
+
+
+test('archived cards are rehomed into the Archived grid and restored out of it on unarchive', () => {
+  assert.ok(admin, 'catalogue admin module must load');
+  assert.equal(typeof admin.rehomeCardForSavedState, 'function');
+
+  const flat = {
+    id:'flat-main',
+    appendChild(card) { card.parentElement = this; }
+  };
+  const archived = {
+    id:'archived-cards',
+    appendChild(card) { card.parentElement = this; }
+  };
+  const root = {
+    getElementById(id) {
+      if (id === 'flat-main') return flat;
+      if (id === 'archived-cards') return archived;
+      return null;
+    },
+    querySelector() { return flat; }
+  };
+  const card = {
+    dataset:{ archived:'1' },
+    parentElement:flat,
+    closest(selector) {
+      return selector === '#archived-section' && this.parentElement === archived ? { id:'archived-section' } : null;
+    }
+  };
+
+  admin.rehomeCardForSavedState(card, { archived:true, catalogueType:'main' }, root);
+  assert.equal(card.parentElement, archived);
+
+  delete card.dataset.archived;
+  admin.rehomeCardForSavedState(card, { archived:false, catalogueType:'main' }, root);
+  assert.equal(card.parentElement, flat);
 });
