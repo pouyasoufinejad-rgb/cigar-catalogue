@@ -1,0 +1,49 @@
+{
+  "id": "2026-09-20-variants-paradiso-elegancia-corona",
+  "operation": "upsert-entry",
+  "key": "paradiso-elegancia-corona",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona",
+        "label": "Corona",
+        "title": "Elegancia Corona",
+        "length": 5.5,
+        "ring": 46,
+        "packagePrice": 37,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-corona/"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Elegancia Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso/"
+        ],
+        "priceNote": "Found through the Paradiso family page rather than a verified product URL; the range shown is 47-1119."
+      },
+      {
+        "id": "churchill",
+        "label": "Churchill",
+        "title": "Elegancia Churchill",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-churchill/"
+        ],
+        "priceNote": "Cigar Hut shows a 54-1275 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "corona"
+  },
+  "note": "Nest 3 sizes of the same cigar under one entry, defaulting to corona. 1 of 3 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

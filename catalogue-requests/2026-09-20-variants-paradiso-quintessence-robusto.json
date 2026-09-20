@@ -1,0 +1,40 @@
+{
+  "id": "2026-09-20-variants-paradiso-quintessence-robusto",
+  "operation": "upsert-entry",
+  "key": "paradiso-quintessence-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Quintessence Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "packagePrice": 40,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-quintessence-robusto/"
+        ],
+        "smokeTime": "About 55–70 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "majestic",
+        "label": "Majestic",
+        "title": "Quintessence Majestic",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-quintessence-majestic/"
+        ],
+        "priceNote": "Cigar Hut shows a 52-1169 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "robusto"
+  },
+  "note": "Nest 2 sizes of the same cigar under one entry, defaulting to robusto. 1 of 2 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Quintessence Belicoso is a shape variant and is out of stock, so it stays standalone. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

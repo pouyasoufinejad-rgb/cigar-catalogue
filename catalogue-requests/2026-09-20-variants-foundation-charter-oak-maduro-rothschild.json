@@ -1,0 +1,73 @@
+{
+  "id": "2026-09-20-variants-foundation-charter-oak-maduro-rothschild",
+  "operation": "upsert-entry",
+  "key": "foundation-charter-oak-maduro-rothschild",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "rothschild",
+        "label": "Rothschild",
+        "title": "Charter Oak Maduro Rothschild",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 34,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-rothschild/",
+          "https://www.smokingpipes.com/cigars/foundation-cigar-company/moreinfo.cfm?product_id=333828"
+        ],
+        "smokeTime": "About 35–45 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "petite-corona",
+        "label": "Petite Corona",
+        "title": "Charter Oak Maduro Petite Corona",
+        "length": 5.25,
+        "ring": 42,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-petite-corona/"
+        ],
+        "priceNote": "Cigar Hut shows a 37-679 range across every option on the page."
+      },
+      {
+        "id": "lonsdale",
+        "label": "Lonsdale",
+        "title": "Charter Oak Maduro Lonsdale",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-lonsdale/"
+        ],
+        "priceNote": "Cigar Hut shows a 54-989 range across every option on the page."
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Charter Oak Maduro Toro",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-toro/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 56-999 range."
+      },
+      {
+        "id": "grande",
+        "label": "Grande",
+        "title": "Charter Oak Maduro Grande",
+        "length": 6,
+        "ring": 60,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-grande/"
+        ],
+        "priceNote": "Cigar Hut shows a 55-1039 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "rothschild"
+  },
+  "note": "Nest 5 sizes of the same cigar under one entry, defaulting to rothschild. 1 of 5 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Charter Oak Shade and Charter Oak Habano are separate blend lines. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

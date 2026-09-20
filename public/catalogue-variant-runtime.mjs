@@ -81,6 +81,28 @@ export function applyVariantToCard(card, record, variantId) {
     title.innerHTML = `${brand}${effective.title}`;
   }
 
+  // The eyebrow keeps its rank prefix, which belongs to the entry, and takes the selected
+  // size's caption after it.
+  const eyebrow = card.querySelector('.eyebrow');
+  if (eyebrow && effective.eyebrow) {
+    const current = eyebrow.textContent || '';
+    const dash = current.indexOf('—');
+    eyebrow.textContent = dash >= 0
+      ? `${current.slice(0, dash + 1)} ${effective.eyebrow}`
+      : effective.eyebrow;
+  }
+
+  // Practical describes handling, which changes with the size: the cadence band follows the
+  // ring gauge and the package line follows how that size is sold.
+  if (Array.isArray(effective.practicalLines) && effective.practicalLines.length) {
+    const practical = card.querySelector('.artmeta-right');
+    if (practical) {
+      const heading = practical.querySelector('.artmeta-title')?.outerHTML || '';
+      practical.innerHTML = heading + effective.practicalLines
+        .map(line => `<span class="artmeta-line">${line}</span>`).join('');
+    }
+  }
+
   const art = card.querySelector('.artframe');
   if (art) {
     if (effective.length > 0) art.dataset.visualLength = String(effective.length);

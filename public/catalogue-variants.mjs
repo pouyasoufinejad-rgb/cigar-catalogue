@@ -13,9 +13,13 @@ import { sizeTierForRing } from './catalogue-size-rules.mjs';
 // The fields a vitola may legitimately change. Blend and production data is deliberately
 // absent: wrapper, binder, filler, country, strength, quality and flavour describe the
 // cigar, not its size, and a variant that needed to change them would not be a variant.
+// Practical is here because it describes the smoke's handling, which is a function of the
+// size: the cadence band follows the ring gauge, and the package line follows how that size
+// is sold. Production stays out, because wrapper, binder and filler are the blend.
 export const VARIANT_FIELDS = Object.freeze([
   'title', 'eyebrow', 'length', 'ring', 'packageLabel', 'packagePrice', 'price',
-  'retailerLinks', 'stock', 'smokeTime', 'imageUrl', 'summaryHtml', 'noteHtml', 'size'
+  'retailerLinks', 'stock', 'smokeTime', 'imageUrl', 'summaryHtml', 'noteHtml', 'size',
+  'practicalLines'
 ]);
 
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
@@ -78,6 +82,9 @@ export function normaliseVariant(input, index = 0) {
   if (text(raw.imageUrl).startsWith('/')) variant.imageUrl = text(raw.imageUrl);
   if (raw.summaryHtml) variant.summaryHtml = text(raw.summaryHtml);
   if (raw.noteHtml) variant.noteHtml = text(raw.noteHtml);
+  if (Array.isArray(raw.practicalLines)) {
+    variant.practicalLines = raw.practicalLines.map(line => text(line).trim()).filter(Boolean);
+  }
   if (raw.priceNote) variant.priceNote = text(raw.priceNote).trim();
   if (raw.priceChecked) variant.priceChecked = text(raw.priceChecked).trim();
   // A Size medal follows from the ring gauge, so a variant that changes ring gets its own

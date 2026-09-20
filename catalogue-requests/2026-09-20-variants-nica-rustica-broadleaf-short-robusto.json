@@ -1,0 +1,42 @@
+{
+  "id": "2026-09-20-variants-nica-rustica-broadleaf-short-robusto",
+  "operation": "upsert-entry",
+  "key": "nica-rustica-broadleaf-short-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-robusto",
+        "label": "Short Robusto",
+        "title": "Broadleaf Short Robusto",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 929.5,
+        "packageCount": 25,
+        "packageLabel": "box of 25",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/nica-rustica-broadleaf-short-robusto"
+        ],
+        "smokeTime": "About 50 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "The Index box of 25 at A$929.50 is A$37.18 a stick, below its A$39 single.",
+        "practicalLines": [
+          "box of 25",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Broadleaf Toro",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/drew-estate-cigars/"
+        ],
+        "priceNote": "Found through the Drew Estate family page rather than a verified product URL; the range shown is 49-1149."
+      }
+    ],
+    "defaultVariantId": "short-robusto"
+  },
+  "note": "Nest 2 sizes of the same cigar under one entry, defaulting to short-robusto. 1 of 2 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Belly Belicoso is a shape variant and Nica Rustica Adobe a separate blend, so both stay standalone. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-20-variants-aj-fernandez-new-world-oscuro",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-oscuro",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "New World Oscuro",
+        "length": 4,
+        "ring": 36,
+        "packagePrice": 115.55,
+        "packageCount": 5,
+        "packageLabel": "pack of 5",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/new-world-oscuro-pack-by-aj-fernandez-%252d-%284-x-36%29-%252d-pack-of-5.html"
+        ],
+        "smokeTime": "25–35 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "CigarWorld pack of five at A$115.55 is A$23.11 a stick, below its A$24.11 single.",
+        "practicalLines": [
+          "pack of 5",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "New World Oscuro Toro",
+        "length": 6.5,
+        "ring": 55,
+        "packagePrice": 1339.1,
+        "packageCount": 21,
+        "packageLabel": "box of 21",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/categories/cigars/aj-fernandez-%28nicaragua%29/new-world/"
+        ],
+        "smokeTime": "About 70–90 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "CigarWorld box of 21 at A$1339.10 is A$63.77 a stick, below its A$68.95 single.",
+        "practicalLines": [
+          "box of 21",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "petit-corona"
+  },
+  "note": "Nest 2 sizes of the same cigar under one entry, defaulting to petit-corona. 2 of 2 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Oscuro Belicoso is a shape variant with no reliable standalone Australian price, and the Cameroon, Puro Especial, Dorado and Connecticut lines are separate blends. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

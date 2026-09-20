@@ -1,0 +1,102 @@
+{
+  "id": "2026-09-20-variants-liga-privada-no-9-petit-corona-oscuro",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-petit-corona-oscuro",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-panatela",
+        "label": "Short Panatela",
+        "title": "No. 9 Short Panatela Oscuro",
+        "eyebrow": "Best exact No. 9 taster",
+        "length": 4.5,
+        "ring": 40,
+        "packagePrice": 37,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-short-panatela-oscuro/"
+        ],
+        "smokeTime": "35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "imageUrl": "/api/catalogue-image/liga-privada-no-9-short-panatela",
+        "summaryHtml": "<strong>Espresso, dark cocoa, earth, white pepper and caramel</strong> come through with more wrapper concentration than the coronet while retaining the No. 9’s oily sweetness. The draw should carry measured resistance and the burn is normally disciplined, though the narrow ring punishes impatient puffing and can turn the final inch hot. Its aroma is dense, roasted and savoury-sweet. Mouthfeel is creamy, oily and chewy, followed by a long finish of cocoa, coffee, earth and pepper. The line began as Drew Estate’s <a href=\"https://drewestate.com/products/liga-privada/liga-privada-no-9/\" rel=\"noopener noreferrer\" target=\"_blank\">private blend project</a>, built from unusually scarce tobaccos rather than a mass-market formula.",
+        "noteHtml": "Exact taster for: Liga Privada No. 9 Coronets — Tin of 10.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "No. 9 Petit Corona Oscuro",
+        "eyebrow": "Fullest-ring exact No. 9 short",
+        "length": 4.25,
+        "ring": 46,
+        "packagePrice": 44,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-petit-corona-oscuro/"
+        ],
+        "smokeTime": "40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "noteHtml": "Cigar Hut lists the exact 4¼″ × 46 single at A$44 and has it in stock; the same page offers ten cigars or a box of 24.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "No. 9 Robusto",
+        "length": 5,
+        "ring": 54,
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 61-1339 range across every option."
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "No. 9 Toro",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9/"
+        ],
+        "priceNote": "Cigar Hut shows an 80-1799 range across every option on the page."
+      },
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "No. 9 Corona Viva",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9/"
+        ],
+        "priceNote": "Cigar Hut shows a 55-1199 range across every option on the page."
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "No. 9 Corona Doble",
+        "length": 7,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9/"
+        ],
+        "priceNote": "Cigar Hut shows an 85-1899 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "short-panatela",
+    "rank": 6,
+    "eyebrow": "Best exact No. 9 taster"
+  },
+  "note": "Nest 6 sizes of the same cigar under one entry, defaulting to short-panatela. 2 of 6 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Consolidates the separate liga-privada-no-9-short-panatela card, whose title, dimensions, price, retailer link, image, summary, note and smoke time all move onto its size variant. That card is archived rather than deleted in a paired request. Belicoso Oscuro is a shape variant and Coronets a tinned compact format the research file asks to verify, so both stay standalone. Toro Tubo is the Toro in a tube, which is packaging, not a size. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

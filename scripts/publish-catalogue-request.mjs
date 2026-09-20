@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile, realpath, stat } from 'node:fs/promises';
+import { defaultVariantId, normaliseVariants } from '../public/catalogue-variants.mjs';
 import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -21,7 +22,11 @@ const CARD_EDITORIAL_FIELDS = new Set([
 ]);
 const CARD_STRUCTURAL_FIELDS = new Set([
   'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk', 'taster', 'catalogueType',
-  'retailerLinks', 'imageUrl', 'smokeTime'
+  'retailerLinks', 'imageUrl', 'smokeTime',
+  // The sizes an entry covers and which one it shows first. These filter lists drop
+  // anything they do not name, so leaving them out would discard every variant on the way
+  // to KV without any error to show for it.
+  'sizeVariants', 'defaultVariantId'
 ]);
 const DYNAMIC_ONLY_FIELDS = new Set([
   'stock', 'imageSourceKey', 'imageVersion', 'priceChecked', 'stockChecked', 'productionLines', 'practicalLines'
@@ -397,6 +402,24 @@ function assertSubset(actual, expected, keys, label) {
   for (const key of keys) {
     if (!(key in expected)) continue;
     try {
+      // Size variants are stored normalised: ids are slugged, a per-stick price is derived
+      // from the package, and an unpriced size is marked as such. Comparing the request's
+      // raw shape against that would fail every publish that carries sizes, so both sides
+      // are normalised and the comparison asks whether the same sizes came back.
+      if (key === 'sizeVariants') {
+        assert.deepEqual(
+          normaliseVariants({ sizeVariants: actual?.[key] }),
+          normaliseVariants({ sizeVariants: expected[key] })
+        );
+        continue;
+      }
+      if (key === 'defaultVariantId') {
+        assert.equal(
+          defaultVariantId({ sizeVariants: actual?.sizeVariants, defaultVariantId: actual?.[key] }),
+          defaultVariantId({ sizeVariants: expected.sizeVariants, defaultVariantId: expected[key] })
+        );
+        continue;
+      }
       assert.deepEqual(actual?.[key], expected[key]);
     } catch {
       throw new Error(`${label} verification failed for field "${key}".`);

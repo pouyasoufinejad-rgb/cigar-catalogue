@@ -1,0 +1,6 @@
+{
+  "id": "2026-09-20-consolidate-liga-privada-no-9-short-panatela",
+  "operation": "archive-entry",
+  "key": "liga-privada-no-9-short-panatela",
+  "note": "liga-privada-no-9-short-panatela is the same cigar as liga-privada-no-9-petit-corona-oscuro in a different vitola, so it becomes that entry’s short-panatela size variant and stops being a card of its own. Archived rather than deleted: the record, its image and its ranking history stay recoverable, and nothing is lost because the variant carries its title, dimensions, price, retailer link, image, summary, note and smoke time."
+}

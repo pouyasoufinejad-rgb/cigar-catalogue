@@ -252,3 +252,45 @@ test('the admin promote control appears only for an admin, and only on a multi-s
   assert.equal(buttons.length, 1, 'one button, on the only card with sizes to choose between');
   assert.equal(buttons[0].closest('article.card').dataset.key, NO_9.key);
 });
+
+test('a size carries its own Practical block, because cadence follows ring gauge', async () => {
+  const dom = mount();
+  const api = await runtime();
+  const state = STATE();
+  // Ring 46 is a Forgiving cadence; ring 40 is Lenient. The band is a property of the size.
+  state.entries[NO_9.key].sizeVariants = NO_9.sizeVariants.map(variant => ({
+    ...variant,
+    practicalLines: ['Single cigar', 'Uncut', 'Protected',
+      variant.ring >= 41 ? 'Forgiving Cadence' : 'Lenient Cadence']
+  }));
+  state.cards[NO_9.key] = state.entries[NO_9.key];
+  api.setVariantState(state);
+
+  const card = cardOf(dom, NO_9.key);
+  api.selectVariant(NO_9.key, 'short-panatela');
+  let lines = [...card.querySelectorAll('.artmeta-right .artmeta-line')].map(node => node.textContent);
+  assert.deepEqual(lines, ['Single cigar', 'Uncut', 'Protected', 'Lenient Cadence']);
+  assert.equal(card.querySelector('.artmeta-right .artmeta-title').textContent, 'Practical');
+
+  api.selectVariant(NO_9.key, 'petit-corona');
+  lines = [...card.querySelectorAll('.artmeta-right .artmeta-line')].map(node => node.textContent);
+  assert.deepEqual(lines, ['Single cigar', 'Uncut', 'Protected', 'Forgiving Cadence']);
+});
+
+test('a size can carry its own eyebrow caption while keeping the entry rank', async () => {
+  const dom = mount();
+  const api = await runtime();
+  const state = STATE();
+  state.entries[NO_9.key].sizeVariants = NO_9.sizeVariants.map(variant => ({
+    ...variant,
+    eyebrow: variant.id === 'short-panatela' ? 'Best exact No. 9 taster' : 'Fullest-ring exact No. 9 short'
+  }));
+  state.cards[NO_9.key] = state.entries[NO_9.key];
+  api.setVariantState(state);
+
+  const card = cardOf(dom, NO_9.key);
+  api.selectVariant(NO_9.key, 'short-panatela');
+  assert.equal(card.querySelector('.eyebrow').textContent, 'No. 7 — Best exact No. 9 taster');
+  api.selectVariant(NO_9.key, 'petit-corona');
+  assert.equal(card.querySelector('.eyebrow').textContent, 'No. 7 — Fullest-ring exact No. 9 short');
+});

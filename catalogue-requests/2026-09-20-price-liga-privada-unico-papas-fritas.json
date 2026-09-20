@@ -1,0 +1,16 @@
+{
+  "id": "2026-09-20-price-liga-privada-unico-papas-fritas",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-papas-fritas",
+  "entry": {
+    "packagePrice": 104,
+    "packageLabel": "tin of 4",
+    "price": 26,
+    "priceChecked": "2026-09-20",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-unico-serie-papas-fritas/",
+      "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-papas-fritas"
+    ]
+  },
+  "note": "Correct the displayed price to the best currently available Australian per-stick figure. Cigar Hut’s A$104 tin of four is A$26 a stick, against the A$30.70 single from The Index that the card showed. Both retailers stay listed. Value stays automatically derived from price."
+}

@@ -1,0 +1,84 @@
+{
+  "id": "2026-09-20-variants-ashton-vsg-enchantment",
+  "operation": "upsert-entry",
+  "key": "ashton-vsg-enchantment",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "enchantment",
+        "label": "Enchantment",
+        "title": "VSG Enchantment",
+        "length": 4.375,
+        "ring": 60,
+        "packagePrice": 44,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-enchantment/",
+          "https://www.smokingpipes.com/cigars/ashton/moreinfo.cfm?product_id=26572"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "tres-mystique",
+        "label": "Tres Mystique",
+        "title": "VSG Tres Mystique",
+        "length": 4.375,
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-tres-mystique/"
+        ],
+        "priceNote": "Out of stock at Cigar Hut; the page shows a 39-849 range."
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "VSG Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "priceNote": "Existence and dimensions are verified, but the research file asks for an exact standalone Australian price before any price data is added."
+      },
+      {
+        "id": "eclipse",
+        "label": "Eclipse",
+        "title": "VSG Eclipse",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-eclipse-tubo/"
+        ],
+        "priceNote": "The verified Australian page is the tubo presentation, which is packaging; the range shown is 62-1419."
+      },
+      {
+        "id": "sorcerer",
+        "label": "Sorcerer",
+        "title": "VSG Sorcerer",
+        "length": 7,
+        "ring": 49,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-sorcerer/"
+        ],
+        "priceNote": "Cigar Hut shows a 67-1499 range across every option on the page."
+      },
+      {
+        "id": "wizard",
+        "label": "Wizard",
+        "title": "VSG Wizard",
+        "length": 6,
+        "ring": 56,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-wizard/"
+        ],
+        "priceNote": "Cigar Hut shows a 63-2099 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "enchantment"
+  },
+  "note": "Nest 6 sizes of the same cigar under one entry, defaulting to enchantment. 1 of 6 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Belicoso No. 1 and Torpedo are shape variants, so both stay standalone. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

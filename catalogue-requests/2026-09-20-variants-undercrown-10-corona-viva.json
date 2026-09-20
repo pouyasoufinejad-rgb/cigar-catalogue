@@ -1,0 +1,62 @@
+{
+  "id": "2026-09-20-variants-undercrown-10-corona-viva",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "Undercrown 10 Corona Viva",
+        "length": 5,
+        "ring": 43,
+        "packagePrice": 39,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-viva/",
+          "https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=433680"
+        ],
+        "smokeTime": "About 40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Undercrown 10 Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-robusto/"
+        ],
+        "priceNote": "Cigar Hut shows a 49-889 range across every option on the page."
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Undercrown 10 Toro",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-toro/"
+        ],
+        "priceNote": "Cigar Hut shows a 70-1319 range across every option on the page."
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "Undercrown 10 Corona Doble",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-doble/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 78-1449 range."
+      }
+    ],
+    "defaultVariantId": "corona-viva"
+  },
+  "note": "Nest 4 sizes of the same cigar under one entry, defaulting to corona-viva. 1 of 4 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Undercrown Maduro and Undercrown Shade are separate blend lines, and Coronets is a tinned compact format the research file asks to verify. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}

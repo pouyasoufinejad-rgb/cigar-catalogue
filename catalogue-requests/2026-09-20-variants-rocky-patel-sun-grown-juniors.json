@@ -1,0 +1,56 @@
+{
+  "id": "2026-09-20-variants-rocky-patel-sun-grown-juniors",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "juniors",
+        "label": "Juniors",
+        "title": "Sun Grown Juniors",
+        "length": 4,
+        "ring": 38,
+        "packagePrice": 85,
+        "packageCount": 5,
+        "packageLabel": "pack of 5",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/rocky-patel-sun-grown-juniors-pack-of-5/",
+          "https://cigarbox.com.au/products/rocky-pate-sun-grown-juniors-tin-of-5-4-x-38rg",
+          "https://www.theindexcigars.com.au/products/rocky-patel-sun-grown-juniors"
+        ],
+        "smokeTime": "25–35 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "Cigar Hut’s A$85 pack of five is A$17 a stick, below The Index’s A$92.40 tin of five at A$18.48 and its A$19.90 single.",
+        "practicalLines": [
+          "pack of 5",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Sun Grown Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "packagePrice": 47.3,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/rocky-patel-sungrown-robusto"
+        ],
+        "smokeTime": "About 50–65 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "The Index box of 20 is sold out, so the A$47.30 single is the best currently available Australian price.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "juniors"
+  },
+  "note": "Nest 2 sizes of the same cigar under one entry, defaulting to juniors. 2 of 2 have a verified current Australian price; the rest carry none, because a retailer min-max range spans every option on the page and says nothing about one vitola. Sun Grown Maduro Robusto is a blend variant and stays standalone. Ratings are not stored per size: Size follows the selected ring gauge and Value stays automatically derived from the selected price. Retailer and price data comes from docs/variant-retailer-price-research-2026-09-20.json."
+}
