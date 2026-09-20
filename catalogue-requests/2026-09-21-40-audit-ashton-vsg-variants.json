@@ -1,0 +1,114 @@
+{
+  "id": "2026-09-21-40-audit-ashton-vsg-variants",
+  "operation": "upsert-entry",
+  "key": "ashton-vsg-enchantment",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "enchantment",
+        "label": "Enchantment",
+        "title": "VSG Enchantment",
+        "length": 4.375,
+        "ring": 60,
+        "packagePrice": 44,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-enchantment/",
+          "https://www.smokingpipes.com/cigars/ashton/moreinfo.cfm?product_id=26572"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "tres-mystique",
+        "label": "Tres Mystique",
+        "title": "VSG Tres Mystique",
+        "length": 4.375,
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-tres-mystique/"
+        ],
+        "priceNote": "Out of stock at Cigar Hut; the page shows a 39-849 range."
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "VSG Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "priceNote": "Existence and dimensions are verified, but the research file asks for an exact standalone Australian price before any price data is added."
+      },
+      {
+        "id": "eclipse",
+        "label": "Eclipse",
+        "title": "VSG Eclipse",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-eclipse-tubo/"
+        ],
+        "priceNote": "Cigar Hut exact Eclipse Tubo page lists the single at A$62.",
+        "packagePrice": 62,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "sorcerer",
+        "label": "Sorcerer",
+        "title": "VSG Sorcerer",
+        "length": 7,
+        "ring": 49,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-sorcerer/"
+        ],
+        "priceNote": "Cigar Hut exact Sorcerer page lists the single at A$67.",
+        "packagePrice": 67,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "wizard",
+        "label": "Wizard",
+        "title": "VSG Wizard",
+        "length": 6,
+        "ring": 56,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-wizard/"
+        ],
+        "priceNote": "Cigar Hut exact Wizard page lists the single at A$63.",
+        "packagePrice": 63,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "enchantment"
+  },
+  "note": "Adds verified single pricing for exact in-stock VSG pages. Tres Mystique remains unpriced because it is sold out; Robusto remains unpriced without an exact standalone AU listing."
+}
