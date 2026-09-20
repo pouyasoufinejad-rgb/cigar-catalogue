@@ -2,6 +2,7 @@ import {
   blendEffectiveRecord,
   normaliseBlendVariants,
   normaliseVariants,
+  variantEffectiveRecord,
   variantSlug
 } from './catalogue-variants.mjs?v=blend-variants-1';
 
@@ -101,15 +102,24 @@ export function variantEditSnapshot(record, kind, blendVariantId = '', sizeVaria
   const sizeId = variantSlug(sizeVariantId);
   if (kind === 'blend') {
     const resolved = blendEffectiveRecord(record, blendId);
-    return { id:resolved.blendVariantId, raw:resolved.blendVariant, effective:resolved.record };
+    const raw = (Array.isArray(record?.blendVariants) ? record.blendVariants : [])
+      .find(item => rawId(item) === resolved.blendVariantId) || null;
+    return { id:resolved.blendVariantId, raw, effective:resolved.record };
   }
+
+  const blends = normaliseBlendVariants(record);
   const blended = blendId ? blendEffectiveRecord(record, blendId).record : record;
-  const variants = normaliseVariants(blended);
-  const variant = variants.find(item => item.id === sizeId) || null;
-  if (!variant) return { id:'', raw:null, effective:blended };
-  const effective = { ...blended };
-  for (const [key, value] of Object.entries(variant)) {
-    if (!['id','label','priceUnverified'].includes(key)) effective[key] = value;
+  const resolved = variantEffectiveRecord(blended, sizeId);
+  if (!resolved.variant) return { id:'', raw:null, effective:blended };
+
+  let rawList = Array.isArray(record?.sizeVariants) ? record.sizeVariants : [];
+  if (blendId && blends.length) {
+    const baseBlendId = blends[0]?.id || '';
+    const rawBlend = (record.blendVariants || []).find(item => rawId(item) === blendId);
+    if (rawBlend && (blendId !== baseBlendId || Array.isArray(rawBlend.sizeVariants))) {
+      rawList = Array.isArray(rawBlend.sizeVariants) ? rawBlend.sizeVariants : [];
+    }
   }
-  return { id:variant.id, raw:variant, effective };
+  const raw = rawList.find(item => rawId(item) === resolved.variantId) || null;
+  return { id:resolved.variantId, raw, effective:resolved.record };
 }
