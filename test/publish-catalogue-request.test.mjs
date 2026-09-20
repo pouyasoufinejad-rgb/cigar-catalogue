@@ -271,6 +271,8 @@ test('delete-entry retry cleans a stale recommendation reference after the entry
   assert.equal(result.verified, true);
   assert.equal(calls.some(call => call.method === 'DELETE'), false, 'retry must tolerate the entry already being absent');
   assert.deepEqual(writtenState.sections.recommendationSubsections[0].entryKeys, ['keep']);
+  assert.equal(writtenState.cards.keep.rank, 1);
+  assert.equal(writtenState.cards.keep.subsection, 'petit');
 });
 
 test('image upload validates bytes, verifies download, and associates imageUrl', async () => {
