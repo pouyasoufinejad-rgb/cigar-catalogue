@@ -1,5 +1,6 @@
 import { deriveValue } from '../public/catalogue-value.mjs';
 import { overallScoreMarkup } from '../public/catalogue-overall-score.mjs';
+import { defaultVariantId, normaliseVariants, variantEffectiveRecord } from '../public/catalogue-variants.mjs';
 import { sizeScoreForRing } from '../public/catalogue-size-rules.mjs';
 import {
   STOCK_RESULTS_KEY,
@@ -311,7 +312,12 @@ export function normaliseEntry(input, keyOverride = '') {
     imageSourceKey: sanitiseKey(raw.imageSourceKey),
     imageVersion: integer(raw.imageVersion, 0, 0, Number.MAX_SAFE_INTEGER),
     priceChecked: /^\d{4}-\d{2}-\d{2}$/.test(text(raw.priceChecked)) ? raw.priceChecked : '',
-    stockChecked: /^\d{4}-\d{2}-\d{2}$/.test(text(raw.stockChecked)) ? raw.stockChecked : ''
+    stockChecked: /^\d{4}-\d{2}-\d{2}$/.test(text(raw.stockChecked)) ? raw.stockChecked : '',
+    // Sizes of the same cigar, and which one the catalogue shows first. This schema drops
+    // anything it does not name, so without these two the variants would not survive a
+    // publish at all.
+    sizeVariants: normaliseVariants(raw),
+    defaultVariantId: defaultVariantId(raw)
   };
 }
 
@@ -684,6 +690,15 @@ function medalRating(label, scoreValue) {
   return `<div class="rating ${tier} ${className}"><span>${esc(label)}</span><i aria-hidden="true" class="medal ${tier}"></i><b>${tier[0].toUpperCase() + tier.slice(1)}</b><small class="subscore">${value}/10</small></div>`;
 }
 
+// A size whose Australian price is not verified gets an unrated Value medal. Scoring its
+// missing price would put a Bronze 1/10 on the card, which reads as a verdict on the cigar
+// rather than as a gap in the pricing.
+function unratedValueRating() {
+  return '<div class="rating value-unrated"><span>Value</span>'
+    + '<i aria-hidden="true" class="medal bronze value-unrated-medal"></i>'
+    + '<b>Unrated</b><small class="subscore">No AU price</small></div>';
+}
+
 function sizeRating(size) {
   const tier = ['gold', 'silver', 'bronze'].includes(size) ? size : 'bronze';
   return `<div class="rating ${tier}"><span>Size</span><i aria-hidden="true" class="medal ${tier}"></i><b>${tier[0].toUpperCase() + tier.slice(1)}</b></div>`;
@@ -737,11 +752,38 @@ function stockHtml(entry) {
   return `<div aria-label="${esc(status)}; ${esc(checkedLine)}" class="freshness ${liveClass}"${checked ? ` data-checked="${esc(entry.priceChecked || checked)}"` : ''}><span class="stock-state">${esc(status)}</span><span class="checked-state"><span class="price-checked-state">${entry.priceChecked ? `Price checked ${esc(entry.priceChecked)}` : 'Price not yet checked'}</span><span class="stock-checked-state">${esc(checkedLine)}</span></span></div>`;
 }
 
+// The markup a multi-size entry needs: a control to change size, and the variant data the
+// browser needs to change it without another round trip. A single-size entry gets neither,
+// so every card without variants renders exactly as it did before.
+export function variantMarkup(record, variants, activeId) {
+  if (!Array.isArray(variants) || variants.length < 2) return '';
+  const options = variants.map(variant => {
+    const selected = variant.id === activeId ? ' selected' : '';
+    const unpriced = variant.priceUnverified ? ' data-price-unverified="1"' : '';
+    return `<option value="${esc(variant.id)}"${selected}${unpriced}>${esc(variant.label)}</option>`;
+  }).join('');
+  // The names are printed as well as listed so an in-page find, and anything that reads the
+  // rendered page, still sees every vitola this entry covers.
+  const names = variants.map(variant => esc(variant.label)).join(', ');
+  return `<div class="size-variants" data-variant-count="${variants.length}">`
+    + `<label class="size-variant-label" for="size-variant-${esc(record.key)}">Size</label>`
+    + `<select class="size-variant-select" id="size-variant-${esc(record.key)}" data-variant-select="${esc(record.key)}">${options}</select>`
+    + `<span class="size-variant-names" hidden>${names}</span>`
+    + '</div>';
+}
+
 export function renderEntryCard(rawEntry) {
-  const entry = normaliseEntry(rawEntry, rawEntry?.key);
+  const stored = normaliseEntry(rawEntry, rawEntry?.key);
+  // Everything below renders the selected size, so the card a reader first sees is the
+  // saved default rather than whichever size happens to be first in the list.
+  const resolved = variantEffectiveRecord(stored, stored.defaultVariantId);
+  const entry = resolved.record;
+  const variants = resolved.variants;
   if (!entry.key || !entry.brand || !entry.title) return '';
   const valueInfo = deriveValue(entry.price, entry.quality);
-  const valueScore = valueInfo.score;
+  // A size with no verified Australian price has no Value, rather than the 1/10 that
+  // scoring a zero price would produce and read as a judgement of the cigar.
+  const valueScore = entry.priceUnverified ? null : valueInfo.score;
   const imageMarkup = entry.imageUrl
     ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" src="${esc(entry.imageUrl)}">`
     : entry.imageSourceKey
@@ -762,15 +804,17 @@ export function renderEntryCard(rawEntry) {
   const rankLabel = entry.taster ? 'Taster' : 'No.';
   const rankValue = entry.taster ? `T${entry.rank}` : String(entry.rank);
   const sizeFootprint = Math.max(0.32, Math.min(1.15, (Math.max(entry.length, 1) / 5) * (Math.max(entry.ring, 1) / 50))).toFixed(4);
-  return `<article class="card" data-dynamic-entry="1" data-key="${esc(entry.key)}" data-expected="${valueInfo.benchmark}" data-format="${sizeBucket(entry.size)}" data-price="${entry.price.toFixed(2)}"${entry.priceChecked ? ` data-price-checked="${esc(entry.priceChecked)}"` : ''} data-quality="${scoreBucket(entry.quality)}" data-rank="${entry.rank}" data-ratio="${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : ''}" data-risk="${entry.risk}" data-stock="${esc(entry.stock)}"${entry.stockChecked ? ` data-stock-checked="${esc(entry.stockChecked)}"` : ''} data-strength="${scoreBucket(entry.strength)}" data-value="${scoreBucket(valueScore)}"${tasterAttr}${archivedAttrs}${pinAttr}>
+  return `<article class="card" data-dynamic-entry="1" data-key="${esc(entry.key)}" data-expected="${valueInfo.benchmark}" data-format="${sizeBucket(entry.size)}" data-price="${entry.price.toFixed(2)}"${entry.priceChecked ? ` data-price-checked="${esc(entry.priceChecked)}"` : ''} data-quality="${scoreBucket(entry.quality)}" data-rank="${entry.rank}" data-ratio="${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : ''}" data-risk="${entry.risk}" data-stock="${esc(entry.stock)}"${entry.stockChecked ? ` data-stock-checked="${esc(entry.stockChecked)}"` : ''} data-strength="${scoreBucket(entry.strength)}" data-value="${entry.priceUnverified ? '' : scoreBucket(valueScore)}"${entry.priceUnverified ? ' data-price-unverified="1"' : ''}${resolved.variantId ? ` data-active-variant="${esc(resolved.variantId)}" data-default-variant="${esc(entry.defaultVariantId)}"` : ''}${tasterAttr}${archivedAttrs}${pinAttr}>
 <div class="artframe size-normalized" data-visual-length="${entry.length}" data-visual-ring="${entry.ring}" style="--visual-footprint:${sizeFootprint}">${imageMarkup}<div class="rankflag"><span>${rankLabel}</span><b>${rankValue}</b></div>${riskHtml(entry.risk)}<div class="artmeta artmeta-left"><span class="artmeta-title">Production</span>${production}</div><div class="artmeta artmeta-right"><span class="artmeta-title">Practical</span>${practical}</div>${entry.smokeTime ? `<div class="artmeta artmeta-bottom">${esc(entry.smokeTime)}</div>` : ''}</div>
-<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3><div class="country-above"><div class="country-row">${overallScoreMarkup({
+<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3>${variantMarkup(entry, variants, resolved.variantId)}<div class="country-above"><div class="country-row">${overallScoreMarkup({
     strength: entry.strength,
     quality: entry.quality,
     flavour: entry.flavour,
     size: sizeScoreForRing(entry.ring),
     value: valueScore
-  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div><div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${medalRating('Value', valueScore)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
+  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${entry.priceUnverified
+    ? `<div class="value-calc value-unrated"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>No verified AU price for this size</span><span>Ratio <b>—</b></span></div>`
+    : `<div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>`}${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${entry.priceUnverified ? unratedValueRating() : medalRating('Value', valueScore)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
 }
 
 function setHtmlAttribute(tag, name, value) {
@@ -902,7 +946,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=148"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=149"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
