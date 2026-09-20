@@ -1,0 +1,69 @@
+{
+  "id": "2026-09-21-40-audit-paradiso-elegancia-variants",
+  "operation": "upsert-entry",
+  "key": "paradiso-elegancia-corona",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona",
+        "label": "Corona",
+        "title": "Elegancia Corona",
+        "length": 5.5,
+        "ring": 46,
+        "packagePrice": 37,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-corona/"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Elegancia Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-robusto/"
+        ],
+        "priceNote": "Cigar Hut exact Robusto page lists the single at A$47.",
+        "packagePrice": 47,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "churchill",
+        "label": "Churchill",
+        "title": "Elegancia Churchill",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-elegancia-churchill/"
+        ],
+        "priceNote": "Cigar Hut exact Churchill page lists the single at A$54.",
+        "packagePrice": 54,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "corona"
+  },
+  "note": "Replaces the generic Paradiso link with exact Elegancia pages and adds verified singles."
+}
