@@ -6,17 +6,22 @@
 // never writes to KV, and promoting one is an explicit, separate action.
 
 import {
+  blendEffectiveRecord,
+  defaultBlendVariantId,
   defaultVariantId,
+  normaliseBlendVariants,
   normaliseVariants,
+  promoteBlendVariantPatch,
   promoteVariantPatch,
   resolveSearchQuery,
   variantEffectiveRecord
-} from './catalogue-variants.mjs?v=size-variants-1';
+} from './catalogue-variants.mjs?v=blend-variants-1';
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=flavour-weight-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
-import { refreshLaurelForCard } from './catalogue-flavour.mjs?v=flavour-weight-1';
+import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=flavour-weight-1';
 
 export const VARIANT_QUERY_PARAM = 'variant';
+export const BLEND_QUERY_PARAM = 'blend';
 export const STATE_API = '/api/catalogue-overrides';
 
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
@@ -114,6 +119,202 @@ function replaceShopLinks(card, links) {
 // Every field a vitola can legitimately change, written into the card that is already on
 // screen. The ratings are not written here: they are recomputed from the fields below by
 // the modules that already own them, so a variant cannot carry a stale score.
+
+function ratingNode(card, label) {
+  return [...(card?.querySelectorAll?.('.rating') || [])]
+    .find(node => (node.querySelector(':scope > span')?.textContent || '').trim() === label) || null;
+}
+
+function applyNumericRating(card, label, value, datasetName) {
+  const score = Number(value);
+  const node = ratingNode(card, label);
+  if (!node || !Number.isFinite(score) || score <= 0) return;
+  const rounded = Math.max(1, Math.min(10, Math.round(score)));
+  const tier = rounded >= 7 ? 'gold' : rounded >= 5 ? 'silver' : 'bronze';
+  const scoreClass = rounded >= 8 ? 'score-high' : rounded >= 5 ? 'score-mid' : 'score-low';
+  node.classList.remove('gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low');
+  node.classList.add(tier, scoreClass);
+  const medal = node.querySelector('.medal');
+  if (medal) medal.className = `medal ${tier}`;
+  const bold = node.querySelector('b');
+  if (bold) bold.textContent = tier[0].toUpperCase() + tier.slice(1);
+  let small = node.querySelector('.subscore');
+  if (!small) {
+    small = document.createElement('small');
+    small.className = 'subscore';
+    node.appendChild(small);
+  }
+  small.textContent = `${rounded}/10`;
+  if (datasetName) card.dataset[datasetName] = String(rounded >= 7 ? 3 : rounded >= 5 ? 2 : 1);
+}
+
+function replaceMetaLines(card, selector, lines) {
+  const host = card.querySelector(selector);
+  if (!host) return;
+  const heading = host.querySelector('.artmeta-title')?.cloneNode(true);
+  host.replaceChildren();
+  if (heading) host.appendChild(heading);
+  for (const line of Array.isArray(lines) ? lines : []) {
+    const span = document.createElement('span');
+    span.className = 'artmeta-line';
+    span.textContent = line;
+    host.appendChild(span);
+  }
+}
+
+function syncExperienceTags(card, tags) {
+  card.querySelector('.tag-groups')?.remove();
+  if (!Array.isArray(tags) || !tags.length) return;
+  const medals = card.querySelector('.medals');
+  if (!medals) return;
+  const groups = document.createElement('div');
+  groups.className = 'tag-groups';
+  const group = document.createElement('div');
+  group.className = 'tag-group';
+  const label = document.createElement('span');
+  label.className = 'tag-label';
+  label.textContent = 'Experience';
+  const items = document.createElement('div');
+  items.className = 'tag-items';
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.textContent = tag;
+    items.appendChild(chip);
+  }
+  group.append(label, items);
+  groups.appendChild(group);
+  medals.insertAdjacentElement('afterend', groups);
+}
+
+function syncNote(card, html) {
+  let note = card.querySelector('p.mog-note');
+  if (!html) {
+    note?.remove();
+    return;
+  }
+  if (!note) {
+    note = document.createElement('p');
+    note.className = 'mog-note';
+    const summary = card.querySelector('p.summary');
+    if (summary) summary.insertAdjacentElement('afterend', note);
+    else card.querySelector('.cardbody')?.appendChild(note);
+  }
+  note.innerHTML = html;
+}
+
+function syncSizeSelector(card, key, record, activeId = '') {
+  const variants = normaliseVariants(record);
+  let host = card.querySelector('.size-variants');
+  if (variants.length < 2) {
+    if (host) host.hidden = true;
+    return;
+  }
+
+  if (!host) {
+    host = document.createElement('div');
+    host.className = 'size-variants';
+    const blendHost = card.querySelector('.blend-variants');
+    const title = card.querySelector('h3');
+    if (blendHost) blendHost.insertAdjacentElement('afterend', host);
+    else title?.insertAdjacentElement('afterend', host);
+  }
+  host.hidden = false;
+  host.dataset.variantCount = String(variants.length);
+  let select = host.querySelector('[data-variant-select]');
+  if (!select) {
+    const label = document.createElement('label');
+    label.className = 'size-variant-label';
+    label.htmlFor = `size-variant-${key}`;
+    label.textContent = 'Size';
+    select = document.createElement('select');
+    select.className = 'size-variant-select';
+    select.id = `size-variant-${key}`;
+    select.dataset.variantSelect = key;
+    host.append(label, select);
+  }
+  const wanted = variants.map(item => item.id).join('|');
+  const current = [...select.options].map(option => option.value).join('|');
+  if (wanted !== current) {
+    select.replaceChildren(...variants.map(variant => {
+      const option = document.createElement('option');
+      option.value = variant.id;
+      option.textContent = variant.label;
+      if (variant.priceUnverified) option.dataset.priceUnverified = '1';
+      return option;
+    }));
+  }
+  select.value = variants.some(item => item.id === activeId)
+    ? activeId
+    : defaultVariantId(record);
+  bindSelects(card);
+}
+
+function applyBlendPresentation(card, effective) {
+  replaceMetaLines(card, '.artmeta-left', effective.productionLines);
+  applyNumericRating(card, 'Strength', effective.strength, 'strength');
+  applyNumericRating(card, 'Quality', effective.quality, 'quality');
+  ensureFlavourRating(card, effective.flavour ?? null);
+  syncExperienceTags(card, effective.experienceTags);
+  syncNote(card, effective.noteHtml || '');
+
+  const country = card.querySelector('.country-name');
+  if (country && effective.country) country.textContent = effective.country;
+  if (Number.isFinite(Number(effective.risk))) card.dataset.risk = String(effective.risk);
+
+  refreshSizeAdjustedValueForCard(card, effective);
+  refreshLaurelForCard(card, effective);
+  markUnratedValue(card, Boolean(effective.priceUnverified), effective.quality);
+}
+
+export function applyBlendToCard(card, record, blendVariantId, sizeVariantId = '') {
+  if (!card || !record) return null;
+  const blendResolved = blendEffectiveRecord(record, blendVariantId);
+  if (!blendResolved.blendVariant) return null;
+  const blended = blendResolved.record;
+  const sizes = normaliseVariants(blended);
+
+  card.dataset.activeBlend = blendResolved.blendVariantId;
+  card.dataset.defaultBlend = blended.defaultBlendVariantId || '';
+  const blendSelect = card.querySelector('[data-blend-select]');
+  if (blendSelect && blendSelect.value !== blendResolved.blendVariantId) {
+    blendSelect.value = blendResolved.blendVariantId;
+  }
+
+  syncSizeSelector(card, card.dataset.key || '', blended, sizeVariantId);
+  let resolvedSize = null;
+  if (sizes.length) {
+    resolvedSize = applyVariantToCard(
+      card,
+      blended,
+      sizes.some(item => item.id === sizeVariantId) ? sizeVariantId : defaultVariantId(blended)
+    );
+  } else {
+    const syntheticId = '__selected_blend__';
+    const synthetic = {
+      ...blended,
+      id: syntheticId,
+      label: blendResolved.blendVariant.label || 'Blend'
+    };
+    resolvedSize = applyVariantToCard(card, {
+      ...blended,
+      sizeVariants: [synthetic],
+      defaultVariantId: syntheticId
+    }, syntheticId);
+    delete card.dataset.activeVariant;
+    delete card.dataset.defaultVariant;
+  }
+
+  const effective = resolvedSize?.record || blended;
+  applyBlendPresentation(card, effective);
+  return {
+    ...blendResolved,
+    record: effective,
+    variant: resolvedSize?.variant || null,
+    variantId: sizes.length ? (resolvedSize?.variantId || '') : ''
+  };
+}
+
 export function applyVariantToCard(card, record, variantId) {
   if (!card || !record) return null;
   const resolved = variantEffectiveRecord(record, variantId);
@@ -249,9 +450,21 @@ export function selectVariant(key, variantId, { updateUrl = true } = {}) {
   const card = document.querySelector(cardSelector(key));
   const record = storedRecord(liveState, key);
   if (!card || !record) return null;
-  const resolved = applyVariantToCard(card, record, variantId);
+  const activeBlend = card.dataset.activeBlend || defaultBlendVariantId(record);
+  const blended = activeBlend ? blendEffectiveRecord(record, activeBlend).record : record;
+  const resolved = applyVariantToCard(card, blended, variantId);
   if (!resolved) return null;
   if (updateUrl) writeVariantToUrl(key, resolved.variantId, record);
+  return resolved;
+}
+
+export function selectBlend(key, blendVariantId, { updateUrl = true } = {}) {
+  const card = document.querySelector(cardSelector(key));
+  const record = storedRecord(liveState, key);
+  if (!card || !record) return null;
+  const resolved = applyBlendToCard(card, record, blendVariantId);
+  if (!resolved) return null;
+  if (updateUrl) writeBlendToUrl(key, resolved.blendVariantId, resolved.variantId, record);
   return resolved;
 }
 
@@ -259,14 +472,45 @@ export function selectVariant(key, variantId, { updateUrl = true } = {}) {
 // dropped again when the selection is just the saved default, so a shared link stays clean.
 export function writeVariantToUrl(key, variantId, record) {
   try {
+    const card = document.querySelector(cardSelector(key));
+    const activeBlend = card?.dataset.activeBlend || defaultBlendVariantId(record);
+    const blended = activeBlend ? blendEffectiveRecord(record, activeBlend).record : record;
     const url = new URL(window.location.href);
-    if (!variantId || variantId === defaultVariantId(record)) {
+    if (!variantId || variantId === defaultVariantId(blended)) {
       url.searchParams.delete(VARIANT_QUERY_PARAM);
     } else {
       url.searchParams.set(VARIANT_QUERY_PARAM, `${key}:${variantId}`);
     }
     window.history.replaceState({}, '', url);
   } catch { /* history is a convenience here, never a requirement */ }
+}
+
+export function writeBlendToUrl(key, blendVariantId, variantId, record) {
+  try {
+    const url = new URL(window.location.href);
+    if (!blendVariantId || blendVariantId === defaultBlendVariantId(record)) {
+      url.searchParams.delete(BLEND_QUERY_PARAM);
+    } else {
+      url.searchParams.set(BLEND_QUERY_PARAM, `${key}:${blendVariantId}`);
+    }
+    const blended = blendVariantId ? blendEffectiveRecord(record, blendVariantId).record : record;
+    if (!variantId || variantId === defaultVariantId(blended)) {
+      url.searchParams.delete(VARIANT_QUERY_PARAM);
+    } else {
+      url.searchParams.set(VARIANT_QUERY_PARAM, `${key}:${variantId}`);
+    }
+    window.history.replaceState({}, '', url);
+  } catch { /* history is a convenience here, never a requirement */ }
+}
+
+export function readBlendFromUrl(href = window.location.href) {
+  try {
+    const raw = new URL(href).searchParams.get(BLEND_QUERY_PARAM) || '';
+    const [key, blendVariantId] = raw.split(':');
+    return key && blendVariantId ? { key, blendVariantId } : null;
+  } catch {
+    return null;
+  }
 }
 
 export function readVariantFromUrl(href = window.location.href) {
@@ -288,6 +532,7 @@ export function openSearchResult(query) {
   const hit = resolveSearchQuery(query, records);
   if (!hit) return null;
   const card = document.querySelector(cardSelector(hit.key));
+  if (hit.blendVariantId) selectBlend(hit.key, hit.blendVariantId);
   if (hit.variantId) selectVariant(hit.key, hit.variantId);
   // Scrolling is a courtesy; a host without it should still select the size and highlight.
   card?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
@@ -318,15 +563,36 @@ export async function promoteActiveVariant(key, { fetchImpl = fetch } = {}) {
   return patch;
 }
 
+export async function promoteActiveBlend(key, { fetchImpl = fetch } = {}) {
+  const card = document.querySelector(cardSelector(key));
+  const record = storedRecord(liveState, key);
+  if (!card || !record) return null;
+  const patch = promoteBlendVariantPatch(record, card.dataset.activeBlend || '');
+  if (!patch) return null;
+
+  const response = await fetchImpl(STATE_API, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ cards: { [key]: patch }, entries: { [key]: patch } })
+  });
+  if (!response?.ok) throw new Error(`Could not save the default blend (HTTP ${response?.status}).`);
+
+  if (liveState?.cards?.[key]) liveState.cards[key].defaultBlendVariantId = patch.defaultBlendVariantId;
+  if (liveState?.entries?.[key]) liveState.entries[key].defaultBlendVariantId = patch.defaultBlendVariantId;
+  card.dataset.defaultBlend = patch.defaultBlendVariantId;
+  writeBlendToUrl(key, patch.defaultBlendVariantId, card.dataset.activeVariant || '', storedRecord(liveState, key));
+  return patch;
+}
+
 function ensureStyle() {
   if (document.getElementById('catalogue-variant-style')) return;
   const style = document.createElement('style');
   style.id = 'catalogue-variant-style';
   style.textContent = `
-.size-variants{display:flex;align-items:center;gap:7px;margin:0 0 8px}
-.size-variant-label{font-family:Cinzel,serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a6b34}
-.size-variant-select{flex:1 1 auto;min-width:0;max-width:230px;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:600 12px Georgia,serif;padding:4px 7px}
-.size-variant-select:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
+.size-variants,.blend-variants{display:flex;align-items:center;gap:7px;margin:0 0 8px}
+.size-variant-label,.blend-variant-label{font-family:Cinzel,serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a6b34}
+.size-variant-select,.blend-variant-select{flex:1 1 auto;min-width:0;max-width:230px;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:600 12px Georgia,serif;padding:4px 7px}
+.size-variant-select:focus,.blend-variant-select:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
 .rating.value-unrated{opacity:.68}
 .rating.value-unrated .value-unrated-medal{filter:grayscale(1);opacity:.38}
 .rating.value-unrated b,.rating.value-unrated .subscore{color:inherit;opacity:.72}
@@ -339,7 +605,7 @@ article.card.search-hit{outline:2px solid #c69d2c;outline-offset:3px}
 .catalogue-variant-search input{box-sizing:border-box;width:100%;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:13px Georgia,serif;padding:6px 9px}
 .catalogue-variant-search input:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
 .catalogue-variant-search-status{color:#8a7a60;font-size:10.5px;min-height:13px}
-@media(max-width:900px){.size-variant-select{max-width:none}}
+@media(max-width:900px){.size-variant-select,.blend-variant-select{max-width:none}}
 `;
   document.head.appendChild(style);
 }
@@ -352,14 +618,22 @@ function bindSelects(root = document) {
       selectVariant(select.dataset.variantSelect, select.value);
     });
   });
+  root.querySelectorAll?.('[data-blend-select]').forEach(select => {
+    if (select.dataset.blendBound === '1') return;
+    select.dataset.blendBound = '1';
+    select.addEventListener('change', () => {
+      selectBlend(select.dataset.blendSelect, select.value);
+    });
+  });
 }
 
 // The admin control lives beside the selector rather than in the editor panel, because the
 // size it promotes is the one on screen.
 function bindAdminDefaultButtons(root = document) {
   if (!document.getElementById('catalogue-admin-panel')) return;
+
   root.querySelectorAll?.('.size-variants').forEach(host => {
-    if (host.querySelector('.catalogue-variant-default')) return;
+    if (host.hidden || host.querySelector('.catalogue-variant-default')) return;
     const select = host.querySelector('[data-variant-select]');
     if (!select) return;
     const button = document.createElement('button');
@@ -378,11 +652,29 @@ function bindAdminDefaultButtons(root = document) {
     });
     host.appendChild(button);
   });
+
+  root.querySelectorAll?.('.blend-variants').forEach(host => {
+    if (host.querySelector('.catalogue-blend-default')) return;
+    const select = host.querySelector('[data-blend-select]');
+    if (!select) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'catalogue-variant-default catalogue-blend-default';
+    button.textContent = 'Make default';
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      try {
+        const saved = await promoteActiveBlend(select.dataset.blendSelect);
+        button.textContent = saved ? 'Default saved' : 'Already default';
+      } catch (error) {
+        button.textContent = error.message || 'Save failed';
+      }
+      setTimeout(() => { button.textContent = 'Make default'; button.disabled = false; }, 2200);
+    });
+    host.appendChild(button);
+  });
 }
 
-// A search box, because a vitola that only exists as a size inside another entry is
-// otherwise unreachable by name. It mounts into the sidebar's control host when there is
-// one and falls back to the top of the catalogue.
 export function ensureVariantSearch(root = document) {
   if (root.getElementById?.('catalogue-variant-search')) return root.getElementById('catalogue-variant-search');
   const host = root.getElementById?.('catalogue-sidebar-extra-controls')
@@ -396,11 +688,11 @@ export function ensureVariantSearch(root = document) {
   const label = root.createElement('label');
   label.className = 'catalogue-variant-search-label';
   label.setAttribute('for', 'catalogue-variant-search-input');
-  label.textContent = 'Find a cigar or size';
+  label.textContent = 'Find a cigar, blend or size';
   const input = root.createElement('input');
   input.id = 'catalogue-variant-search-input';
   input.type = 'search';
-  input.placeholder = 'e.g. Liga No 9 Petit Corona';
+  input.placeholder = 'e.g. Liga No 9 Petit Corona or Maduro';
   input.autocomplete = 'off';
   const status = root.createElement('small');
   status.className = 'catalogue-variant-search-status';
@@ -410,7 +702,7 @@ export function ensureVariantSearch(root = document) {
     if (!query) { status.textContent = ''; return; }
     const hit = openSearchResult(query);
     status.textContent = hit
-      ? `Opened ${hit.key}${hit.variantId ? ` · ${hit.variantId.replace(/-/g, ' ')}` : ''}`
+      ? `Opened ${hit.key}${hit.blendVariantId ? ` · ${hit.blendVariantId.replace(/-/g, ' ')}` : ''}${hit.variantId ? ` · ${hit.variantId.replace(/-/g, ' ')}` : ''}`
       : 'No match';
   };
   input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); run(); } });
@@ -424,11 +716,21 @@ export function ensureVariantSearch(root = document) {
 export function applyAllVariants() {
   document.querySelectorAll('article.card[data-key]').forEach(card => {
     const record = storedRecord(liveState, card.dataset.key);
-    if (!record || normaliseVariants(record).length < 2) return;
-    applyVariantToCard(card, record, card.dataset.activeVariant || defaultVariantId(record));
+    if (!record) return;
+    const blends = normaliseBlendVariants(record);
+    if (blends.length > 1) {
+      applyBlendToCard(card, record, card.dataset.activeBlend || defaultBlendVariantId(record));
+      return;
+    }
+    if (normaliseVariants(record).length >= 1) {
+      applyVariantToCard(card, record, card.dataset.activeVariant || defaultVariantId(record));
+    }
   });
-  const requested = readVariantFromUrl();
-  if (requested) selectVariant(requested.key, requested.variantId, { updateUrl: false });
+
+  const requestedBlend = readBlendFromUrl();
+  if (requestedBlend) selectBlend(requestedBlend.key, requestedBlend.blendVariantId, { updateUrl: false });
+  const requestedVariant = readVariantFromUrl();
+  if (requestedVariant) selectVariant(requestedVariant.key, requestedVariant.variantId, { updateUrl: false });
 }
 
 export async function initVariantRuntime({ fetchImpl = fetch } = {}) {
