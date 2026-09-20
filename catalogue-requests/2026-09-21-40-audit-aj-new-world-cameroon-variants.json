@@ -1,0 +1,77 @@
+{
+  "id": "2026-09-21-40-audit-aj-new-world-cameroon-variants",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-cameroon-short-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-robusto",
+        "label": "Short Robusto",
+        "title": "New World Cameroon Short Robusto",
+        "length": 4,
+        "ring": 48,
+        "packagePrice": 39.32,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/NEW-WORLD-%252d-Cameroon-Short-Robusto-%252d-%284%22-x-48%29-Single.html"
+        ],
+        "smokeTime": "40–55 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld single A$39.32. The box of 20 is excluded by the purchase cap.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "double-robusto",
+        "label": "Double Robusto",
+        "title": "New World Cameroon Double Robusto",
+        "length": 5.5,
+        "ring": 54,
+        "packagePrice": 54.75,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/new-world-%252d-cameroon-double-robusto-%252d-%285-1%7B47%7D2-%22-x-54%29-single.html"
+        ],
+        "smokeTime": "About 60–75 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld single A$54.75. The box of 20 is excluded by the purchase cap.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "New World Cameroon Toro",
+        "length": 6,
+        "ring": 50,
+        "packagePrice": 59.04,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/new-world-%252d-cameroon-toro-%252d-%286-%22-x-50%29-box-of-20.html"
+        ],
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "The exact CigarWorld Toro page offers a A$59.04 single. The box of 20 is excluded by the purchase cap.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "short-robusto"
+  },
+  "note": "All Cameroon size variants now use single-cigar pricing; no package over 10 is used."
+}
