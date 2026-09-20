@@ -44,6 +44,48 @@ test('KV-only dynamic entry is injected into catalogue HTML', () => {
   assert.match(transformed, /KV-only cigar/);
 });
 
+test('archived dynamic entries are injected into the Archived grid instead of the active grid', () => {
+  const html = '<!doctype html><html><body><div id="flat-main"></div><div id="archived-cards"></div></body></html>';
+  const transformed = injectEntriesIntoHtml(html, {
+    active: {
+      key:'active',
+      brand:'Test Brand',
+      title:'Active cigar',
+      price:12,
+      quality:7,
+      strength:6,
+      length:4,
+      ring:32,
+      rank:1,
+      risk:1,
+      archived:false
+    },
+    archived: {
+      key:'archived',
+      brand:'Test Brand',
+      title:'Archived cigar',
+      price:14,
+      quality:7,
+      strength:6,
+      length:4,
+      ring:32,
+      rank:2,
+      risk:1,
+      archived:true,
+      archivedAt:'2026-09-21T02:00:00Z'
+    }
+  });
+
+  const flatStart = transformed.indexOf('<div id="flat-main">');
+  const archivedStart = transformed.indexOf('<div id="archived-cards">');
+  const activeIndex = transformed.indexOf('data-key="active"');
+  const archivedIndex = transformed.indexOf('data-key="archived"');
+
+  assert.ok(activeIndex > flatStart && activeIndex < archivedStart, 'active entry should render in flat-main');
+  assert.ok(archivedIndex > archivedStart, 'archived entry should render in archived-cards');
+  assert.match(transformed.slice(archivedStart), /data-archived="1"/);
+});
+
 test('structural image override inserts an image into a dynamic card that was rendered without one', () => {
   const html = injectEntriesIntoHtml('<div id="flat-main"></div>', {
     'image-later': {
