@@ -13,6 +13,10 @@ import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 const baseUrl = String(process.env.CATALOGUE_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
 const widths = String(process.env.WIDTHS || '360,412,540,900')
   .split(',').map(value => Number(value.trim())).filter(Number.isFinite);
+// One card per row is the rule below the 901px breakpoint only; above it a multi-column
+// grid is correct. Measuring a desktop width is useful, but failing on it would report a
+// layout regression that is not one.
+const PHONE_MAX = 900;
 
 const browser = await chromium.launch();
 let worst = 0;
@@ -55,9 +59,11 @@ for (const width of widths) {
   });
 
   console.log(`\n=== viewport ${width}px  innerWidth=${report.innerWidth}  matches(max-900)=${report.matches900}  docScrollWidth=${report.docWidth}`);
+  const enforced = width <= PHONE_MAX;
+  if (!enforced) console.log('   (desktop width: reported only, multiple cards per row are correct here)');
   for (const row of report.rows) {
-    const flag = row.perRow > 1 ? '  <-- MORE THAN ONE PER ROW' : '';
-    if (row.perRow > 1) worst = Math.max(worst, row.perRow);
+    const flag = row.perRow > 1 && enforced ? '  <-- MORE THAN ONE PER ROW' : '';
+    if (row.perRow > 1 && enforced) worst = Math.max(worst, row.perRow);
     console.log(`   ${String(row.perRow).padStart(2)} per row of ${String(row.total).padEnd(3)} card=${row.cardWidth}px grid=${row.gridWidth}px  [${row.columns}]  ${row.id}${flag}`);
   }
 
@@ -70,6 +76,9 @@ await browser.close();
 if (worst > 1) {
   console.error(`\nMOBILE_LAYOUT_CHECK_FAILED: a grid rendered ${worst} cards per row at a phone width.`);
   process.exitCode = 1;
-} else {
+} else if (widths.some(width => width <= PHONE_MAX)) {
   console.log('\nMOBILE_LAYOUT_CHECK_PASSED: one card per row at every measured phone width.');
+} else {
+  console.error(`\nMOBILE_LAYOUT_CHECK_SKIPPED: every width given was above ${PHONE_MAX}px, so nothing was checked.`);
+  process.exitCode = 1;
 }
