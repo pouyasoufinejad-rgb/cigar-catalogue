@@ -1,0 +1,102 @@
+{
+  "id": "2026-09-21-40-audit-davidoff-winston-churchill-variants",
+  "operation": "upsert-entry",
+  "key": "davidoff-winston-churchill-petite-panatela",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "petite-panatela",
+        "label": "Petite Panatela",
+        "title": "Winston Churchill Petite Panatela",
+        "length": 4,
+        "ring": 38,
+        "packagePrice": 105,
+        "packageCount": 5,
+        "packageLabel": "tin of 5",
+        "retailerLinks": [
+          "https://corporatecigar.com/product/davidoff-wsc-petit-panetela-5s/",
+          "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/winston-churchill/"
+        ],
+        "smokeTime": "20–30 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "Corporate Cigar’s A$105 tin of five is A$21 a stick, below CigarWorld’s A$139 tin and A$28.95 single.",
+        "practicalLines": [
+          "tin of 5",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "Winston Churchill Petit Corona",
+        "length": 4.5,
+        "ring": 41,
+        "packagePrice": 49.11,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/davidoff-%252d-winston-churchill-%252d-petit-corona-%252d-single-%252d-%284-1%7B47%7D2-x-41%29.html"
+        ],
+        "smokeTime": "About 35–45 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld single A$49.11. The box of 20 is excluded by the purchase cap.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Winston Churchill Robusto",
+        "length": 5.5,
+        "ring": 52,
+        "packagePrice": 69.77,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/winston-churchill/",
+          "https://www.cigarhut.com.au/davidoff-winston-churchill-robusto/"
+        ],
+        "smokeTime": "About 55–70 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld single A$69.77 is below Cigar Hut's A$73 single. Larger boxes are excluded.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "churchill",
+        "label": "Churchill",
+        "title": "Winston Churchill Churchill",
+        "length": 6.875,
+        "ring": 47,
+        "packagePrice": 78.64,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/davidoff-%252d-winston-churchill-%252d-churchill-%286.875%22-x-47%29-%252d-single.html",
+          "https://www.cigarhut.com.au/davidoff-winston-churchill-churchill/"
+        ],
+        "smokeTime": "About 70–90 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld single A$78.64 is below Cigar Hut's A$85 single. Larger boxes are excluded.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "petite-panatela"
+  },
+  "note": "The larger sizes now use verified singles; Petite Panatela remains the five-pack benchmark."
+}
