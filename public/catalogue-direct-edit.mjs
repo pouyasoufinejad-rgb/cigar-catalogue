@@ -71,7 +71,7 @@ function ensurePanel() {
   if (panel) return panel;
   panel = document.createElement('div');
   panel.id = 'catalogue-direct-controls';
-  panel.innerHTML = `<div class="direct-row"><span class="direct-title">Direct catalogue editing</span><button type="button" data-direct="save">Save</button><button type="button" data-direct="more">More fields</button><button type="button" data-direct="finish">Finish</button></div>
+  panel.innerHTML = `<div class="direct-row"><span class="direct-title">Direct catalogue editing</span><button type="button" data-direct="save">Save</button><button type="button" data-direct="more">More parent fields</button><button type="button" data-direct="finish">Finish</button></div>
 <div class="direct-sliders">
 <label>Image size</label><input data-direct-range="imageScale" type="range" min="60" max="180" step="1" value="100"><output data-direct-out="imageScale">100%</output>
 <label>Image X</label><input data-direct-range="imageX" type="range" min="-120" max="120" step="1" value="0"><output data-direct-out="imageX">0</output>
@@ -150,7 +150,9 @@ function applyLayout(card, values = {}) {
 
 function updatePanelFor(card) {
   ensurePanel();
-  panel.querySelector('.direct-title').textContent = card ? `Editing · ${card.querySelector('h3')?.textContent.trim() || card.dataset.key}` : 'Direct catalogue editing · tap a card';
+  panel.querySelector('.direct-title').textContent = card
+    ? `Editing · ${card.querySelector('h3')?.textContent.trim() || card.dataset.key}${card.dataset.activeBlend ? ` · blend: ${card.dataset.activeBlend.replace(/-/g, ' ')}` : ''}${card.dataset.activeVariant ? ` · size: ${card.dataset.activeVariant.replace(/-/g, ' ')}` : ''}`
+    : 'Direct catalogue editing · tap a card';
   panel.querySelectorAll('button[data-direct="save"],button[data-direct="more"]').forEach(button => { button.disabled = !card; });
   if (!card) return;
   const layout = readLayout(card);
@@ -175,7 +177,11 @@ function selectCard(card) {
   setEditable(selected, true);
   selectInExistingAdmin(selected);
   updatePanelFor(selected);
-  selected.scrollIntoView?.({ block:'nearest', behavior:'smooth' });
+  const rect = selected.getBoundingClientRect?.();
+  const viewHeight = Number(globalThis.innerHeight) || 0;
+  if (rect && viewHeight && (rect.top < 0 || rect.bottom > viewHeight)) {
+    selected.scrollIntoView?.({ block:'nearest', behavior:'auto' });
+  }
 }
 
 function closeDiagnosticSections() {
@@ -219,6 +225,7 @@ function onToggleCapture(event) {
 function onDocumentClick(event) {
   if (!editMode) return;
   if (event.target.closest?.('#catalogue-direct-controls')) return;
+  if (event.target.closest?.('.size-variants,.blend-variants,#catalogue-variant-editor')) return;
   const card = event.target.closest?.('article.card[data-key]');
   if (!card) return;
   const editingText = selected === card && event.target.closest?.('.catalogue-direct-editable');
