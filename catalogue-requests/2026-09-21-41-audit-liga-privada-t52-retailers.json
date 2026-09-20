@@ -1,0 +1,119 @@
+{
+  "id": "2026-09-21-41-audit-liga-privada-t52-retailers",
+  "operation": "upsert-entry",
+  "key": "liga-privada-t52-short-panatela",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-panatela",
+        "label": "Short Panatela",
+        "title": "T52 Short Panatela",
+        "length": 4.5,
+        "ring": 46,
+        "packagePrice": 42,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-short-panatela/"
+        ],
+        "smokeTime": "35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "Current Cigar Hut crawl shows A$42 for the single, not the A$47 previously displayed.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "T52 Petit Corona",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-petit-corona/"
+        ],
+        "priceNote": "Cigar Hut exact Petit Corona page lists the single at A$52.",
+        "packagePrice": 52,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "T52 Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-robusto/",
+          "https://www.theindexcigars.com.au/products/liga-privada-t52-robusto"
+        ],
+        "priceNote": "Cigar Hut single A$67 is below The Index's A$70 single. Packages above 10 are excluded.",
+        "packagePrice": 67,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "T52 Toro",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-toro/",
+          "https://www.theindexcigars.com.au/products/liga-privada-t52-toro"
+        ],
+        "priceNote": "Cigar Hut single A$64 is below The Index's A$68.80 single. Packages above 10 are excluded.",
+        "packagePrice": 64,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "T52 Corona Viva",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-corona-viva/"
+        ],
+        "priceNote": "Cigar Hut exact Corona Viva page lists the single at A$52.",
+        "packagePrice": 52,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "T52 Corona Doble",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-corona-doble/"
+        ],
+        "priceNote": "Cigar Hut shows an 85-1899 range across every option on the page."
+      }
+    ],
+    "defaultVariantId": "short-panatela"
+  },
+  "note": "Second retailer pass: exact Index alternates added where verified; Cigar Hut remains the cheaper Robusto and Toro source."
+}

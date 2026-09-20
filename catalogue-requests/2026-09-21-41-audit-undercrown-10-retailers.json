@@ -1,0 +1,84 @@
+{
+  "id": "2026-09-21-41-audit-undercrown-10-retailers",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "Undercrown 10 Corona Viva",
+        "length": 5,
+        "ring": 43,
+        "packagePrice": 39,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-viva/",
+          "https://www.smokingpipes.com/cigars/drew-estate/moreinfo.cfm?product_id=433680"
+        ],
+        "smokeTime": "About 40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Undercrown 10 Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-robusto/",
+          "https://www.theindexcigars.com.au/products/undercrown-10-robusto"
+        ],
+        "priceNote": "Cigar Hut single A$49 is below The Index's A$54.60 single. Packages above 10 are excluded.",
+        "packagePrice": 49,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Undercrown 10 Toro",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/undercrown-10-toro",
+          "https://www.cigarhut.com.au/undercrown-10-toro/"
+        ],
+        "priceNote": "The Index single A$64 is below Cigar Hut's A$70 single. Packages above 10 are excluded.",
+        "packagePrice": 64,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "Undercrown 10 Corona Doble",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/undercrown-10-corona-doble/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 78-1449 range."
+      }
+    ],
+    "defaultVariantId": "corona-viva"
+  },
+  "note": "Second retailer pass: Toro benchmark corrected to The Index A$64; exact Index Robusto alternate retained."
+}
