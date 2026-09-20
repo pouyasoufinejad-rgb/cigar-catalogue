@@ -37,7 +37,8 @@ function baseState(overrides = {}) {
 
 test('validateRequest rejects unsafe keys and unsupported operations', () => {
   assert.throws(() => validateRequest({ operation: 'upsert-entry', key: '../bad', entry: {} }), /Invalid catalogue key/);
-  assert.throws(() => validateRequest({ operation: 'delete-entry', key: 'safe-key' }), /Unsupported operation/);
+  assert.throws(() => validateRequest({ operation: 'destroy-entry', key: 'safe-key' }), /Unsupported operation/);
+  assert.equal(validateRequest({ operation: 'delete-entry', key: 'safe-key' }).operation, 'delete-entry');
   assert.equal(validateRequest({ operation: 'upsert-entry', key: 'safe-key', entry: { brand: 'A', title: 'B' } }).key, 'safe-key');
 });
 
