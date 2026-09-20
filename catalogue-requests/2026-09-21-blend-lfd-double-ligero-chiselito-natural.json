@@ -1,0 +1,46 @@
+{
+  "id": "2026-09-21-blend-lfd-double-ligero-chiselito-natural",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-double-ligero-chiselito-natural",
+  "entry": {
+    "brand": "La Flor Dominicana",
+    "title": "Double Ligero Chiselito Natural",
+    "eyebrow": "Sun-grown Sumatra double-ligero chisel",
+    "packagePrice": 34.37,
+    "packageLabel": "single cigar",
+    "price": 34.37,
+    "country": "Dominican Republic",
+    "length": 5,
+    "ring": 44,
+    "strength": 9,
+    "quality": 9,
+    "risk": 2,
+    "stock": "out",
+    "rank": 999,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "summaryHtml": "<strong>Black pepper, leather, cedar, toast and dense tobacco sweetness</strong> drive the Natural Chiselito, with the Ecuadorian Sumatra sun-grown wrapper putting more dry spice and aromatic wood around the ligero-heavy Dominican core. The compact chisel shape keeps the smoke concentrated and forceful, with a firm savoury centre and a long pepper-and-cedar finish.",
+    "noteHtml": "Untasted. CigarWorld lists the exact 5″ × 44 Natural single at A$34.37, but it is currently unavailable.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Ecuadorian Sumatra Sun Grown",
+      "Binder: Dominican Republic",
+      "Filler: Dominican Republic, ligero-heavy"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Chisel cap",
+      "Protected",
+      "Forgiving Cadence"
+    ],
+    "smokeTime": "About 45–55 min smoke",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/la-flor-dominicana-%252d-double-ligero-chiselito-natural-%252d-single-%252d-%285%22-x-44%29.html"
+    ],
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21"
+  },
+  "note": "Add the Natural/Sun Grown counterpart to the existing Double Ligero Chiselito Maduro as a standalone blend entry. The exact Australian single is currently unavailable, so it remains listed with stock out rather than being omitted or nested as a size."
+}
