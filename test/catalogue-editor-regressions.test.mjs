@@ -57,7 +57,7 @@ test('edit click is observed at window capture before direct edit can stop docum
 });
 
 test('Edit catalogue is owned by direct edit while the full editor remains bound for More fields', () => {
-  assert.match(loaderSource, /catalogue-direct-edit\.mjs\?v=editor-repair-1/);
+  assert.match(loaderSource, /catalogue-direct-edit\.mjs\?v=variant-edit-1/);
   assert.match(directEditSource, /function onToggleCapture\(event\)[\s\S]*?event\.stopImmediatePropagation\(\)/);
   assert.match(directEditSource, /function openMoreFields\(\)[\s\S]*?allowModalOpen = true;[\s\S]*?catalogue-admin-toggle/);
   assert.match(fullEditorSource, /q\('catalogue-admin-toggle'\)\?\.addEventListener\('click', openEditor\)/);
