@@ -44,9 +44,17 @@ for (const width of widths) {
       });
     }
     out.search = Boolean(document.getElementById('catalogue-variant-search-input'));
-    out.shortPanatelaCards = [...document.querySelectorAll('article.card:not(.hidden)')]
+    // An archived card still exists in the document; it lives in the archived grid rather
+    // than among the recommendations. Only a card outside that section is a duplicate.
+    out.shortPanatelaCards = [...document.querySelectorAll('article.card')]
       .filter(card => /No\. 9 Short Panatela/i.test(card.querySelector('h3')?.textContent || ''))
-      .map(card => card.dataset.key);
+      .map(card => ({
+        key: card.dataset.key,
+        archivedAttr: card.dataset.archived === '1',
+        section: card.closest('.archived-section') ? 'archived'
+          : (card.closest('.grid')?.id || card.closest('section')?.id || 'unknown'),
+        hidden: card.classList.contains('hidden')
+      }));
     return out;
   });
 
@@ -61,8 +69,12 @@ for (const width of widths) {
   if (!report.selectors) fail('no card rendered a size selector at all');
   if (report.overflow) fail(`${report.overflow} size selector(s) overflow their card`);
   if (!report.search) fail('the search control did not mount');
-  console.log(`   ACTIVE_SHORT_PANATELA_CARDS ${JSON.stringify(report.shortPanatelaCards)}`);
-  if (report.shortPanatelaCards.length > 1) fail('more than one active card shows the Short Panatela');
+  console.log(`   SHORT_PANATELA_CARDS ${JSON.stringify(report.shortPanatelaCards)}`);
+  const activeShortPanatelas = report.shortPanatelaCards
+    .filter(card => card.section !== 'archived' && !card.archivedAttr && !card.hidden);
+  if (activeShortPanatelas.length > 1) {
+    fail(`${activeShortPanatelas.length} active cards show the Short Panatela: ${activeShortPanatelas.map(card => card.key).join(', ')}`);
+  }
 
   // Selecting a size must rewrite the card and leave the saved default alone.
   const probe = await page.evaluate(async () => {
