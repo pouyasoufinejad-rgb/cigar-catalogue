@@ -65,6 +65,12 @@ For an existing item, `entry` may contain only the fields intended to change. Th
 
 If rank, taster/main cohort, or archive state changes, the publisher re-numbers the affected active cohort so duplicate/gapped ranks are not introduced.
 
+## Variant pricing rules
+
+- Variant benchmark packages must contain **10 cigars or fewer**. Never use a 20-, 25-, 48-, 50-count or larger box to derive catalogue Value.
+- If a cigar is above A$30, benchmark an available single rather than a bulk pack or box.
+- Prefer exact Australian product pages for variant retailer links. Do not infer option-level prices from broad min-max ranges.
+
 ## Image requests
 
 Images are repository assets under `catalogue-requests/assets/`. Only PNG, JPEG, and WebP are accepted and the Worker maximum is 12 MiB.
