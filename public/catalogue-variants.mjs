@@ -304,11 +304,14 @@ export function blendEffectiveRecord(record, requestedId = '') {
   const blendVariantId = resolveBlendVariantId(base, requestedId);
   const blendVariant = variants.find(item => item.id === blendVariantId) || variants[0];
   const merged = { ...base };
-  const isSavedDefault = blendVariant.id === defaultBlendVariantId(base);
+  // The first blend is the parent/baseline data source. defaultBlendVariantId only controls
+  // which blend opens first; promoting another default must never make the original blend
+  // lose the parent fields it was built from.
+  const isBaseVariant = blendVariant.id === variants[0].id;
 
-  // The parent fields describe the saved/default blend. An alternate blend must not borrow
-  // tobacco, ratings, tasting copy, stock or sizes just because its own data omitted them.
-  if (!isSavedDefault) {
+  // An alternate blend must not borrow tobacco, ratings, tasting copy, stock or sizes just
+  // because its own data omitted them.
+  if (!isBaseVariant) {
     merged.length = 0;
     merged.ring = 0;
     merged.packageLabel = '';
@@ -337,7 +340,7 @@ export function blendEffectiveRecord(record, requestedId = '') {
     if (own(blendVariant, field)) merged[field] = blendVariant[field];
   }
 
-  if (!isSavedDefault && blendVariant.priceUnverified) {
+  if (!isBaseVariant && blendVariant.priceUnverified) {
     merged.price = 0;
     merged.packagePrice = 0;
     merged.priceUnverified = true;
