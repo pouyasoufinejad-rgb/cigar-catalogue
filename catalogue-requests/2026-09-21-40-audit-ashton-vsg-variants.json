@@ -42,7 +42,20 @@
         "title": "VSG Robusto",
         "length": 5.5,
         "ring": 50,
-        "priceNote": "Existence and dimensions are verified, but the research file asks for an exact standalone Australian price before any price data is added."
+        "priceNote": "CigarWorld exact Robusto single is in stock at A$60.18. Its box of 24 is excluded by the purchase cap.",
+        "packagePrice": 60.18,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/ashton-vsg-%252d-robusto-%252d-%285-1%7B47%7D2x-50%29-%252d-single.html"
+        ],
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
       },
       {
         "id": "eclipse",
@@ -110,5 +123,5 @@
     ],
     "defaultVariantId": "enchantment"
   },
-  "note": "Adds verified single pricing for exact in-stock VSG pages. Tres Mystique remains unpriced because it is sold out; Robusto remains unpriced without an exact standalone AU listing."
+  "note": "Adds verified single pricing and exact AU product links for in-stock VSG sizes. Tres Mystique remains unpriced because it is sold out."
 }
