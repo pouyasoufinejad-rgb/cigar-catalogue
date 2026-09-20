@@ -933,14 +933,32 @@ export function applyStructuralOverridesToHtml(html, cards) {
   });
 }
 
-export function injectEntriesIntoHtml(html, entries) {
-  const cards = Object.values(record(entries)).map(renderEntryCard).filter(Boolean).join('\n');
+function injectCardsIntoContainer(html, containerId, cards, required = false) {
   if (!cards) return html;
-  const marker = /<div\b(?=[^>]*\bid=["']flat-main["'])[^>]*>/i;
+  const marker = new RegExp(`<div\\\\b(?=[^>]*\\\\bid=["']${containerId}["'])[^>]*>`, 'i');
   const match = marker.exec(html);
-  if (!match) throw new Error('Could not find #flat-main in restored catalogue HTML.');
+  if (!match) {
+    if (required) throw new Error(`Could not find #${containerId} in restored catalogue HTML.`);
+    return html;
+  }
   const insertAt = match.index + match[0].length;
   return `${html.slice(0, insertAt)}\n${cards}\n${html.slice(insertAt)}`;
+}
+
+export function injectEntriesIntoHtml(html, entries) {
+  const rendered = Object.values(record(entries))
+    .map(entry => ({ entry, card:renderEntryCard(entry) }))
+    .filter(item => Boolean(item.card));
+  if (!rendered.length) return html;
+
+  const archivedHost = /<div\b(?=[^>]*\bid=["']archived-cards["'])[^>]*>/i.test(html);
+  const activeCards = rendered.filter(item => !item.entry?.archived).map(item => item.card).join('\n');
+  const archivedCards = rendered.filter(item => item.entry?.archived).map(item => item.card).join('\n');
+  const flatCards = [activeCards, archivedHost ? '' : archivedCards].filter(Boolean).join('\n');
+
+  let output = injectCardsIntoContainer(html, 'flat-main', flatCards, Boolean(flatCards));
+  if (archivedHost && archivedCards) output = injectCardsIntoContainer(output, 'archived-cards', archivedCards);
+  return output;
 }
 
 export function injectRuntimeBootstrap(html) {
