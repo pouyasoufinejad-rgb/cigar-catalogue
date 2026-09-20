@@ -13,4 +13,5 @@ if (typeof document !== 'undefined') {
   import('./catalogue-convenience.mjs?v=compact-retailer-matrix-1');
   import('./catalogue-convenience-refinements.mjs');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-5');
+  import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
 }
