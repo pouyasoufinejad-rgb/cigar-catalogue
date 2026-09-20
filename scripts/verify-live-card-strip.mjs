@@ -6,8 +6,18 @@
 // production. Running it in Actions is the only way to assert against the page a visitor
 // actually gets rather than against a local copy of public/index.html.
 
+import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
+
+// The expected badge size is read from the stylesheet the runtime injects rather than
+// pinned here, so deliberately resizing the laurel does not fail this check for the wrong
+// reason. What is being asserted is that every card agrees, not any particular number.
+const flavourSource = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
+const expectedBadge = (() => {
+  const rule = flavourSource.match(/\.laurel-badge\{width:(\d+)px;height:(\d+)px\}/);
+  return rule ? `${rule[1]}x${rule[2]}` : null;
+})();
 
 const baseUrl = String(process.env.CATALOGUE_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
 const profiles = [['desktop', 1440], ['tablet', 1000], ['mobile', 412]];
@@ -76,6 +86,7 @@ for (const [label, width] of profiles) {
   console.log(`\n=== ${label} ${width}px`);
   console.log(`   cards=${out.cards}  computed grid-column=[${out.gridColumn}]`);
   console.log(`   STRIP_OFF_CENTRE ${out.offCentre}${out.offCentre ? ` (worst ${out.worstOffset}px on ${out.worstKey})` : ''}`);
+  console.log(`   EXPECTED_LAUREL ${expectedBadge ?? '(no rule found)'}`);
   console.log(`   LAURELS ${out.badgeCount} (gem ${out.gem}, crown ${out.crown})  sizes=${out.badgeSizes.join(', ') || 'none'}`);
   console.log(`   OLD_AWARD_BOXES_VISIBLE ${out.visibleAwardBoxes}`);
   console.log(`   SCORES ${out.scored} rendered, ${out.scoreNotFirst} not leading the row`);
@@ -84,8 +95,11 @@ for (const [label, width] of profiles) {
   if (out.offCentre) { console.error(`   FAIL ${label}: ${out.offCentre} strip(s) not centred`); failures += 1; }
   if (out.visibleAwardBoxes) { console.error(`   FAIL ${label}: the old award box is visible`); failures += 1; }
   if (out.scoreNotFirst) { console.error(`   FAIL ${label}: the score is not first in the row`); failures += 1; }
-  if (out.badgeCount && out.badgeSizes.some(size => size !== '27x25')) {
-    console.error(`   FAIL ${label}: a laurel is not the expected 27x25`); failures += 1;
+  if (out.badgeCount && out.badgeSizes.length > 1) {
+    console.error(`   FAIL ${label}: laurels render at more than one size`); failures += 1;
+  }
+  if (out.badgeCount && expectedBadge && out.badgeSizes[0] !== expectedBadge) {
+    console.error(`   FAIL ${label}: laurel is ${out.badgeSizes[0]}, the stylesheet says ${expectedBadge}`); failures += 1;
   }
 
   await page.screenshot({ path: `card-strip-${label}.png`, fullPage: false });

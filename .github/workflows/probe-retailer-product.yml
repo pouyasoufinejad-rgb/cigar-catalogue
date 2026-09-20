@@ -1,0 +1,33 @@
+name: Probe retailer product page
+
+# Read-only diagnostic. Fetches the retailer product pages given as input and prints what
+# they actually say about price, packaging and dimensions. The agent sandbox's egress proxy
+# refuses .com.au, so this is the only way to read an Australian listing rather than guess
+# at it. Writes nothing and needs no secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'Comma- or space-separated retailer product URLs'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Read the retailer listings
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe
+        env:
+          PROBE_URLS: ${{ inputs.urls }}
+        run: node scripts/probe-retailer-product.mjs
