@@ -500,7 +500,7 @@ export function cardRecord(key) {
   return storedRecord(liveState, key);
 }
 
-function preserveViewport(work) {
+export function preserveViewport(work) {
   const view = typeof window !== 'undefined' ? window : null;
   if (!view || typeof work !== 'function') return work?.();
   const x = Number(view.scrollX) || 0;
