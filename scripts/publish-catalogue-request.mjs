@@ -18,7 +18,7 @@ import {
 export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'replace-image', 'update-sections']);
+export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'delete-entry', 'replace-image', 'update-sections']);
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
@@ -404,6 +404,14 @@ async function putEntry(fetchImpl, baseUrl, token, key, entry) {
   }, 'Entry write', token);
 }
 
+async function deleteEntry(fetchImpl, baseUrl, token, key) {
+  const url = `${baseUrl}/api/catalogue-entry/${encodeURIComponent(key)}`;
+  return fetchJson(fetchImpl, url, {
+    method: 'DELETE',
+    headers: buildHeaders(token)
+  }, 'Entry delete', token);
+}
+
 async function putState(fetchImpl, baseUrl, token, state) {
   return fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, {
     method: 'PUT',
@@ -534,6 +542,26 @@ export async function publishRequestDocument(input, options = {}) {
 
   if (!exists && request.operation !== 'upsert-entry') throw new Error(`Catalogue key "${request.key}" does not exist.`);
   const target = existingDynamic || !existingCard ? 'dynamic' : 'static';
+
+  if (request.operation === 'delete-entry') {
+    // A nested variant can supersede a former standalone dynamic card. Deletion removes
+    // that obsolete record entirely instead of leaving a duplicate in the Archived grid.
+    if (!existingDynamic) throw new Error('delete-entry can only remove a dynamic catalogue entry.');
+    await deleteEntry(fetchImpl, baseUrl, token, request.key);
+
+    const verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+    const verifiedState = normaliseStateShape(verifiedStateRaw);
+    if (isRecord(verifiedState.entries[request.key]) || isRecord(verifiedState.cards[request.key])) {
+      throw new Error(`Catalogue deletion read-back still contains "${request.key}".`);
+    }
+    assertRankingInvariant(verifiedState.cards, 'Catalogue state read-back', verifiedState.sections);
+
+    const html = await fetchProductionHtml(fetchImpl, `${baseUrl}/?catalogue_verify=${encodeURIComponent(request.key)}`, sleep);
+    const keyPattern = new RegExp(`\\bdata-key=["']${escapeRegex(request.key)}["']`, 'i');
+    if (keyPattern.test(html)) throw new Error(`Catalogue key "${request.key}" still appears in production HTML after deletion.`);
+
+    return { ok: true, operation: request.operation, key: request.key, target: 'dynamic', verified: true };
+  }
 
   let entryPatch = clone(request.entry);
   let cardPatch = clone(request.entry);

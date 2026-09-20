@@ -37,7 +37,8 @@ function baseState(overrides = {}) {
 
 test('validateRequest rejects unsafe keys and unsupported operations', () => {
   assert.throws(() => validateRequest({ operation: 'upsert-entry', key: '../bad', entry: {} }), /Invalid catalogue key/);
-  assert.throws(() => validateRequest({ operation: 'delete-entry', key: 'safe-key' }), /Unsupported operation/);
+  assert.throws(() => validateRequest({ operation: 'destroy-entry', key: 'safe-key' }), /Unsupported operation/);
+  assert.equal(validateRequest({ operation: 'delete-entry', key: 'safe-key' }).operation, 'delete-entry');
   assert.equal(validateRequest({ operation: 'upsert-entry', key: 'safe-key', entry: { brand: 'A', title: 'B' } }).key, 'safe-key');
 });
 
@@ -200,6 +201,41 @@ test('unarchive restores the saved archived rank and shifts active entries aroun
   assert.equal(writtenState.cards.b.rank, 2);
   assert.equal(writtenState.cards.a.rank, 1);
   assert.equal(writtenState.cards.c.rank, 3);
+});
+
+test('delete-entry removes a dynamic standalone card and verifies production absence', async () => {
+  const calls = [];
+  const state = baseState({
+    entries: {
+      duplicate: {
+        key: 'duplicate', brand: 'Brand', title: 'Duplicate', quality: 7, strength: 7, price: 20,
+        packagePrice: 20, packageLabel: 'single cigar', length: 5, ring: 44, country: 'Dominican Republic',
+        risk: 1, taster: false, archived: true, archivedAt: '2026-09-21T00:00:00Z',
+        experienceTags: [], summaryHtml: '', noteHtml: '', productionLines: [], practicalLines: [],
+        smokeTime: '', retailerLinks: [], imageUrl: '', imageSourceKey: '', imageVersion: 0,
+        stock: 'in', stockPin: '', priceChecked: '2026-09-21', stockChecked: '2026-09-21', size: 'gold'
+      }
+    },
+    cards: {
+      duplicate: { archived: true, archivedRank: 2, taster: false }
+    }
+  });
+  const withoutDuplicate = baseState({ entries: {}, cards: {} });
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'DELETE', url: `${BASE}/api/catalogue-entry/duplicate`, response: jsonResponse({ ok: true, key: 'duplicate' }) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: jsonResponse(withoutDuplicate) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=duplicate`, response: new Response('<html><body>no duplicate card</body></html>', { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  const result = await publishRequestDocument({ operation: 'delete-entry', key: 'duplicate' }, {
+    fetchImpl: createFetchRouter(routes, calls), baseUrl: BASE, token: TOKEN, now: () => new Date('2026-09-21T00:00:00Z')
+  });
+
+  assert.equal(result.operation, 'delete-entry');
+  assert.equal(result.verified, true);
+  assert.equal(calls.some(call => call.method === 'DELETE' && call.href.endsWith('/api/catalogue-entry/duplicate')), true);
+  assert.equal(calls.some(call => call.method === 'PUT'), false);
 });
 
 test('image upload validates bytes, verifies download, and associates imageUrl', async () => {
