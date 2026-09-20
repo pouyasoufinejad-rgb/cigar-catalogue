@@ -2,5 +2,5 @@
   "id": "2026-09-21-zz-delete-lfd-chiselito-natural-standalone",
   "operation": "delete-entry",
   "key": "la-flor-dominicana-double-ligero-chiselito-natural",
-  "note": "Delete the obsolete standalone Natural Chiselito record after its data was absorbed into the Natural blend variant of la-flor-dominicana-double-ligero-chiselito-maduro. The nested variant is the sole catalogue representation."
+  "note": "Delete the obsolete standalone Natural Chiselito record after its data was absorbed into the Natural blend variant of la-flor-dominicana-double-ligero-chiselito-maduro. The nested variant is the sole catalogue representation. Retry under the idempotent delete publisher so any stale recommendation-subsection reference is also removed."
 }
