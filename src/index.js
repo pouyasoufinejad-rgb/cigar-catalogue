@@ -1,6 +1,13 @@
 import { deriveValue } from '../public/catalogue-value.mjs';
 import { overallScoreMarkup } from '../public/catalogue-overall-score.mjs';
-import { defaultVariantId, normaliseVariants, variantEffectiveRecord } from '../public/catalogue-variants.mjs';
+import {
+  blendEffectiveRecord,
+  defaultBlendVariantId,
+  defaultVariantId,
+  normaliseBlendVariants,
+  normaliseVariants,
+  variantEffectiveRecord
+} from '../public/catalogue-variants.mjs';
 import { sizeScoreForRing } from '../public/catalogue-size-rules.mjs';
 import {
   STOCK_RESULTS_KEY,
@@ -317,7 +324,9 @@ export function normaliseEntry(input, keyOverride = '') {
     // anything it does not name, so without these two the variants would not survive a
     // publish at all.
     sizeVariants: normaliseVariants(raw),
-    defaultVariantId: defaultVariantId(raw)
+    defaultVariantId: defaultVariantId(raw),
+    blendVariants: normaliseBlendVariants(raw),
+    defaultBlendVariantId: defaultBlendVariantId(raw)
   };
 }
 
@@ -772,13 +781,30 @@ export function variantMarkup(record, variants, activeId) {
     + '</div>';
 }
 
+
+export function blendVariantMarkup(record, variants, activeId) {
+  if (!Array.isArray(variants) || variants.length < 2) return '';
+  const options = variants.map(variant => {
+    const selected = variant.id === activeId ? ' selected' : '';
+    return `<option value="${esc(variant.id)}"${selected}>${esc(variant.label)}</option>`;
+  }).join('');
+  const names = variants.map(variant => esc(variant.label)).join(', ');
+  return `<div class="blend-variants" data-blend-variant-count="${variants.length}">`
+    + `<label class="blend-variant-label" for="blend-variant-${esc(record.key)}">Blend</label>`
+    + `<select class="blend-variant-select" id="blend-variant-${esc(record.key)}" data-blend-select="${esc(record.key)}">${options}</select>`
+    + `<span class="blend-variant-names" hidden>${names}</span>`
+    + '</div>';
+}
+
 export function renderEntryCard(rawEntry) {
   const stored = normaliseEntry(rawEntry, rawEntry?.key);
   // Everything below renders the selected size, so the card a reader first sees is the
   // saved default rather than whichever size happens to be first in the list.
-  const resolved = variantEffectiveRecord(stored, stored.defaultVariantId);
+  const blendResolved = blendEffectiveRecord(stored, stored.defaultBlendVariantId);
+  const resolved = variantEffectiveRecord(blendResolved.record, blendResolved.record.defaultVariantId);
   const entry = resolved.record;
   const variants = resolved.variants;
+  const blendVariants = blendResolved.blendVariants;
   if (!entry.key || !entry.brand || !entry.title) return '';
   const valueInfo = deriveValue(entry.price, entry.quality);
   // A size with no verified Australian price has no Value, rather than the 1/10 that
@@ -804,9 +830,9 @@ export function renderEntryCard(rawEntry) {
   const rankLabel = entry.taster ? 'Taster' : 'No.';
   const rankValue = entry.taster ? `T${entry.rank}` : String(entry.rank);
   const sizeFootprint = Math.max(0.32, Math.min(1.15, (Math.max(entry.length, 1) / 5) * (Math.max(entry.ring, 1) / 50))).toFixed(4);
-  return `<article class="card" data-dynamic-entry="1" data-key="${esc(entry.key)}" data-expected="${valueInfo.benchmark}" data-format="${sizeBucket(entry.size)}" data-price="${entry.price.toFixed(2)}"${entry.priceChecked ? ` data-price-checked="${esc(entry.priceChecked)}"` : ''} data-quality="${scoreBucket(entry.quality)}" data-rank="${entry.rank}" data-ratio="${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : ''}" data-risk="${entry.risk}" data-stock="${esc(entry.stock)}"${entry.stockChecked ? ` data-stock-checked="${esc(entry.stockChecked)}"` : ''} data-strength="${scoreBucket(entry.strength)}" data-value="${entry.priceUnverified ? '' : scoreBucket(valueScore)}"${entry.priceUnverified ? ' data-price-unverified="1"' : ''}${resolved.variantId ? ` data-active-variant="${esc(resolved.variantId)}" data-default-variant="${esc(entry.defaultVariantId)}"` : ''}${tasterAttr}${archivedAttrs}${pinAttr}>
+  return `<article class="card" data-dynamic-entry="1" data-key="${esc(entry.key)}" data-expected="${valueInfo.benchmark}" data-format="${sizeBucket(entry.size)}" data-price="${entry.price.toFixed(2)}"${entry.priceChecked ? ` data-price-checked="${esc(entry.priceChecked)}"` : ''} data-quality="${scoreBucket(entry.quality)}" data-rank="${entry.rank}" data-ratio="${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : ''}" data-risk="${entry.risk}" data-stock="${esc(entry.stock)}"${entry.stockChecked ? ` data-stock-checked="${esc(entry.stockChecked)}"` : ''} data-strength="${scoreBucket(entry.strength)}" data-value="${entry.priceUnverified ? '' : scoreBucket(valueScore)}"${entry.priceUnverified ? ' data-price-unverified="1"' : ''}${blendResolved.blendVariantId ? ` data-active-blend="${esc(blendResolved.blendVariantId)}" data-default-blend="${esc(entry.defaultBlendVariantId)}"` : ''}${resolved.variantId ? ` data-active-variant="${esc(resolved.variantId)}" data-default-variant="${esc(entry.defaultVariantId)}"` : ''}${tasterAttr}${archivedAttrs}${pinAttr}>
 <div class="artframe size-normalized" data-visual-length="${entry.length}" data-visual-ring="${entry.ring}" style="--visual-footprint:${sizeFootprint}">${imageMarkup}<div class="rankflag"><span>${rankLabel}</span><b>${rankValue}</b></div>${riskHtml(entry.risk)}<div class="artmeta artmeta-left"><span class="artmeta-title">Production</span>${production}</div><div class="artmeta artmeta-right"><span class="artmeta-title">Practical</span>${practical}</div>${entry.smokeTime ? `<div class="artmeta artmeta-bottom">${esc(entry.smokeTime)}</div>` : ''}</div>
-<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3>${variantMarkup(entry, variants, resolved.variantId)}<div class="country-above"><div class="country-row">${overallScoreMarkup({
+<div class="cardbody"><div class="eyebrow">${entry.archived ? 'Archived' : entry.taster ? `T${entry.rank}` : `No. ${entry.rank}`} — ${esc(entry.eyebrow)}</div><h3><span>${esc(entry.brand)}</span>${esc(entry.title)}</h3>${blendVariantMarkup(entry, blendVariants, blendResolved.blendVariantId)}${variantMarkup(entry, variants, resolved.variantId)}<div class="country-above"><div class="country-row">${overallScoreMarkup({
     strength: entry.strength,
     quality: entry.quality,
     flavour: entry.flavour,
