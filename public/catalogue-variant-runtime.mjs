@@ -203,6 +203,53 @@ function syncNote(card, html) {
   note.innerHTML = html;
 }
 
+function linesFromStoredMarkup(markup) {
+  if (typeof markup !== 'string' || !markup.trim()) return [];
+  const host = document.createElement('div');
+  host.innerHTML = markup;
+  const nodes = [...host.querySelectorAll('.artmeta-line')];
+  if (nodes.length) return nodes.map(node => node.textContent.trim()).filter(Boolean);
+  return host.textContent.split(/\n+/).map(line => line.trim()).filter(Boolean);
+}
+
+function syncBlendSelector(card, key, record, activeId = '') {
+  const variants = normaliseBlendVariants(record);
+  if (variants.length < 2) return;
+  let host = card.querySelector('.blend-variants');
+  if (!host) {
+    host = document.createElement('div');
+    host.className = 'blend-variants';
+    card.querySelector('h3')?.insertAdjacentElement('afterend', host);
+  }
+  host.dataset.blendVariantCount = String(variants.length);
+  let select = host.querySelector('[data-blend-select]');
+  if (!select) {
+    const label = document.createElement('label');
+    label.className = 'blend-variant-label';
+    label.htmlFor = `blend-variant-${key}`;
+    label.textContent = 'Blend';
+    select = document.createElement('select');
+    select.className = 'blend-variant-select';
+    select.id = `blend-variant-${key}`;
+    select.dataset.blendSelect = key;
+    host.append(label, select);
+  }
+  const wanted = variants.map(item => item.id).join('|');
+  const current = [...select.options].map(option => option.value).join('|');
+  if (wanted !== current) {
+    select.replaceChildren(...variants.map(variant => {
+      const option = document.createElement('option');
+      option.value = variant.id;
+      option.textContent = variant.label;
+      return option;
+    }));
+  }
+  select.value = variants.some(item => item.id === activeId)
+    ? activeId
+    : defaultBlendVariantId(record);
+  bindSelects(card);
+}
+
 function syncSizeSelector(card, key, record, activeId = '') {
   const variants = normaliseVariants(record);
   let host = card.querySelector('.size-variants');
@@ -271,9 +318,16 @@ export function applyBlendToCard(card, record, blendVariantId, sizeVariantId = '
   if (!card || !record) return null;
   const blendResolved = blendEffectiveRecord(record, blendVariantId);
   if (!blendResolved.blendVariant) return null;
-  const blended = blendResolved.record;
+  const blended = { ...blendResolved.record };
+  if (!Array.isArray(blended.productionLines) && typeof blended.productionHtml === 'string') {
+    blended.productionLines = linesFromStoredMarkup(blended.productionHtml);
+  }
+  if (!Array.isArray(blended.practicalLines) && typeof blended.practicalHtml === 'string') {
+    blended.practicalLines = linesFromStoredMarkup(blended.practicalHtml);
+  }
   const sizes = normaliseVariants(blended);
 
+  syncBlendSelector(card, card.dataset.key || '', record, blendResolved.blendVariantId);
   card.dataset.activeBlend = blendResolved.blendVariantId;
   card.dataset.defaultBlend = blended.defaultBlendVariantId || '';
   const blendSelect = card.querySelector('[data-blend-select]');
