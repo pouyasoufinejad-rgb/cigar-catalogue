@@ -1,3 +1,5 @@
+import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=1';
+
 const STATE_API = '/api/catalogue-overrides';
 const STORAGE_KEY = 'catalogue-direct-layout-v1';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
@@ -127,6 +129,15 @@ function artmetaHtml(card, selector) {
   return Array.from(node.children).filter(child => !child.classList.contains('artmeta-title')).map(child => child.outerHTML).join('');
 }
 
+function artmetaLines(card, selector) {
+  const node = card.querySelector(selector);
+  if (!node) return [];
+  return Array.from(node.children)
+    .filter(child => !child.classList.contains('artmeta-title'))
+    .map(child => child.textContent.trim())
+    .filter(Boolean);
+}
+
 function experienceTags(card) {
   return Array.from(card.querySelectorAll('.tag-items .tag-chip')).map(node => node.textContent.trim()).filter(Boolean);
 }
@@ -141,6 +152,32 @@ function directPatch(card) {
     practicalHtml: artmetaHtml(card, '.artmeta-right'),
     ...layoutFromCard(card)
   };
+}
+
+function variantCopyPatch(card) {
+  return {
+    summaryHtml: card.querySelector('.summary')?.innerHTML || '',
+    noteHtml: card.querySelector('.mog-note')?.innerHTML || '',
+    eyebrow: stripRankPrefix(card.querySelector('.eyebrow')?.textContent || ''),
+    experienceTags: experienceTags(card),
+    productionLines: artmetaLines(card, '.artmeta-left'),
+    practicalLines: artmetaLines(card, '.artmeta-right')
+  };
+}
+
+function variantStructuralPatch(updated) {
+  const patch = {};
+  if (Array.isArray(updated?.blendVariants)) patch.blendVariants = updated.blendVariants;
+  if (Array.isArray(updated?.sizeVariants)) patch.sizeVariants = updated.sizeVariants;
+  if (updated?.defaultBlendVariantId) patch.defaultBlendVariantId = updated.defaultBlendVariantId;
+  if (updated?.defaultVariantId) patch.defaultVariantId = updated.defaultVariantId;
+  return patch;
+}
+
+function arraysMatch(saved, expected) {
+  if (expected.blendVariants && JSON.stringify(saved?.blendVariants || []) !== JSON.stringify(expected.blendVariants)) return false;
+  if (expected.sizeVariants && JSON.stringify(saved?.sizeVariants || []) !== JSON.stringify(expected.sizeVariants)) return false;
+  return true;
 }
 
 function saveLocalLayout(key, patch) {
@@ -174,23 +211,49 @@ async function saveSelectedVerified() {
   try {
     const state = await fetchState();
     const key = card.dataset.key;
-    const patch = directPatch(card);
+    const layoutPatch = layoutFromCard(card);
     const cards = { ...(state.cards || {}) };
-    cards[key] = { ...(cards[key] || {}), ...patch };
+    const entries = { ...(state.entries || {}) };
+    const record = { key, ...(cards[key] || {}), ...(entries[key] || {}) };
+    const blendVariantId = card.dataset.activeBlend || '';
+    const sizeVariantId = card.dataset.activeVariant || '';
+    let structuralPatch = {};
+
+    if (blendVariantId || sizeVariantId) {
+      const updated = updateVariantScopedCopy(record, { blendVariantId, sizeVariantId }, variantCopyPatch(card));
+      structuralPatch = variantStructuralPatch(updated);
+      const parentCopyPatch = !blendVariantId
+        ? {
+          experienceTags:experienceTags(card),
+          productionHtml:artmetaHtml(card, '.artmeta-left')
+        }
+        : {};
+      cards[key] = { ...(cards[key] || {}), ...parentCopyPatch, ...structuralPatch, ...layoutPatch };
+      if (entries[key]) entries[key] = { ...entries[key], ...structuralPatch };
+    } else {
+      const patch = directPatch(card);
+      cards[key] = { ...(cards[key] || {}), ...patch };
+    }
+
     const response = await adminWriteFetch(STATE_API, {
       method:'PUT',
       headers:{ 'content-type':'application/json' },
-      body:JSON.stringify({ version:3, cards, sections:{ ...(state.sections || {}) } })
+      body:JSON.stringify({ version:3, cards, sections:{ ...(state.sections || {}) }, entries })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (${response.status})`);
 
-    // A successful PUT is enough to preserve an immediate refresh in this browser,
-    // even while Cloudflare KV is still propagating to subsequent reads.
-    saveLocalLayout(key, patch);
+    saveLocalLayout(key, layoutPatch);
     button.textContent = 'Verifying…';
-    const verified = await verifySavedLayout(key, patch);
-    const verifiedLayout = verified.cards?.[key];
+    let verified = null;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      verified = await fetchState();
+      const saved = verified.cards?.[key];
+      if (layoutMatches(saved, layoutPatch) && arraysMatch(saved, structuralPatch)) break;
+      if (attempt === 11) throw new Error('The server accepted the save but KV read-back does not yet contain the active variant changes.');
+      await delay(500);
+    }
+    const verifiedLayout = verified?.cards?.[key];
     if (verifiedLayout) saveLocalLayout(key, verifiedLayout);
     button.textContent = 'Saved ✓';
     setTimeout(() => { button.textContent = old; button.disabled = false; }, 1000);

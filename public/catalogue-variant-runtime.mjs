@@ -500,26 +500,51 @@ export function cardRecord(key) {
   return storedRecord(liveState, key);
 }
 
-export function selectVariant(key, variantId, { updateUrl = true } = {}) {
-  const card = document.querySelector(cardSelector(key));
-  const record = storedRecord(liveState, key);
-  if (!card || !record) return null;
-  const activeBlend = card.dataset.activeBlend || defaultBlendVariantId(record);
-  const blended = activeBlend ? blendEffectiveRecord(record, activeBlend).record : record;
-  const resolved = applyVariantToCard(card, blended, variantId);
-  if (!resolved) return null;
-  if (updateUrl) writeVariantToUrl(key, resolved.variantId, record);
-  return resolved;
+export function preserveViewport(work) {
+  const view = typeof window !== 'undefined' ? window : null;
+  if (!view || typeof work !== 'function') return work?.();
+  const x = Number(view.scrollX) || 0;
+  const y = Number(view.scrollY) || 0;
+  const result = work();
+  const restore = () => {
+    if (Math.abs((Number(view.scrollX) || 0) - x) > 0.5 || Math.abs((Number(view.scrollY) || 0) - y) > 0.5) {
+      view.scrollTo?.(x, y);
+    }
+  };
+  restore();
+  view.requestAnimationFrame?.(() => {
+    restore();
+    view.requestAnimationFrame?.(restore);
+  });
+  return result;
 }
 
-export function selectBlend(key, blendVariantId, { updateUrl = true } = {}) {
+export function selectVariant(key, variantId, { updateUrl = true, preserveScroll = true } = {}) {
   const card = document.querySelector(cardSelector(key));
   const record = storedRecord(liveState, key);
   if (!card || !record) return null;
-  const resolved = applyBlendToCard(card, record, blendVariantId);
-  if (!resolved) return null;
-  if (updateUrl) writeBlendToUrl(key, resolved.blendVariantId, resolved.variantId, record);
-  return resolved;
+  const apply = () => {
+    const activeBlend = card.dataset.activeBlend || defaultBlendVariantId(record);
+    const blended = activeBlend ? blendEffectiveRecord(record, activeBlend).record : record;
+    const resolved = applyVariantToCard(card, blended, variantId);
+    if (!resolved) return null;
+    if (updateUrl) writeVariantToUrl(key, resolved.variantId, record);
+    return resolved;
+  };
+  return preserveScroll ? preserveViewport(apply) : apply();
+}
+
+export function selectBlend(key, blendVariantId, { updateUrl = true, preserveScroll = true } = {}) {
+  const card = document.querySelector(cardSelector(key));
+  const record = storedRecord(liveState, key);
+  if (!card || !record) return null;
+  const apply = () => {
+    const resolved = applyBlendToCard(card, record, blendVariantId);
+    if (!resolved) return null;
+    if (updateUrl) writeBlendToUrl(key, resolved.blendVariantId, resolved.variantId, record);
+    return resolved;
+  };
+  return preserveScroll ? preserveViewport(apply) : apply();
 }
 
 // A selected size is addressable without becoming its own catalogue card. The parameter is
@@ -643,7 +668,7 @@ function ensureStyle() {
   const style = document.createElement('style');
   style.id = 'catalogue-variant-style';
   style.textContent = `
-.size-variants,.blend-variants{display:flex;align-items:center;gap:7px;margin:0 0 8px}
+.size-variants,.blend-variants{display:flex;align-items:center;gap:7px;margin:0 0 8px;overflow-anchor:none}
 .size-variant-label,.blend-variant-label{font-family:Cinzel,serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a6b34}
 .size-variant-select,.blend-variant-select{flex:1 1 auto;min-width:0;max-width:230px;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:600 12px Georgia,serif;padding:4px 7px}
 .size-variant-select:focus,.blend-variant-select:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
@@ -669,14 +694,14 @@ function bindSelects(root = document) {
     if (select.dataset.variantBound === '1') return;
     select.dataset.variantBound = '1';
     select.addEventListener('change', () => {
-      selectVariant(select.dataset.variantSelect, select.value);
+      selectVariant(select.dataset.variantSelect, select.value, { preserveScroll:true });
     });
   });
   root.querySelectorAll?.('[data-blend-select]').forEach(select => {
     if (select.dataset.blendBound === '1') return;
     select.dataset.blendBound = '1';
     select.addEventListener('change', () => {
-      selectBlend(select.dataset.blendSelect, select.value);
+      selectBlend(select.dataset.blendSelect, select.value, { preserveScroll:true });
     });
   });
 }
