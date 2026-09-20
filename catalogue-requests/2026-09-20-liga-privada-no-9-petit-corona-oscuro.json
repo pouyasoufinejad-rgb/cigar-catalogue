@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-20-liga-privada-no-9-petit-corona-oscuro",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-petit-corona-oscuro",
+  "entry": {
+    "brand": "Liga Privada",
+    "title": "No. 9 Petit Corona Oscuro",
+    "eyebrow": "Fullest-ring exact No. 9 short",
+    "packagePrice": 44,
+    "packageLabel": "single cigar",
+    "price": 44,
+    "country": "Nicaragua",
+    "length": 4.25,
+    "ring": 46,
+    "strength": 8,
+    "quality": 9,
+    "flavour": 8,
+    "risk": 1,
+    "size": "gold",
+    "subsection": "petit-panatelas",
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "rank": 7,
+    "smokeTime": "40–55 min smoke",
+    "experienceTags": [
+      "Nicotine Bomb",
+      "Pairings: Espresso, dark chocolate, Whiskey",
+      "Occasion: After dinner, slow smoke, weekend session"
+    ],
+    "summaryHtml": "<strong>Espresso, dark cocoa, earth, black pepper and caramel sweetness</strong> run through the same No. 9 blend already in the catalogue, here at a 46 ring that carries more filler behind the wrapper than the Short Panatela and noticeably more than the Coronet. The wider ring is the most forgiving of the three exact No. 9 formats: the draw should be open without turning loose, and the burn holds a slower line that does not punish an unhurried pace the way a 32 or 40 ring does. Its aroma is dense, roasted and savoury-sweet, the mouthfeel creamy and oily, and the finish long on cocoa, coffee, earth and pepper. The line began as Drew Estate's <a href=\"https://drewestate.com/products/liga-privada/liga-privada-no-9/\" rel=\"noopener noreferrer\" target=\"_blank\">private blend project</a>, built from unusually scarce tobaccos rather than a mass-market formula.",
+    "noteHtml": "Cigar Hut lists the exact 4¼″ × 46 single at A$44 and has it in stock; the same page offers ten cigars or a box of 24. Strength, Quality and Flavour carry across from the No. 9 Short Panatela Oscuro and No. 9 Coronets, which are the same blend from the same factory; Value stays automatically derived from price.",
+    "productionLines": [
+      "Handmade",
+      "Wrapper: Connecticut River Valley Broadleaf Oscuro",
+      "Binder: Brazilian Mata Fina",
+      "Filler: Nicaraguan and Honduran"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Protected",
+      "Forgiving Cadence"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-no-9-petit-corona-oscuro/"
+    ],
+    "priceChecked": "2026-09-20"
+  },
+  "note": "Add Liga Privada No. 9 Petit Corona Oscuro at rank 7, directly below No. 9 Short Panatela Oscuro at rank 6, so the two sit next to each other in Petit Panatelas (ring 46 puts it in the same ring-35-and-over subsection). Price, dimensions, country and stock were read from the live Cigar Hut product page in CI rather than from search snippets, which disagreed on length: the page states 4 1/4\" (108mm), ring gauge 46, Nicaragua, A$44 single, in stock. Packaging follows the Short Panatela convention of pricing the single rather than the box. Ring 46 is 41 or over, so Practical carries Forgiving Cadence. Ratings transfer from the two exact No. 9 cards already in the catalogue; this vitola is not described as personally tasted."
+}
