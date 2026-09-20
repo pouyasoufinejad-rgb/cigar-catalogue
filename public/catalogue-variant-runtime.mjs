@@ -659,7 +659,7 @@ article.card.search-hit{outline:2px solid #c69d2c;outline-offset:3px}
 .catalogue-variant-search input{box-sizing:border-box;width:100%;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:13px Georgia,serif;padding:6px 9px}
 .catalogue-variant-search input:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
 .catalogue-variant-search-status{color:#8a7a60;font-size:10.5px;min-height:13px}
-@media(max-width:900px){.size-variant-select,.blend-variant-select{max-width:none}}
+@media(max-width:900px){.size-variant-select{max-width:none}.blend-variant-select{max-width:none}}
 `;
   document.head.appendChild(style);
 }
