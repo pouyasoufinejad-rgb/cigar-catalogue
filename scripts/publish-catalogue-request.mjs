@@ -421,6 +421,7 @@ async function putState(fetchImpl, baseUrl, token, state) {
 }
 
 function removeRecommendationMember(sectionsInput, key) {
+  // Worker entry deletion removes entries/cards, but subsection membership is stored separately.
   const sections = isRecord(sectionsInput) ? clone(sectionsInput) : {};
   if (!Array.isArray(sections.recommendationSubsections)) return sections;
   sections.recommendationSubsections = sections.recommendationSubsections.map(section => {
