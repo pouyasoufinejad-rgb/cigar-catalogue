@@ -301,7 +301,12 @@ async function saveEditor(event) {
 }
 
 function bindButtons(root = document) {
-  if (!document.getElementById('catalogue-admin-panel')) return;
+  const editing = document.body?.classList?.contains('catalogue-direct-edit-mode')
+    || Boolean(document.getElementById('catalogue-admin-panel'));
+  if (!editing) {
+    root.querySelectorAll?.('.catalogue-variant-edit-button').forEach(button => button.remove());
+    return;
+  }
   root.querySelectorAll?.('.blend-variants').forEach(host => {
     if (host.querySelector('.catalogue-variant-edit-blend')) return;
     const card = host.closest('article.card[data-key]');
@@ -339,7 +344,7 @@ export function initVariantEditor() {
   ensureModal();
   bindButtons();
   const observer = new MutationObserver(() => bindButtons());
-  observer.observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['hidden'] });
+  observer.observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['hidden','class'] });
 }
 
 if (typeof document !== 'undefined') {
