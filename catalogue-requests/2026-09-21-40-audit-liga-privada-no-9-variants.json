@@ -1,0 +1,130 @@
+{
+  "id": "2026-09-21-40-audit-liga-privada-no-9-variants",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-petit-corona-oscuro",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-panatela",
+        "label": "Short Panatela",
+        "title": "No. 9 Short Panatela Oscuro",
+        "eyebrow": "Best exact No. 9 taster",
+        "length": 4.5,
+        "ring": 40,
+        "packagePrice": 37,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-short-panatela-oscuro/"
+        ],
+        "smokeTime": "35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "imageUrl": "/api/catalogue-image/liga-privada-no-9-short-panatela",
+        "summaryHtml": "<strong>Espresso, dark cocoa, earth, white pepper and caramel</strong> come through with more wrapper concentration than the coronet while retaining the No. 9’s oily sweetness. The draw should carry measured resistance and the burn is normally disciplined, though the narrow ring punishes impatient puffing and can turn the final inch hot. Its aroma is dense, roasted and savoury-sweet. Mouthfeel is creamy, oily and chewy, followed by a long finish of cocoa, coffee, earth and pepper. The line began as Drew Estate’s <a href=\"https://drewestate.com/products/liga-privada/liga-privada-no-9/\" rel=\"noopener noreferrer\" target=\"_blank\">private blend project</a>, built from unusually scarce tobaccos rather than a mass-market formula.",
+        "noteHtml": "Exact taster for: Liga Privada No. 9 Coronets — Tin of 10.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "No. 9 Petit Corona Oscuro",
+        "eyebrow": "Fullest-ring exact No. 9 short",
+        "length": 4.25,
+        "ring": 46,
+        "packagePrice": 44,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-petit-corona-oscuro/"
+        ],
+        "smokeTime": "40–55 min smoke",
+        "priceChecked": "2026-09-20",
+        "noteHtml": "Cigar Hut lists the exact 4¼″ × 46 single at A$44 and has it in stock; the same page offers ten cigars or a box of 24.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "No. 9 Robusto",
+        "length": 5,
+        "ring": 54,
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-robusto/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 61-1339 range across every option."
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "No. 9 Toro",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-toro/"
+        ],
+        "priceNote": "Cigar Hut exact Toro page lists the single at A$80.",
+        "packagePrice": 80,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "No. 9 Corona Viva",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-corona-viva/"
+        ],
+        "priceNote": "Cigar Hut exact Corona Viva page lists the single at A$55.",
+        "packagePrice": 55,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "No. 9 Corona Doble",
+        "length": 7,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-no-9-corona-doble/"
+        ],
+        "priceNote": "Cigar Hut exact Corona Doble page lists the single at A$85.",
+        "packagePrice": 85,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "short-panatela"
+  },
+  "note": "Replaces generic No. 9 family links with exact vitola pages and adds verified single prices. Robusto stays unpriced because it is sold out."
+}

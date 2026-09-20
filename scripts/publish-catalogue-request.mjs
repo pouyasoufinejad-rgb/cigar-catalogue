@@ -291,6 +291,26 @@ function reorderForTarget(cardsInput, key, targetCard, nowString, sections = {})
   return scratch.cards;
 }
 
+export const MAX_VARIANT_PACKAGE_COUNT = 10;
+
+function validateVariantPurchaseCaps(entry) {
+  const inspect = (variants, label) => {
+    if (!Array.isArray(variants)) return;
+    for (const variant of variants) {
+      if (!isRecord(variant)) continue;
+      const count = Number(variant.packageCount);
+      if (Number.isFinite(count) && count > MAX_VARIANT_PACKAGE_COUNT) {
+        const id = String(variant.id || variant.label || 'unnamed').trim();
+        throw new Error(`${label} variant "${id}" packageCount cannot exceed ${MAX_VARIANT_PACKAGE_COUNT}.`);
+      }
+      inspect(variant.sizeVariants, 'Size');
+      inspect(variant.blendVariants, 'Blend');
+    }
+  };
+  inspect(entry?.sizeVariants, 'Size');
+  inspect(entry?.blendVariants, 'Blend');
+}
+
 function validateImage(image, required) {
   if (!image) {
     if (required) throw new Error('replace-image requires an image object.');
@@ -312,6 +332,7 @@ export function validateRequest(input) {
   if (operation !== 'update-sections' && !key) throw new Error('Invalid catalogue key.');
   const entry = isRecord(input.entry) ? clone(input.entry) : {};
   if (operation === 'upsert-entry' && !isRecord(input.entry)) throw new Error('upsert-entry requires an entry object.');
+  if (operation === 'upsert-entry') validateVariantPurchaseCaps(entry);
   const sections = isRecord(input.sections) ? clone(input.sections) : {};
   if (operation === 'update-sections') {
     const sectionNames = Object.keys(sections);

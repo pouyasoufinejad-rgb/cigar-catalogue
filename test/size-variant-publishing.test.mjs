@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { publishRequestDocument } from '../scripts/publish-catalogue-request.mjs';
+import { MAX_VARIANT_PACKAGE_COUNT, publishRequestDocument, validateRequest } from '../scripts/publish-catalogue-request.mjs';
 import { normaliseEntry } from '../src/index.js';
 import {
   defaultBlendVariantId,
@@ -190,4 +190,21 @@ test('a publish carries blend variants through to the stored entry and card', as
   const card = harness.written().cards[key];
   assert.deepEqual(normaliseBlendVariants(card).map(variant => variant.id), ['sun-grown', 'maduro']);
   assert.equal(defaultBlendVariantId(card), 'sun-grown');
+});
+
+
+test('variant publication rejects packages larger than ten cigars', () => {
+  assert.equal(MAX_VARIANT_PACKAGE_COUNT, 10);
+  assert.throws(() => validateRequest({
+    operation: 'upsert-entry', key: 'test-size-cap',
+    entry: { sizeVariants: [{ id: 'robusto', label: 'Robusto', packageCount: 20 }] }
+  }), /packageCount cannot exceed 10/);
+  assert.throws(() => validateRequest({
+    operation: 'upsert-entry', key: 'test-blend-cap',
+    entry: { blendVariants: [{ id: 'natural', label: 'Natural', packageCount: 50 }] }
+  }), /packageCount cannot exceed 10/);
+  assert.doesNotThrow(() => validateRequest({
+    operation: 'upsert-entry', key: 'test-ten-pack',
+    entry: { sizeVariants: [{ id: 'corona', label: 'Corona', packageCount: 10 }] }
+  }));
 });

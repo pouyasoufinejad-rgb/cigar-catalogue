@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-21-40-audit-aj-new-world-oscuro-variants",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-oscuro",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "New World Oscuro",
+        "length": 4,
+        "ring": 36,
+        "packagePrice": 115.55,
+        "packageCount": 5,
+        "packageLabel": "pack of 5",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/new-world-oscuro-pack-by-aj-fernandez-%252d-%284-x-36%29-%252d-pack-of-5.html"
+        ],
+        "smokeTime": "25–35 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "CigarWorld pack of five at A$115.55 is A$23.11 a stick, below its A$24.11 single.",
+        "practicalLines": [
+          "pack of 5",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "New World Oscuro Toro",
+        "length": 6.5,
+        "ring": 55,
+        "packagePrice": 68.95,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/categories/cigars/aj-fernandez-%28nicaragua%29/new-world/"
+        ],
+        "smokeTime": "About 70–90 min smoke",
+        "priceChecked": "2026-09-21",
+        "priceNote": "CigarWorld lists the Oscuro Toro single at A$68.95. The box of 21 is excluded by the purchase cap.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "petit-corona"
+  },
+  "note": "Petit Corona remains the verified pack of five; Toro now uses the verified single price instead of a box of 21."
+}

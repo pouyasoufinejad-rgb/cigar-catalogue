@@ -1,0 +1,103 @@
+{
+  "id": "2026-09-21-40-audit-charter-oak-maduro-variants",
+  "operation": "upsert-entry",
+  "key": "foundation-charter-oak-maduro-rothschild",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "rothschild",
+        "label": "Rothschild",
+        "title": "Charter Oak Maduro Rothschild",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 34,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-rothschild/",
+          "https://www.smokingpipes.com/cigars/foundation-cigar-company/moreinfo.cfm?product_id=333828"
+        ],
+        "smokeTime": "About 35–45 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "petite-corona",
+        "label": "Petite Corona",
+        "title": "Charter Oak Maduro Petite Corona",
+        "length": 5.25,
+        "ring": 42,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-petite-corona/"
+        ],
+        "priceNote": "Cigar Hut exact Petite Corona page lists the single at A$37.",
+        "packagePrice": 37,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "lonsdale",
+        "label": "Lonsdale",
+        "title": "Charter Oak Maduro Lonsdale",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-lonsdale/"
+        ],
+        "priceNote": "Cigar Hut exact Lonsdale page lists the single at A$54.",
+        "packagePrice": 54,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Charter Oak Maduro Toro",
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-toro/"
+        ],
+        "priceNote": "Sold out at Cigar Hut; the page shows a 56-999 range."
+      },
+      {
+        "id": "grande",
+        "label": "Grande",
+        "title": "Charter Oak Maduro Grande",
+        "length": 6,
+        "ring": 60,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/charter-oak-maduro-grande/"
+        ],
+        "priceNote": "Cigar Hut exact Grande page lists the single at A$55.",
+        "packagePrice": 55,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "rothschild"
+  },
+  "note": "Adds verified single pricing to exact in-stock Charter Oak Maduro variant pages. Toro remains unpriced because it is sold out."
+}

@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-21-40-audit-oliva-serie-g-special-g-blends",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Serie G Special G Natural",
+        "eyebrow": "African Cameroon Natural petit perfecto",
+        "packagePrice": 27,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 27,
+        "country": "Nicaragua",
+        "length": 3.75,
+        "ring": 48,
+        "strength": 4,
+        "quality": 7,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Toasted nuts, dry cedar, black coffee, light sweet spice and earth</strong> define the Cameroon-wrapped Special G. The Nicaraguan core gives the small perfecto enough body to avoid becoming thin, while the Cameroon leaf keeps the profile drier, nuttier and more aromatic than the Maduro. Its short shape concentrates the opening quickly before settling into coffee, cedar and toasted-nut notes.",
+        "noteHtml": "Untasted.",
+        "productionLines": [
+          "Handmade in Nicaragua",
+          "Wrapper: African Cameroon",
+          "Binder: Nicaraguan",
+          "Filler: Nicaraguan"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "smokeTime": "About 35–40 min smoke",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/oliva-serie-g-special-g/",
+          "https://www.theindexcigars.com.au/products/oliva-serie-g-special-g"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21",
+        "priceNote": "Cigar Hut exact Special G page lists the single at A$27 and also offers 10 cigars. The 48-count box benchmark is excluded."
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Replaces the 48-box-derived Natural benchmark with Cigar Hut's A$27 single and exact retailer links."
+}
