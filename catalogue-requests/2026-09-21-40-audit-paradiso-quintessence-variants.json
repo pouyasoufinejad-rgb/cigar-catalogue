@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-21-40-audit-paradiso-quintessence-variants",
+  "operation": "upsert-entry",
+  "key": "paradiso-quintessence-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "Quintessence Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "packagePrice": 40,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-quintessence-robusto/"
+        ],
+        "smokeTime": "About 55–70 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "majestic",
+        "label": "Majestic",
+        "title": "Quintessence Majestic",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/paradiso-quintessence-majestic/"
+        ],
+        "priceNote": "Cigar Hut exact Majestic page lists the single at A$52.",
+        "packagePrice": 52,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "priceChecked": "2026-09-21",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "robusto"
+  },
+  "note": "Adds the verified Majestic single price and preserves the exact retailer page."
+}
