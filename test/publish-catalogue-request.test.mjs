@@ -238,6 +238,38 @@ test('delete-entry removes a dynamic standalone card and verifies production abs
   assert.equal(calls.some(call => call.method === 'PUT'), false);
 });
 
+test('delete-entry retry cleans a stale recommendation reference after the entry is already gone', async () => {
+  const calls = [];
+  const state = baseState({
+    entries: {},
+    cards: {},
+    sections: {
+      recommendationSubsections: [
+        { id: 'petit', title: 'Petit', note: '', entryKeys: ['keep', 'duplicate'] }
+      ]
+    }
+  });
+  let writtenState;
+  const routes = [
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: jsonResponse(state) },
+    { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
+      writtenState = JSON.parse(options.body);
+      return jsonResponse({ ok: true });
+    } },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards, sections: writtenState.sections }) },
+    { method: 'GET', url: `${BASE}/?catalogue_verify=duplicate`, response: new Response('<html><body>gone</body></html>', { status: 200, headers: { 'content-type': 'text/html' } }) }
+  ];
+
+  const result = await publishRequestDocument({ operation: 'delete-entry', key: 'duplicate' }, {
+    fetchImpl: createFetchRouter(routes, calls), baseUrl: BASE, token: TOKEN, now: () => new Date('2026-09-21T00:00:00Z')
+  });
+
+  assert.equal(result.verified, true);
+  assert.equal(calls.some(call => call.method === 'DELETE'), false, 'retry must tolerate the entry already being absent');
+  assert.deepEqual(writtenState.sections.recommendationSubsections[0].entryKeys, ['keep']);
+});
+
 test('image upload validates bytes, verifies download, and associates imageUrl', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'catalogue-publisher-'));
   const requestDir = join(dir, 'catalogue-requests');
