@@ -1,0 +1,155 @@
+{
+  "id": "2026-09-20-variant-audit-liga-privada-t52-short-panatela",
+  "operation": "upsert-entry",
+  "key": "liga-privada-t52-short-panatela",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-panatela",
+        "label": "Short Panatela",
+        "title": "T52 Short Panatela",
+        "length": 4.25,
+        "ring": 46,
+        "packagePrice": 42,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-short-panatela/"
+        ],
+        "smokeTime": "35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "Cigar Hut lists the exact T52 Short Panatela as 4¼″ × 46 at A$42.",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "packageCount": 1,
+        "stock": "in",
+        "stockChecked": "2026-09-20"
+      },
+      {
+        "id": "petit-corona",
+        "label": "Petit Corona",
+        "title": "T52 Petit Corona",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-petit-corona/"
+        ],
+        "priceNote": "Cigar Hut lists the exact T52 Petit Corona as 4½″ × 40 at A$52.",
+        "length": 4.5,
+        "ring": 40,
+        "packagePrice": 52,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "T52 Robusto",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-robusto/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 5″ × 54 Robusto single at A$67.",
+        "length": 5,
+        "ring": 54,
+        "packagePrice": 67,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 50–65 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "T52 Toro",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-toro/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 52 Toro single at A$64.",
+        "length": 6,
+        "ring": 52,
+        "packagePrice": 64,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-viva",
+        "label": "Corona Viva",
+        "title": "T52 Corona Viva",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-corona-viva/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 46 Corona Viva single at A$52.",
+        "length": 6,
+        "ring": 46,
+        "packagePrice": 52,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 55–70 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "corona-doble",
+        "label": "Corona Doble",
+        "title": "T52 Corona Doble",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/liga-privada-t52-corona-doble/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 7″ × 54 Corona Doble single at A$85.",
+        "length": 7,
+        "ring": 54,
+        "packagePrice": 85,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 80–100 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "short-panatela"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}
