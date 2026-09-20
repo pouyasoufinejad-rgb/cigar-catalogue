@@ -1,0 +1,32 @@
+name: Variant live-state diagnostic
+
+on:
+  push:
+    branches:
+      - feature-entry-size-variants
+    paths:
+      - '.github/workflows/variant-live-state-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read live variant target
+        shell: bash
+        run: |
+          node <<'NODE'
+          const base='https://cigar-catalogue.psncodex.workers.dev';
+          const res=await fetch(base+'/api/catalogue-overrides?variant_audit='+Date.now(), {headers:{accept:'application/json'},cache:'no-store'});
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          const state=await res.json();
+          const sections=state.sections?.recommendationSubsections||[];
+          const section=sections.find(x=>x.id==='petit-panatelas');
+          console.log('TARGET_SECTION '+JSON.stringify(section));
+          const keys=section?.entryKeys||[];
+          for(const key of keys){
+            console.log('TARGET_ENTRY '+key+' '+JSON.stringify({card:state.cards?.[key]||null,entry:state.entries?.[key]||null}));
+          }
+          NODE
