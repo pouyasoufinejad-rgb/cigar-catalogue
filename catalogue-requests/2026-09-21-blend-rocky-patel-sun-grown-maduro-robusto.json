@@ -1,0 +1,46 @@
+{
+  "id": "2026-09-21-blend-rocky-patel-sun-grown-maduro-robusto",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-maduro-robusto",
+  "entry": {
+    "brand": "Rocky Patel",
+    "title": "Sun Grown Maduro Robusto",
+    "eyebrow": "Broadleaf Maduro counterpart to Sun Grown",
+    "packagePrice": 906,
+    "packageLabel": "box of 20",
+    "price": 45.3,
+    "country": "Nicaragua",
+    "length": 5,
+    "ring": 50,
+    "strength": 8,
+    "quality": 9,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "summaryHtml": "<strong>Dark-roasted coffee, earth, cocoa, caramel, black licorice and pepper</strong> make the Sun Grown Maduro darker and sweeter than the standard Ecuadorian-Sumatra Sun Grown line. The oily Broadleaf wrapper sits over a Nicaraguan core, giving the Robusto dense body, roasted sweetness and a peppery finish without losing the line’s dry, earthy backbone.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade in Estelí, Nicaragua",
+      "Wrapper: Broadleaf Maduro",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Box of 20",
+      "Uncut",
+      "Protected",
+      "Forgiving Cadence"
+    ],
+    "smokeTime": "About 60 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/sun-grown-maduro-robusto"
+    ],
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21"
+  },
+  "note": "Add the Maduro counterpart to the existing Rocky Patel Sun Grown line as a standalone blend entry. The Index currently has both the single and box of 20 available; the box gives the best verified Australian per-stick price at A$45.30."
+}

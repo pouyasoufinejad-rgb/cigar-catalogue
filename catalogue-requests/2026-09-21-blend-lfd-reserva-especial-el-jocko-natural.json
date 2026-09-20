@@ -1,0 +1,46 @@
+{
+  "id": "2026-09-21-blend-lfd-reserva-especial-el-jocko-natural",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-reserva-especial-el-jocko-natural",
+  "entry": {
+    "brand": "La Flor Dominicana",
+    "title": "Reserva Especial El Jocko Natural",
+    "eyebrow": "Connecticut Natural compact perfecto",
+    "packagePrice": 37.14,
+    "packageLabel": "single cigar",
+    "price": 37.14,
+    "country": "Dominican Republic",
+    "length": 4.5,
+    "ring": 54,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "summaryHtml": "<strong>Cedar, cream, roasted nuts, cinnamon, earth and restrained pepper</strong> give the El Jocko Natural a brighter profile than the Broadleaf Maduro without turning mild or bland. The Ecuadorian Connecticut wrapper softens the darker edges while the Dominican core supplies body and savoury depth. Its perfecto shape starts concentrated, opens through the broad middle and finishes on cedar, nuts and warm spice.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Ecuadorian Connecticut",
+      "Binder: Dominican Republic",
+      "Filler: Dominican Republic"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Perfecto",
+      "Protected",
+      "Forgiving Cadence"
+    ],
+    "smokeTime": "About 35–50 min smoke",
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/categories/cigars/la-flor-dominicana-%28dominican-republic%29/"
+    ],
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21"
+  },
+  "note": "Add the Natural counterpart to the existing El Jocko Maduro as a standalone entry. CigarWorld currently lists the exact 4.5 x 32-54 Natural single at A$37.14 and available; its box is temporarily unavailable."
+}

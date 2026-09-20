@@ -1,0 +1,46 @@
+{
+  "id": "2026-09-21-blend-arturo-fuente-exquisitos-natural",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-natural",
+  "entry": {
+    "brand": "Arturo Fuente",
+    "title": "Exquisitos Natural",
+    "eyebrow": "Sun-grown Dominican small panatela",
+    "packagePrice": 1075,
+    "packageLabel": "box of 50",
+    "price": 21.5,
+    "country": "Dominican Republic",
+    "length": 4.5,
+    "ring": 33,
+    "strength": 6,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "size": "gold",
+    "summaryHtml": "<strong>Cedar, toasted nuts, coffee, light pepper and caramel sweetness</strong> lead a compact, wrapper-forward profile. The Ecuadorian sun-grown leaf brings more spice and dry wood than a shade-wrapped cigar, while the Dominican core keeps the smoke rounded and steady. At 33 ring the wrapper stays prominent, with a concentrated cedar-and-coffee finish rather than the darker cocoa weight of the Maduro.",
+    "noteHtml": "Untasted.",
+    "productionLines": [
+      "Handmade in the Dominican Republic",
+      "Wrapper: Ecuadorian Sun Grown",
+      "Binder: Dominican Republic",
+      "Filler: Dominican Republic"
+    ],
+    "practicalLines": [
+      "Box of 50",
+      "Uncut",
+      "Protected",
+      "Lenient Cadence"
+    ],
+    "smokeTime": "About 30 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/arturo-fuente-exquisito-natural"
+    ],
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21"
+  },
+  "note": "Add the Natural/Sun Grown blend counterpart to the existing Exquisitos Maduro as its own standalone catalogue entry. The Index currently has both the single and box of 50 available; the box gives the best verified Australian per-stick price at A$21.50."
+}
