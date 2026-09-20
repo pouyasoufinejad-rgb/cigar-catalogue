@@ -1,0 +1,152 @@
+{
+  "id": "2026-09-20-variant-audit-ashton-vsg-enchantment",
+  "operation": "upsert-entry",
+  "key": "ashton-vsg-enchantment",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "enchantment",
+        "label": "Enchantment",
+        "title": "VSG Enchantment",
+        "length": 4.375,
+        "ring": 60,
+        "packagePrice": 44,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-enchantment/",
+          "https://www.smokingpipes.com/cigars/ashton/moreinfo.cfm?product_id=26572"
+        ],
+        "smokeTime": "About 45–60 min smoke",
+        "priceChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "tres-mystique",
+        "label": "Tres Mystique",
+        "title": "VSG Tres Mystique",
+        "length": 4.375,
+        "stock": "out",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-tres-mystique/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 4⅜″ × 44 single at A$39; it is currently sold out.",
+        "ring": 44,
+        "packagePrice": 39,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "smokeTime": "About 35–50 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "robusto",
+        "label": "Robusto",
+        "title": "VSG Robusto",
+        "length": 5.5,
+        "ring": 50,
+        "priceNote": "CigarWorld lists the exact 5½″ × 50 VSG Robusto single at A$60.18 and in stock.",
+        "packagePrice": 60.18,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/ashton-vsg-%252d-robusto-%252d-%285-1%7B47%7D2x-50%29-%252d-single.html"
+        ],
+        "stock": "in",
+        "smokeTime": "About 55–70 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "eclipse",
+        "label": "Eclipse",
+        "title": "VSG Eclipse",
+        "length": 6,
+        "ring": 52,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-eclipse-tubo/"
+        ],
+        "priceNote": "Cigar Hut lists the 6″ × 52 Eclipse Tubo at A$62.",
+        "packagePrice": 62,
+        "packageCount": 1,
+        "packageLabel": "single tubo",
+        "stock": "in",
+        "smokeTime": "About 60–75 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single tubo",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "sorcerer",
+        "label": "Sorcerer",
+        "title": "VSG Sorcerer",
+        "length": 7,
+        "ring": 49,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-sorcerer/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 7″ × 49 Sorcerer single at A$67.",
+        "packagePrice": 67,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 75–95 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "wizard",
+        "label": "Wizard",
+        "title": "VSG Wizard",
+        "length": 6,
+        "ring": 56,
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/ashton-vsg-wizard/"
+        ],
+        "priceNote": "Cigar Hut lists the exact 6″ × 56 Wizard single at A$63.",
+        "packagePrice": 63,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "enchantment"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}
