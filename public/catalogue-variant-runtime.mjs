@@ -46,6 +46,54 @@ function retailerLabel(url) {
   }
 }
 
+function applyVariantFreshness(card, effective) {
+  const status = ['in', 'out', 'unknown'].includes(effective.stock) ? effective.stock : 'unknown';
+  card.dataset.stock = status;
+  if (effective.priceChecked) card.dataset.priceChecked = effective.priceChecked;
+  else delete card.dataset.priceChecked;
+  if (effective.stockChecked) card.dataset.stockChecked = effective.stockChecked;
+  else delete card.dataset.stockChecked;
+
+  const row = card.querySelector('.freshness');
+  if (!row) return;
+  row.classList.remove('live-stock-in', 'live-stock-out', 'live-stock-unknown', 'live-stock-delisted');
+  row.classList.add(`live-stock-${status}`);
+
+  const retailer = Array.isArray(effective.retailerLinks) && effective.retailerLinks.length
+    ? retailerLabel(effective.retailerLinks[0])
+    : 'retailer';
+  const stockState = row.querySelector('.stock-state');
+  if (stockState) {
+    stockState.textContent = status === 'in'
+      ? `In stock at ${retailer}`
+      : status === 'out'
+        ? `Out of stock at ${retailer}`
+        : 'Stock status unconfirmed';
+  }
+  const priceState = row.querySelector('.price-checked-state');
+  if (priceState) priceState.textContent = effective.priceChecked
+    ? `Price checked ${effective.priceChecked}`
+    : 'Price not yet checked';
+  const stockCheckedState = row.querySelector('.stock-checked-state');
+  if (stockCheckedState) stockCheckedState.textContent = effective.stockChecked
+    ? `Stock checked ${effective.stockChecked}`
+    : 'Stock not yet checked';
+}
+
+function announceVariantChange(card, resolved) {
+  const EventCtor = card?.ownerDocument?.defaultView?.CustomEvent;
+  if (!EventCtor) return;
+  card.dispatchEvent(new EventCtor('catalogue:variant-changed', {
+    bubbles: true,
+    detail: {
+      key: card.dataset.key || '',
+      variantId: resolved.variantId,
+      defaultVariantId: card.dataset.defaultVariant || '',
+      stock: card.dataset.stock || 'unknown'
+    }
+  }));
+}
+
 function replaceShopLinks(card, links) {
   const existing = [...card.querySelectorAll('a.shop[href]')];
   const body = card.querySelector('.cardbody');
@@ -130,6 +178,7 @@ export function applyVariantToCard(card, record, variantId) {
   }
 
   if (Array.isArray(effective.retailerLinks)) replaceShopLinks(card, effective.retailerLinks);
+  applyVariantFreshness(card, effective);
 
   if (own(effective, 'smokeTime')) {
     const bottom = card.querySelector('.artmeta-bottom');
@@ -154,6 +203,7 @@ export function applyVariantToCard(card, record, variantId) {
   refreshSizeAdjustedValueForCard(card, effective);
   refreshLaurelForCard(card, effective);
   markUnratedValue(card, Boolean(effective.priceUnverified), effective.quality);
+  announceVariantChange(card, resolved);
   return resolved;
 }
 
