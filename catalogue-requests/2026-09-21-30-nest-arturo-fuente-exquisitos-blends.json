@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-21-30-nest-arturo-fuente-exquisitos-blends",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Exquisitos Natural",
+        "eyebrow": "Sun-grown Dominican small panatela",
+        "packagePrice": 1075,
+        "packageCount": 50,
+        "packageLabel": "box of 50",
+        "price": 21.5,
+        "country": "Dominican Republic",
+        "length": 4.5,
+        "ring": 33,
+        "strength": 6,
+        "quality": 7,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Cedar, toasted nuts, coffee, light pepper and caramel sweetness</strong> lead a compact, wrapper-forward profile. The Ecuadorian sun-grown leaf brings more spice and dry wood than a shade-wrapped cigar, while the Dominican core keeps the smoke rounded and steady. At 33 ring the wrapper stays prominent, with a concentrated cedar-and-coffee finish rather than the darker cocoa weight of the Maduro.",
+        "noteHtml": "Untasted.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Ecuadorian Sun Grown",
+          "Binder: Dominican Republic",
+          "Filler: Dominican Republic"
+        ],
+        "practicalLines": [
+          "Box of 50",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ],
+        "smokeTime": "About 30 min smoke",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/arturo-fuente-exquisito-natural"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Nest the existing standalone blend counterpart under arturo-fuente-exquisitos-maduro using the Blend dropdown. Preserve the parent entry as the baseline/default blend and do not copy or overwrite unrelated parent fields."
+}

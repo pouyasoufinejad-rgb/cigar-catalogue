@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-21-30-nest-arturo-fuente-hemingway-classic-blends",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-hemingway-classic-natural",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural"
+      },
+      {
+        "id": "sun-grown",
+        "label": "Sun Grown",
+        "title": "Hemingway Classic Sun Grown",
+        "eyebrow": "Ecuadorian sun-grown Hemingway perfecto",
+        "packagePrice": 68.18,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 34.09,
+        "country": "Dominican Republic",
+        "length": 7,
+        "ring": 46,
+        "strength": 7,
+        "quality": 8,
+        "risk": 2,
+        "stock": "in",
+        "summaryHtml": "<strong>Cedar, leather, toasted wood, caramel, red pepper and citrus peel</strong> give the Classic Sun Grown a firmer, spicier edge than the Cameroon-wrapped Natural while retaining the Hemingway line’s aromatic Dominican core. The Ecuadorian sun-grown wrapper adds darker sweetness and pepper around the cedar, with the long perfecto shape allowing the profile to broaden before a woody, savoury-sweet finish.",
+        "noteHtml": "Untasted. Price follows the catalogue’s existing Hemingway Classic convention of treating one 7-inch cigar as two pre-light sessions.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Ecuadorian Sun Grown",
+          "Binder: Dominican Republic",
+          "Filler: Dominican Republic"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Double-tapered perfecto",
+          "Pre-cut before lighting into two sessions",
+          "Forgiving Cadence"
+        ],
+        "smokeTime": "About 30–45 min per pre-cut session",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/categories/cigars/arturo-fuente-%28dominican%29/arturo-fuente-hemingway/",
+          "https://www.cigarhut.com.au/arturo-fuente-hemingway-classic-sun-grown/"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21"
+      }
+    ],
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Nest the existing standalone blend counterpart under arturo-fuente-hemingway-classic-natural using the Blend dropdown. Preserve the parent entry as the baseline/default blend and do not copy or overwrite unrelated parent fields."
+}

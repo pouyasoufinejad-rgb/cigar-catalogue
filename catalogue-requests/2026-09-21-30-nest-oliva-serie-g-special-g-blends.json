@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-21-30-nest-oliva-serie-g-special-g-blends",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Serie G Special G Natural",
+        "eyebrow": "African Cameroon Natural petit perfecto",
+        "packagePrice": 1292.1,
+        "packageCount": 48,
+        "packageLabel": "box of 48",
+        "price": 26.92,
+        "country": "Nicaragua",
+        "length": 3.75,
+        "ring": 48,
+        "strength": 4,
+        "quality": 7,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Toasted nuts, dry cedar, black coffee, light sweet spice and earth</strong> define the Cameroon-wrapped Special G. The Nicaraguan core gives the small perfecto enough body to avoid becoming thin, while the Cameroon leaf keeps the profile drier, nuttier and more aromatic than the Maduro. Its short shape concentrates the opening quickly before settling into coffee, cedar and toasted-nut notes.",
+        "noteHtml": "Untasted.",
+        "productionLines": [
+          "Handmade in Nicaragua",
+          "Wrapper: African Cameroon",
+          "Binder: Nicaraguan",
+          "Filler: Nicaraguan"
+        ],
+        "practicalLines": [
+          "Box of 48",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "smokeTime": "About 35–40 min smoke",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/oliva-%252d-%28serie-g%29-special-g-%252d-box-of-48-%252d-%283.75%22-x-48%29.html",
+          "https://www.theindexcigars.com.au/products/oliva-serie-g-special-g"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Nest the existing standalone blend counterpart under oliva-serie-g-maduro-special-g using the Blend dropdown. Preserve the parent entry as the baseline/default blend and do not copy or overwrite unrelated parent fields."
+}
