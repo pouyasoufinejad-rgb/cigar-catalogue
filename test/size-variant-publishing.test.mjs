@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 
 import { publishRequestDocument } from '../scripts/publish-catalogue-request.mjs';
 import { normaliseEntry } from '../src/index.js';
-import { defaultVariantId, normaliseVariants } from '../public/catalogue-variants.mjs';
+import {
+  defaultBlendVariantId,
+  defaultVariantId,
+  normaliseBlendVariants,
+  normaliseVariants
+} from '../public/catalogue-variants.mjs';
 
 const BASE = 'https://cigar-catalogue.psncodex.workers.dev';
 const TOKEN = 'test-token-do-not-log';
@@ -146,4 +151,43 @@ test('archiving the consolidated card leaves no second standalone entry for the 
   assert.equal(normaliseVariants(cards[parent]).length, 3);
   assert.ok(normaliseVariants(cards[parent]).some(variant => variant.id === 'short-panatela'),
     'the archived card lives on as a size of the surviving entry');
+});
+
+
+test('a publish carries blend variants through to the stored entry and card', async () => {
+  const key = 'rocky-patel-sun-grown-juniors';
+  const blends = [
+    { id: 'sun-grown', label: 'Sun Grown' },
+    {
+      id: 'maduro', label: 'Maduro', title: 'Sun Grown Maduro Robusto',
+      length: 5, ring: 50, packagePrice: 47.3, packageLabel: 'single cigar',
+      strength: 8, quality: 9, flavour: null,
+      productionLines: ['Wrapper: Broadleaf Maduro', 'Binder: Nicaraguan', 'Filler: Nicaraguan'],
+      practicalLines: ['Single cigar', 'Uncut', 'Protected', 'Forgiving Cadence'],
+      retailerLinks: ['https://www.theindexcigars.com.au/products/sun-grown-maduro-robusto']
+    }
+  ];
+  const harness = publishHarness(key, { version: 3, cards: {}, sections: {}, entries: {} });
+
+  await publishRequestDocument({
+    operation: 'upsert-entry',
+    key,
+    entry: {
+      brand: 'Rocky Patel', title: 'Sun Grown Juniors', eyebrow: 'Sun Grown',
+      rank: 4, quality: 8, strength: 9, country: 'Honduras',
+      length: 4, ring: 38, packagePrice: 85, packageLabel: 'pack of 5', price: 17,
+      blendVariants: blends, defaultBlendVariantId: 'sun-grown'
+    }
+  }, { fetchImpl: harness.router, baseUrl: BASE, token: TOKEN, repoRoot: process.cwd() });
+
+  const entry = harness.saved();
+  assert.deepEqual(normaliseBlendVariants(entry).map(variant => variant.id), ['sun-grown', 'maduro']);
+  assert.equal(defaultBlendVariantId(entry), 'sun-grown');
+  assert.equal(entry.blendVariants[1].quality, 9);
+  assert.deepEqual(entry.blendVariants[1].productionLines,
+    ['Wrapper: Broadleaf Maduro', 'Binder: Nicaraguan', 'Filler: Nicaraguan']);
+
+  const card = harness.written().cards[key];
+  assert.deepEqual(normaliseBlendVariants(card).map(variant => variant.id), ['sun-grown', 'maduro']);
+  assert.equal(defaultBlendVariantId(card), 'sun-grown');
 });
