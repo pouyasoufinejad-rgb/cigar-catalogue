@@ -935,7 +935,7 @@ export function applyStructuralOverridesToHtml(html, cards) {
 
 function injectCardsIntoContainer(html, containerId, cards, required = false) {
   if (!cards) return html;
-  const marker = new RegExp(`<div\\\\b(?=[^>]*\\\\bid=["']${containerId}["'])[^>]*>`, 'i');
+  const marker = new RegExp(`<div\\b(?=[^>]*\\bid=["']${containerId}["'])[^>]*>`, 'i');
   const match = marker.exec(html);
   if (!match) {
     if (required) throw new Error(`Could not find #${containerId} in restored catalogue HTML.`);
