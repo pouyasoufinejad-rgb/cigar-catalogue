@@ -242,7 +242,7 @@ test('delete-entry retry cleans a stale recommendation reference after the entry
   const calls = [];
   const state = baseState({
     entries: {},
-    cards: {},
+    cards: { keep: { rank: 1, archived: false, taster: false } },
     sections: {
       recommendationSubsections: [
         { id: 'petit', title: 'Petit', note: '', entryKeys: ['keep', 'duplicate'] }
@@ -250,14 +250,17 @@ test('delete-entry retry cleans a stale recommendation reference after the entry
     }
   });
   let writtenState;
+  let verifyReads = 0;
   const routes = [
     { method: 'GET', url: `${BASE}/api/catalogue-overrides`, response: jsonResponse(state) },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: jsonResponse(state) },
+    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => {
+      verifyReads += 1;
+      return jsonResponse(verifyReads === 1 ? state : { ...state, cards: writtenState.cards, sections: writtenState.sections });
+    } },
     { method: 'PUT', url: `${BASE}/api/catalogue-overrides`, response: ({ options }) => {
       writtenState = JSON.parse(options.body);
       return jsonResponse({ ok: true });
     } },
-    { method: 'GET', url: `${BASE}/api/catalogue-overrides?verify=1`, response: () => jsonResponse({ ...state, cards: writtenState.cards, sections: writtenState.sections }) },
     { method: 'GET', url: `${BASE}/?catalogue_verify=duplicate`, response: new Response('<html><body>gone</body></html>', { status: 200, headers: { 'content-type': 'text/html' } }) }
   ];
 
