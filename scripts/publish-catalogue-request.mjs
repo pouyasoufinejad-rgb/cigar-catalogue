@@ -544,6 +544,8 @@ export async function publishRequestDocument(input, options = {}) {
   const target = existingDynamic || !existingCard ? 'dynamic' : 'static';
 
   if (request.operation === 'delete-entry') {
+    // A nested variant can supersede a former standalone dynamic card. Deletion removes
+    // that obsolete record entirely instead of leaving a duplicate in the Archived grid.
     if (!existingDynamic) throw new Error('delete-entry can only remove a dynamic catalogue entry.');
     await deleteEntry(fetchImpl, baseUrl, token, request.key);
 
