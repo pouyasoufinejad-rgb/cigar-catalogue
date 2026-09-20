@@ -21,6 +21,9 @@ const expectedBadge = (() => {
 
 const baseUrl = String(process.env.CATALOGUE_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
 const profiles = [['desktop', 1440], ['tablet', 1000], ['mobile', 412]];
+// Optional: report where these cards land in their grid and what sits either side of them.
+const neighbourKeys = String(process.env.STRIP_NEIGHBOUR_KEYS || '')
+  .split(',').map(value => value.trim()).filter(Boolean);
 
 const browser = await chromium.launch();
 let failures = 0;
@@ -31,7 +34,7 @@ for (const [label, width] of profiles) {
   // The flavour module rewrites every country row after load; give it room to settle.
   await page.waitForTimeout(5000);
 
-  const out = await page.evaluate(() => {
+  const out = await page.evaluate(keys => {
     const cards = [...document.querySelectorAll('article.card')];
     let offCentre = 0;
     let worstOffset = 0;
@@ -79,9 +82,25 @@ for (const [label, width] of profiles) {
       visibleAwardBoxes: [...document.querySelectorAll('.gem-award')]
         .filter(node => getComputedStyle(node).display !== 'none').length,
       scored, scoreNotFirst,
-      top: samples.sort((a, b) => Number(b.split('=')[1]) - Number(a.split('=')[1])).slice(0, 8)
+      top: samples.sort((a, b) => Number(b.split('=')[1]) - Number(a.split('=')[1])).slice(0, 8),
+      // Where a card actually lands once the subsection module has finished moving cards,
+      // which is the only thing that settles whether two cards sit next to each other. A
+      // static card's data-rank in the served HTML is the stale baked value, so reading
+      // the raw response answers a different question.
+      neighbours: keys.map(key => {
+        const card = document.querySelector(`article.card[data-key="${CSS.escape(key)}"]`);
+        if (!card) return `NEIGHBOURS ${key}: (card not found)`;
+        const grid = card.closest('.grid');
+        const siblings = [...(grid?.querySelectorAll(':scope > article.card:not(.hidden)') || [])];
+        const at = siblings.indexOf(card);
+        const label = node => `${node.dataset.key || '?'}[${(node.querySelector('.eyebrow')?.textContent || '').trim()}]`;
+        return `NEIGHBOURS ${key}: grid=${grid?.id || '?'} pos=${at + 1}/${siblings.length}`
+          + ` prev=${at > 0 ? label(siblings[at - 1]) : '(none)'}`
+          + ` self=${label(card)}`
+          + ` next=${at >= 0 && at + 1 < siblings.length ? label(siblings[at + 1]) : '(none)'}`;
+      })
     };
-  });
+  }, neighbourKeys);
 
   console.log(`\n=== ${label} ${width}px`);
   console.log(`   cards=${out.cards}  computed grid-column=[${out.gridColumn}]`);
@@ -91,6 +110,7 @@ for (const [label, width] of profiles) {
   console.log(`   OLD_AWARD_BOXES_VISIBLE ${out.visibleAwardBoxes}`);
   console.log(`   SCORES ${out.scored} rendered, ${out.scoreNotFirst} not leading the row`);
   console.log(`   TOP ${out.top.join('  ')}`);
+  for (const line of out.neighbours) console.log(`   ${line}`);
 
   if (out.offCentre) { console.error(`   FAIL ${label}: ${out.offCentre} strip(s) not centred`); failures += 1; }
   if (out.visibleAwardBoxes) { console.error(`   FAIL ${label}: the old award box is visible`); failures += 1; }
