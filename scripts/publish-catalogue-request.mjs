@@ -569,7 +569,8 @@ export async function publishRequestDocument(input, options = {}) {
 
     const cleanedSections = removeRecommendationMember(verifiedState.sections, request.key);
     if (JSON.stringify(cleanedSections) !== JSON.stringify(verifiedState.sections)) {
-      await putState(fetchImpl, baseUrl, token, { ...verifiedState, sections: cleanedSections });
+      const cleanedCards = normaliseRankings(verifiedState.cards, cleanedSections);
+      await putState(fetchImpl, baseUrl, token, { ...verifiedState, cards: cleanedCards, sections: cleanedSections });
       verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
       verifiedState = normaliseStateShape(verifiedStateRaw);
       if (isRecord(verifiedState.entries[request.key]) || isRecord(verifiedState.cards[request.key])) {
