@@ -1,0 +1,57 @@
+{
+  "id": "2026-09-20-variant-audit-nica-rustica-broadleaf-short-robusto",
+  "operation": "upsert-entry",
+  "key": "nica-rustica-broadleaf-short-robusto",
+  "entry": {
+    "sizeVariants": [
+      {
+        "id": "short-robusto",
+        "label": "Short Robusto",
+        "title": "Broadleaf Short Robusto",
+        "length": 4.5,
+        "ring": 50,
+        "packagePrice": 929.5,
+        "packageCount": 25,
+        "packageLabel": "box of 25",
+        "retailerLinks": [
+          "https://www.theindexcigars.com.au/products/nica-rustica-broadleaf-short-robusto"
+        ],
+        "smokeTime": "About 50 min smoke",
+        "priceChecked": "2026-09-20",
+        "priceNote": "The Index box of 25 at A$929.50 is A$37.18 a stick, below its A$39 single.",
+        "practicalLines": [
+          "box of 25",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      },
+      {
+        "id": "toro",
+        "label": "Toro",
+        "title": "Broadleaf Toro",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/nica-rustica-connecticut-broadleaf-toro/"
+        ],
+        "priceNote": "Cigar Hut lists the exact Broadleaf Toro as 6″ × 52 at A$49.",
+        "length": 6,
+        "ring": 52,
+        "packagePrice": 49,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "stock": "in",
+        "smokeTime": "About 65–80 min smoke",
+        "priceChecked": "2026-09-20",
+        "stockChecked": "2026-09-20",
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ]
+      }
+    ],
+    "defaultVariantId": "short-robusto"
+  },
+  "note": "Correct verified per-size dimensions, Australian prices, retailer links, stock and freshness metadata after variant-system audit. Every selectable size now carries its own dimensions and price instead of inheriting another vitola’s data."
+}
