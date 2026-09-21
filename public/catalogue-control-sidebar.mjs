@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-control-sidebar-style-v3';
+const STYLE_ID = 'catalogue-control-sidebar-style-v2';
 const SIDEBAR_ID = 'catalogue-control-sidebar';
 const EXTRA_ID = 'catalogue-sidebar-extra-controls';
 const DESKTOP_QUERY = '(min-width: 1660px)';
