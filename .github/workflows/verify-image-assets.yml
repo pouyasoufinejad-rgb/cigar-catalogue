@@ -1,0 +1,34 @@
+name: Verify live image assets
+
+# Read-only diagnostic. Fetches an image from production and compares it byte for byte
+# against the copy this repository ships. A committed asset and a served asset are
+# different things: a publish can carry a new URL while the old bytes are still behind it,
+# or an edge cache can keep serving the previous file. Needs no secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: 'Repository-relative image paths to compare against production'
+        required: false
+        default: 'public/variant-images/lfd-double-ligero-chiselito-natural.webp'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Compare committed assets against production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare
+        env:
+          ASSET_PATHS: ${{ inputs.paths }}
+        run: node scripts/verify-live-image-assets.mjs
