@@ -57,3 +57,19 @@ test('future upserts reject redundant untasted copy, including nested variants',
   }), /must not use "untasted"/i);
   assert.equal(validateRequest({ operation: 'cleanup-notes' }).operation, 'cleanup-notes');
 });
+
+test('cleanup creates a minimal override for stale static copy missing from KV', () => {
+  const state = { version: 3, cards: {}, sections: {}, entries: {} };
+  const fallback = {
+    static: {
+      title: 'Static Cigar',
+      summaryHtml: '<strong>Espresso and cocoa</strong> lead the smoke. The Broadleaf wrapper makes the format unusually dark.',
+      noteHtml: 'Exact-line taster available: A$30 single.'
+    }
+  };
+  const cleaned = cleanupStaleCatalogueNotes(state, fallback);
+  assert.equal(cleaned.noteChanges, 1);
+  assert.deepEqual(Object.keys(cleaned.state.cards.static), ['noteHtml']);
+  assert.match(cleaned.state.cards.static.noteHtml, /Broadleaf wrapper/i);
+  assert.doesNotMatch(cleaned.state.cards.static.noteHtml, /A\$/);
+});
