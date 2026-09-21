@@ -990,7 +990,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=153"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=154"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
