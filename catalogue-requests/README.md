@@ -25,6 +25,7 @@ Supported operations:
 - `unarchive-entry` — restore an archived item to its saved rank/cohort.
 - `replace-image` — replace the KV-hosted image for an existing item.
 - `update-sections` — update `legendHtml` and/or `benchmarksHtml` without touching catalogue entries or rankings.
+- `cleanup-notes` — sweep the effective KV catalogue, including nested size/blend variants, replacing tasting-status and retailer/price-only markup notes with cigar-specific copy while preserving unrelated fields.
 
 Keys must match the Worker key rule: lowercase `a-z`, digits, `_` or `-`, maximum 96 characters, beginning with a letter or digit.
 
@@ -104,3 +105,7 @@ If a new dynamic entry exists in KV but is absent from production HTML, the work
 ## Manual retry
 
 The workflow supports `workflow_dispatch` with a repository-relative `request_path`. This re-runs one existing request file after the test suite passes.
+
+## Markup-note rule
+
+`noteHtml` is for cigar-specific character, construction, provenance or format context. Do not use `Untasted` or tasting-status placeholders, and do not spend the note repeating retailer, price or stock information already represented elsewhere in the card.
