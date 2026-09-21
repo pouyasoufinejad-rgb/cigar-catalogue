@@ -417,10 +417,10 @@ function parseStaticEditorialCards(html) {
     const key = safeKey(htmlAttribute(tag, 'data-key'));
     if (!key) continue;
     const body = match[2] || '';
-    const summaryHtml = body.match(/<p\b[^>]*class=["'][^"']*(?:^|\s)summary(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
-    const noteHtml = body.match(/<p\b[^>]*class=["'][^"']*(?:^|\s)mog-note(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
+    const summaryHtml = body.match(/<p\b[^>]*class=["'][^"']*\bsummary\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
+    const noteHtml = body.match(/<p\b[^>]*class=["'][^"']*\bmog-note\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
     const title = stripMarkupText(body.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i)?.[1]);
-    const eyebrow = stripMarkupText(body.match(/<[^>]*class=["'][^"']*(?:^|\s)eyebrow(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i)?.[1]);
+    const eyebrow = stripMarkupText(body.match(/<[^>]*class=["'][^"']*\beyebrow\b[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i)?.[1]);
     if (summaryHtml !== undefined || noteHtml !== undefined) {
       cards[key] = {
         ...(summaryHtml !== undefined ? { summaryHtml } : {}),
