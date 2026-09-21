@@ -90,6 +90,36 @@ for (const path of paths) {
   failures += 1;
 }
 
+// Which live records point at this asset, and with what cache-busting query. Serving the
+// right bytes is only half of it: a browser holding the old file under the bare URL keeps
+// showing it until the stored URL changes.
+const state = await fetch(`${baseUrl}/api/catalogue-overrides?asset_refs=${Date.now()}`,
+  { headers: { accept: 'application/json' }, cache: 'no-store' })
+  .then(response => (response.ok ? response.json() : null))
+  .catch(() => null);
+
+if (state) {
+  for (const path of paths) {
+    const basename = path.split('/').pop();
+    const found = new Set();
+    const walk = (node, trail) => {
+      if (typeof node === 'string') {
+        if (node.includes(basename)) found.add(`${trail} -> ${node}`);
+        return;
+      }
+      if (!node || typeof node !== 'object') return;
+      for (const [key, value] of Object.entries(node)) walk(value, `${trail}.${key}`);
+    };
+    walk(state.cards, 'cards');
+    walk(state.entries, 'entries');
+    console.log(`\n=== live references to ${basename}`);
+    if (!found.size) console.log('   (none: no catalogue record points at this asset)');
+    for (const line of found) console.log(`   ${line}`);
+  }
+} else {
+  console.log('\n(could not read live catalogue state to list references)');
+}
+
 if (failures) {
   console.error(`\nASSET_CHECK_FAILED: ${failures} asset(s) do not match production.`);
   process.exitCode = 1;
