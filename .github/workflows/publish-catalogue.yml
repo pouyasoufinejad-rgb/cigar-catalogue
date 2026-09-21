@@ -120,6 +120,9 @@ jobs:
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-card-copy.mjs' | grep -q .; then
                 cleanup_changed=true
               fi
+              if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-markup-notes.mjs' | grep -q .; then
+                note_cleanup_changed=true
+              fi
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
               fi

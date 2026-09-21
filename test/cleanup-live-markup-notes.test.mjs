@@ -5,7 +5,8 @@ import {
   buildDistinctiveNote,
   buildMarkupNotePatch,
   parseRenderedCards,
-  findAffectedKeys
+  findAffectedKeys,
+  badEffectiveRenderedNotes
 } from '../scripts/cleanup-live-markup-notes.mjs';
 
 test('untasted markup notes are always replaced', () => {
@@ -115,4 +116,22 @@ test('findAffectedKeys scans cards, entries and nested variants', () => {
     }
   };
   assert.deepEqual(findAffectedKeys(state, {}), ['dynamicBad', 'staticBad', 'variantBad']);
+});
+
+test('render verification uses the KV editorial override over stale legacy HTML', () => {
+  const rendered = {
+    legacy: {
+      summaryHtml: 'Dark Broadleaf and cocoa define the blend.',
+      noteHtml: 'Untasted. The Index lists it at A$22.'
+    }
+  };
+  const state = {
+    cards: {
+      legacy: {
+        noteHtml: 'Dark Broadleaf gives the compact smoke a dense cocoa core.'
+      }
+    },
+    entries: {}
+  };
+  assert.deepEqual(badEffectiveRenderedNotes(state, rendered), []);
 });

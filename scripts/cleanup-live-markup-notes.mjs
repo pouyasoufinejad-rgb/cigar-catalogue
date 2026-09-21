@@ -309,9 +309,25 @@ export function findAffectedKeys(state = {}, baseCards = {}) {
     .sort();
 }
 
-function badProductionNotes(baseCards) {
+function badRawRenderedNotes(baseCards) {
   return Object.entries(baseCards)
     .filter(([, record]) => noteNeedsReplacement(record?.noteHtml))
+    .map(([key]) => key)
+    .sort();
+}
+
+export function badEffectiveRenderedNotes(state = {}, baseCards = {}) {
+  const cards = isRecord(state.cards) ? state.cards : {};
+  const entries = isRecord(state.entries) ? state.entries : {};
+  return Object.entries(baseCards)
+    .filter(([key, record]) => {
+      const effective = {
+        ...(isRecord(record) ? record : {}),
+        ...(isRecord(entries[key]) ? entries[key] : {}),
+        ...(isRecord(cards[key]) ? cards[key] : {})
+      };
+      return noteNeedsReplacement(effective.noteHtml);
+    })
     .map(([key]) => key)
     .sort();
 }
@@ -332,7 +348,7 @@ export async function runLiveMarkupNoteCleanup(options = {}) {
   const cards = isRecord(initialState.cards) ? initialState.cards : {};
   const entries = isRecord(initialState.entries) ? initialState.entries : {};
   const stateKeys = new Set([...Object.keys(cards), ...Object.keys(entries)]);
-  const productionOnlyBad = badProductionNotes(initialRendered).filter(key => !stateKeys.has(key));
+  const productionOnlyBad = badRawRenderedNotes(initialRendered).filter(key => !stateKeys.has(key));
   if (productionOnlyBad.length) {
     throw new Error('Rendered bad notes cannot be safely patched because their keys are absent from live state: ' + productionOnlyBad.join(', '));
   }
@@ -376,7 +392,7 @@ export async function runLiveMarkupNoteCleanup(options = {}) {
     readRenderedCards(fetchImpl, baseUrl)
   ]);
   const remainingState = findAffectedKeys(finalState, finalRendered);
-  const remainingProduction = badProductionNotes(finalRendered);
+  const remainingProduction = badEffectiveRenderedNotes(finalState, finalRendered);
 
   if (remainingState.length || remainingProduction.length) {
     throw new Error(
