@@ -1,0 +1,42 @@
+name: One-off Chiselito Natural image rebuild
+
+on:
+  push:
+    branches:
+      - fix-chiselito-natural-image-quality-2026-09-21
+    paths:
+      - .github/workflows/one-off-chiselito-natural-image.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-chiselito-natural-image-quality-2026-09-21
+          fetch-depth: 0
+      - name: Rebuild high-quality image
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tmp/chiselito-image/part*.b64 | tr -d '\r\n' | base64 --decode > public/variant-images/lfd-double-ligero-chiselito-natural.webp
+          test "$(wc -c < public/variant-images/lfd-double-ligero-chiselito-natural.webp | tr -d ' ')" = "35156"
+          echo "2dc08bfb5c300c6cd05304477f8c3d914ac34a56d8082a4a66b8065dfb4f74e9  public/variant-images/lfd-double-ligero-chiselito-natural.webp" | sha256sum -c -
+          file public/variant-images/lfd-double-ligero-chiselito-natural.webp
+      - name: Remove staging files
+        shell: bash
+        run: |
+          rm -rf .tmp/chiselito-image
+          rm -f .github/workflows/one-off-chiselito-natural-image.yml
+      - name: Commit rebuilt asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace blurry Chiselito Natural image"
+          git push origin HEAD:fix-chiselito-natural-image-quality-2026-09-21
