@@ -552,7 +552,7 @@ function ensureStyles(root = document) {
   z-index:44;
   top:18px;
   right:calc(50vw + 650px);
-  width:min(230px,calc(50vw - 660px));
+  width:min(250px,calc(50vw - 660px));
   max-height:calc(100vh - 36px);
   overflow:auto;
   display:flex;

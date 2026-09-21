@@ -10,6 +10,7 @@ const {
 } = sidebarModule;
 
 const runtimeSource = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
+const sidebarSource = await readFile(new URL('../public/catalogue-control-sidebar.mjs', import.meta.url), 'utf8');
 
 function catalogueFixture(url = 'https://example.test/catalogue') {
   const dom = new JSDOM(`<!doctype html><html><head></head><body>
@@ -45,7 +46,13 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-5/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6/);
+});
+
+test('large desktop sidebar is slightly wider without moving its breakpoint or right edge', () => {
+  assert.match(sidebarSource, /const DESKTOP_QUERY = '\(min-width: 1660px\)'/);
+  assert.match(sidebarSource, /right:calc\(50vw \+ 650px\)/);
+  assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px\)\)/);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {
