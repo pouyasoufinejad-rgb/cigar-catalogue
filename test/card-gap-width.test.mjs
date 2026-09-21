@@ -12,8 +12,17 @@ test('standard desktop catalogue keeps three columns with the existing 60px widt
   assert.match(layoutSource, /margin-inline:-30px!important/);
 });
 
-test('large desktop catalogue widens only when the fixed sidebar is present', () => {
-  assert.match(layoutSource, /@media\(min-width:1660px\)[\s\S]*width:calc\(100% \+ 150px\)!important/);
+test('desktop header and catalogue chrome use the same horizontal overhang as the cards', () => {
+  assert.match(layoutSource, /@media\(min-width:901px\)[\s\S]*\.wrap > header,[\s\S]*width:calc\(100% \+ 60px\)!important;[\s\S]*margin-left:-30px!important/);
+  assert.match(layoutSource, /\.wrap > \.section > \.section-head/);
+  assert.match(layoutSource, /\.wrap > \.section > \.legend-dropdown/);
+  assert.match(layoutSource, /\.wrap > \.section > \.test-impact-note/);
+  assert.match(layoutSource, /\.wrap > \.section > \.live-stock-check/);
+  assert.match(layoutSource, /\.tier-stack > \.tier-block > \.tier-heading/);
+});
+
+test('large desktop catalogue and chrome widen together when the fixed sidebar is present', () => {
+  assert.match(layoutSource, /@media\(min-width:1660px\)[\s\S]*html body \.grid,[\s\S]*\.wrap > header,[\s\S]*width:calc\(100% \+ 150px\)!important/);
 });
 
 test('mobile catalogue remains one full-width column', () => {
