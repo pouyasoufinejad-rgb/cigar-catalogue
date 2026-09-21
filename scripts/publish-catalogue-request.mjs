@@ -18,7 +18,7 @@ import {
 export const DEFAULT_BASE_URL = 'https://cigar-catalogue.psncodex.workers.dev';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'delete-entry', 'replace-image', 'update-sections']);
+export const SUPPORTED_OPERATIONS = new Set(['upsert-entry', 'archive-entry', 'unarchive-entry', 'delete-entry', 'replace-image', 'update-sections', 'cleanup-notes']);
 const PRODUCTION_VERIFY_RETRY_DELAYS = [2000, 5000, 10000];
 
 const CARD_EDITORIAL_FIELDS = new Set([
@@ -291,6 +291,155 @@ function reorderForTarget(cardsInput, key, targetCard, nowString, sections = {})
   return scratch.cards;
 }
 
+
+function stripMarkupText(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeCopyHtml(value) {
+  return String(value || '').replace(/[&<>]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char]));
+}
+
+function sentenceList(value) {
+  return stripMarkupText(value).split(/(?<=[.!?])\s+/).map(part => part.trim()).filter(Boolean);
+}
+
+function removeUntastedSentences(value) {
+  if (typeof value !== 'string' || !/\buntasted\b/i.test(value)) return value;
+  return value
+    .split(/(?<=[.!?])\s+/)
+    .filter(part => !/\buntasted\b/i.test(stripMarkupText(part)))
+    .join(' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+export function isStaleMarkupNote(value) {
+  const text = stripMarkupText(value);
+  if (!text) return false;
+  if (/\buntasted\b/i.test(text)) return true;
+
+  const tasterLead = /^(?:exact-line taster|taster(?: available)?|nearest taster|related\b.*\btaster|the related\b.*\btaster|pinned in as|restock candidate|high palate-fit prospect)/i;
+  if (tasterLead.test(text)) return true;
+
+  const shopping = /(?:A\$|\bcurrently lists\b|\blists the exact\b|\blists\b.*\bat A\$|\bcurrently (?:available|unavailable|sold out|out of stock|in stock)\b|\bavailable to (?:order|add to cart|choose options)\b)/i;
+  if (!shopping.test(text)) return false;
+
+  const substance = /(?:draw|burn|smok|flavou?r|pepper|sweet|cedar|cocoa|coffee|espresso|earth|leather|cream|spice|wrapper|binder|filler|blend|format|shape|chisel|perfecto|lancero|coronet|cigarillo|puro|ligero|construction|aroma|mouthfeel|progression|body|strength|quality|nicotine|complex|rich|mild|medium|full-bodied|retrohale)/i;
+  return !substance.test(text);
+}
+
+function distinctiveNoteHtml(record) {
+  const summary = removeUntastedSentences(String(record?.summaryHtml || ''));
+  const sentences = sentenceList(summary).filter(sentence =>
+    !/(?:A\$|\bcurrently lists\b|\blists the exact\b|\bin stock\b|\bout of stock\b|\bsold out\b)/i.test(sentence)
+  );
+  const structural = sentences.find(sentence =>
+    /(?:wrapper|binder|filler|blend|format|shape|perfecto|chisel|pigtail|closed foot|box-pressed|fire-cured|short-filler|mixed-filler|infusion|sweetened cap|Cameroon|Broadleaf|Sun Grown|San Andrés|Connecticut|Corojo|Criollo|ligero|puro|lancero|coronet|cigarillo|tobacco)/i.test(sentence)
+  );
+  const flavour = sentences.find(sentence =>
+    /(?:pepper|sweet|cedar|cocoa|coffee|espresso|earth|leather|cream|spice|chocolate|nut|fruit|molasses|caramel|toast|wood|smoke)/i.test(sentence)
+  );
+  let sentence = structural || flavour || sentences[0] || '';
+  if (!sentence) {
+    const eyebrow = stripMarkupText(record?.eyebrow);
+    if (eyebrow) sentence = 'The defining trait is its ' + eyebrow.charAt(0).toLowerCase() + eyebrow.slice(1) + '.';
+  }
+  if (!sentence) {
+    const wrapper = Array.isArray(record?.productionLines)
+      ? record.productionLines.find(line => /^wrapper\s*:/i.test(String(line || '')))
+      : '';
+    if (wrapper) sentence = String(wrapper).replace(/^wrapper\s*:\s*/i, '') + ' is the defining wrapper for this expression.';
+  }
+  if (!sentence) sentence = (stripMarkupText(record?.title) || 'This cigar') + ' is kept for its distinct blend and format rather than its retailer listing.';
+  return escapeCopyHtml(sentence);
+}
+
+function validateNoUntastedCopy(record, label = 'entry') {
+  if (!isRecord(record)) return;
+  for (const field of ['noteHtml', 'summaryHtml']) {
+    if (typeof record[field] === 'string' && /\buntasted\b/i.test(record[field])) {
+      throw new Error(label + '.' + field + ' must not use "untasted"; tasting status is redundant catalogue copy.');
+    }
+  }
+  for (const field of ['sizeVariants', 'blendVariants']) {
+    if (!Array.isArray(record[field])) continue;
+    record[field].forEach((variant, index) => validateNoUntastedCopy(variant, label + '.' + field + '[' + index + ']'));
+  }
+}
+
+function cleanupRecordCopy(record) {
+  if (!isRecord(record)) return { record, noteChanges: 0, summaryChanges: 0 };
+  const next = clone(record);
+  let noteChanges = 0;
+  let summaryChanges = 0;
+
+  if (typeof next.summaryHtml === 'string' && /\buntasted\b/i.test(next.summaryHtml)) {
+    const cleanedSummary = removeUntastedSentences(next.summaryHtml);
+    if (cleanedSummary !== next.summaryHtml) {
+      next.summaryHtml = cleanedSummary;
+      summaryChanges += 1;
+    }
+  }
+
+  if (typeof next.noteHtml === 'string' && isStaleMarkupNote(next.noteHtml)) {
+    next.noteHtml = distinctiveNoteHtml(next);
+    noteChanges += 1;
+  }
+
+  for (const field of ['sizeVariants', 'blendVariants']) {
+    if (!Array.isArray(next[field])) continue;
+    next[field] = next[field].map(variant => {
+      const cleaned = cleanupRecordCopy(variant);
+      noteChanges += cleaned.noteChanges;
+      summaryChanges += cleaned.summaryChanges;
+      return cleaned.record;
+    });
+  }
+
+  return { record: next, noteChanges, summaryChanges };
+}
+
+export function cleanupStaleCatalogueNotes(stateInput) {
+  const state = normaliseStateShape(stateInput);
+  const changedEntries = [];
+  const changedCards = [];
+  let noteChanges = 0;
+  let summaryChanges = 0;
+
+  for (const [key, entry] of Object.entries(state.entries)) {
+    const cleaned = cleanupRecordCopy(entry);
+    if (JSON.stringify(cleaned.record) !== JSON.stringify(entry)) {
+      state.entries[key] = cleaned.record;
+      changedEntries.push(key);
+    }
+    noteChanges += cleaned.noteChanges;
+    summaryChanges += cleaned.summaryChanges;
+  }
+
+  for (const [key, card] of Object.entries(state.cards)) {
+    const cleaned = cleanupRecordCopy(card);
+    if (JSON.stringify(cleaned.record) !== JSON.stringify(card)) {
+      state.cards[key] = cleaned.record;
+      changedCards.push(key);
+    }
+    noteChanges += cleaned.noteChanges;
+    summaryChanges += cleaned.summaryChanges;
+  }
+
+  return { state, changedEntries, changedCards, noteChanges, summaryChanges };
+}
+
 export const MAX_VARIANT_PACKAGE_COUNT = 10;
 
 function validateVariantPurchaseCaps(entry) {
@@ -328,11 +477,15 @@ export function validateRequest(input) {
   if (!isRecord(input)) throw new Error('Publication request must be a JSON object.');
   const operation = String(input.operation || '').trim();
   if (!SUPPORTED_OPERATIONS.has(operation)) throw new Error(`Unsupported operation: ${operation || '(missing)'}.`);
-  const key = operation === 'update-sections' ? '' : safeKey(input.key);
-  if (operation !== 'update-sections' && !key) throw new Error('Invalid catalogue key.');
+  const keyless = operation === 'update-sections' || operation === 'cleanup-notes';
+  const key = keyless ? '' : safeKey(input.key);
+  if (!keyless && !key) throw new Error('Invalid catalogue key.');
   const entry = isRecord(input.entry) ? clone(input.entry) : {};
   if (operation === 'upsert-entry' && !isRecord(input.entry)) throw new Error('upsert-entry requires an entry object.');
-  if (operation === 'upsert-entry') validateVariantPurchaseCaps(entry);
+  if (operation === 'upsert-entry') {
+    validateVariantPurchaseCaps(entry);
+    validateNoUntastedCopy(entry);
+  }
   const sections = isRecord(input.sections) ? clone(input.sections) : {};
   if (operation === 'update-sections') {
     const sectionNames = Object.keys(sections);
@@ -514,6 +667,33 @@ export async function publishRequestDocument(input, options = {}) {
   const rawState = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read');
   const state = normaliseStateShape(rawState);
   const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
+  if (request.operation === 'cleanup-notes') {
+    const cleaned = cleanupStaleCatalogueNotes(state);
+
+    for (const key of cleaned.changedEntries) {
+      await putEntry(fetchImpl, baseUrl, token, key, cleaned.state.entries[key]);
+    }
+    await putState(fetchImpl, baseUrl, token, cleaned.state);
+
+    const verifiedStateRaw = await fetchJson(fetchImpl, baseUrl + '/api/catalogue-overrides?verify=1', { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
+    const verifiedState = normaliseStateShape(verifiedStateRaw);
+    const remaining = cleanupStaleCatalogueNotes(verifiedState);
+    if (remaining.noteChanges || remaining.summaryChanges) {
+      throw new Error('Catalogue note cleanup verification found ' + remaining.noteChanges + ' stale notes and ' + remaining.summaryChanges + ' redundant tasting-status summary sentences.');
+    }
+
+    await fetchProductionHtml(fetchImpl, baseUrl + '/?catalogue_verify=note-cleanup', sleep);
+    return {
+      ok: true,
+      operation: request.operation,
+      target: 'catalogue',
+      noteChanges: cleaned.noteChanges,
+      summaryChanges: cleaned.summaryChanges,
+      changedEntries: cleaned.changedEntries.length,
+      changedCards: cleaned.changedCards.length,
+      verified: true
+    };
+  }
   if (request.operation === 'update-sections') {
     state.sections = { ...state.sections, ...request.sections };
     if (Array.isArray(request.sections.recommendationSubsections)) {
