@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-22-01-nest-davidoff-primeros-nicaragua-natural",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Primeros Nicaragua — Tin of 6",
+        "eyebrow": "Nicaraguan Habano Primeros",
+        "packagePrice": 132,
+        "packageCount": 6,
+        "packageLabel": "tin of 6",
+        "price": 22,
+        "country": "Dominican Republic",
+        "length": 4.125,
+        "ring": 34,
+        "strength": 6,
+        "quality": 8,
+        "risk": 2,
+        "stock": "in",
+        "summaryHtml": "<strong>Black pepper, roasted coffee, leather and creamy sweetness</strong> give the standard Nicaragua Primeros a brighter, less sweet profile than the Maduro. The Nicaraguan Habano wrapper keeps the smoke peppery and aromatic while the Ecuadorian binder and Nicaraguan-Dominican filler add coffee, leather and a soft creamy finish.",
+        "noteHtml": "Untasted. Cigar Hut currently lists the exact tin of 6 at A$132 (A$22 per cigar); Sydney Cigar House lists the exact single at A$23.40.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Nicaraguan Habano",
+          "Binder: Ecuadorian",
+          "Filler: Nicaraguan and Dominican"
+        ],
+        "practicalLines": [
+          "Tin of 6",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ],
+        "smokeTime": "About 15–20 min smoke",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/davidoff-primeros-nicaragua-tin-of-6/",
+          "https://www.sydneycigar.com.au/davidoff-primeros-nicaragua/",
+          "https://www.theindexcigars.com.au/products/davidoff-primeros-nicaraguan",
+          "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/primeros/"
+        ],
+        "priceChecked": "2026-09-22",
+        "stockChecked": "2026-09-22"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Add Davidoff Primeros Nicaragua Natural as a nested blend variant under the existing Davidoff Primeros Nicaragua Maduro card. Keep Maduro as the displayed default and preserve all unrelated parent fields."
+}
