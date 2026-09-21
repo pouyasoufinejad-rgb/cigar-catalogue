@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 
 import { renderEntryCard } from '../src/index.js';
@@ -144,6 +145,48 @@ test('blend normalisation keeps Blend separate from Size and does not inherit ba
   const sunGrown = blendEffectiveRecord(promoted, 'sun-grown').record;
   assert.equal(sunGrown.title, ROCKY.title, 'the base blend still resolves from the parent after promotion');
   assert.equal(sunGrown.sizeVariants.length, 2);
+});
+
+
+test('Chiselito Natural repair stays distinct from the Maduro parent', async () => {
+  const repair = JSON.parse(await readFile(
+    new URL('../catalogue-requests/2026-09-21-43-fix-lfd-chiselito-natural-variant.json', import.meta.url),
+    'utf8'
+  ));
+  const maduro = {
+    key: repair.key,
+    brand: 'La Flor Dominicana',
+    title: 'Double Ligero Chiselito Maduro',
+    eyebrow: 'Double-ligero Maduro chisel',
+    packagePrice: 36.2,
+    packageLabel: 'single cigar',
+    price: 36.2,
+    country: 'Dominican Republic',
+    length: 5,
+    ring: 44,
+    strength: 9,
+    quality: 9,
+    risk: 2,
+    stock: 'in',
+    summaryHtml: '<strong>Dark chocolate, espresso, leather, raisin, red pepper and sweet spice</strong> define the Maduro.',
+    productionLines: [
+      'Handmade in the Dominican Republic',
+      'Wrapper: Ecuadorian Maduro',
+      'Binder: Dominican Republic',
+      'Filler: Dominican Republic, ligero-heavy'
+    ],
+    practicalLines: ['Single cigar', 'Chisel cap', 'Protected', 'Forgiving Cadence'],
+    retailerLinks: ['https://www.theindexcigars.com.au/products/la-flor-dominicana-double-ligero-chiselito-maduro'],
+    blendVariants: repair.entry.blendVariants,
+    defaultBlendVariantId: repair.entry.defaultBlendVariantId
+  };
+
+  const natural = blendEffectiveRecord(maduro, 'natural').record;
+  assert.equal(natural.title, 'Double Ligero Chiselito Natural');
+  assert.match(natural.productionLines.join('\n'), /Ecuadorian Sumatra Sun Grown/);
+  assert.notEqual(natural.summaryHtml, maduro.summaryHtml);
+  assert.match(natural.retailerLinks[0], /theindexcigars\.com\.au\/products\/la-flor-dominicana-double-ligero-chiselito-natural/);
+  assert.equal(natural.activeBlendVariantId, 'natural');
 });
 
 test('server markup renders Blend above Size', () => {

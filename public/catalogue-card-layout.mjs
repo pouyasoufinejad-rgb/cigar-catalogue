@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v153';
+const STYLE_ID = 'catalogue-wide-card-layout-v154';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -16,11 +16,37 @@ html body article.card{
   max-width:none!important;
   margin:0!important;
 }
+
+/* The cards deliberately overhang the 1220px wrap on desktop. Give the catalogue chrome
+   the exact same left edge and right edge so the header, section furniture and subsection
+   rules do not stop short of the cards. This is desktop-only; mobile keeps the wrap intact. */
+@media(min-width:901px){
+  html body .wrap > header,
+  html body .wrap > .section > .section-head,
+  html body .wrap > .section > .legend-dropdown,
+  html body .wrap > .section > .test-impact-note,
+  html body .wrap > .section > .live-stock-check,
+  html body .wrap > .section > .controls,
+  html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
+  html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
+    width:calc(100% + 60px)!important;
+    margin-left:-30px!important;
+    margin-right:0!important;
+  }
+}
 /* Only use the extra horizontal room on the large-desktop layout where the fixed
    sidebar is present. Keeping the 901-1659px geometry unchanged avoids introducing
    horizontal overflow on narrower desktop and tablet-width viewports. */
 @media(min-width:1660px){
-  html body .grid{
+  html body .grid,
+  html body .wrap > header,
+  html body .wrap > .section > .section-head,
+  html body .wrap > .section > .legend-dropdown,
+  html body .wrap > .section > .test-impact-note,
+  html body .wrap > .section > .live-stock-check,
+  html body .wrap > .section > .controls,
+  html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
+  html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
     width:calc(100% + 150px)!important;
   }
 }
