@@ -104,3 +104,7 @@ If a new dynamic entry exists in KV but is absent from production HTML, the work
 ## Manual retry
 
 The workflow supports `workflow_dispatch` with a repository-relative `request_path`. This re-runs one existing request file after the test suite passes.
+
+## Markup note editorial rule
+
+Use `noteHtml` for cigar-specific character, construction, provenance, format or a useful personal tasting observation. Do not use it as a tasting-status placeholder, and do not use it merely to repeat retailer, price or stock information already represented elsewhere on the card.
