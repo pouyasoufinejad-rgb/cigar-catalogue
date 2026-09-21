@@ -303,7 +303,7 @@ async function readRenderedCards(fetchImpl, baseUrl) {
 export function findAffectedKeys(state = {}, baseCards = {}) {
   const cards = isRecord(state.cards) ? state.cards : {};
   const entries = isRecord(state.entries) ? state.entries : {};
-  const keys = [...new Set([...Object.keys(cards), ...Object.keys(entries)])];
+  const keys = [...new Set([...Object.keys(baseCards), ...Object.keys(cards), ...Object.keys(entries)])];
   return keys
     .filter(key => Object.keys(buildMarkupNotePatch(cards[key], entries[key], baseCards[key])).length > 0)
     .sort();
@@ -344,14 +344,6 @@ export async function runLiveMarkupNoteCleanup(options = {}) {
     readLiveState(fetchImpl, baseUrl),
     readRenderedCards(fetchImpl, baseUrl)
   ]);
-
-  const cards = isRecord(initialState.cards) ? initialState.cards : {};
-  const entries = isRecord(initialState.entries) ? initialState.entries : {};
-  const stateKeys = new Set([...Object.keys(cards), ...Object.keys(entries)]);
-  const productionOnlyBad = badRawRenderedNotes(initialRendered).filter(key => !stateKeys.has(key));
-  if (productionOnlyBad.length) {
-    throw new Error('Rendered bad notes cannot be safely patched because their keys are absent from live state: ' + productionOnlyBad.join(', '));
-  }
 
   const initialKeys = findAffectedKeys(initialState, initialRendered);
   console.log('Found ' + initialKeys.length + ' catalogue card(s) with redundant markup notes.');
