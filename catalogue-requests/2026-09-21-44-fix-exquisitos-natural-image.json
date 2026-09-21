@@ -1,0 +1,56 @@
+{
+  "id": "2026-09-21-44-fix-exquisitos-natural-image",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Exquisitos Natural",
+        "eyebrow": "Sun-grown Dominican small panatela",
+        "packagePrice": 21,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 21,
+        "country": "Dominican Republic",
+        "length": 4.5,
+        "ring": 33,
+        "strength": 6,
+        "quality": 7,
+        "risk": 1,
+        "stock": "in",
+        "imageUrl": "/api/catalogue-image/arturo-fuente-exquisitos-natural?v=20260921",
+        "summaryHtml": "<strong>Cedar, toasted nuts, coffee, light pepper and caramel sweetness</strong> lead a compact, wrapper-forward profile. The Ecuadorian sun-grown leaf brings more spice and dry wood than a shade-wrapped cigar, while the Dominican core keeps the smoke rounded and steady. At 33 ring the wrapper stays prominent, with a concentrated cedar-and-coffee finish rather than the darker cocoa weight of the Maduro.",
+        "noteHtml": "Untasted.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Ecuadorian Sun Grown",
+          "Binder: Dominican Republic",
+          "Filler: Dominican Republic"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ],
+        "smokeTime": "About 30 min smoke",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/arturo-fuente-exquisitos-natural/",
+          "https://www.theindexcigars.com.au/products/arturo-fuente-exquisito-natural",
+          "https://www.cigarworld.com.au/aud/products/arturo-fuente-exquisitos-natural-%252d-single-%252d-%284-1%7B47%7D2%22-x-33%29.html"
+        ],
+        "priceChecked": "2026-09-21",
+        "stockChecked": "2026-09-21",
+        "priceNote": "Cigar Hut exact Natural page lists the single at A$21 and also offers 10 cigarillos. The 50-count box is excluded by the catalogue purchase cap."
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Wire the existing Exquisitos Natural image to the nested Natural blend so switching Blend updates the card image."
+}
