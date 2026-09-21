@@ -135,3 +135,14 @@ test('render verification uses the KV editorial override over stale legacy HTML'
   };
   assert.deepEqual(badEffectiveRenderedNotes(state, rendered), []);
 });
+
+
+test('findAffectedKeys includes stale cards that exist only in rendered production', () => {
+  const rendered = {
+    staticOnly: {
+      summaryHtml: 'Fire-cured Kentucky tobacco gives this compact cigar its smoky identity.',
+      noteHtml: 'Untasted. The Index lists it at A$20.'
+    }
+  };
+  assert.deepEqual(findAffectedKeys({ cards: {}, entries: {} }, rendered), ['staticOnly']);
+});
