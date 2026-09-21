@@ -1,0 +1,56 @@
+{
+  "id": "2026-09-22-02-correct-davidoff-primeros-nicaragua-natural-price",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Primeros Nicaragua — Tin of 6",
+        "eyebrow": "Nicaraguan Habano Primeros",
+        "packagePrice": 115,
+        "packageCount": 6,
+        "packageLabel": "tin of 6",
+        "price": 19.17,
+        "country": "Dominican Republic",
+        "length": 4.125,
+        "ring": 34,
+        "strength": 6,
+        "quality": 8,
+        "risk": 2,
+        "stock": "in",
+        "summaryHtml": "<strong>Black pepper, roasted coffee, leather and creamy sweetness</strong> give the standard Nicaragua Primeros a brighter, less sweet profile than the Maduro. The Nicaraguan Habano wrapper keeps the smoke peppery and aromatic while the Ecuadorian binder and Nicaraguan-Dominican filler add coffee, leather and a soft creamy finish.",
+        "noteHtml": "Untasted. Corporate Cigar currently lists the exact tin of 6 at A$115 (A$19.17 per cigar), the best verified Australian price.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Nicaraguan Habano",
+          "Binder: Ecuadorian",
+          "Filler: Nicaraguan and Dominican"
+        ],
+        "practicalLines": [
+          "Tin of 6",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ],
+        "smokeTime": "About 15–20 min smoke",
+        "retailerLinks": [
+          "https://corporatecigar.com/product/davidoff-primeros-nicaragua-6s/",
+          "https://www.cigarhut.com.au/davidoff-primeros-nicaragua-tin-of-6/",
+          "https://www.sydneycigar.com.au/davidoff-primeros-nicaragua/",
+          "https://www.theindexcigars.com.au/products/davidoff-primeros-nicaraguan",
+          "https://www.cigarworld.com.au/aud/categories/cigars/davidoff-%28dominican%29/primeros/"
+        ],
+        "priceChecked": "2026-09-22",
+        "stockChecked": "2026-09-22"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Correct Davidoff Primeros Nicaragua Natural benchmark to Corporate Cigar's in-stock A$115 tin of 6 (A$19.17 per cigar), add Corporate Cigar retailer link, and preserve the nested Natural variant under the Maduro parent."
+}
