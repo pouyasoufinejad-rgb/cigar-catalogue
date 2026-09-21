@@ -410,8 +410,32 @@ function cleanupRecordCopy(record) {
   return { record: next, noteChanges, summaryChanges };
 }
 
-export function cleanupStaleCatalogueNotes(stateInput) {
+function parseStaticEditorialCards(html) {
+  const cards = {};
+  for (const match of String(html || '').matchAll(/<article\b([^>]*)>([\s\S]*?)<\/article>/gi)) {
+    const tag = '<article' + match[1] + '>';
+    const key = safeKey(htmlAttribute(tag, 'data-key'));
+    if (!key) continue;
+    const body = match[2] || '';
+    const summaryHtml = body.match(/<p\b[^>]*class=["'][^"']*(?:^|\s)summary(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
+    const noteHtml = body.match(/<p\b[^>]*class=["'][^"']*(?:^|\s)mog-note(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
+    const title = stripMarkupText(body.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i)?.[1]);
+    const eyebrow = stripMarkupText(body.match(/<[^>]*class=["'][^"']*(?:^|\s)eyebrow(?:\s|$)[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i)?.[1]);
+    if (summaryHtml !== undefined || noteHtml !== undefined) {
+      cards[key] = {
+        ...(summaryHtml !== undefined ? { summaryHtml } : {}),
+        ...(noteHtml !== undefined ? { noteHtml } : {}),
+        ...(title ? { title } : {}),
+        ...(eyebrow ? { eyebrow } : {})
+      };
+    }
+  }
+  return cards;
+}
+
+export function cleanupStaleCatalogueNotes(stateInput, fallbackCardsInput = {}) {
   const state = normaliseStateShape(stateInput);
+  const fallbackCards = isRecord(fallbackCardsInput) ? fallbackCardsInput : {};
   const changedEntries = [];
   const changedCards = [];
   let noteChanges = 0;
@@ -427,10 +451,18 @@ export function cleanupStaleCatalogueNotes(stateInput) {
     summaryChanges += cleaned.summaryChanges;
   }
 
-  for (const [key, card] of Object.entries(state.cards)) {
-    const cleaned = cleanupRecordCopy(card);
-    if (JSON.stringify(cleaned.record) !== JSON.stringify(card)) {
-      state.cards[key] = cleaned.record;
+  const cardKeys = new Set([...Object.keys(fallbackCards), ...Object.keys(state.cards)]);
+  for (const key of cardKeys) {
+    const current = isRecord(state.cards[key]) ? state.cards[key] : {};
+    const fallback = isRecord(fallbackCards[key]) ? fallbackCards[key] : {};
+    const effective = { ...fallback, ...current };
+    const cleaned = cleanupRecordCopy(effective);
+    const patch = {};
+    for (const [field, value] of Object.entries(cleaned.record)) {
+      if (JSON.stringify(value) !== JSON.stringify(effective[field])) patch[field] = value;
+    }
+    if (Object.keys(patch).length) {
+      state.cards[key] = { ...current, ...patch };
       changedCards.push(key);
     }
     noteChanges += cleaned.noteChanges;
@@ -668,7 +700,15 @@ export async function publishRequestDocument(input, options = {}) {
   const state = normaliseStateShape(rawState);
   const includeStaticCatalogue = options.includeStaticCatalogue ?? (options.repoRoot !== undefined || options.fetchImpl === undefined);
   if (request.operation === 'cleanup-notes') {
-    const cleaned = cleanupStaleCatalogueNotes(state);
+    let fallbackCards = {};
+    if (includeStaticCatalogue) {
+      const staticHtml = await readFile(resolve(repoRoot, 'public/index.html'), 'utf8').catch(error => {
+        if (error?.code === 'ENOENT') return '';
+        throw error;
+      });
+      fallbackCards = parseStaticEditorialCards(staticHtml);
+    }
+    const cleaned = cleanupStaleCatalogueNotes(state, fallbackCards);
 
     for (const key of cleaned.changedEntries) {
       await putEntry(fetchImpl, baseUrl, token, key, cleaned.state.entries[key]);
@@ -677,7 +717,7 @@ export async function publishRequestDocument(input, options = {}) {
 
     const verifiedStateRaw = await fetchJson(fetchImpl, baseUrl + '/api/catalogue-overrides?verify=1', { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
     const verifiedState = normaliseStateShape(verifiedStateRaw);
-    const remaining = cleanupStaleCatalogueNotes(verifiedState);
+    const remaining = cleanupStaleCatalogueNotes(verifiedState, fallbackCards);
     if (remaining.noteChanges || remaining.summaryChanges) {
       throw new Error('Catalogue note cleanup verification found ' + remaining.noteChanges + ' stale notes and ' + remaining.summaryChanges + ' redundant tasting-status summary sentences.');
     }
