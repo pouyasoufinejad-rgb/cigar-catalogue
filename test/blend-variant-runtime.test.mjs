@@ -150,7 +150,7 @@ test('blend normalisation keeps Blend separate from Size and does not inherit ba
 
 test('Chiselito Natural repair stays distinct from the Maduro parent', async () => {
   const repair = JSON.parse(await readFile(
-    new URL('../catalogue-requests/2026-09-21-43-fix-lfd-chiselito-natural-variant.json', import.meta.url),
+    new URL('../catalogue-requests/2026-09-21-45-fix-chiselito-natural-image.json', import.meta.url),
     'utf8'
   ));
   const maduro = {
@@ -187,6 +187,23 @@ test('Chiselito Natural repair stays distinct from the Maduro parent', async () 
   assert.notEqual(natural.summaryHtml, maduro.summaryHtml);
   assert.match(natural.retailerLinks[0], /theindexcigars\.com\.au\/products\/la-flor-dominicana-double-ligero-chiselito-natural/);
   assert.equal(natural.activeBlendVariantId, 'natural');
+});
+
+test('Exquisitos Natural carries its own image instead of inheriting Maduro', async () => {
+  const repair = JSON.parse(await readFile(
+    new URL('../catalogue-requests/2026-09-21-44-fix-exquisitos-natural-image.json', import.meta.url),
+    'utf8'
+  ));
+  const parent = {
+    key: repair.key,
+    title: 'Exquisitos Maduro',
+    imageUrl: '/api/catalogue-image/arturo-fuente-exquisitos-maduro',
+    blendVariants: repair.entry.blendVariants,
+    defaultBlendVariantId: repair.entry.defaultBlendVariantId
+  };
+  const natural = blendEffectiveRecord(parent, 'natural').record;
+  assert.equal(natural.imageUrl, '/api/catalogue-image/arturo-fuente-exquisitos-natural?v=20260921');
+  assert.notEqual(natural.imageUrl, parent.imageUrl);
 });
 
 test('server markup renders Blend above Size', () => {
