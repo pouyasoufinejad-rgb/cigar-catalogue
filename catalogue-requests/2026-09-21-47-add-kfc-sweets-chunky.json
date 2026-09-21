@@ -1,0 +1,48 @@
+{
+  "id": "2026-09-21-47-add-kfc-sweets-chunky",
+  "operation": "upsert-entry",
+  "key": "kfc-sweets-chunky",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "Kentucky Fire Cured Sweets Chunky",
+    "eyebrow": "Sweetened fire-cured compact",
+    "packagePrice": 37.8,
+    "packageLabel": "single cigar",
+    "price": 37.8,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 46,
+    "strength": 6,
+    "quality": 8,
+    "risk": 1,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "imageUrl": "https://www.theindexcigars.com.au/cdn/shop/files/3501_540x.png?v=1692264255",
+    "summaryHtml": "<strong>Maple sweetness, hickory smoke, oak, barbecue, bourbon and savoury tobacco</strong> define the Sweets blend in a thicker 4″ × 46 format. The sweetened cap softens the fire-cured Kentucky character while the broader ring gives the smoky, woody core more body than the Ponies, with a lingering maple-bacon style finish.",
+    "noteHtml": "Untasted. The Index currently lists the exact 4″ × 46 Sweets Chunky single at A$37.80 and available. Cigar Hut lists the same size at A$45.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Wrapper: Mexican San Andrés",
+      "Binder: Connecticut Broadleaf",
+      "Filler: Kentucky fire-cured + Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Sweetened cap",
+      "Compact Half Corona",
+      "About 40 min smoke"
+    ],
+    "smokeTime": "About 40 min smoke",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/collections/cigars/products/kentucky-fired-cured-sweets-chunky",
+      "https://www.cigarhut.com.au/kentucky-fire-cured-sweets-chunky/"
+    ],
+    "priceChecked": "2026-09-21",
+    "stockChecked": "2026-09-21"
+  },
+  "note": "Add Drew Estate Kentucky Fire Cured Sweets Chunky as the final card in the Panatelas, Coronas & Robustos subsection. Keep it as a single-only purchase because the single exceeds A$30, and preserve all unrelated catalogue data."
+}
