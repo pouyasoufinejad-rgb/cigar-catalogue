@@ -12,6 +12,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-editor-behaviour.mjs');
   import('./catalogue-convenience.mjs?v=compact-retailer-matrix-1');
   import('./catalogue-convenience-refinements.mjs');
+  import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-6');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
   import('./catalogue-variant-runtime.mjs?v=blend-variants-2');
