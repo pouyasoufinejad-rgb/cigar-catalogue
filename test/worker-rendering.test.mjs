@@ -183,3 +183,26 @@ test('catalogue cards show friendly labels for Firmin Cigars and The Index', () 
   assert.match(html, />View at Firmin Cigars <span>/);
   assert.match(html, />View at The Index <span>/);
 });
+
+test('static cards render noteHtml overrides from KV', () => {
+  const html = '<article class="card" data-key="static-note"><div class="cardbody"><p class="summary">Dark cocoa and cedar.</p><p class="mog-note taster-note">The Index lists the single at A$30.</p></div></article>';
+  const transformed = applyStructuralOverridesToHtml(html, {
+    'static-note': { noteHtml: 'A closed foot and pigtail cap distinguish this compact format.' }
+  });
+
+  assert.match(transformed, /<p class="mog-note taster-note">A closed foot and pigtail cap distinguish this compact format\.<\/p>/);
+  assert.doesNotMatch(transformed, /The Index lists/);
+});
+
+test('static note override can add or remove the markup note cleanly', () => {
+  const withoutNote = '<article class="card" data-key="static-add"><div class="cardbody"><p class="summary">Cedar and spice.</p></div></article>';
+  const added = applyStructuralOverridesToHtml(withoutNote, {
+    'static-add': { noteHtml: 'Its Cameroon wrapper is the defining aromatic element.' }
+  });
+  assert.match(added, /<p class="summary">Cedar and spice\.<\/p><p class="mog-note">Its Cameroon wrapper is the defining aromatic element\.<\/p>/);
+
+  const removed = applyStructuralOverridesToHtml(added, {
+    'static-add': { noteHtml: '' }
+  });
+  assert.doesNotMatch(removed, /class="mog-note"/);
+});
