@@ -180,18 +180,19 @@ function discoveredRetailers() {
 }
 
 function populateRetailerSelect(select) {
-  if (!select) return;
+  const root = select?.ownerDocument || globalThis.document;
+  if (!select || !root) return;
   const retailers = discoveredRetailers();
   const selected = activeRetailer;
   select.replaceChildren();
 
-  const all = document.createElement('option');
+  const all = root.createElement('option');
   all.value = '';
   all.textContent = 'All retailers';
   select.appendChild(all);
 
   retailers.forEach(host => {
-    const option = document.createElement('option');
+    const option = root.createElement('option');
     option.value = host;
     option.textContent = retailerLabel(host);
     select.appendChild(option);
