@@ -1,0 +1,5 @@
+{
+  "id": "2026-09-22-03-cleanup-stale-markup-notes",
+  "operation": "cleanup-notes",
+  "note": "Sweep every effective catalogue card and nested size/blend variant. Replace notes that say Untasted or only repeat retailer/price/stock information with cigar-specific copy derived from the entry's substantive summary; remove redundant Untasted sentences from summaries; preserve all unrelated prices, retailer links, ratings, ranks, stock, images and variant structure."
+}
