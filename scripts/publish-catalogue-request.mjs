@@ -291,6 +291,20 @@ function reorderForTarget(cardsInput, key, targetCard, nowString, sections = {})
   return scratch.cards;
 }
 
+
+function validateNoRedundantTastingStatusNote(record, label = 'entry') {
+  if (!isRecord(record)) return;
+  if (typeof record.noteHtml === 'string' && /\buntasted\b/i.test(record.noteHtml)) {
+    throw new Error(label + '.noteHtml must describe what is distinctive about the cigar instead of repeating tasting status.');
+  }
+  for (const field of ['sizeVariants', 'blendVariants']) {
+    if (!Array.isArray(record[field])) continue;
+    record[field].forEach((variant, index) =>
+      validateNoRedundantTastingStatusNote(variant, label + '.' + field + '[' + index + ']')
+    );
+  }
+}
+
 export const MAX_VARIANT_PACKAGE_COUNT = 10;
 
 function validateVariantPurchaseCaps(entry) {
@@ -332,7 +346,10 @@ export function validateRequest(input) {
   if (operation !== 'update-sections' && !key) throw new Error('Invalid catalogue key.');
   const entry = isRecord(input.entry) ? clone(input.entry) : {};
   if (operation === 'upsert-entry' && !isRecord(input.entry)) throw new Error('upsert-entry requires an entry object.');
-  if (operation === 'upsert-entry') validateVariantPurchaseCaps(entry);
+  if (operation === 'upsert-entry') {
+    validateVariantPurchaseCaps(entry);
+    validateNoRedundantTastingStatusNote(entry);
+  }
   const sections = isRecord(input.sections) ? clone(input.sections) : {};
   if (operation === 'update-sections') {
     const sectionNames = Object.keys(sections);
