@@ -9,6 +9,7 @@ on:
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
+      - 'scripts/cleanup-live-markup-notes.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
       - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
@@ -24,6 +25,7 @@ on:
       - 'scripts/publish-catalogue-request.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
+      - 'scripts/cleanup-live-markup-notes.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
       - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
@@ -85,6 +87,7 @@ jobs:
 
           files=()
           cleanup_changed=false
+          note_cleanup_changed=false
           structure_changed=false
           repair_changed=false
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
@@ -102,6 +105,9 @@ jobs:
               mapfile -t files < <(git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'catalogue-requests/*.json')
               if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/cleanup-live-card-copy.mjs' | grep -q .; then
                 cleanup_changed=true
+              fi
+              if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/cleanup-live-markup-notes.mjs' | grep -q .; then
+                note_cleanup_changed=true
               fi
               if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
@@ -123,7 +129,7 @@ jobs:
             fi
           fi
 
-          if (( ${#files[@]} == 0 )) && [[ "${cleanup_changed}" != "true" ]] && [[ "${structure_changed}" != "true" ]] && [[ "${repair_changed}" != "true" ]]; then
+          if (( ${#files[@]} == 0 )) && [[ "${cleanup_changed}" != "true" ]] && [[ "${note_cleanup_changed}" != "true" ]] && [[ "${structure_changed}" != "true" ]] && [[ "${repair_changed}" != "true" ]]; then
             echo "No catalogue request JSON files or live repair/normaliser changed; nothing to publish."
             exit 0
           fi
@@ -145,6 +151,11 @@ jobs:
           if [[ "${cleanup_changed}" == "true" ]]; then
             echo "Cleaning redundant untasted/projected wording from current live card copy"
             node scripts/cleanup-live-card-copy.mjs
+          fi
+
+          if [[ "${note_cleanup_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
+            echo "Replacing redundant markup notes with cigar-specific editorial notes"
+            node scripts/cleanup-live-markup-notes.mjs
           fi
 
           if [[ "${repair_changed}" == "true" ]]; then
