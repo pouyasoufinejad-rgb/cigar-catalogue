@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v152';
+const STYLE_ID = 'catalogue-wide-card-layout-v153';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -15,6 +15,14 @@ html body article.card{
   width:100%!important;
   max-width:none!important;
   margin:0!important;
+}
+/* Only use the extra horizontal room on the large-desktop layout where the fixed
+   sidebar is present. Keeping the 901-1659px geometry unchanged avoids introducing
+   horizontal overflow on narrower desktop and tablet-width viewports. */
+@media(min-width:1660px){
+  html body .grid{
+    width:calc(100% + 150px)!important;
+  }
 }
 @media(min-width:901px){
 html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"]):nth-last-child(2 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])):nth-child(3n + 1 of article.card:not(.hidden):not(.brand-line-filter-hidden):not([data-personal-filter-hidden="1"])){
