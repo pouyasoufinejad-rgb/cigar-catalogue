@@ -1,0 +1,35 @@
+name: Verify live filters
+
+# Read-only. Renders the live page and checks the retailer dropdown and price bands are
+# there and actually filtering, and that the bootstrap a returning visitor runs imports the
+# filter module at all. Needs no secrets.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Check the live filter controls
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: npm install --no-audit --no-fund playwright && npx playwright install --with-deps chromium
+      - name: Verify
+        run: node scripts/verify-live-filters.mjs
+      - name: Upload screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: filters-${{ github.run_id }}
+          path: filters-*.png
+          retention-days: 14
+          if-no-files-found: warn
