@@ -1,0 +1,24 @@
+name: Publish pack single sweep
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/publish-pack-single-sweep.mjs'
+      - '.github/workflows/publish-pack-single-sweep.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      CATALOGUE_ADMIN_TOKEN: ${{ secrets.CATALOGUE_ADMIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/publish-pack-single-sweep.mjs
