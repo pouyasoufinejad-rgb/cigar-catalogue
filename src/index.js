@@ -684,7 +684,8 @@ function esc(value) {
 
 function aud(value) {
   const number = finite(value);
-  return 'A
+  return 'A' + String.fromCharCode(36) + (Number.isInteger(number) ? number.toFixed(0) : number.toFixed(2));
+}
 
 function cheapestSingleText(record = {}) {
   const lines = Array.isArray(record.practicalLines) ? record.practicalLines : [];
