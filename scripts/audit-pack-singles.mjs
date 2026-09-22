@@ -106,7 +106,9 @@ async function main(){
   }
   console.log('ISLA_GRAN_CORONA_VERIFIED maduro=37.39 natural=35.21 ring=44');
   const expectedSingles=[
-    ['davidoff-winston-churchill-petite-panatela','Cheapest single: A$26.90 · Sam\'s Smokes'],
+    ['davidoff-winston-churchill-petite-panatela','Cheapest single: A$28.95 · Cigarworld'],
+    ['davidoff-primeros-escurio','Cheapest single: A$24.10 · The Index'],
+    ['davidoff-primeros-nicaragua-maduro','Cheapest single: A$24.10 · The Index'],
     ['liga-privada-no-9-coronets','Cheapest single: A$13.00 · The Index'],
     ['liga-privada-unico-papas-fritas','Cheapest single: A$29.00 · CigarHut'],
     ['my-father-la-gran-oferta-lancero','Cheapest single: A$51.50 · The Index']
