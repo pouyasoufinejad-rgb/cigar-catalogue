@@ -1,0 +1,49 @@
+{
+  "id": "2026-09-23-add-sin-compromiso-paladin-de-saka",
+  "operation": "upsert-entry",
+  "key": "sin-compromiso-paladin-de-saka",
+  "entry": {
+    "brand": "Dunbarton Tobacco & Trust",
+    "title": "Sin Compromiso Paladin de Saka",
+    "eyebrow": "Aged firm-pressed flagship Sin Compromiso",
+    "packagePrice": 69.8,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 69.8,
+    "country": "Nicaragua",
+    "length": 7,
+    "ring": 52,
+    "strength": 6,
+    "quality": 9,
+    "flavour": 9,
+    "risk": 1,
+    "stock": "in",
+    "rank": 999,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "summaryHtml": "<strong>Espresso, dark chocolate, earth, cedar, natural tobacco and pepper</strong> lead a dense but controlled profile, with the extra Pennsylvania seedleaf adding robustness without turning the cigar harsh. The firm box press and extended aging keep the smoke unusually polished for a blend with this much dark tobacco character.",
+    "noteHtml": "Paladin de Saka is the more robust, one-year-aged offshoot of Sin Compromiso and is made only in this 7″ × 52 firm-pressed format. Cigar Coop scored it 92 and singled out flavour as its strongest attribute, with medium strength and body rather than brute-force power.",
+    "productionLines": [
+      "Handmade in Nicaragua at Fábrica de Tabacos Joya de Nicaragua",
+      "Wrapper: Mexican San Andrés Negro “Cultivo Tonto”",
+      "Binder: Hybridised Ecuador Habano “Thin Ligero”",
+      "Filler: Independent-plantation Nicaraguan tobaccos and Pennsylvania seedleaf"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Spanish-cedar sleeved",
+      "Firm box press",
+      "Long-session format"
+    ],
+    "smokeTime": "90–120 min smoke",
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/joya-de-nicaragua-sin-compromiso-paladin-de-saka-7-x-52rg-1"
+    ],
+    "priceChecked": "2026-09-23",
+    "stockChecked": "2026-09-23"
+  },
+  "note": "Add Dunbarton Tobacco & Trust Sin Compromiso Paladin de Saka to the Panatelas, Coronas & Robustos subsection. Use the current Cigarbox single at A$69.80 as the Australian benchmark. This is the sole 7 x 52 firm-pressed Paladin vitola, made at Joya de Nicaragua with San Andrés Negro wrapper, Ecuador Habano thin-ligero binder, Nicaraguan filler and Pennsylvania seedleaf. Append to the subsection without disturbing unrelated catalogue data."
+}
