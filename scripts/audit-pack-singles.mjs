@@ -24,14 +24,6 @@ export function packageCount(record = {}) {
     || source.match(/\b(\d{1,3})\s+(?:cigars?|cigarillos?|sticks?)\b/i);
   if (countMatch) return Math.max(1, Number(countMatch[1]) || 1);
 
-  const packagePrice = Number(record.packagePrice);
-  const perStickPrice = Number(record.price);
-  if (Number.isFinite(packagePrice) && packagePrice > 0 && Number.isFinite(perStickPrice) && perStickPrice > 0) {
-    const ratio = packagePrice / perStickPrice;
-    const rounded = Math.round(ratio);
-    if (rounded >= 2 && rounded <= 100 && Math.abs(ratio - rounded) <= 0.08) return rounded;
-  }
-
   return /\b(?:pack|tin|box|packet|carton)\b/i.test(source) ? 2 : 1;
 }
 
