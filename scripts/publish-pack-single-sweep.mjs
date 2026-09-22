@@ -72,9 +72,18 @@ function patchTarget(entry,blendId,sizeId,line,url){
    if(sizeId){
      const sizes=Array.isArray(blends[bi].sizeVariants)?structuredClone(blends[bi].sizeVariants):[];
      const si=sizes.findIndex(v=>String(v?.id||'')===sizeId);
-     if(si<0) throw new Error(entry.key+': size '+sizeId+' missing under '+blendId);
-     sizes[si]={...sizes[si],practicalLines:withLine(sizes[si].practicalLines,line),retailerLinks:addLink(sizes[si].retailerLinks,url)};
-     blends[bi]={...blends[bi],sizeVariants:sizes};
+     if(si>=0){
+       sizes[si]={...sizes[si],practicalLines:withLine(sizes[si].practicalLines,line),retailerLinks:addLink(sizes[si].retailerLinks,url)};
+       blends[bi]={...blends[bi],sizeVariants:sizes};
+     } else {
+       // Some blend variants inherit the parent's sizeVariants rather than storing their
+       // own copy. Update the inherited parent size instead of inventing nested structure.
+       const parentSizes=Array.isArray(entry.sizeVariants)?structuredClone(entry.sizeVariants):[];
+       const psi=parentSizes.findIndex(v=>String(v?.id||'')===sizeId);
+       if(psi<0) throw new Error(entry.key+': size '+sizeId+' missing under blend and parent');
+       parentSizes[psi]={...parentSizes[psi],practicalLines:withLine(parentSizes[psi].practicalLines,line),retailerLinks:addLink(parentSizes[psi].retailerLinks,url)};
+       return {...entry,blendVariants:blends,sizeVariants:parentSizes};
+     }
    }else{
      blends[bi]={...blends[bi],practicalLines:withLine(blends[bi].practicalLines,line),retailerLinks:addLink(blends[bi].retailerLinks,url)};
    }
@@ -91,8 +100,16 @@ function patchTarget(entry,blendId,sizeId,line,url){
 }
 function targetRecord(entry,blendId,sizeId){
  let rec=entry;
- if(blendId) rec=(rec.blendVariants||[]).find(v=>String(v?.id||'')===blendId);
- if(!rec) return null;
+ if(blendId){
+   const blend=(rec.blendVariants||[]).find(v=>String(v?.id||'')===blendId);
+   if(!blend) return null;
+   if(sizeId){
+     const nested=(blend.sizeVariants||[]).find(v=>String(v?.id||'')===sizeId);
+     if(nested) return nested;
+     return (rec.sizeVariants||[]).find(v=>String(v?.id||'')===sizeId)||null;
+   }
+   return blend;
+ }
  if(sizeId) rec=(rec.sizeVariants||[]).find(v=>String(v?.id||'')===sizeId);
  return rec||null;
 }
