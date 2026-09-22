@@ -98,25 +98,33 @@ function targetRecord(entry,blendId,sizeId){
 }
 
 const initial=await get('/api/catalogue-overrides?single_sweep='+Date.now());
-const byKey=new Map();
+const next=structuredClone(initial);
+
 for(const [key,blend,size,line,url] of targets){
- const base=byKey.get(key)||structuredClone(initial.entries?.[key]);
- if(!base) throw new Error(key+': not a dynamic entry; sweep stopped before writes');
- base.key=key;
- byKey.set(key,patchTarget(base,blend,size,line,url));
+  const dynamic=next.entries?.[key];
+  const staticCard=next.cards?.[key];
+  if(!dynamic&&!staticCard) throw new Error(key+': catalogue record missing');
+  if(dynamic){
+    dynamic.key=key;
+    next.entries[key]=patchTarget(dynamic,blend,size,line,url);
+  }else{
+    next.cards[key]=patchTarget({...staticCard,key},blend,size,line,url);
+  }
 }
-for(const [key,entry] of byKey){
- await put('/api/catalogue-entry/'+encodeURIComponent(key),entry);
- console.log('UPDATED '+key);
-}
+
+await put('/api/catalogue-overrides',next);
+
 const finalState=await get('/api/catalogue-overrides?single_sweep_verify='+Date.now());
-let verified=0;
+let verified=0, dynamicCount=0, staticCount=0;
 for(const [key,blend,size,line,url] of targets){
- const entry=finalState.entries?.[key];
- const rec=entry&&targetRecord(entry,blend,size);
- if(!rec) throw new Error(key+': verification target missing');
- if(!(rec.practicalLines||[]).includes(line)) throw new Error(key+': cheapest-single line missing after write');
- if(url&&!(rec.retailerLinks||[]).includes(url)) throw new Error(key+': cheapest-single retailer link missing after write');
- verified++;
+  const dynamic=finalState.entries?.[key];
+  const source=dynamic||finalState.cards?.[key];
+  if(!source) throw new Error(key+': verification source missing');
+  const rec=targetRecord(source,blend,size);
+  if(!rec) throw new Error(key+': verification target missing');
+  if(!(rec.practicalLines||[]).includes(line)) throw new Error(key+': cheapest-single line missing after write');
+  if(url&&!(rec.retailerLinks||[]).includes(url)) throw new Error(key+': cheapest-single retailer link missing after write');
+  if(dynamic) dynamicCount++; else staticCount++;
+  verified++;
 }
-console.log('PACK_SINGLE_SWEEP_VERIFIED '+verified);
+console.log('PACK_SINGLE_SWEEP_VERIFIED '+verified+' dynamic='+dynamicCount+' static='+staticCount);
