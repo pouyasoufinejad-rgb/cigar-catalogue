@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-22-fix-liga-privada-unico-papas-fritas-package",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-papas-fritas",
+  "entry": {
+    "packagePrice": 29,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 29,
+    "stock": "in",
+    "priceChecked": "2026-09-22",
+    "stockChecked": "2026-09-22",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/liga-privada-unico-serie-papas-fritas/",
+      "https://www.theindexcigars.com.au/products/liga-privada-unico-serie-papas-fritas"
+    ]
+  },
+  "note": "Correct the erroneous Cigar Hut tin-of-4 data. Cigar Hut's live product page offers Single, 10 Cigars and Box of 25, with the single at A$29; there is no A$104 tin of four on the current listing. Preserve unrelated fields and keep Value automatically derived."
+}
