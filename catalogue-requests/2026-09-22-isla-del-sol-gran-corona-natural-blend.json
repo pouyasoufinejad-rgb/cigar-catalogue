@@ -1,0 +1,63 @@
+{
+  "id": "2026-09-22-isla-del-sol-gran-corona-natural-blend",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "packagePrice": 37.39,
+    "packageLabel": "single cigar",
+    "price": 37.39,
+    "length": 5,
+    "ring": 44,
+    "retailerLinks": [
+      "https://www.cigarworld.com.au/aud/products/isla-del-sol-%252d-maduro-%252d-gran-corona-%285-x-44%29-single.html",
+      "https://www.cigarhut.com.au/isla-del-sol-maduro-gran-corona/"
+    ],
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "title": "Natural Gran Corona",
+        "eyebrow": "Sumatra-wrapped coffee-infused Gran Corona",
+        "packagePrice": 35.21,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 35.21,
+        "country": "Nicaragua",
+        "length": 5,
+        "ring": 44,
+        "strength": 5,
+        "quality": 8,
+        "flavour": 8,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Sweet coffee, cocoa, toasted almond and creamy cedar</strong> sit over a lighter, more aromatic tobacco profile than the Maduro. The Sumatra wrapper and Nicaraguan core keep the coffee infusion prominent while adding soft wood, nutty sweetness and a smooth, mellow-medium body.",
+        "noteHtml": "The original Isla del Sol expression uses a Sumatra wrapper over a Nicaraguan binder and filler, making it the lighter, more aromatic counterpart to the darker San Andrés Maduro.",
+        "productionLines": [
+          "Flavoured",
+          "Handmade",
+          "Wrapper: Sumatra",
+          "Binder: Nicaraguan",
+          "Filler: Nicaraguan"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "smokeTime": "40–55 min smoke",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/isla-del-sol%252d-drew-estate-%252d-gran-corona-%252d-%285x44%29-%252d-single.html"
+        ],
+        "priceChecked": "2026-09-22",
+        "stockChecked": "2026-09-22"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Nest the currently available Isla del Sol Natural Gran Corona under the existing Maduro Gran Corona as a blend variant. Correct the parent Maduro to the current in-stock Cigarworld single at A$37.39 and the verified 5 x 44 dimensions. Natural is the standard Sumatra-wrapped 5 x 44 expression, currently A$35.21 as a Cigarworld single. Preserve all unrelated parent fields."
+}
