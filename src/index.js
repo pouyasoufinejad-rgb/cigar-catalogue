@@ -684,7 +684,17 @@ function esc(value) {
 
 function aud(value) {
   const number = finite(value);
-  return `A$${Number.isInteger(number) ? number.toFixed(0) : number.toFixed(2)}`;
+  return `A${Number.isInteger(number) ? number.toFixed(0) : number.toFixed(2)}`;
+}
+
+function cheapestSingleText(record = {}) {
+  const lines = Array.isArray(record.practicalLines) ? record.practicalLines : [];
+  return lines.find(line => /^cheapest single\s*:/i.test(String(line || '').trim())) || '';
+}
+
+function cheapestSingleMarkup(record = {}) {
+  const line = cheapestSingleText(record);
+  return line ? `<div class="cheapest-single">${esc(line)}</div>` : '';
 }
 
 function tierName(scoreValue) {
@@ -838,7 +848,7 @@ export function renderEntryCard(rawEntry) {
     flavour: entry.flavour,
     size: sizeScoreForRing(entry.ring),
     value: valueScore
-  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${entry.priceUnverified
+  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${cheapestSingleMarkup(entry)}${entry.priceUnverified
     ? `<div class="value-calc value-unrated"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>No verified AU price for this size</span><span>Ratio <b>—</b></span></div>`
     : `<div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>`}${stockHtml(entry)}<div class="medals">${medalRating('Strength', entry.strength)}${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}${entry.priceUnverified ? unratedValueRating() : medalRating('Value', valueScore)}</div>${experience}<p class="summary">${entry.summaryHtml}</p>${note}${links}</div></article>`;
 }
