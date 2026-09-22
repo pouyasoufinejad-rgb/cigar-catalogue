@@ -102,6 +102,25 @@ function textLinesFromMarkup(html) {
     .filter(Boolean);
 }
 
+function syncCheapestSingleLine(card, lines) {
+  if (!card) return;
+  const text = (Array.isArray(lines) ? lines : [])
+    .find(line => /^cheapest single\s*:/i.test(String(line || '').trim())) || '';
+  let node = card.querySelector('.cheapest-single');
+  if (!text) {
+    node?.remove();
+    return;
+  }
+  if (!node) {
+    node = document.createElement('div');
+    node.className = 'cheapest-single';
+    const facts = card.querySelector('.facts');
+    if (facts) facts.insertAdjacentElement('afterend', node);
+    else card.querySelector('.cardbody')?.prepend(node);
+  }
+  node.textContent = text;
+}
+
 export function buildSavePlan({ state, key, dynamic, structural, editorial, sections }) {
   const current = state && typeof state === 'object' ? state : {};
   const cards = stripDerivedValuesFromCards(current.cards);
@@ -776,7 +795,11 @@ function applyEditorialToCard(card, saved = {}) {
     replaceDynamicArtmeta(card, '.artmeta-left', 'Production', own(saved, 'productionHtml') ? saved.productionHtml : linesToMarkup(saved.productionLines));
   }
   if (isDynamic || own(saved, 'practicalHtml') || own(saved, 'practicalLines')) {
-    replaceDynamicArtmeta(card, '.artmeta-right', 'Practical', own(saved, 'practicalHtml') ? saved.practicalHtml : linesToMarkup(saved.practicalLines));
+    const practicalLines = own(saved, 'practicalHtml')
+      ? textLinesFromMarkup(saved.practicalHtml)
+      : (Array.isArray(saved.practicalLines) ? saved.practicalLines : []);
+    replaceDynamicArtmeta(card, '.artmeta-right', 'Practical', own(saved, 'practicalHtml') ? saved.practicalHtml : linesToMarkup(practicalLines));
+    syncCheapestSingleLine(card, practicalLines);
   }
   if (isDynamic || own(saved, 'country')) applyDynamicCountryFlag(card, saved.country || card.querySelector('.country-name')?.textContent || 'Unknown');
 
