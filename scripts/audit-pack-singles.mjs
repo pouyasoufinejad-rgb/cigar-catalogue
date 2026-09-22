@@ -15,7 +15,7 @@ const money = value => Number(String(value || '').replace(/[^0-9.]/g,'')) || 0;
 export function packageCount(record = {}) {
   const explicit = Number(record.packageCount);
   if (Number.isFinite(explicit) && explicit > 1) return Math.round(explicit);
-  const source = [record.packageLabel, ...(Array.isArray(record.practicalLines) ? record.practicalLines : [])].filter(Boolean).join(' ');
+  const firstPractical = Array.isArray(record.practicalLines) ? record.practicalLines[0] : '';\n  const source = [record.packageLabel, firstPractical].filter(Boolean).join(' ');
   const m = source.match(/\b(?:pack|tin|box|packet|carton|bundle)\s+(?:of\s+)?(\d{1,3})\b/i)
     || source.match(/\b(\d{1,3})[- ]?(?:pack|tin|box|count|ct)\b/i)
     || source.match(/\b(\d{1,3})\s+(?:cigars?|cigarillos?|sticks?)\b/i);
