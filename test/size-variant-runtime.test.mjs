@@ -253,6 +253,32 @@ test('the admin promote control appears only for an admin, and only on a multi-s
   assert.equal(buttons[0].closest('article.card').dataset.key, NO_9.key);
 });
 
+test('cheapest single stays visible in the main card body when a size changes', async () => {
+  const dom = mount();
+  const api = await runtime();
+  const state = STATE();
+  state.entries[NO_9.key].sizeVariants = NO_9.sizeVariants.map(variant => ({
+    ...variant,
+    practicalLines: variant.id === 'short-panatela'
+      ? ['Single cigar', 'Cheapest single: A$37.00 · Cigarhut', 'Uncut', 'Protected', 'Lenient Cadence']
+      : variant.id === 'petit-corona'
+        ? ['Single cigar', 'Cheapest single: A$44.00 · Cigarhut', 'Uncut', 'Protected', 'Forgiving Cadence']
+        : []
+  }));
+  state.cards[NO_9.key] = state.entries[NO_9.key];
+  api.setVariantState(state);
+
+  const card = cardOf(dom, NO_9.key);
+  api.selectVariant(NO_9.key, 'short-panatela');
+  assert.equal(card.querySelector('.cheapest-single')?.textContent,
+    'Cheapest single: A$37.00 · Cigarhut');
+  assert.equal(card.querySelector('.facts').nextElementSibling?.className, 'cheapest-single');
+
+  api.selectVariant(NO_9.key, 'petit-corona');
+  assert.equal(card.querySelector('.cheapest-single')?.textContent,
+    'Cheapest single: A$44.00 · Cigarhut');
+});
+
 test('a size carries its own Practical block, because cadence follows ring gauge', async () => {
   const dom = mount();
   const api = await runtime();
