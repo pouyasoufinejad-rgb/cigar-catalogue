@@ -98,7 +98,26 @@ async function main(){
   const effective={};
   for(const key of new Set([...Object.keys(rendered),...Object.keys(state.cards||{}),...Object.keys(state.entries||{})])) effective[key]={...(rendered[key]||{}),...(state.cards?.[key]||{}),...(state.entries?.[key]||{})};
   const rows=collectMultiStickEntries(effective,rendered);
-  console.log('ISLA_GRAN_CORONA '+JSON.stringify(effective['isla-del-sol-maduro-gran-corona']||null));
+  const isla=effective['isla-del-sol-maduro-gran-corona']||{};
+  const natural=(Array.isArray(isla.blendVariants)?isla.blendVariants:[]).find(v=>String(v?.id||'')==='natural');
+  const maduro=(Array.isArray(isla.blendVariants)?isla.blendVariants:[]).find(v=>String(v?.id||'')==='maduro');
+  if(Number(isla.price)!==37.39||Number(isla.ring)!==44||!natural||!maduro||Number(natural.price)!==35.21||Number(natural.ring)!==44){
+    throw new Error('Live Isla del Sol Gran Corona blend state is not the verified Maduro/Natural 5 x 44 configuration.');
+  }
+  console.log('ISLA_GRAN_CORONA_VERIFIED maduro=37.39 natural=35.21 ring=44');
+  const expectedSingles=[
+    ['davidoff-winston-churchill-petite-panatela','Cheapest single: A$26.90 · Sam\'s Smokes'],
+    ['liga-privada-no-9-coronets','Cheapest single: A$13.00 · The Index'],
+    ['liga-privada-unico-papas-fritas','Cheapest single: A$29.00 · CigarHut'],
+    ['my-father-la-gran-oferta-lancero','Cheapest single: A$51.50 · The Index']
+  ];
+  for(const [key,line] of expectedSingles){
+    const hits=rows.filter(item=>item.key===key);
+    if(!hits.length||!hits.some(item=>(item.practicalLines||[]).includes(line))) {
+      throw new Error(key+': corrected cheapest-single value is not live.');
+    }
+  }
+  console.log('PACK_SINGLE_CORRECTIONS_VERIFIED count='+expectedSingles.length);
   console.log(`PACK_SINGLE_AUDIT count=${rows.length}`);
   for(const item of rows) console.log(`PACK ${JSON.stringify(item)}`);
   const missing=rows.filter(item=>!(item.practicalLines||[]).some(line=>/^cheapest single\s*:/i.test(String(line||''))));
