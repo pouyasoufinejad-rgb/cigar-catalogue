@@ -98,6 +98,7 @@ async function main(){
   const effective={};
   for(const key of new Set([...Object.keys(rendered),...Object.keys(state.cards||{}),...Object.keys(state.entries||{})])) effective[key]={...(rendered[key]||{}),...(state.cards?.[key]||{}),...(state.entries?.[key]||{})};
   const rows=collectMultiStickEntries(effective,rendered);
+  console.log('ISLA_GRAN_CORONA '+JSON.stringify(effective['isla-del-sol-maduro-gran-corona']||null));
   console.log(`PACK_SINGLE_AUDIT count=${rows.length}`);
   for(const item of rows) console.log(`PACK ${JSON.stringify(item)}`);
   const missing=rows.filter(item=>!(item.practicalLines||[]).some(line=>/^cheapest single\s*:/i.test(String(line||''))));
