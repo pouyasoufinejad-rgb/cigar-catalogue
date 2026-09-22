@@ -1,0 +1,97 @@
+{
+  "id": "2026-09-22-add-wise-man-corojo-corona",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-corojo-corona",
+  "entry": {
+    "brand": "Foundation",
+    "title": "The Wise Man Corojo Corona",
+    "eyebrow": "Sweet-spiced Nicaraguan Corojo Corona",
+    "packagePrice": 37,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 37,
+    "country": "Nicaragua",
+    "length": 5,
+    "ring": 48,
+    "strength": 6,
+    "quality": 8,
+    "flavour": 8,
+    "risk": 1,
+    "stock": "in",
+    "rank": 13,
+    "catalogueType": "main",
+    "taster": false,
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "size": "gold",
+    "summaryHtml": "<strong>Cedar, sweet spice, cocoa, graham cracker, toasted oak and earthy nuttiness</strong> shape a medium-bodied profile with a clear Corojo sweetness and peppery lift. The 5″ × 48 Corona keeps the Nicaraguan Corojo ’99 wrapper prominent while the Estelí, Condega and Jalapa core adds dry wood, earth and a restrained chocolate note.",
+    "noteHtml": "This is the current My Father-made Wise Man reblend introduced in 2024, not the older Aganorsa-made El Güegüense. Exact-Corona reviews consistently praise the draw and burn, while flavour assessments range from sweet and refined to somewhat dry, making construction the most reliable strength of the vitola.",
+    "productionLines": [
+      "Handmade in Nicaragua at My Father Cigars",
+      "Wrapper: Nicaraguan Corojo ’99",
+      "Binder: Nicaraguan Estelí and Jalapa",
+      "Filler: Nicaraguan Estelí, Condega and Jalapa"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Cellophane protected",
+      "5″ × 48 Corona",
+      "Moderate cadence"
+    ],
+    "smokeTime": "45–70 min smoke",
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/the-wise-man-corojo-corona/"
+    ],
+    "priceChecked": "2026-09-22",
+    "stockChecked": "2026-09-22",
+    "blendVariants": [
+      {
+        "id": "corojo",
+        "label": "Corojo"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "title": "The Wise Man Maduro Corona",
+        "eyebrow": "San Andrés-wrapped Wise Man Corona",
+        "packagePrice": 41,
+        "packageCount": 1,
+        "packageLabel": "single cigar",
+        "price": 41,
+        "country": "Nicaragua",
+        "length": 5,
+        "ring": 48,
+        "strength": 8,
+        "quality": 8,
+        "flavour": 8,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Espresso, cocoa, dark chocolate, black pepper, earth and molasses sweetness</strong> give the Maduro a darker, fuller profile than the Corojo. The Mexican San Andrés wrapper adds richer chocolate and coffee weight over the same Estelí, Condega and Jalapa core, with sweetness and spice building through the smoke.",
+        "noteHtml": "The exact 5″ × 48 Maduro Corona has drawn strong praise for construction and rich cocoa-pepper character, including a 93-point Cigar Press review, although other reviewers found the current My Father version less complex than the older Aganorsa-made Wise Man Maduro.",
+        "productionLines": [
+          "Handmade in Nicaragua at My Father Cigars",
+          "Wrapper: Mexican San Andrés Maduro",
+          "Binder: Nicaraguan Estelí and Jalapa",
+          "Filler: Nicaraguan Estelí, Condega and Jalapa"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Cellophane protected",
+          "5″ × 48 Corona",
+          "Moderate cadence"
+        ],
+        "smokeTime": "45–70 min smoke",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/categories/cigars/foundation-cigar-company/",
+          "https://www.theindexcigars.com.au/products/the-wise-man-maduro-corona-gorda"
+        ],
+        "priceChecked": "2026-09-22",
+        "stockChecked": "2026-09-22"
+      }
+    ],
+    "defaultBlendVariantId": "corojo"
+  },
+  "note": "Add Foundation The Wise Man Corojo Corona as rank 13 in the Panatelas, Coronas & Robustos subsection, with the current Wise Man Maduro Corona nested as its blend variant. Corojo is the current 5 x 48 My Father-made version and is A$37 at Cigar Hut. Maduro is the matching 5 x 48 blend; use the currently available A$41 Cigarworld single rather than The Index's cheaper A$39.90 out-of-stock listing. Preserve unrelated catalogue data and let the publisher renumber the affected main cohort around rank 13."
+}
