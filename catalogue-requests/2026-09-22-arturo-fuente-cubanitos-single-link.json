@@ -1,0 +1,22 @@
+{
+  "id": "2026-09-22-arturo-fuente-cubanitos-single-link",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "retailerLinks": [
+      "https://firmincigars.com.au/product/arturo-fuente-cubanitos-natural-10s-dominican/?v=2c18c36508d1",
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-cubanitos-%252d-pack-of-10-%252d-%284-1%7B47%7D2%22-x-32%29.html",
+      "https://www.cigarhut.com.au/arturo-fuente-cubanitos/",
+      "https://www.theindexcigars.com.au/products/arturo-fuente-cubanitos",
+      "https://www.cigarworld.com.au/aud/products/arturo-fuente-cubanitos-%252d-single-%252d-%284-1%7B47%7D2%22-x-32%29.html"
+    ],
+    "practicalLines": [
+      "Pack of 10",
+      "Cheapest single: A$15.60 · The Index",
+      "Uncut",
+      "Protected",
+      "Sensitive Cadence"
+    ]
+  },
+  "note": "Add Cigarworld's exact Cubanitos single-product URL while retaining The Index A$15.60 as the surfaced cheapest single under the preferred-retailer rule. Preserve unrelated fields."
+}
