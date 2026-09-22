@@ -348,11 +348,13 @@ export function normalisePracticalLines(record = {}, context = {}) {
   const family = classifyStructureFamily(record, context);
   const lines = sourceLines(record, 'practical');
   const first = packageLine(record, lines, family);
+  const cheapestSingle = firstMatch(lines, /^cheapest single\s*:/i);
   const cut = cutLine(lines, family);
   const protection = protectionLine(record, lines, family, first);
   const cadence = cadenceForRing(effectiveRing(record, context));
-  if (family === HALF_FAMILY) return [first, cut, protection, fullCigarLine(record, lines, context), cadence];
-  return [first, cut, protection, cadence];
+  const purchase = cheapestSingle ? [cheapestSingle] : [];
+  if (family === HALF_FAMILY) return [first, ...purchase, cut, protection, fullCigarLine(record, lines, context), cadence];
+  return [first, ...purchase, cut, protection, cadence];
 }
 
 // What the page actually renders for this key, which is what compliance is measured
