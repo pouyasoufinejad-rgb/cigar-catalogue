@@ -169,6 +169,32 @@ test('stock targets retain one URL for each of the six audited retailers', () =>
   ]);
 });
 
+
+test('multi-stick cards render cheapest single beneath the price facts', () => {
+  const html = renderEntryCard({
+    key: 'pack-single-visible',
+    brand: 'Test Brand',
+    title: 'Pack Cigar',
+    packagePrice: 100,
+    packageLabel: 'tin of 10',
+    price: 10,
+    quality: 7,
+    strength: 6,
+    length: 4,
+    ring: 32,
+    rank: 1,
+    risk: 1,
+    practicalLines: [
+      'Tin of 10',
+      'Cheapest single: A$13.00 · The Index',
+      'Uncut',
+      'Protected'
+    ]
+  });
+
+  assert.match(html, /<\/div><div class="cheapest-single">Cheapest single: A\$13\.00 · The Index<\/div><div class="value-calc/);
+});
+
 test('catalogue cards show friendly labels for Firmin Cigars and The Index', () => {
   const html = renderEntryCard({
     key: 'retailer-labels',
