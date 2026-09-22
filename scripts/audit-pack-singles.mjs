@@ -90,6 +90,10 @@ async function main(){
   const rows=collectMultiStickEntries(effective,rendered);
   console.log(`PACK_SINGLE_AUDIT count=${rows.length}`);
   for(const item of rows) console.log(`PACK ${JSON.stringify(item)}`);
+  const missing=rows.filter(item=>!(item.practicalLines||[]).some(line=>/^cheapest single\s*:/i.test(String(line||''))));
+  console.log(`PACK_SINGLE_MISSING count=${missing.length}`);
+  for(const item of missing) console.log(`MISSING ${JSON.stringify(item)}`);
+  if(missing.length) throw new Error(`Cheapest-single line missing from ${missing.length} multi-stick presentation(s).`);
   console.log('PACK_SINGLE_AUDIT_COMPLETE');
 }
 if (process.argv[1] && new URL(import.meta.url).pathname.endsWith(process.argv[1].replace(/\\/g,'/'))) main().catch(e=>{console.error(e?.stack||e);process.exitCode=1;});
