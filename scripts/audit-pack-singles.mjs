@@ -84,7 +84,17 @@ async function main(){
   ]);
   if(!stateResp.ok) throw new Error(`Live state read failed with HTTP ${stateResp.status}.`);
   if(!pageResp.ok) throw new Error(`Rendered catalogue read failed with HTTP ${pageResp.status}.`);
-  const state=await stateResp.json(), rendered=parseRendered(await pageResp.text());
+  const pageHtml=await pageResp.text();
+  const state=await stateResp.json(), rendered=parseRendered(pageHtml);
+  const visibleRows=(pageHtml.match(/class=["'][^"']*cheapest-single[^"']*["']/gi)||[]).length;
+  const runtimeResp=await fetch(baseUrl+'/catalogue-variant-runtime.mjs?pack_single_ui_verify='+Date.now(),{headers:{accept:'text/javascript'},cache:'no-store'});
+  if(!runtimeResp.ok) throw new Error('Variant runtime read failed with HTTP '+runtimeResp.status+'.');
+  const runtimeText=await runtimeResp.text();
+  if(!runtimeText.includes('syncCheapestSingleLine')||!runtimeText.includes('.cheapest-single')) {
+    throw new Error('Production variant runtime does not include the visible cheapest-single UI.');
+  }
+  if(!visibleRows) throw new Error('Production HTML contains no visible cheapest-single rows.');
+  console.log('PACK_SINGLE_VISIBLE_ROWS count='+visibleRows);
   const effective={};
   for(const key of new Set([...Object.keys(rendered),...Object.keys(state.cards||{}),...Object.keys(state.entries||{})])) effective[key]={...(rendered[key]||{}),...(state.cards?.[key]||{}),...(state.entries?.[key]||{})};
   const rows=collectMultiStickEntries(effective,rendered);
