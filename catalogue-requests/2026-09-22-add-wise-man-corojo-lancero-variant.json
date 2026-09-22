@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-22-add-wise-man-corojo-lancero-variant",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-maduro-lancero-half",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "corojo",
+        "label": "Corojo",
+        "title": "The Wise Man Corojo Lancero",
+        "eyebrow": "Corojo '99 lancero half",
+        "packagePrice": 49,
+        "packageCount": 1,
+        "packageLabel": "single full lancero",
+        "price": 24.5,
+        "country": "Nicaragua",
+        "length": 3.5,
+        "ring": 40,
+        "strength": 6,
+        "quality": 8,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Cedar, cinnamon, graham cracker, honeyed peanut, nutmeg and natural sweetness</strong> drive a woody, spice-led profile. The Nicaraguan Corojo '99 wrapper keeps the 40-ring smoke aromatic and wrapper-forward, with a brighter and less cocoa-heavy character than the Maduro.",
+        "noteHtml": "The exact 7″ × 40 Corojo Lancero scored 91 points in Cigar Insider in November 2025, with an easy draw and a medium-strength profile.",
+        "productionLines": [
+          "Handmade in Nicaragua at My Father Cigars",
+          "Wrapper: Nicaraguan Corojo '99",
+          "Binder: Nicaraguan tobaccos from Estelí and Jalapa",
+          "Filler: Nicaraguan tobaccos from Estelí, Condega and Jalapa"
+        ],
+        "practicalLines": [
+          "Single full lancero",
+          "Cut cleanly into two ~3½″ × 40 half-sessions before lighting",
+          "Uncut",
+          "Deliberate Cadence"
+        ],
+        "smokeTime": "30–45 min smoke per half",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/the-wise-man-corojo-lancero/"
+        ],
+        "priceChecked": "2026-09-22",
+        "stockChecked": "2026-09-22"
+      }
+    ],
+    "defaultBlendVariantId": "maduro"
+  },
+  "note": "Add the current My Father-made Wise Man Corojo Lancero as a nested blend variant under the existing Wise Man Maduro Lancero half-cigar entry. Keep Maduro as the displayed default. Cigar Hut currently lists the exact 7 x 40 Corojo Lancero at A$49; catalogue price remains A$24.50 per practical half-session. Preserve all unrelated parent fields."
+}
