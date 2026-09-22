@@ -25,7 +25,11 @@ export const BLEND_QUERY_PARAM = 'blend';
 export const STATE_API = '/api/catalogue-overrides';
 
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
-const aud = value => 'A
+const aud = value => {
+  const fixed = Number(value).toFixed(2);
+  const amount = fixed.endsWith('.00') ? fixed.slice(0, -3) : fixed;
+  return 'A' + String.fromCharCode(36) + amount;
+};
 
 function cheapestSingleText(lines) {
   return (Array.isArray(lines) ? lines : [])
