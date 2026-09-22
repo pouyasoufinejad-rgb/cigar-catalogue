@@ -25,7 +25,30 @@ export const BLEND_QUERY_PARAM = 'blend';
 export const STATE_API = '/api/catalogue-overrides';
 
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
-const aud = value => `A$${Number(value).toFixed(2).replace(/\.00$/, '')}`;
+const aud = value => `A${Number(value).toFixed(2).replace(/\.00$/, '')}`;
+
+function cheapestSingleText(lines) {
+  return (Array.isArray(lines) ? lines : [])
+    .find(line => /^cheapest single\s*:/i.test(String(line || '').trim())) || '';
+}
+
+export function syncCheapestSingleLine(card, lines) {
+  if (!card) return;
+  const text = cheapestSingleText(lines);
+  let node = card.querySelector('.cheapest-single');
+  if (!text) {
+    node?.remove();
+    return;
+  }
+  if (!node) {
+    node = card.ownerDocument.createElement('div');
+    node.className = 'cheapest-single';
+    const facts = card.querySelector('.facts');
+    if (facts) facts.insertAdjacentElement('afterend', node);
+    else card.querySelector('.cardbody')?.prepend(node);
+  }
+  node.textContent = text;
+}
 
 function storedRecord(state, key) {
   const card = state?.cards?.[key];
@@ -405,6 +428,7 @@ export function applyVariantToCard(card, record, variantId) {
         .map(line => `<span class="artmeta-line">${line}</span>`).join('');
     }
   }
+  syncCheapestSingleLine(card, effective.practicalLines);
 
   const art = card.querySelector('.artframe');
   if (art) {
@@ -676,6 +700,7 @@ function ensureStyle() {
 .rating.value-unrated .value-unrated-medal{filter:grayscale(1);opacity:.38}
 .rating.value-unrated b,.rating.value-unrated .subscore{color:inherit;opacity:.72}
 .value-calc.value-unrated{opacity:.78}
+.cheapest-single{margin:7px 0 9px;padding:7px 9px;border:1px solid rgba(195,162,80,.36);border-radius:7px;background:rgba(255,250,240,.58);color:#6b4b1d;font:700 11px Georgia,serif;line-height:1.35}
 article.card.search-hit{outline:2px solid #c69d2c;outline-offset:3px}
 .catalogue-variant-default{margin-left:6px;border:1px solid rgba(195,162,80,.5);border-radius:6px;background:rgba(255,250,240,.7);color:#6c4a0d;font:700 10px Cinzel,serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;cursor:pointer}
 .catalogue-variant-default[disabled]{opacity:.45;cursor:default}
