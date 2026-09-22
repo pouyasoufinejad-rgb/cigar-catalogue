@@ -22,8 +22,10 @@ Do not place `CATALOGUE_ADMIN_TOKEN` or any other credential in Git, request JSO
 - Preserve unrelated fields on partial edits.
 - Use the site's existing automatic Value logic; never hard-code a stale Value score.
 - If the verified single-cigar price is over A$30, do not use a box/pack per-stick discount as the catalogue price benchmark. Use the best available single-cigar price instead. This does not override products whose normal retail form is inherently a tin/pack and no single is sold.
+- For any cigar whose catalogue purchase format is a pack, tin, or box containing more than one cigar, also research and record the cheapest currently available Australian single-cigar retailer, single price, and direct retailer link when a genuine single is sold. Keep this separate from the pack listing and never treat the pack's calculated per-stick price as the single-cigar price. If no Australian retailer sells a genuine single, record that no single was found rather than inventing one.
 - Keep main and taster ranking cohorts contiguous when changing ranks or archive status.
 - Prefer archive over deletion. Do not wipe KV or bulk-delete catalogue data.
+- Catalogue-visible markup notes must not say “Untasted” or use equivalent status filler. They must also not merely repeat retailer, stock, availability, package-price, or listing information already shown elsewhere. Use the note for genuinely distinctive cigar-specific context instead.
 
 ## Images
 
