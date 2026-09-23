@@ -1,0 +1,48 @@
+{
+  "id": "2026-09-23-add-deadwood-dominicana-cigarillos",
+  "operation": "upsert-entry",
+  "key": "deadwood-dominicana-cigarillos",
+  "entry": {
+    "brand": "Drew Estate",
+    "title": "Deadwood Dominicana Cigarillos — Tin of 10",
+    "eyebrow": "Sweet-capped Dominican-forward cigarillo",
+    "packageCount": 10,
+    "packageLabel": "tin of 10",
+    "packagePrice": 0,
+    "price": 0,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 32,
+    "strength": 4,
+    "quality": 7,
+    "risk": 2,
+    "stock": "unknown",
+    "rank": 9,
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "size": "gold",
+    "summaryHtml": "<strong>Honey, cream, cocoa, sweet fig, hay, earth and buttery sweetness</strong> define this compact Dominican-forward Deadwood. The Connecticut Shade wrapper and sweetened cap keep the 4″ × 32 cigarillo soft and aromatic, while the Mexican San Andrés binder adds enough earth and cocoa to stop the profile becoming purely sugary.",
+    "noteHtml": "This is the cigarillo expression of Drew Estate’s first Dominican-focused Deadwood blend: a smoother, more traditional direction than the darker original Deadwood sisters, while retaining the line’s signature sweetened cap.",
+    "productionLines": [
+      "Made in Nicaragua at La Gran Fabrica Drew Estate",
+      "Wrapper: Connecticut Shade",
+      "Binder: Mexican San Andrés",
+      "Filler: Dominican-forward blend"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "4″ × 32 cigarillo",
+      "Sweetened cap",
+      "Compact quick-smoke format",
+      "Slow cadence"
+    ],
+    "smokeTime": "About 20–25 min smoke",
+    "retailerLinks": [],
+    "priceNote": "No current Australian retail listing verified; do not derive Value from overseas pricing.",
+    "priceChecked": "2026-09-23",
+    "stockChecked": "2026-09-23"
+  },
+  "note": "Add Drew Estate Deadwood Dominicana Cigarillos as rank 9 in Coronets & Cigarillos, shifting the existing rank-9-and-below entries down. Exact format is a 4 x 32 cigarillo sold in tins of 10, with Connecticut Shade wrapper, Mexican San Andres binder and Dominican-forward filler. No current Australian retailer listing or AUD price was verified, so leave price unverified rather than inventing an Australian figure. Preserve unrelated catalogue data and let the publisher renumber the affected cohort."
+}
