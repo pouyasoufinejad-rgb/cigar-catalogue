@@ -1,0 +1,27 @@
+{
+  "id": "2026-09-23-price-deadwood-dominicana-cigarillos-index",
+  "operation": "upsert-entry",
+  "key": "deadwood-dominicana-cigarillos",
+  "entry": {
+    "packagePrice": 129,
+    "packageCount": 10,
+    "packageLabel": "tin of 10",
+    "price": 12.9,
+    "stock": "in",
+    "retailerLinks": [
+      "https://www.theindexcigars.com.au/products/deadwood-dominicana-cigarillos"
+    ],
+    "practicalLines": [
+      "Tin of 10",
+      "Cheapest single: A$13.00 · The Index",
+      "4″ × 32 cigarillo",
+      "Sweetened cap",
+      "Compact quick-smoke format",
+      "Slow cadence"
+    ],
+    "priceNote": "The Index lists a single at A$13.00 and a tin of 10 at A$129.00, making the catalogue benchmark A$12.90 per cigar from the tin.",
+    "priceChecked": "2026-09-23",
+    "stockChecked": "2026-09-23"
+  },
+  "note": "Correct Deadwood Dominicana Cigarillos pricing from the user-supplied current The Index product-page screenshots. Single is A$13.00 and tin of 10 is A$129.00; both show Add to Cart. Use the tin benchmark of A$12.90 per cigar while surfacing the A$13 exact single separately. Preserve all unrelated fields."
+}
