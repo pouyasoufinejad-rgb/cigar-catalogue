@@ -160,16 +160,33 @@ test('the strip sizes itself to the laurels instead of a fixed guess', () => {
 
   const card = dom.window.document.querySelector('article.card');
   const frame = card.querySelector('.artframe');
-  // jsdom reports no layout, so drive the sync with a stubbed measurement.
+  // jsdom reports no layout, so drive the sync with stubbed measurements. The frame's own
+  // height is read first, to tell "not laid out yet" from "genuinely has no laurels".
+  frame.getBoundingClientRect = () => ({ height: 400, width: 400, top: 0, bottom: 400, left: 0, right: 400 });
   medals.getBoundingClientRect = () => ({ height: 97, width: 400, top: 0, bottom: 97, left: 0, right: 400 });
   assert.equal(strip.syncStripHeight(card), 97);
   assert.equal(frame.style.getPropertyValue('--medal-strip'), '97px',
     'the frame reserves exactly what the row measured');
 
-  // A row that measures nothing must not collapse the strip to zero.
-  medals.getBoundingClientRect = () => ({ height: 0, width: 0, top: 0, bottom: 0, left: 0, right: 0 });
+  // A card that is not laid out yet measures nothing, and that measurement means nothing.
+  frame.getBoundingClientRect = () => ({ height: 0, width: 0, top: 0, bottom: 0, left: 0, right: 0 });
   assert.equal(strip.syncStripHeight(card), 0);
   assert.equal(frame.style.getPropertyValue('--medal-strip'), '97px', 'the last good height stands');
+});
+
+test('a card with no laurels reserves no strip at all', () => {
+  const dom = mount(renderEntryCard(ENTRY));
+  const card = dom.window.document.querySelector('article.card');
+  const frame = card.querySelector('.artframe');
+  const medals = frame.querySelector('.medals');
+  frame.getBoundingClientRect = () => ({ height: 400, width: 400, top: 0, bottom: 400, left: 0, right: 400 });
+  medals.getBoundingClientRect = () => ({ height: 86, width: 400, top: 0, bottom: 86, left: 0, right: 400 });
+
+  medals.innerHTML = '';
+  assert.equal(strip.syncStripHeight(card), 0);
+  // Reserving for an empty row leaves a blank black band under the artwork with nothing
+  // in it, which is exactly the gap this was meant to remove.
+  assert.equal(frame.style.getPropertyValue('--medal-strip'), '0px');
 });
 
 test('each label takes the colour of its own laurel', () => {

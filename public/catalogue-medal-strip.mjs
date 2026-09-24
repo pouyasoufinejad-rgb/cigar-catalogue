@@ -96,10 +96,17 @@ export function syncStripHeight(card) {
   const frame = card?.querySelector?.('.artframe');
   const medals = frame?.querySelector?.('.medals');
   if (!frame || !medals) return 0;
-  const height = Math.ceil(medals.getBoundingClientRect().height);
-  if (!(height > 0)) return 0;
-  if (frame.style.getPropertyValue('--medal-strip') !== `${height}px`) {
-    frame.style.setProperty('--medal-strip', `${height}px`);
+  // A card that is not laid out yet measures nothing, and that means nothing. Leave it for
+  // the next pass rather than reserving or collapsing on it.
+  if (!(frame.getBoundingClientRect().height > 0)) return 0;
+  // A row with no ratings reserves nothing. Reserving for it leaves a blank black band
+  // under the artwork with nothing in it, which is what a fixed height used to do to every
+  // card and still did to the handful that carry no laurels.
+  const rated = medals.querySelectorAll('.rating').length > 0;
+  const height = rated ? Math.ceil(medals.getBoundingClientRect().height) : 0;
+  const next = `${Math.max(0, height)}px`;
+  if (frame.style.getPropertyValue('--medal-strip') !== next) {
+    frame.style.setProperty('--medal-strip', next);
   }
   return height;
 }
