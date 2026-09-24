@@ -1048,7 +1048,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   const tag = await weakEntityTag(transformed);
   headers.set('cache-control', 'no-cache');
   if (tag) headers.set('etag', tag);
-  headers.set('x-cigar-catalogue-version', '140');
+  headers.set('x-cigar-catalogue-version', '141');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');

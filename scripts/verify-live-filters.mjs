@@ -32,6 +32,11 @@ if (servedVersion !== expected) fail(`production serves v=${servedVersion}, sour
 // says about caching and whether a conditional GET is answered honestly.
 const docHeaders = page0.headers;
 const liveTag = docHeaders.get('etag') || '';
+const cachingSummary = [
+  `worker build ${docHeaders.get('x-cigar-catalogue-version') || '(none)'}`,
+  `cache-control ${docHeaders.get('cache-control') || '(none)'}`,
+  `etag ${liveTag || '(none)'}`
+];
 console.log(`=== document cache-control: ${docHeaders.get('cache-control') || '(none)'}`
   + `  etag: ${liveTag || '(none)'}`
   + (docHeaders.get('x-cigar-catalogue-degraded') ? '  DEGRADED' : ''));
@@ -45,12 +50,14 @@ if (liveTag) {
   const revalidated = await fetch(`${baseUrl}/?filter_check=${Date.now()}`,
     { headers: { 'if-none-match': liveTag }, cache: 'no-store' });
   console.log(`=== a conditional GET carrying that tag answers ${revalidated.status}`);
+  cachingSummary.push(`own tag -> ${revalidated.status}`);
   if (revalidated.status !== 304 && revalidated.status !== 200) {
     fail(`a conditional GET answered ${revalidated.status}`);
   }
   const stale = await fetch(`${baseUrl}/?filter_check=${Date.now()}`,
     { headers: { 'if-none-match': '"never-this-document"' }, cache: 'no-store' });
   console.log(`=== a conditional GET carrying a foreign tag answers ${stale.status}`);
+  cachingSummary.push(`foreign tag -> ${stale.status}`);
   if (stale.status === 304) fail('a tag that never described this document was honoured, which is how the old page came back');
 } else {
   console.log('=== no etag, so every reload re-sends the whole document');
@@ -205,8 +212,10 @@ for (const [label, width] of [['wide', 1800], ['desktop', 1440], ['mobile', 412]
 await browser.close();
 
 if (failures) {
+  console.error(`\nCACHING: ${cachingSummary.join('  |  ')}`);
   console.error(`\nFILTER_CHECK_FAILED: ${failures} problem(s) on the live page.`);
   process.exitCode = 1;
 } else {
+  console.log(`\nCACHING: ${cachingSummary.join('  |  ')}`);
   console.log('\nFILTER_CHECK_PASSED: retailer and price filters are live and filtering.');
 }
