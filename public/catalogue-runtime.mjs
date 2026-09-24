@@ -15,6 +15,6 @@ if (typeof document !== 'undefined') {
   import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-6');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
-  import('./catalogue-variant-runtime.mjs?v=blend-variants-2');
+  import('./catalogue-variant-runtime.mjs?v=compact-medals-1');
   import('./catalogue-variant-editor.mjs?v=1');
 }

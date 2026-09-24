@@ -715,7 +715,9 @@ function medalRating(label, scoreValue) {
 function unratedValueRating() {
   return '<div class="rating value-unrated"><span>Value</span>'
     + '<i aria-hidden="true" class="medal bronze value-unrated-medal"></i>'
-    + '<b>Unrated</b><small class="subscore">No AU price</small></div>';
+    // The score now sits inside the wreath, where a sentence does not fit. The reason is
+    // spelled out in the value row beneath, so the medal only has to say there is no number.
+    + '<b>Unrated</b><small class="subscore">—</small></div>';
 }
 
 function sizeRating(size) {
@@ -1000,7 +1002,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=154"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=155"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;

@@ -503,7 +503,9 @@ export function markUnratedValue(card, unrated, quality) {
   const subscore = rating.querySelector('.subscore');
   if (unrated) {
     if (label) label.textContent = 'Unrated';
-    if (subscore) subscore.textContent = 'No AU price';
+    // Matches the server-rendered unrated medal: the wreath holds a dash, and the value row
+    // beneath carries the explanation.
+    if (subscore) subscore.textContent = '—';
     rating.querySelector('.medal')?.classList.add('value-unrated-medal');
     card.dataset.value = '';
     if (row) {

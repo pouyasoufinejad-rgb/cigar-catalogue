@@ -122,7 +122,9 @@ test('an unpriced size shows no price and an unrated Value', async () => {
     .find(node => node.querySelector(':scope > span').textContent === 'Value');
   assert.ok(value.classList.contains('value-unrated'));
   assert.equal(value.querySelector('b').textContent, 'Unrated');
-  assert.equal(value.querySelector('.subscore').textContent, 'No AU price');
+  // The score sits inside the wreath now, so the medal carries a dash and the value row
+  // beneath carries the reason.
+  assert.equal(value.querySelector('.subscore').textContent, '—');
 
   // Going back to a priced size clears it again rather than leaving the card unrated.
   api.selectVariant(NO_9.key, 'petit-corona');

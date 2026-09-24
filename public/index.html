@@ -615,6 +615,48 @@ h3{font-size:24px!important;margin:6px 0 12px!important}
 .catalogue-admin-field textarea.tall{min-height:220px}
 </style>
   <!-- catalogue-runtime-build-v140 -->
+<style id="v96-compact-rating-medals">
+/* Compact rating medals.
+   The laurel already says the tier by its colour, so the Bronze/Silver/Gold word underneath
+   was saying it twice and forcing the frame taller than it needed to be. The word goes, the
+   framed box goes with it, and the score moves into the open centre of the wreath, which is
+   the space the artwork already leaves for it. */
+.medals .rating:not(.risk){
+  border:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  min-height:0!important;
+  padding:0 2px 2px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr);
+  justify-items:center;
+  align-content:start;
+}
+/* The tier word is what the medal is already showing. */
+.medals .rating:not(.risk) b{display:none!important}
+/* Without a frame around it the label sat too close to the top edge. */
+.medals .rating:not(.risk)>span{grid-area:1/1;padding-top:7px;margin-bottom:2px}
+/* The medal and the score share one grid cell, so the score lands inside the wreath rather
+   than under it. */
+.medals .rating:not(.risk) .medal{
+  grid-area:2/1;width:min(92px,88%)!important;height:86px!important;margin:0!important
+}
+.medals .rating:not(.risk) .subscore{
+  grid-area:2/1;align-self:center;justify-self:center;
+  margin:0!important;z-index:2;
+  font-family:Cinzel,serif;font-size:13px;font-weight:800;letter-spacing:.02em;line-height:1;
+  text-shadow:0 1px 0 rgba(255,252,245,.85),0 0 4px rgba(255,252,245,.9)
+}
+.medals .rating.bronze .subscore{color:#7e431f}
+.medals .rating.silver .subscore{color:#5a5955}
+.medals .rating.gold .subscore{color:#7a5510}
+.medals .rating.flavour-unrated .subscore,.medals .rating.value-unrated .subscore{color:#8a7a60}
+@media(max-width:700px){
+  .medals .rating:not(.risk) .medal{width:min(62px,94%)!important;height:58px!important}
+  .medals .rating:not(.risk) .subscore{font-size:10.5px}
+  .medals .rating:not(.risk)>span{padding-top:5px}
+}
+</style>
 </head>
 <body>
 <div class="wrap">

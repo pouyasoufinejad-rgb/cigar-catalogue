@@ -12,7 +12,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=blend-variants-2';
+} from './catalogue-variant-runtime.mjs?v=compact-medals-1';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
