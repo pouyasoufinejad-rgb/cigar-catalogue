@@ -631,11 +631,12 @@ h3{font-size:24px!important;margin:6px 0 12px!important}
   grid-template-columns:minmax(0,1fr);
   justify-items:center;
   align-content:start;
+  row-gap:0;
 }
 /* The tier word is what the medal is already showing. */
 .medals .rating:not(.risk) b{display:none!important}
 /* Without a frame around it the label sat too close to the top edge. */
-.medals .rating:not(.risk)>span{grid-area:1/1;padding-top:7px;margin-bottom:2px}
+.medals .rating:not(.risk)>span{grid-area:1/1;padding-top:4px;margin-bottom:0;line-height:1}
 /* The medal and the score share one grid cell, so the score lands inside the wreath rather
    than under it. */
 .medals .rating:not(.risk) .medal{

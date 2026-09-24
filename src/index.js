@@ -1007,7 +1007,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=160"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=161"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -1019,13 +1019,31 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   if (url.pathname !== '/' && url.pathname !== '/index.html') return response;
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.toLowerCase().includes('text/html')) return response;
-  const state = await readState(env);
   const html = await response.text();
-  const transformed = injectRuntimeBootstrap(applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards));
+  // The bootstrap is injected whatever happens to KV. Without it the browser loads none of
+  // the runtime modules and the visitor is left with the markup baked into the static file,
+  // which is years of catalogue out of date; with it, the modules fetch the state
+  // themselves and the page repairs itself. A KV hiccup should cost freshness, not the
+  // whole runtime.
+  let body = html;
+  let degraded = false;
+  try {
+    const state = await readState(env);
+    body = applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards);
+  } catch (error) {
+    degraded = true;
+    console.error('[catalogue] server-side state injection failed; serving the shell with its runtime', error);
+  }
+  const transformed = injectRuntimeBootstrap(body);
   const headers = new Headers(response.headers);
   headers.delete('content-length');
-  headers.set('cache-control', 'no-cache, must-revalidate');
+  // The body is rewritten on every request, so any validator copied from the static asset
+  // describes a different document and would let a revalidation serve the old one.
+  headers.delete('etag');
+  headers.delete('last-modified');
+  headers.set('cache-control', 'no-store');
   headers.set('x-cigar-catalogue-version', '140');
+  if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
 }
 

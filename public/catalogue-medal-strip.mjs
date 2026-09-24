@@ -55,7 +55,7 @@ html body article.card .artframe .artmeta-bottom{bottom:calc(var(--medal-strip) 
    immune to every one of those rules and leaves no edge between strip and frame. */
 html body article.card .artframe .medals{
   position:absolute!important;left:0;right:0;bottom:0;height:auto!important;
-  z-index:4;margin:0!important;padding:0 12px 8px!important;
+  z-index:4;margin:0!important;padding:0 12px 4px!important;
   background:#020202!important;
   display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
   gap:4px!important;
@@ -83,7 +83,7 @@ html body article.card .artframe .medals .rating.flavour-unrated .subscore,
 html body article.card .artframe .medals .rating.value-unrated .subscore{color:#9d938a!important}
 @media(max-width:900px){
   :root{--medal-strip:92px}
-  html body article.card .artframe .medals{padding:0 8px 8px!important;gap:3px!important}
+  html body article.card .artframe .medals{padding:0 8px 4px!important;gap:3px!important}
 }
 `;
   doc.head.appendChild(style);

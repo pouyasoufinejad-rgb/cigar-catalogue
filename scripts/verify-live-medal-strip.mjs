@@ -24,7 +24,7 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
   const report = await page.evaluate(() => {
     const out = { cards: 0, outsideFrame: [], overlapArt: [], overlapSmoke: [], darkBacked: 0,
       lightText: 0, sample: null, strayInBody: [], tierColours: {}, dimScores: [],
-      slack: [], worstSlack: 0, labelTints: {}, mismatchedLabels: [] };
+      slack: [], worstSlack: 0, labelTints: {}, mismatchedLabels: [], hidden: 0 };
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const frame = card.querySelector('.artframe');
       const medals = card.querySelector('.medals');
@@ -35,6 +35,8 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
 
       const f = frame.getBoundingClientRect();
       const m = medals.getBoundingClientRect();
+      // A card the filters have hidden renders nothing, so nothing about it is a defect.
+      if (!(f.height > 0) || !(f.width > 0)) { out.cards -= 1; out.hidden += 1; continue; }
       const img = frame.querySelector('img');
       const smoke = frame.querySelector('.artmeta-bottom');
       if (m.bottom > f.bottom + 1 || m.top < f.top) out.outsideFrame.push(card.dataset.key);
@@ -94,7 +96,7 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
     return out;
   });
 
-  console.log(`\n=== ${label} ${width}px : ${report.cards} cards`);
+  console.log(`\n=== ${label} ${width}px : ${report.cards} rendered cards (${report.hidden} hidden by filters, not measured)`);
   if (report.sample) console.log(`   sample ${JSON.stringify(report.sample)}`);
   console.log(`   dark-backed frames: ${report.darkBacked}   light rating text: ${report.lightText}`);
   console.log(`   score colours by tier: ${JSON.stringify(report.tierColours)}`);

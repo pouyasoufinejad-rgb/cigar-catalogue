@@ -10,12 +10,18 @@ export function ensureWideCardLayout() {
    the gap the sidebar already leaves. The overhang is also capped by how much room is
    actually free to the right, so a narrower desktop cannot be pushed into sideways scroll. */
 html body .grid{
-  --card-bleed:min(120px, max(0px, (100vw - 100%) / 2 - 16px));
+  /* The sidebar's right edge sits 40px left of the wrap, so the left overhang is capped
+     well under that and keeps a visible gap; the right has the rest of the room. Both are
+     also capped by how much space is actually free, so no width is pushed into sideways
+     scroll by a fixed number that only suited a wider one. */
+  --card-room:max(0px, (100vw - 100%) / 2 - 16px);
+  --card-bleed-left:min(24px, var(--card-room));
+  --card-bleed-right:min(150px, var(--card-room));
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
-  width:calc(100% + var(--card-bleed))!important;
-  margin-left:0!important;
-  margin-right:calc(-1 * var(--card-bleed))!important;
+  width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
+  margin-left:calc(-1 * var(--card-bleed-left))!important;
+  margin-right:calc(-1 * var(--card-bleed-right))!important;
 }
 html body article.card{
   width:100%!important;
@@ -35,10 +41,12 @@ html body article.card{
   html body .wrap > .section > .controls,
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
-    --card-bleed:min(120px, max(0px, (100vw - 100%) / 2 - 16px));
-    width:calc(100% + var(--card-bleed))!important;
-    margin-left:0!important;
-    margin-right:calc(-1 * var(--card-bleed))!important;
+    --card-room:max(0px, (100vw - 100%) / 2 - 16px);
+    --card-bleed-left:min(24px, var(--card-room));
+    --card-bleed-right:min(150px, var(--card-room));
+    width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
+    margin-left:calc(-1 * var(--card-bleed-left))!important;
+    margin-right:calc(-1 * var(--card-bleed-right))!important;
   }
 }
 /* Only use the extra horizontal room on the large-desktop layout where the fixed
@@ -54,10 +62,12 @@ html body article.card{
   html body .wrap > .section > .controls,
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
-    --card-bleed:min(180px, max(0px, (100vw - 100%) / 2 - 16px));
-    width:calc(100% + var(--card-bleed))!important;
-    margin-left:0!important;
-    margin-right:calc(-1 * var(--card-bleed))!important;
+    --card-room:max(0px, (100vw - 100%) / 2 - 16px);
+    --card-bleed-left:min(24px, var(--card-room));
+    --card-bleed-right:min(210px, var(--card-room));
+    width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
+    margin-left:calc(-1 * var(--card-bleed-left))!important;
+    margin-right:calc(-1 * var(--card-bleed-right))!important;
   }
 }
 @media(min-width:901px){
@@ -94,7 +104,8 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
     gap:6px!important;
     width:100%!important;
     margin-inline:0!important;
-    --card-bleed:0px;
+    --card-bleed-left:0px;
+    --card-bleed-right:0px;
   }
   html body article.card{
     width:100%!important;
