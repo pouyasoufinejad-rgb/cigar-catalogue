@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v155';
+const STYLE_ID = 'catalogue-wide-card-layout-v156';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -65,9 +65,10 @@ html body article.card{
     --card-bleed-left:min(150px, var(--card-room))!important;
   }
 }
-/* On the large-desktop layout the left is pinned narrow by the sidebar, so the right takes
-   every pixel that is actually free. --card-room already holds a 16px gutter back, so this
-   cannot reach the edge of the window or start a sideways scroll. */
+/* On the large-desktop layout the sidebar has moved 24px left, so the cards follow it: the
+   left cap grows by the same 24px and the right gives it back. The block ends up in the
+   same place relative to the sidebar, with a visible gap on the right instead of sitting
+   against the window edge. --card-room already holds a 16px gutter back on top of that. */
 @media(min-width:1660px){
   html body .grid,
   html body .wrap > header,
@@ -79,8 +80,9 @@ html body article.card{
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
     --card-room:max(0px, (100vw - 100%) / 2 - 16px);
-    --card-bleed-left:min(24px, var(--card-room));
-    --card-bleed-right:var(--card-room);
+    --rail-shift:24px;
+    --card-bleed-left:min(calc(24px + var(--rail-shift)), var(--card-room));
+    --card-bleed-right:max(0px, calc(var(--card-room) - var(--rail-shift)));
     width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
     margin-left:calc(-1 * var(--card-bleed-left))!important;
     margin-right:calc(-1 * var(--card-bleed-right))!important;

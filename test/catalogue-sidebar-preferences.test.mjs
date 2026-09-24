@@ -160,6 +160,6 @@ test('unreadable browser storage degrades to defaults instead of throwing', () =
 test('the per-card value benchmark strip is hidden by the sidebar stylesheet', () => {
   const dom = fixture();
   installControlSidebar(dom.window.document, dom.window);
-  const style = dom.window.document.getElementById('catalogue-control-sidebar-style-v2');
+  const style = dom.window.document.getElementById('catalogue-control-sidebar-style-v3');
   assert.match(style.textContent, /\.value-calc\{display:none!important\}/);
 });

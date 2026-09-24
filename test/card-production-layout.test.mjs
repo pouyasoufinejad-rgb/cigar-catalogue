@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const stockClient = await readFile(new URL('../public/catalogue-stock-client.mjs', import.meta.url), 'utf8');
 const runtimeLoader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 const wideLayout = await readFile(new URL('../public/catalogue-card-layout.mjs', import.meta.url), 'utf8').catch(() => '');
+const sidebarSource = await readFile(new URL('../public/catalogue-control-sidebar.mjs', import.meta.url), 'utf8');
 
 test('card cleanup removes only an exact Unflavoured production line', () => {
   assert.match(stockClient, /textContent\.trim\(\)\.toLowerCase\(\) === 'unflavoured'/);
@@ -12,12 +13,38 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 });
 
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
-  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=both-bleed-2'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=left-shift-1'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
   assert.match(wideLayout, /width:\s*calc\(100% \+ var\(--card-bleed-left\) \+ var\(--card-bleed-right\)\)!important/);
   assert.match(wideLayout, /margin-right:\s*calc\(-1 \* var\(--card-bleed-right\)\)!important/);
   assert.match(wideLayout, /max-width:\s*none!important/);
+});
+
+test('the cards shift left by exactly as much as the sidebar does', () => {
+  // Two files hold this number. If they drift apart the cards either slide under the rail
+  // or leave a gap beside it, which is the defect this pins.
+  const railShift = Number(sidebarSource.match(/const RAIL_SHIFT = (\d+);/)?.[1]);
+  assert.ok(railShift > 0, 'the sidebar should declare a shift');
+  const block = wideLayout.match(/@media\(min-width:1660px\)\{[\s\S]*?\n  \}/)[0];
+  const cardShift = Number(block.match(/--rail-shift:(\d+)px/)?.[1]);
+  assert.equal(cardShift, railShift, 'the cards must move with the rail, not independently');
+
+  // The left takes the shift on top of its sidebar-safe cap, and the right gives it back,
+  // so the block keeps its width and ends up further from the right edge of the window.
+  assert.match(block, /--card-bleed-left:min\(calc\(24px \+ var\(--rail-shift\)\), var\(--card-room\)\)/);
+  assert.match(block, /--card-bleed-right:max\(0px, calc\(var\(--card-room\) - var\(--rail-shift\)\)\)/);
+
+  // Solved at a width where nothing is room-capped: the gap beside the rail is unchanged
+  // and the gap at the right edge grows by the shift.
+  const vw = 2560, wrap = 1220;
+  const room = (vw - wrap) / 2 - 16;
+  const gridLeft = (vw - wrap) / 2 - Math.min(24 + cardShift, room);
+  const gridRight = (vw + wrap) / 2 + Math.max(0, room - cardShift);
+  // `right` is the distance from the window's right edge to the rail's right edge.
+  const railRight = vw - (vw / 2 + 650 + railShift);
+  assert.equal(gridLeft - railRight, 16, 'the gap beside the sidebar should not change');
+  assert.equal(vw - gridRight, 16 + cardShift, 'and the right edge should gain the shift');
 });
 
 test('the left overhang only stays narrow where there is a sidebar to clear', () => {

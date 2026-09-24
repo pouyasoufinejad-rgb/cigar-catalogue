@@ -3,7 +3,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-direct-persistence.mjs?v=variant-edit-1');
   import('./catalogue-flavour.mjs?v=flavour-weight-1');
   import('./catalogue-size-value-runtime.mjs?v=value-single-writer-1');
-  import('./catalogue-card-layout.mjs?v=both-bleed-2');
+  import('./catalogue-card-layout.mjs?v=left-shift-1');
   import('./catalogue-medal-strip.mjs?v=tight-strip-1');
   import('./catalogue-legacy-copy.mjs');
   import('./catalogue-size-presentation.mjs');
@@ -14,7 +14,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-convenience.mjs?v=compact-retailer-matrix-1');
   import('./catalogue-convenience-refinements.mjs');
   import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
-  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-6');
+  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-7');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
   import('./catalogue-variant-runtime.mjs?v=compact-medals-1');
   import('./catalogue-variant-editor.mjs?v=1');

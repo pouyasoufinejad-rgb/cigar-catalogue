@@ -1,7 +1,9 @@
-const STYLE_ID = 'catalogue-control-sidebar-style-v2';
+const STYLE_ID = 'catalogue-control-sidebar-style-v3';
 const SIDEBAR_ID = 'catalogue-control-sidebar';
 const EXTRA_ID = 'catalogue-sidebar-extra-controls';
 const DESKTOP_QUERY = '(min-width: 1660px)';
+// How far left the sidebar and the cards sit, so neither hugs the right edge.
+const RAIL_SHIFT = 24;
 const BRAND_LINE_QUERY_PARAM = 'brandLine';
 const placements = new WeakMap();
 
@@ -551,8 +553,13 @@ function ensureStyles(root = document) {
   position:fixed;
   z-index:44;
   top:18px;
-  right:calc(50vw + 650px);
-  width:min(250px,calc(50vw - 660px));
+  /* The whole rail moves left by this much, and the cards move with it, so the layout
+     stops sitting hard against the right edge of the window. The width subtracts the same
+     amount, which keeps the rail's left edge exactly where it was rather than pushing it
+     off-screen on a viewport that has no room to give. */
+  --rail-shift:${RAIL_SHIFT}px;
+  right:calc(50vw + 650px + var(--rail-shift));
+  width:min(250px,calc(50vw - 660px - var(--rail-shift)));
   max-height:calc(100vh - 36px);
   overflow:auto;
   display:flex;
@@ -662,4 +669,4 @@ if (typeof document !== 'undefined') {
   }
 }
 
-export { DESKTOP_QUERY, SIDEBAR_ID, EXTRA_ID };
+export { DESKTOP_QUERY, SIDEBAR_ID, EXTRA_ID, RAIL_SHIFT };

@@ -29,7 +29,7 @@ test('desktop header and catalogue chrome use the same horizontal overhang as th
 });
 
 test('large desktop catalogue and chrome widen together when the fixed sidebar is present', () => {
-  assert.match(layoutSource, /@media\(min-width:1660px\)[\s\S]*html body \.grid,[\s\S]*\.wrap > header,[\s\S]*--card-bleed-right:var\(--card-room\)/);
+  assert.match(layoutSource, /@media\(min-width:1660px\)[\s\S]*html body \.grid,[\s\S]*\.wrap > header,[\s\S]*--card-bleed-right:max\(0px, calc\(var\(--card-room\) - var\(--rail-shift\)\)\)/);
 });
 
 test('mobile catalogue remains one full-width column', () => {

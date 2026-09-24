@@ -46,13 +46,31 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-6/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-7/);
 });
 
-test('large desktop sidebar is slightly wider without moving its breakpoint or right edge', () => {
+test('the sidebar sits left of its old anchor without its left edge leaving the window', () => {
   assert.match(sidebarSource, /const DESKTOP_QUERY = '\(min-width: 1660px\)'/);
-  assert.match(sidebarSource, /right:calc\(50vw \+ 650px\)/);
-  assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px\)\)/);
+  const shift = Number(sidebarSource.match(/const RAIL_SHIFT = (\d+);/)?.[1]);
+  assert.ok(shift > 0, 'the rail should be shifted left by a real amount');
+  assert.match(sidebarSource, /right:calc\(50vw \+ 650px \+ var\(--rail-shift\)\)/);
+  // The width has to subtract the same shift. Without that the rail keeps its width and
+  // its left edge walks off the left of the window on a viewport with no room to give.
+  assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px - var\(--rail-shift\)\)\)/);
+
+  // Solve the two cases by hand: while the width is capped at 250px the rail really moves
+  // left, and once the window is too narrow for that the left edge is pinned instead.
+  const left = vw => {
+    const rightOffset = vw / 2 + 650 + shift;
+    const width = Math.min(250, vw / 2 - 660 - shift);
+    return { left: vw - rightOffset - width, width };
+  };
+  const wide = left(2560);
+  assert.equal(wide.width, 250, 'a wide window keeps the full rail');
+  assert.equal(wide.left, 1280 - 900 - shift, `and moves it left by ${shift}px`);
+  const tight = left(1800);
+  assert.equal(tight.left, 10, 'a tight window pins the left edge rather than clipping it');
+  assert.ok(tight.width > 0);
 });
 
 test('sidebar placement reparents the existing controls without cloning or replacing them', () => {

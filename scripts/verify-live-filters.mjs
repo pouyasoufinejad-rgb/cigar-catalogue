@@ -124,6 +124,13 @@ async function checkSidebarClearance(page, label, width) {
     console.log(`   cards overhang the wrap by ${overhang}px (grid ${geometry.gridWidth}px vs wrap ${geometry.wrapWidth}px)`);
     if (overhang < 40) fail(`${label}: the cards only overhang the wrap by ${overhang}px, so the extra width is gone`);
   }
+  // The layout used to sit hard against the right edge of the window. Where the sidebar is
+  // present the block is shifted left, so there should be a visible gap on that side too.
+  if (width >= SIDEBAR_MIN_WIDTH) {
+    const rightGap = geometry.viewport - geometry.gridRight;
+    console.log(`   gap at the right edge: ${rightGap}px`);
+    if (rightGap < 24) fail(`${label}: only ${rightGap}px at the right edge, so the cards still hug it`);
+  }
   if (geometry.gap !== null && geometry.gap < 8) {
     fail(`${label}: only ${geometry.gap}px between the sidebar and the cards, so the sidebar covers them`);
   }
