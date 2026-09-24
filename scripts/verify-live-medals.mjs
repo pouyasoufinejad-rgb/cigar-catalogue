@@ -34,7 +34,24 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
         const bold = rating.querySelector('b');
         if (bold && style.display !== 'none' && getComputedStyle(bold).display !== 'none') out.tierWordsShown += 1;
         if ((Number.parseFloat(style.borderTopWidth) || 0) > 0) out.framed += 1;
-        out.tallest = Math.max(out.tallest, Math.round(rating.getBoundingClientRect().height));
+        const height = Math.round(rating.getBoundingClientRect().height);
+        if (height > out.tallest) {
+          out.tallest = height;
+          // Naming the offender matters: guessing at which box is tall is how a layout fix
+          // goes wrong several times in a row.
+          out.tallestWhere = {
+            key: card.dataset.key,
+            label: (rating.querySelector(':scope > span')?.textContent || '').trim(),
+            classes: rating.className,
+            section: card.closest('.archived-section') ? 'archived' : (card.closest('.grid')?.id || '?'),
+            compact: document.body.classList.contains('compact-cards')
+              || card.classList.contains('compact') || null,
+            labelHeight: Math.round(rating.querySelector(':scope > span')?.getBoundingClientRect().height || 0),
+            medalHeight: Math.round(rating.querySelector('.medal')?.getBoundingClientRect().height || 0),
+            minHeight: getComputedStyle(rating).minHeight,
+            padding: getComputedStyle(rating).padding
+          };
+        }
 
         const name = (rating.querySelector(':scope > span')?.textContent || '').trim();
         const medal = rating.querySelector('.medal');
@@ -58,6 +75,7 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
 
   console.log(`\n=== ${label} ${width}px`);
   console.log(`   ${report.cards} cards, ${report.ratings} ratings, tallest rating ${report.tallest}px`);
+  if (report.tallestWhere) console.log(`   tallest: ${JSON.stringify(report.tallestWhere)}`);
   console.log(`   sample: ${report.sample.join(' | ')}`);
   console.log(`   tier words still shown: ${report.tierWordsShown}   framed boxes: ${report.framed}   scores off centre: ${report.offCentre}${report.worstOffset ? ` (worst ${report.worstOffset}px)` : ''}`);
   if (report.missingScore.length) console.log(`   ratings with no score: ${[...new Set(report.missingScore)].join(', ')}`);
