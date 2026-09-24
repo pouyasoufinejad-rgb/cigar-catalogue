@@ -6,6 +6,10 @@ export const QUALITY_BENCHMARKS = Object.freeze({
 export const SIZE_BASE_LENGTH = 4;
 export const SIZE_BASE_RING = 32;
 export const SIZE_EXPONENT = 0.5;
+// Below the baseline the curve is steeper, so a small cigar keeps less of the discount its
+// size would otherwise buy. Above the baseline nothing changes: a bigger cigar earns what
+// it already earned, and no more. The two meet at 1, so there is no step at the baseline.
+export const SIZE_SMALL_EXPONENT = 0.65;
 
 function clampScore(value) {
   const number = Number(value);
@@ -40,8 +44,9 @@ export function sizeFactor(length, ring) {
   const l = Math.max(0, finiteNumber(length));
   const r = Math.max(0, finiteNumber(ring));
   if (!(l > 0) || !(r > 0)) return 1;
+  // Volume, not girth: a long thin cigar and a short thin one are not the same smoke.
   const rawSize = (l * (r ** 2)) / (SIZE_BASE_LENGTH * (SIZE_BASE_RING ** 2));
-  return rawSize ** SIZE_EXPONENT;
+  return rawSize ** (rawSize < 1 ? SIZE_SMALL_EXPONENT : SIZE_EXPONENT);
 }
 
 export function resolveSmokingUnit({ price, length, ring, catalogueType = '', valueUnit = '' } = {}) {

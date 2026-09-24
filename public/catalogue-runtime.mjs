@@ -2,7 +2,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-direct-edit.mjs?v=variant-edit-1');
   import('./catalogue-direct-persistence.mjs?v=variant-edit-1');
   import('./catalogue-flavour.mjs?v=flavour-weight-1');
-  import('./catalogue-size-value-runtime.mjs?v=value-single-writer-1');
+  import('./catalogue-size-value-runtime.mjs?v=volume-size-1');
   import('./catalogue-card-layout.mjs?v=left-shift-1');
   import('./catalogue-medal-strip.mjs?v=tight-strip-1');
   import('./catalogue-legacy-copy.mjs');

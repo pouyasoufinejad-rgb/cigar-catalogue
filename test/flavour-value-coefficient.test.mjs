@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   SIZE_EXPONENT,
+  SIZE_SMALL_EXPONENT,
   deriveValue,
   flavourValueMultiplier,
   resolveSmokingUnit,
@@ -97,4 +98,42 @@ test('editing Flavour, Quality or price refreshes the flavour-aware Value previe
   assert.match(flavourRuntime, /catalogue-admin-flavour/);
   assert.match(flavourRuntime, /catalogue-admin-quality/);
   assert.match(flavourRuntime, /catalogue-v139-price/);
+});
+
+
+test('the size coefficient is volume, not girth', () => {
+  // A long thin cigar and a short thin one are not the same smoke, so the coefficient has
+  // to separate them. Ring alone cannot.
+  assert.ok(sizeFactor(7, 20) > sizeFactor(3.5, 20),
+    'doubling the length has to move the coefficient');
+  assert.ok(Math.abs(sizeFactor(7, 20) / sizeFactor(3.5, 20) - 2 ** SIZE_SMALL_EXPONENT) < 1e-12,
+    'and by exactly the volume ratio under the curve');
+  // Girth still dominates, because it is squared.
+  assert.ok(sizeFactor(4, 44) > sizeFactor(5.5, 32));
+});
+
+test('small cigars are penalised harder while big ones earn no more than before', () => {
+  assert.ok(SIZE_SMALL_EXPONENT > SIZE_EXPONENT,
+    'a steeper exponent below the baseline is what makes small harsher');
+  const symmetric = (l, r) => ((l * r ** 2) / (4 * 32 ** 2)) ** SIZE_EXPONENT;
+
+  for (const [l, r] of [[3.5, 20], [4, 30], [3, 26]]) {
+    assert.ok(sizeFactor(l, r) < symmetric(l, r),
+      `${l}x${r} should keep less of the discount than the old curve gave it`);
+  }
+  // Above the baseline nothing moves. Rewarding big cigars more was explicitly not wanted.
+  for (const [l, r] of [[4.5, 42], [5, 50], [6, 52], [7, 48]]) {
+    assert.equal(sizeFactor(l, r), symmetric(l, r), `${l}x${r} must be untouched`);
+  }
+  assert.equal(sizeFactor(4, 32), 1, 'and the two curves meet at the baseline, with no step');
+});
+
+test('a harsher small-size coefficient lowers the Value score, not raises it', () => {
+  // The coefficient divides the price ratio, so a smaller factor means a worse ratio and a
+  // worse Value. Getting this backwards would quietly reward the cigars it means to punish.
+  const small = deriveValue(12, 7, 6, { length: 3.5, ring: 20 });
+  const baseline = deriveValue(12, 7, 6, { length: 4, ring: 32 });
+  assert.ok(small.sizeFactor < baseline.sizeFactor);
+  assert.ok(small.ratio > baseline.ratio, 'the small one should look worse value at the same price');
+  assert.ok(small.score <= baseline.score);
 });
