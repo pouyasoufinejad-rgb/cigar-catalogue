@@ -36,27 +36,46 @@ const importsFilters = /catalogue-filter-refinements\.mjs/.test(bootstrapSource)
 console.log(`=== bootstrap at ?v=${servedVersion} imports the filter module: ${importsFilters}`);
 if (!importsFilters) fail(`the bootstrap served at ?v=${servedVersion} never imports catalogue-filter-refinements.mjs`);
 
+// The sidebar only exists on the wide desktop layout. Read that width from the module that
+// declares it, so a change there cannot leave this check quietly measuring nothing.
+const sidebarSource = await readFile(new URL('../public/catalogue-control-sidebar.mjs', import.meta.url), 'utf8');
+const SIDEBAR_MIN_WIDTH = Number(sidebarSource.match(/min-width:\s*(\d+)px/)?.[1] || 0);
+if (!SIDEBAR_MIN_WIDTH) fail('could not read the sidebar breakpoint from catalogue-control-sidebar.mjs');
+console.log(`=== the sidebar mounts at >= ${SIDEBAR_MIN_WIDTH}px`);
+
 // The cards overhang the wrap to reach full width. The fixed sidebar sits to the left of
 // the wrap, so a left overhang slides underneath it and covers the cards.
-async function checkSidebarClearance(page, label) {
+async function checkSidebarClearance(page, label, width) {
   const geometry = await page.evaluate(() => {
-    const sidebar = document.querySelector('#catalogue-control-sidebar, [id*="sidebar"]');
-    const grid = document.querySelector('.grid');
+    const sidebar = document.getElementById('catalogue-control-sidebar');
+    // The first .grid in the document can be an empty or filtered-out one, whose rect is
+    // all zeros. Measuring that proves nothing, so take the first grid that is laid out.
+    const grid = [...document.querySelectorAll('.grid')]
+      .find(node => node.getBoundingClientRect().width > 0);
     if (!grid) return { missing: true };
     const g = grid.getBoundingClientRect();
     const s = sidebar ? sidebar.getBoundingClientRect() : null;
-    const visible = s && getComputedStyle(sidebar).display !== 'none' && s.width > 0;
+    const visible = Boolean(s && getComputedStyle(sidebar).display !== 'none' && s.width > 0);
     return {
       gridLeft: Math.round(g.left), gridRight: Math.round(g.right),
+      sidebarPresent: Boolean(sidebar),
       sidebarRight: visible ? Math.round(s.right) : null,
       gap: visible ? Math.round(g.left - s.right) : null,
       viewport: window.innerWidth,
       docWidth: document.documentElement.scrollWidth
     };
   });
-  if (geometry.missing) { fail(`${label}: no grid to measure`); return; }
+  if (geometry.missing) { fail(`${label}: no laid-out grid to measure`); return; }
   console.log(`   grid ${geometry.gridLeft}..${geometry.gridRight} of ${geometry.viewport}px`
-    + (geometry.sidebarRight === null ? '  (no sidebar at this width)' : `  sidebar ends ${geometry.sidebarRight}, gap ${geometry.gap}px`));
+    + (geometry.sidebarRight === null
+      ? `  (sidebar ${geometry.sidebarPresent ? 'present but not visible' : 'absent'})`
+      : `  sidebar ends ${geometry.sidebarRight}, gap ${geometry.gap}px`));
+  // The sidebar only mounts on the wide desktop layout, and that is the only layout where
+  // a left overhang can slide under it. If it is missing there, this check measured
+  // nothing at all, which is how a real overlap went unnoticed once already.
+  if (width >= SIDEBAR_MIN_WIDTH && geometry.sidebarRight === null) {
+    fail(`${label}: no visible sidebar at ${width}px, so its clearance was never measured`);
+  }
   if (geometry.gap !== null && geometry.gap < 8) {
     fail(`${label}: only ${geometry.gap}px between the sidebar and the cards, so the sidebar covers them`);
   }
@@ -138,7 +157,7 @@ for (const [label, width] of [['wide', 1800], ['desktop', 1440], ['mobile', 412]
     }
   }
 
-  await checkSidebarClearance(page, label);
+  await checkSidebarClearance(page, label, width);
 
   await page.screenshot({ path: `filters-${label}.png`, fullPage: false });
   await page.close();

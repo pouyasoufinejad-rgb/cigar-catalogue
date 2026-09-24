@@ -50,7 +50,8 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
       if (alpha < 1 || (strip[0] + strip[1] + strip[2]) / 3 > 40) out.overlapArt.push(card.dataset.key);
       if (smoke) {
         const s = smoke.getBoundingClientRect();
-        if (s.bottom > m.top + 2) out.overlapSmoke.push(card.dataset.key);
+        // A hidden smoke line has no rect, so it cannot overlap anything.
+        if (s.height > 0 && s.bottom > m.top + 2) out.overlapSmoke.push(card.dataset.key);
       }
       const bg = getComputedStyle(frame).backgroundColor.match(/\d+/g)?.map(Number) || [255, 255, 255];
       if ((bg[0] + bg[1] + bg[2]) / 3 < 40) out.darkBacked += 1;
@@ -88,7 +89,13 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
           frameH: Math.round(f.height),
           stripH: Math.round(m.height),
           artBottomToStrip: img ? Math.round(m.top - img.getBoundingClientRect().bottom) : null,
-          smokeToStrip: smoke ? Math.round(m.top - smoke.getBoundingClientRect().bottom) : null,
+          // A hidden smoke line measures as a zero rect at the origin, which turns this
+          // into the strip's viewport offset and reads like an enormous gap. Report it as
+          // absent instead of printing a number that means nothing.
+          smokeToStrip: (() => {
+            const s = smoke?.getBoundingClientRect();
+            return s && s.height > 0 ? Math.round(m.top - s.bottom) : null;
+          })(),
           stripW: Math.round(m.width), frameW: Math.round(f.width)
         };
       }
