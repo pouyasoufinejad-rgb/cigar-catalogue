@@ -28,6 +28,9 @@ jobs:
       - name: Check the rating medals
         if: ${{ always() }}
         run: node scripts/verify-live-medals.mjs
+      - name: Check the image-frame laurel strip
+        if: ${{ always() }}
+        run: node scripts/verify-live-medal-strip.mjs
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -36,5 +39,6 @@ jobs:
           path: |
             filters-*.png
             medals-*.png
+            strip-*.png
           retention-days: 14
           if-no-files-found: warn
