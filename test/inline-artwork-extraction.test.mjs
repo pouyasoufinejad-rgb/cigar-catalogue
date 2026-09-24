@@ -88,3 +88,33 @@ test('an image the admin replaces still overrides a file-path source', async () 
   assert.match(out, /src="\/replacement\.png"/, 'the override must still land');
   assert.doesNotMatch(out, /\/art\/x-0123456789\.webp/);
 });
+
+test('the shell does not ship a stale catalogue for the runtime to correct', async () => {
+  // The page was showing August's catalogue for 1.5s on a fast connection and 8.6s on slow
+  // 4G, because that is literally what is baked into the file and 26 modules have to load
+  // before it is rewritten. Whatever the shell says before the runtime lands has to be true.
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const refinements = await readFile(
+    new URL('../public/catalogue-filter-refinements.mjs', import.meta.url), 'utf8');
+
+  // The bands the runtime installs, taken from the module rather than repeated here.
+  const bands = [...refinements.matchAll(/(\w+):\s*\{\s*label:\s*'([^']+)'/g)]
+    .map(([, key, label]) => ({ key, label }));
+  assert.ok(bands.length >= 3, 'expected the price bands in the filter module');
+
+  for (const { key, label } of bands) {
+    const button = html.match(new RegExp(`<button data-filter="${key}">([^<]*)</button>`));
+    assert.ok(button, `the shell is missing the ${key} button`);
+    assert.equal(button[1], label,
+      `the shell shows "${button[1]}" until the runtime replaces it with "${label}"`);
+  }
+
+  // The module deletes this one, so shipping it means showing a band that vanishes.
+  assert.doesNotMatch(html, /data-filter="premium"/);
+
+  // A hardcoded date is a lie from the moment it is written. The stock client fills these
+  // in once it knows them.
+  assert.doesNotMatch(html, /Last restock check: \d/,
+    'the shell must not bake a restock date it cannot know');
+  assert.doesNotMatch(html, /Last full sweep: \d/);
+});
