@@ -1,0 +1,5 @@
+# Artwork filenames carry a hash of their own contents, so a changed image is a changed
+# URL and a cached one can never be stale. That makes it safe to tell browsers never to
+# ask again, which is the point of lifting these out of the document.
+/art/*
+  Cache-Control: public, max-age=31536000, immutable
