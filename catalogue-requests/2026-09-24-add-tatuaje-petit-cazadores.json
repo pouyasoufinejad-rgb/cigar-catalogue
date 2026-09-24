@@ -20,7 +20,6 @@
     "catalogueType": "main",
     "archived": false,
     "subsection": "petit-panatelas",
-    "imageUrl": "https://cigarbox.com.au/cdn/shop/files/TatuajePetitCazadores_d49738a7-ced9-4da3-9d7d-c99ff75c361e_medium.png?v=1709796747",
     "summaryHtml": "<strong>Black pepper, cocoa, leather, earth, dark coffee and restrained sweetness</strong> come through with unusual concentration for a 4″ × 40 cigar. The Connecticut Broadleaf wrapper carries a large share of the flavour in this small format, giving the smoke a dense, spicy start that settles into darker coffee, cocoa and leather.",
     "noteHtml": "The broad wrapper-to-filler ratio makes this a concentrated little Broadleaf cigar rather than a mild quick smoke. Reviews are consistently positive on flavour, but firm or tight draws recur often enough to justify a Yellow construction-risk flag.",
     "productionLines": [
@@ -47,5 +46,5 @@
     "priceChecked": "2026-09-24",
     "stockChecked": "2026-09-24"
   },
-  "note": "Add Tatuaje Petit Cazadores Reserva to the Panatelas, Petit Coronas & Petit Robustos subsection using the verified Cigar Box A$29 single and exact product page. Append without disturbing existing ranks or unrelated catalogue data."
+  "note": "Add Tatuaje Petit Cazadores Reserva to the Panatelas, Petit Coronas & Petit Robustos subsection using the verified Cigar Box A$29 single and exact product page. Append without disturbing existing ranks or unrelated catalogue data. Image deliberately omitted because dynamic entries only accept catalogue-hosted relative image URLs."
 }
