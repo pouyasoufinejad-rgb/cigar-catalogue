@@ -62,18 +62,20 @@ html body .grid > article.card:not(.hidden):not(.brand-line-filter-hidden):not([
 html body article.card .medals{
   gap:4px!important;
 }
+/* The medals lost their frames and their tier words, so these no longer reserve room for
+   them. Kept here rather than fought with from the page stylesheet: this selector outranks
+   it, so the two have to agree. */
 html body article.card .medals .rating{
-  min-height:148px!important;
-  padding:8px 4px 5px!important;
+  min-height:0!important;
+  padding:0 2px 2px!important;
 }
 html body article.card .medals .medal{
-  width:min(112px,94%)!important;
-  height:92px!important;
-  margin:2px auto -3px!important;
+  width:min(92px,88%)!important;
+  height:86px!important;
+  margin:0 auto!important;
 }
 html body article.card .medals .rating>span{font-size:10px!important}
-html body article.card .medals .rating b{font-size:11px!important;margin-top:-2px!important}
-html body article.card .medals .subscore{font-size:9px!important;margin-top:-1px!important}
+html body article.card .medals .subscore{font-size:13px!important;margin-top:0!important}
 html body article.card .cardbody .summary{font-size:14px!important;line-height:1.5!important}
 html body article.card .artmeta{font-size:11px!important;line-height:1.35!important}
 @media(max-width:900px){
@@ -95,17 +97,16 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
   html body article.card .medals{gap:4px!important}
   html body article.card .medals .rating{
     min-width:0!important;
-    min-height:140px!important;
-    padding:7px 3px 4px!important;
+    min-height:0!important;
+    padding:0 2px 2px!important;
   }
   html body article.card .medals .medal{
-    width:min(104px,94%)!important;
-    height:84px!important;
-    margin:2px auto -3px!important;
+    width:min(62px,94%)!important;
+    height:58px!important;
+    margin:0 auto!important;
   }
   html body article.card .medals .rating>span{font-size:9px!important}
-  html body article.card .medals .rating b{font-size:10px!important;margin-top:-2px!important}
-  html body article.card .medals .subscore{font-size:9px!important;margin-top:-1px!important}
+  html body article.card .medals .subscore{font-size:10.5px!important;margin-top:0!important}
 }
 `;
   document.head.appendChild(style);

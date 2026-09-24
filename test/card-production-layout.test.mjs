@@ -12,7 +12,7 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 });
 
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
-  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=desktop-width-2'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=compact-medals-1'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
   assert.match(wideLayout, /width:\s*calc\(100% \+ 60px\)!important/);
@@ -27,13 +27,16 @@ test('a final desktop row with two visible cards keeps outside-column balance bu
   assert.match(wideLayout, /grid-column:\s*3!important;[\s\S]*transform:\s*translateX\(-30%\)!important/);
 });
 
-test('laurel boxes are wider, less tall, and keep the score closer to the laurel image', () => {
+test('laurel boxes reserve no room for the frame and tier word they no longer have', () => {
   assert.match(wideLayout, /article\.card \.medals\{[\s\S]*gap:4px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.rating\{[\s\S]*min-height:148px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*height:92px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*margin:2px auto -3px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.rating b\{font-size:\s*11px!important;margin-top:-2px!important/);
-  assert.match(wideLayout, /article\.card \.medals \.subscore\{font-size:\s*9px!important;margin-top:-1px!important/);
+  // The box is only as tall as the label and the wreath now.
+  assert.match(wideLayout, /article\.card \.medals \.rating\{[\s\S]*min-height:0!important/);
+  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*height:86px!important/);
+  assert.match(wideLayout, /article\.card \.medals \.medal\{[\s\S]*margin:0 auto!important/);
+  // Sizing the tier word is dead weight once it is hidden.
+  assert.doesNotMatch(wideLayout, /article\.card \.medals \.rating b\{/);
+  // The score sits inside the wreath, so it is set at reading size rather than as a caption.
+  assert.match(wideLayout, /article\.card \.medals \.subscore\{font-size:\s*13px!important/);
 });
 
 test('wider cards keep readable rating and copy text', () => {
@@ -48,8 +51,8 @@ test('mobile remains one full-width column with no horizontal overhang and compa
   assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*width:\s*100%!important/);
   assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*margin-inline:\s*0!important/);
   assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*html body \.grid > article\.card\{[\s\S]*grid-column:\s*auto!important;[\s\S]*transform:\s*none!important/);
-  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:140px!important/);
-  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:84px!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.rating\{[\s\S]*min-height:0!important/);
+  assert.match(wideLayout, /@media\(max-width:900px\)[\s\S]*article\.card \.medals \.medal\{[\s\S]*height:58px!important/);
 });
 
 test('existing art-frame heights and mobile metadata placement remain unchanged', () => {

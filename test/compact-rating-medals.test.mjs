@@ -113,3 +113,15 @@ test('an unrated Value shows a dash in the wreath rather than a sentence', () =>
   assert.equal(value.querySelector('.subscore').textContent, '—');
   assert.doesNotMatch(html, /No AU price/, 'a sentence does not fit inside a wreath');
 });
+
+test('the runtime card-layout stylesheet agrees with the page about medal height', async () => {
+  const layout = await readFile(new URL('../public/catalogue-card-layout.mjs', import.meta.url), 'utf8');
+  // This selector outranks the page stylesheet, so a stale height here silently wins and
+  // the boxes stay tall no matter what the page says.
+  assert.doesNotMatch(layout, /\.medals \.rating\{[^}]*min-height:1\d\dpx/,
+    'the card-layout sheet must not pin a tall minimum height');
+  assert.match(layout, /html body article\.card \.medals \.rating\{\s*min-height:0!important/,
+    'it should release the minimum height for the compact medals');
+  assert.doesNotMatch(layout, /\.medals \.rating b\{/,
+    'the tier word is hidden, so sizing it is dead weight');
+});
