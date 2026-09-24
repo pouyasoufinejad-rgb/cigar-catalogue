@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss } from './helpers/page-css.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from 'node:fs/promises';
 
-const pageHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+const pageHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8')
+  + '\n<style>' + (await readPageCss()) + '</style>';
 // The card styles ship in the page, so the rendered result is what gets asserted rather
 // than the presence of a rule.
 const css = [...pageHtml.matchAll(/\.(?:laurel-badge|overall-score|gem-award)[^{]*\{[^}]*\}/g)]

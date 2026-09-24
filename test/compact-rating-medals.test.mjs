@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss, withoutDataUris } from './helpers/page-css.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from 'node:fs/promises';
 
@@ -8,9 +9,7 @@ import { renderEntryCard } from '../src/index.js';
 const pageHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 // The whole page cascade minus the inlined artwork, so what jsdom computes is what a
 // desktop browser computes.
-const pageCss = [...pageHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
-  .map(match => match[1]).join('\n')
-  .replace(/[^{}]*\{[^{}]*base64[^{}]*\}/g, '');
+const pageCss = withoutDataUris(await readPageCss());
 
 const ENTRY = Object.freeze({
   key: 'medal-layout-fixture',

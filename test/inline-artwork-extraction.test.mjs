@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 
 import { rewritePage, fileNameFor } from '../scripts/extract-inline-artwork.mjs';
+import { readPageCss } from './helpers/page-css.mjs';
 
 const page = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 const artDir = new URL('../public/art/', import.meta.url);
@@ -38,7 +39,7 @@ test('every artwork reference resolves to a file whose contents match its name',
   assert.deepEqual(orphans, [], 'files nothing references should not ship');
 });
 
-test('extracted artwork is lazy, which the fixed-height frame makes safe', () => {
+test('extracted artwork is lazy, which the fixed-height frame makes safe', async () => {
   const tags = page.match(/<img\b[^>]*?\/art\/[^>]*?>/g) || [];
   assert.ok(tags.length > 40);
   for (const tag of tags) {
@@ -47,7 +48,7 @@ test('extracted artwork is lazy, which the fixed-height frame makes safe', () =>
   }
   // Without a frame that reserves its own height, a lazily-arriving image would shove the
   // page around as the reader scrolls.
-  assert.match(page, /\.artframe\{height:360px/);
+  assert.match(await readPageCss(), /\.artframe\{height:360px/);
 });
 
 test('artwork is served immutable, or lifting it out buys nothing on a second visit', async () => {

@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss } from './helpers/page-css.mjs';
 import { readFile } from 'node:fs/promises';
 
 import * as unifiedAdmin from '../public/catalogue-admin-unified-v139.mjs';
 
-const catalogueHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+const catalogueHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8')
+  + '\n<style>' + (await readPageCss()) + '</style>';
 const benchmarkRequest = JSON.parse(await readFile(new URL('../catalogue-requests/2026-08-31-revamp-benchmarks.json', import.meta.url), 'utf8'));
 
 function parseDivTree(html) {

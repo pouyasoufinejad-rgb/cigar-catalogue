@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss } from './helpers/page-css.mjs';
 import { readFile } from 'node:fs/promises';
 
-const page = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+const page = await readFile(new URL('../public/index.html', import.meta.url), 'utf8')
+  + '\n<style>' + (await readPageCss()) + '</style>';
 const cardLayout = await readFile(new URL('../public/catalogue-card-layout.mjs', import.meta.url), 'utf8');
 const stockClient = await readFile(new URL('../public/catalogue-stock-client.mjs', import.meta.url), 'utf8');
 

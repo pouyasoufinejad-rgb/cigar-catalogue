@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss, withoutDataUris } from './helpers/page-css.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from 'node:fs/promises';
 
@@ -10,10 +11,7 @@ const moduleSource = await readFile(new URL('../public/catalogue-flavour.mjs', i
 // has no bearing on placement. Order is preserved, so what jsdom computes here is what a
 // desktop browser computes: at the default 1024px window none of the phone media queries
 // match.
-const pageCss = [...pageHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
-  .map(match => match[1])
-  .join('\n')
-  .replace(/[^{}]*\{[^{}]*base64[^{}]*\}/g, '');
+const pageCss = withoutDataUris(await readPageCss());
 
 // The same rules the runtime re-injects, which is what a browser holding a stale document
 // actually ends up with.

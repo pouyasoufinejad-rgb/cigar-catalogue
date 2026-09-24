@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss, withoutDataUris } from './helpers/page-css.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from 'node:fs/promises';
 
@@ -307,9 +308,7 @@ test('the size selector does not overflow a phone-width card', async () => {
   const pageHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const moduleSource = await readFile(new URL('../public/catalogue-variant-runtime.mjs', import.meta.url), 'utf8');
   const variantCss = moduleSource.match(/style\.textContent = `([\s\S]*?)`;/)[1];
-  const pageCss = [...pageHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
-    .map(match => match[1]).join('\n')
-    .replace(/[^{}]*\{[^{}]*base64[^{}]*\}/g, '');
+  const pageCss = withoutDataUris(await readPageCss());
 
   const dom = new JSDOM(
     `<!doctype html><html><head><style>${pageCss}\n${variantCss}</style></head>`

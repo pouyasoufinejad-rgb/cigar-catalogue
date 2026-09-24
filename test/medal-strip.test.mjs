@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readPageCss, withoutDataUris } from './helpers/page-css.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from 'node:fs/promises';
 
@@ -8,9 +9,7 @@ const strip = await import('../public/catalogue-medal-strip.mjs');
 import { renderEntryCard } from '../src/index.js';
 
 const pageHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-const pageCss = [...pageHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
-  .map(match => match[1]).join('\n')
-  .replace(/[^{}]*\{[^{}]*base64[^{}]*\}/g, '');
+const pageCss = withoutDataUris(await readPageCss());
 
 const ENTRY = Object.freeze({
   key: 'strip-fixture', brand: 'Liga Privada', title: 'No. 9', eyebrow: 'Fixture',

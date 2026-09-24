@@ -3,3 +3,8 @@
 # ask again, which is the point of lifting these out of the document.
 /art/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Same reasoning for the stylesheet: its name is a hash of its contents, so a rule change
+# is a new URL and a cached copy can never be wrong.
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
