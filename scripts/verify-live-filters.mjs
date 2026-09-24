@@ -35,7 +35,8 @@ const liveTag = docHeaders.get('etag') || '';
 const cachingSummary = [
   `worker build ${docHeaders.get('x-cigar-catalogue-version') || '(none)'}`,
   `cache-control ${docHeaders.get('cache-control') || '(none)'}`,
-  `etag ${liveTag || '(none)'}`
+  `etag ${liveTag || '(none)'}`,
+  `worker-set tag ${docHeaders.get('x-cigar-catalogue-etag') || '(none)'}`
 ];
 console.log(`=== document cache-control: ${docHeaders.get('cache-control') || '(none)'}`
   + `  etag: ${liveTag || '(none)'}`

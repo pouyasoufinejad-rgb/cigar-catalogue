@@ -1048,6 +1048,11 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   const tag = await weakEntityTag(transformed);
   headers.set('cache-control', 'no-cache');
   if (tag) headers.set('etag', tag);
+  // Production answers with no ETag although this build sets one, so something between the
+  // Worker and the client removes it. A copy under a name nothing rewrites tells which:
+  // present here and absent above means the edge stripped it, absent in both means the tag
+  // was never computed.
+  if (tag) headers.set('x-cigar-catalogue-etag', tag);
   headers.set('x-cigar-catalogue-version', '141');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
