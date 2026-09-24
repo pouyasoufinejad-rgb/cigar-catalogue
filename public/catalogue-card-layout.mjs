@@ -1,4 +1,4 @@
-const STYLE_ID = 'catalogue-wide-card-layout-v154';
+const STYLE_ID = 'catalogue-wide-card-layout-v155';
 
 export function ensureWideCardLayout() {
   if (document.getElementById(STYLE_ID)) return;
@@ -49,9 +49,25 @@ html body article.card{
     margin-right:calc(-1 * var(--card-bleed-right))!important;
   }
 }
-/* Only use the extra horizontal room on the large-desktop layout where the fixed
-   sidebar is present. Keeping the 901-1659px geometry unchanged avoids introducing
-   horizontal overflow on narrower desktop and tablet-width viewports. */
+/* Below the sidebar's breakpoint there is no sidebar to slide under, so the left can take
+   the same room as the right instead of the 24px cap that only exists to clear it. On a
+   1440px laptop that is most of the free space on both sides rather than a sliver. */
+@media(min-width:901px) and (max-width:1659px){
+  html body .grid,
+  html body .wrap > header,
+  html body .wrap > .section > .section-head,
+  html body .wrap > .section > .legend-dropdown,
+  html body .wrap > .section > .test-impact-note,
+  html body .wrap > .section > .live-stock-check,
+  html body .wrap > .section > .controls,
+  html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
+  html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
+    --card-bleed-left:min(150px, var(--card-room))!important;
+  }
+}
+/* On the large-desktop layout the left is pinned narrow by the sidebar, so the right takes
+   every pixel that is actually free. --card-room already holds a 16px gutter back, so this
+   cannot reach the edge of the window or start a sideways scroll. */
 @media(min-width:1660px){
   html body .grid,
   html body .wrap > header,
@@ -64,7 +80,7 @@ html body article.card{
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
     --card-room:max(0px, (100vw - 100%) / 2 - 16px);
     --card-bleed-left:min(24px, var(--card-room));
-    --card-bleed-right:min(210px, var(--card-room));
+    --card-bleed-right:var(--card-room);
     width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
     margin-left:calc(-1 * var(--card-bleed-left))!important;
     margin-right:calc(-1 * var(--card-bleed-right))!important;

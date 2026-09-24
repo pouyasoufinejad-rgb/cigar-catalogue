@@ -39,6 +39,8 @@ if (!importsFilters) fail(`the bootstrap served at ?v=${servedVersion} never imp
 // The sidebar only exists on the wide desktop layout. Read that width from the module that
 // declares it, so a change there cannot leave this check quietly measuring nothing.
 const sidebarSource = await readFile(new URL('../public/catalogue-control-sidebar.mjs', import.meta.url), 'utf8');
+// Below this the layout is one column at full width and there is no wrap to overhang.
+const PHONE_MAX = 900;
 const SIDEBAR_MIN_WIDTH = Number(sidebarSource.match(/min-width:\s*(\d+)px/)?.[1] || 0);
 if (!SIDEBAR_MIN_WIDTH) fail('could not read the sidebar breakpoint from catalogue-control-sidebar.mjs');
 console.log(`=== the sidebar mounts at >= ${SIDEBAR_MIN_WIDTH}px`);
@@ -54,6 +56,7 @@ async function checkSidebarClearance(page, label, width) {
       .find(node => node.getBoundingClientRect().width > 0);
     if (!grid) return { missing: true };
     const g = grid.getBoundingClientRect();
+    const wrapRect = grid.closest('.wrap')?.getBoundingClientRect() || null;
     const s = sidebar ? sidebar.getBoundingClientRect() : null;
     const visible = Boolean(s && getComputedStyle(sidebar).display !== 'none' && s.width > 0);
     return {
@@ -61,6 +64,8 @@ async function checkSidebarClearance(page, label, width) {
       sidebarPresent: Boolean(sidebar),
       sidebarRight: visible ? Math.round(s.right) : null,
       gap: visible ? Math.round(g.left - s.right) : null,
+      gridWidth: Math.round(g.width),
+      wrapWidth: wrapRect ? Math.round(wrapRect.width) : null,
       viewport: window.innerWidth,
       docWidth: document.documentElement.scrollWidth
     };
@@ -75,6 +80,13 @@ async function checkSidebarClearance(page, label, width) {
   // nothing at all, which is how a real overlap went unnoticed once already.
   if (width >= SIDEBAR_MIN_WIDTH && geometry.sidebarRight === null) {
     fail(`${label}: no visible sidebar at ${width}px, so its clearance was never measured`);
+  }
+  // The cards are meant to overhang the wrap on both sides. If the bleed collapses the
+  // grid just matches the wrap, which looks like nothing changed rather than like a bug.
+  if (width > PHONE_MAX && geometry.wrapWidth !== null) {
+    const overhang = geometry.gridWidth - geometry.wrapWidth;
+    console.log(`   cards overhang the wrap by ${overhang}px (grid ${geometry.gridWidth}px vs wrap ${geometry.wrapWidth}px)`);
+    if (overhang < 40) fail(`${label}: the cards only overhang the wrap by ${overhang}px, so the extra width is gone`);
   }
   if (geometry.gap !== null && geometry.gap < 8) {
     fail(`${label}: only ${geometry.gap}px between the sidebar and the cards, so the sidebar covers them`);
