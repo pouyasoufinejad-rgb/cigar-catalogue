@@ -1041,10 +1041,39 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // describes a different document and would let a revalidation serve the old one.
   headers.delete('etag');
   headers.delete('last-modified');
-  headers.set('cache-control', 'no-store');
+  // The document is several megabytes, so no-store would re-send all of it on every
+  // reload. It is instead always revalidated against a tag computed from this exact body,
+  // which cannot outlive a catalogue change: a reload that finds nothing changed costs a
+  // 304, and any change at all misses and sends the new document.
+  const tag = await weakEntityTag(transformed);
+  headers.set('cache-control', 'no-cache');
+  if (tag) headers.set('etag', tag);
   headers.set('x-cigar-catalogue-version', '140');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
+  if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
+    headers.delete('content-type');
+    return new Response(null, { status: 304, headers });
+  }
   return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
+}
+
+// Weak, because compression downstream rewrites the bytes and a strong tag would then be
+// a lie. Weak is all a conditional GET needs.
+export async function weakEntityTag(body) {
+  const digest = globalThis.crypto?.subtle?.digest;
+  if (typeof digest !== 'function') return '';
+  const bytes = new TextEncoder().encode(String(body));
+  const hash = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  const hex = [...new Uint8Array(hash)].slice(0, 16)
+    .map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return `W/"${hex}"`;
+}
+
+export function matchesEntityTag(header, tag) {
+  if (!header || !tag) return false;
+  const bare = value => String(value).trim().replace(/^W\//, '');
+  if (header.trim() === '*') return true;
+  return header.split(',').some(candidate => bare(candidate) === bare(tag));
 }
 
 export default {
