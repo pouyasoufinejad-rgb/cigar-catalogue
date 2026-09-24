@@ -1,0 +1,52 @@
+{
+  "id": "2026-09-24-add-romeo-y-julieta-petit-royales",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-petit-royales",
+  "entry": {
+    "brand": "Romeo y Julieta",
+    "title": "Petit Royales",
+    "eyebrow": "Compact, concentrated modern Romeo y Julieta",
+    "rank": 2,
+    "packagePrice": 42,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 42,
+    "country": "Cuba",
+    "length": 3.75,
+    "ring": 47,
+    "strength": 6,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "summaryHtml": "<strong>Cedar, floral sweetness, cocoa, mocha, nuts, fruit and pepper</strong> arrive with more concentration than the cigar’s short length suggests. The 47-ring format produces a dense, creamy smoke with medium strength, building from woody and floral notes into darker cocoa, coffee-like sweetness and a firmer spicy finish.",
+    "noteHtml": "A short, broad Romeo y Julieta that trades session length for flavour concentration and smoke volume. Review consensus is strongly positive on richness and progression for the format, while Cuban construction variability still leaves some risk of a firm draw or uneven burn.",
+    "productionLines": [
+      "Handmade in Cuba",
+      "Wrapper: Cuban",
+      "Binder: Cuban",
+      "Filler: Cuban"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Caprichos format",
+      "3¾″ × 47",
+      "About 30–40 min smoke"
+    ],
+    "smokeTime": "About 30–40 min smoke",
+    "experienceTags": [
+      "Nicotine: Medium"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/romeo-y-julieta-petit-royales/",
+      "https://www.theindexcigars.com.au/products/romeo-y-julieta-petit-royal"
+    ],
+    "priceChecked": "2026-09-24",
+    "stockChecked": "2026-09-24"
+  },
+  "note": "Add Romeo y Julieta Petit Royales at rank 2 in the Panatelas, Petit Coronas & Petit Robustos subsection. Benchmark the current in-stock Cigar Hut single at A$42; The Index is also in stock at A$42.50. Re-rank only the affected active subsection and preserve all unrelated catalogue data. Leave Flavour unrated until personally tasted."
+}
