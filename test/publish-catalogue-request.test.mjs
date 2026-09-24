@@ -498,3 +498,27 @@ test('inserting a card resyncs the ranks of the dynamic entries it displaces', a
   assert.equal(writtenEntries.incumbent.title, 'incumbent');
   assert.equal(writtenEntries.incumbent.price, 12);
 });
+
+
+test('upserts reject redundant tasting-status markup notes, including nested variants', () => {
+  assert.throws(
+    () => validateRequest({
+      operation: 'upsert-entry',
+      key: 'example',
+      entry: { noteHtml: 'Untasted.' }
+    }),
+    /distinctive about the cigar/i
+  );
+  assert.throws(
+    () => validateRequest({
+      operation: 'upsert-entry',
+      key: 'example',
+      entry: {
+        blendVariants: [
+          { id: 'natural', label: 'Natural', noteHtml: 'Untasted. Retailer price pending.' }
+        ]
+      }
+    }),
+    /distinctive about the cigar/i
+  );
+});

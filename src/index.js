@@ -877,7 +877,7 @@ function formatSizeNumber(value) {
 
 const STRUCTURAL_OVERRIDE_FIELDS = new Set([
   'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk',
-  'taster', 'retailerLinks', 'imageUrl', 'smokeTime'
+  'taster', 'retailerLinks', 'imageUrl', 'smokeTime', 'noteHtml'
 ]);
 
 export function applyStructuralOverridesToHtml(html, cards) {
@@ -953,6 +953,18 @@ export function applyStructuralOverridesToHtml(html, cards) {
       if (smokeRx.test(card)) card = card.replace(smokeRx, smoke ? `<div class=\"artmeta artmeta-bottom\">${smoke}</div>` : '');
     }
 
+    if (Object.prototype.hasOwnProperty.call(override, 'noteHtml')) {
+      const note = sanitiseStoredMarkup(override.noteHtml);
+      const noteRx = /(<p\b(?=[^>]*\bclass=["'][^"']*\bmog-note\b[^"']*["'])[^>]*>)[\s\S]*?(<\/p>)/i;
+      if (noteRx.test(card)) {
+        card = card.replace(noteRx, (_all, open, close) => note ? open + note + close : '');
+      } else if (note) {
+        const summaryRx = /(<p\b(?=[^>]*\bclass=["'][^"']*\bsummary\b[^"']*["'])[^>]*>[\s\S]*?<\/p>)/i;
+        const noteClass = override.taster ? 'mog-note taster-note' : 'mog-note';
+        card = card.replace(summaryRx, '$1<p class="' + noteClass + '">' + note + '</p>');
+      }
+    }
+
     if (Object.prototype.hasOwnProperty.call(override, 'retailerLinks')) {
       const newLinks = structuralRetailerLinks(override.retailerLinks);
       const shopRx = /<a\b(?=[^>]*\bclass=[\"'][^\"']*\bshop\b[^\"']*[\"'])[^>]*>[\s\S]*?<\/a>/gi;
@@ -1018,7 +1030,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.set('cache-control', 'no-cache, must-revalidate');
-  headers.set('x-cigar-catalogue-version', '140');
+  headers.set('x-cigar-catalogue-version', '141');
   return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
 }
 
