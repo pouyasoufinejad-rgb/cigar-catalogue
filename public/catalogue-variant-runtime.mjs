@@ -482,7 +482,7 @@ export function applyVariantToCard(card, record, variantId) {
 
   // Size, Value, the laurel and the overall score all follow from the fields just written,
   // through the modules that already own them. Nothing about a rating is stored per variant.
-  applySizeRatingToCard(card, effective.ring);
+  applySizeRatingToCard(card, effective.ring, effective.length);
   refreshSizeAdjustedValueForCard(card, effective);
   refreshLaurelForCard(card, effective);
   markUnratedValue(card, Boolean(effective.priceUnverified), effective.quality);

@@ -8,7 +8,7 @@ import {
   normaliseVariants,
   variantEffectiveRecord
 } from '../public/catalogue-variants.mjs';
-import { sizeScoreForRing } from '../public/catalogue-size-rules.mjs';
+import { sizeScoreForDimensions } from '../public/catalogue-size-rules.mjs';
 import {
   STOCK_RESULTS_KEY,
   STOCK_META_KEY,
@@ -853,7 +853,7 @@ export function renderEntryCard(rawEntry) {
     strength: entry.strength,
     quality: entry.quality,
     flavour: entry.flavour,
-    size: sizeScoreForRing(entry.ring),
+    size: sizeScoreForDimensions(entry.ring, entry.length),
     value: valueScore
   })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${cheapestSingleMarkup(entry)}${entry.priceUnverified
     ? `<div class="value-calc value-unrated"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>No verified AU price for this size</span><span>Ratio <b>—</b></span></div>`
@@ -1007,7 +1007,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=164"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=165"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -1053,7 +1053,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '143');
+  headers.set('x-cigar-catalogue-version', '144');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');

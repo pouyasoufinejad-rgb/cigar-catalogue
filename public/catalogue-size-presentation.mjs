@@ -26,15 +26,30 @@ export function ringGaugeForCard(card) {
   return match ? Number(match[1]) : 0;
 }
 
-export function applySizeRatingToCard(card, explicitRing = null) {
+// The Size score reads length as well as ring, so the card has to give up both. The frame
+// carries them as data attributes; the facts line is the fallback for a card that predates
+// them, where the text reads `4.5" x 44`.
+export function lengthForCard(card) {
+  const artLength = finite(card?.querySelector?.('.artframe')?.dataset?.visualLength, NaN);
+  if (Number.isFinite(artLength) && artLength > 0) return artLength;
+
+  const sizeText = Array.from(card?.querySelectorAll?.('.facts b') || [])
+    .map(node => node.textContent || '')
+    .find(text => /\d+(?:\.\d+)?\s*[^\d]{0,3}[×x]\s*\d/.test(text));
+  const match = String(sizeText || '').match(/(\d+(?:\.\d+)?)\s*[^\d]{0,3}[×x]/);
+  return match ? Number(match[1]) : 0;
+}
+
+export function applySizeRatingToCard(card, explicitRing = null, explicitLength = null) {
   if (!card?.querySelector) return null;
   const ring = explicitRing == null ? ringGaugeForCard(card) : finite(explicitRing, 0);
   if (!(ring > 0)) return null;
+  const length = explicitLength == null ? lengthForCard(card) : finite(explicitLength, 0);
 
   const node = sizeRatingNode(card);
   if (!node) return null;
 
-  const { tier, score } = sizeRatingForRing(ring);
+  const { tier, score } = sizeRatingForRing(ring, length);
   const scoreClass = score >= 8 ? 'score-high' : score >= 5 ? 'score-mid' : 'score-low';
   node.classList.remove('gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low');
   node.classList.add(tier, scoreClass);
