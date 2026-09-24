@@ -8,8 +8,8 @@ export function ensureWideCardLayout() {
 html body .grid{
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
-  width:calc(100% + 60px)!important;
-  margin-inline:-30px!important;
+  width:calc(100% + 120px)!important;
+  margin-inline:-60px!important;
 }
 html body article.card{
   width:100%!important;
@@ -29,8 +29,8 @@ html body article.card{
   html body .wrap > .section > .controls,
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
-    width:calc(100% + 60px)!important;
-    margin-left:-30px!important;
+    width:calc(100% + 120px)!important;
+    margin-left:-60px!important;
     margin-right:0!important;
   }
 }

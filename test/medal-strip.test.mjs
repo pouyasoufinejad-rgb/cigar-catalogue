@@ -150,3 +150,41 @@ test('the runtime loads the strip module', async () => {
   const loader = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
   assert.match(loader, /import\('\.\/catalogue-medal-strip\.mjs\?v=[a-z0-9-]+'\)/);
 });
+
+test('the strip sizes itself to the laurels instead of a fixed guess', () => {
+  const dom = mount(renderEntryCard(ENTRY));
+  const medals = dom.window.document.querySelector('.artframe .medals');
+  // A fixed height left dead black under the row whenever it came out shorter than the
+  // number, and every change to the medal size or card width moved that target again.
+  assert.equal(dom.window.getComputedStyle(medals).height, 'auto');
+
+  const card = dom.window.document.querySelector('article.card');
+  const frame = card.querySelector('.artframe');
+  // jsdom reports no layout, so drive the sync with a stubbed measurement.
+  medals.getBoundingClientRect = () => ({ height: 97, width: 400, top: 0, bottom: 97, left: 0, right: 400 });
+  assert.equal(strip.syncStripHeight(card), 97);
+  assert.equal(frame.style.getPropertyValue('--medal-strip'), '97px',
+    'the frame reserves exactly what the row measured');
+
+  // A row that measures nothing must not collapse the strip to zero.
+  medals.getBoundingClientRect = () => ({ height: 0, width: 0, top: 0, bottom: 0, left: 0, right: 0 });
+  assert.equal(strip.syncStripHeight(card), 0);
+  assert.equal(frame.style.getPropertyValue('--medal-strip'), '97px', 'the last good height stands');
+});
+
+test('each label takes the colour of its own laurel', () => {
+  const dom = mount(renderEntryCard(ENTRY));
+  const sheet = dom.window.document.getElementById(strip.STRIP_STYLE_ID).textContent;
+  const tints = {};
+  for (const tier of ['gold', 'silver', 'bronze']) {
+    const hit = sheet.match(new RegExp(`\\.rating\\.${tier}>span\\{color:(#[0-9a-f]{6})`, 'i'));
+    assert.ok(hit, `${tier} should tint its label`);
+    tints[tier] = hit[1];
+  }
+  assert.equal(new Set(Object.values(tints)).size, 3, 'the three metals must differ');
+  // And the label matches the score of the same tier, so a row reads as one metal.
+  for (const tier of ['gold', 'silver', 'bronze']) {
+    const score = sheet.match(new RegExp(`\\.rating\\.${tier} \\.subscore\\{color:(#[0-9a-f]{6})`, 'i'))[1];
+    assert.equal(tints[tier], score, `${tier}: label and score should be the same metal`);
+  }
+});

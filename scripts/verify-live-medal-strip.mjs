@@ -23,7 +23,8 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
 
   const report = await page.evaluate(() => {
     const out = { cards: 0, outsideFrame: [], overlapArt: [], overlapSmoke: [], darkBacked: 0,
-      lightText: 0, sample: null, strayInBody: [], tierColours: {}, dimScores: [] };
+      lightText: 0, sample: null, strayInBody: [], tierColours: {}, dimScores: [],
+      slack: [], worstSlack: 0, labelTints: {}, mismatchedLabels: [] };
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const frame = card.querySelector('.artframe');
       const medals = card.querySelector('.medals');
@@ -64,6 +65,21 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
         out.tierColours[tier] = `rgb(${r}, ${g}, ${b})`;
         if ((r + g + b) / 3 < 110) out.dimScores.push(`${card.dataset.key}:${tier}`);
       }
+      const frameStyle = getComputedStyle(frame);
+      const reserved = Number.parseFloat(frameStyle.paddingBottom) || 0;
+      const slack = Math.round(reserved - m.height);
+      if (slack > 12) out.slack.push(`${card.dataset.key}:${slack}px`);
+      out.worstSlack = Math.max(out.worstSlack, slack);
+      // The label should read as the same metal as its own laurel.
+      for (const tier of ['gold', 'silver', 'bronze']) {
+        const span = medals.querySelector(`.rating.${tier}>span`);
+        const score = medals.querySelector(`.rating.${tier} .subscore`);
+        if (!span || !score) continue;
+        out.labelTints[tier] = getComputedStyle(span).color;
+        if (getComputedStyle(span).color !== getComputedStyle(score).color) {
+          out.mismatchedLabels.push(`${card.dataset.key}:${tier}`);
+        }
+      }
       if (!out.sample) {
         out.sample = {
           key: card.dataset.key,
@@ -82,6 +98,8 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
   if (report.sample) console.log(`   sample ${JSON.stringify(report.sample)}`);
   console.log(`   dark-backed frames: ${report.darkBacked}   light rating text: ${report.lightText}`);
   console.log(`   score colours by tier: ${JSON.stringify(report.tierColours)}`);
+  console.log(`   label colours by tier: ${JSON.stringify(report.labelTints)}`);
+  console.log(`   worst empty gap under the laurels: ${report.worstSlack}px`);
 
   if (!report.cards) fail(`${label}: no cards with both a frame and a laurel row`);
   if (report.outsideFrame.length) fail(`${label}: ${report.outsideFrame.length} laurel rows are not inside the frame (${report.outsideFrame.slice(0, 3).join(', ')})`);
@@ -95,6 +113,12 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
     fail(`${label}: the tiers do not tint their scores differently (${JSON.stringify(report.tierColours)})`);
   }
   if (report.dimScores.length) fail(`${label}: ${report.dimScores.length} scores are too dark to read on the strip`);
+  if (report.slack.length) fail(`${label}: ${report.slack.length} strips leave dead black under the laurels (worst ${report.worstSlack}px: ${report.slack.slice(0, 3).join(', ')})`);
+  if (report.mismatchedLabels.length) fail(`${label}: ${report.mismatchedLabels.length} labels do not match their own laurel colour (${report.mismatchedLabels.slice(0, 3).join(', ')})`);
+  const labelTints = new Set(Object.values(report.labelTints));
+  if (Object.keys(report.labelTints).length >= 2 && labelTints.size < Object.keys(report.labelTints).length) {
+    fail(`${label}: the tiers do not tint their labels differently (${JSON.stringify(report.labelTints)})`);
+  }
   if (report.sample && report.sample.stripW < report.sample.frameW - 30) {
     fail(`${label}: the strip is ${report.sample.stripW}px across a ${report.sample.frameW}px frame`);
   }
