@@ -5,11 +5,17 @@ export function ensureWideCardLayout() {
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
+/* The cards overhang the wrap on the right only. The fixed sidebar sits to the left of the
+   wrap, so any left overhang slides underneath it; the left edge stays on the wrap and keeps
+   the gap the sidebar already leaves. The overhang is also capped by how much room is
+   actually free to the right, so a narrower desktop cannot be pushed into sideways scroll. */
 html body .grid{
+  --card-bleed:min(120px, max(0px, (100vw - 100%) / 2 - 16px));
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
-  width:calc(100% + 120px)!important;
-  margin-inline:-60px!important;
+  width:calc(100% + var(--card-bleed))!important;
+  margin-left:0!important;
+  margin-right:calc(-1 * var(--card-bleed))!important;
 }
 html body article.card{
   width:100%!important;
@@ -29,9 +35,10 @@ html body article.card{
   html body .wrap > .section > .controls,
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
-    width:calc(100% + 120px)!important;
-    margin-left:-60px!important;
-    margin-right:0!important;
+    --card-bleed:min(120px, max(0px, (100vw - 100%) / 2 - 16px));
+    width:calc(100% + var(--card-bleed))!important;
+    margin-left:0!important;
+    margin-right:calc(-1 * var(--card-bleed))!important;
   }
 }
 /* Only use the extra horizontal room on the large-desktop layout where the fixed
@@ -47,7 +54,10 @@ html body article.card{
   html body .wrap > .section > .controls,
   html body .wrap > .section > .tier-stack > .tier-block > .tier-heading,
   html body .wrap > .section > .tier-stack > .tier-block > .subtier-note{
-    width:calc(100% + 150px)!important;
+    --card-bleed:min(180px, max(0px, (100vw - 100%) / 2 - 16px));
+    width:calc(100% + var(--card-bleed))!important;
+    margin-left:0!important;
+    margin-right:calc(-1 * var(--card-bleed))!important;
   }
 }
 @media(min-width:901px){
@@ -84,6 +94,7 @@ html body article.card .artmeta{font-size:11px!important;line-height:1.35!import
     gap:6px!important;
     width:100%!important;
     margin-inline:0!important;
+    --card-bleed:0px;
   }
   html body article.card{
     width:100%!important;

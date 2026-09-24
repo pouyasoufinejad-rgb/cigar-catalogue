@@ -36,8 +36,37 @@ const importsFilters = /catalogue-filter-refinements\.mjs/.test(bootstrapSource)
 console.log(`=== bootstrap at ?v=${servedVersion} imports the filter module: ${importsFilters}`);
 if (!importsFilters) fail(`the bootstrap served at ?v=${servedVersion} never imports catalogue-filter-refinements.mjs`);
 
+// The cards overhang the wrap to reach full width. The fixed sidebar sits to the left of
+// the wrap, so a left overhang slides underneath it and covers the cards.
+async function checkSidebarClearance(page, label) {
+  const geometry = await page.evaluate(() => {
+    const sidebar = document.querySelector('#catalogue-control-sidebar, [id*="sidebar"]');
+    const grid = document.querySelector('.grid');
+    if (!grid) return { missing: true };
+    const g = grid.getBoundingClientRect();
+    const s = sidebar ? sidebar.getBoundingClientRect() : null;
+    const visible = s && getComputedStyle(sidebar).display !== 'none' && s.width > 0;
+    return {
+      gridLeft: Math.round(g.left), gridRight: Math.round(g.right),
+      sidebarRight: visible ? Math.round(s.right) : null,
+      gap: visible ? Math.round(g.left - s.right) : null,
+      viewport: window.innerWidth,
+      docWidth: document.documentElement.scrollWidth
+    };
+  });
+  if (geometry.missing) { fail(`${label}: no grid to measure`); return; }
+  console.log(`   grid ${geometry.gridLeft}..${geometry.gridRight} of ${geometry.viewport}px`
+    + (geometry.sidebarRight === null ? '  (no sidebar at this width)' : `  sidebar ends ${geometry.sidebarRight}, gap ${geometry.gap}px`));
+  if (geometry.gap !== null && geometry.gap < 8) {
+    fail(`${label}: only ${geometry.gap}px between the sidebar and the cards, so the sidebar covers them`);
+  }
+  if (geometry.docWidth > geometry.viewport + 1) {
+    fail(`${label}: the page scrolls sideways (${geometry.docWidth}px in a ${geometry.viewport}px viewport)`);
+  }
+}
+
 const browser = await chromium.launch();
-for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
+for (const [label, width] of [['wide', 1800], ['desktop', 1440], ['mobile', 412]]) {
   const page = await browser.newPage({
     viewport: { width, height: 950 }, deviceScaleFactor: 2,
     isMobile: width <= 900, hasTouch: width <= 900
@@ -108,6 +137,8 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
       if (filtered.restored !== filtered.before) fail(`${label}: clearing the filter did not restore every card`);
     }
   }
+
+  await checkSidebarClearance(page, label);
 
   await page.screenshot({ path: `filters-${label}.png`, fullPage: false });
   await page.close();

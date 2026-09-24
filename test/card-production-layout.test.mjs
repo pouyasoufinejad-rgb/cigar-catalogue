@@ -12,11 +12,11 @@ test('card cleanup removes only an exact Unflavoured production line', () => {
 });
 
 test('desktop catalogue grid stays at three columns with a very small gap and slightly wider cards', () => {
-  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=wider-cards-1'\)/);
+  assert.match(runtimeLoader, /import\('\.\/catalogue-card-layout\.mjs\?v=right-bleed-1'\)/);
   assert.match(wideLayout, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(wideLayout, /gap:\s*8px!important/);
-  assert.match(wideLayout, /width:\s*calc\(100% \+ 120px\)!important/);
-  assert.match(wideLayout, /margin-inline:\s*-60px!important/);
+  assert.match(wideLayout, /width:\s*calc\(100% \+ var\(--card-bleed\)\)!important/);
+  assert.match(wideLayout, /margin-right:\s*calc\(-1 \* var\(--card-bleed\)\)!important/);
   assert.match(wideLayout, /max-width:\s*none!important/);
 });
 
