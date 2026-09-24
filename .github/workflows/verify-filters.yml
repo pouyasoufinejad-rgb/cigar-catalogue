@@ -25,11 +25,16 @@ jobs:
         run: npm install --no-audit --no-fund playwright && npx playwright install --with-deps chromium
       - name: Verify
         run: node scripts/verify-live-filters.mjs
+      - name: Check the rating medals
+        if: ${{ always() }}
+        run: node scripts/verify-live-medals.mjs
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: filters-${{ github.run_id }}
-          path: filters-*.png
+          path: |
+            filters-*.png
+            medals-*.png
           retention-days: 14
           if-no-files-found: warn
