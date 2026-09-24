@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-24-add-montecristo-no-4",
+  "operation": "upsert-entry",
+  "key": "montecristo-no-4",
+  "entry": {
+    "brand": "Montecristo",
+    "title": "No. 4",
+    "eyebrow": "Classic medium-full Cuban Marevas",
+    "packagePrice": 49,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 49,
+    "country": "Cuba",
+    "length": 5.125,
+    "ring": 42,
+    "strength": 6,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "summaryHtml": "<strong>Cocoa, espresso, cedar, earth, cream, toasted nuts and pepper</strong> define the classic Montecristo profile in a compact 42-ring Marevas. The smoke is typically medium to medium-full, with coffee and cocoa building through the middle and darker roast, leather and pepper becoming more noticeable late.",
+    "noteHtml": "The No. 4 is the flagship Marevas expression of Montecristo’s traditional blend: fuller and more substantial than the Shorts while retaining the same core coffee, cocoa, cedar and earthy character. Construction is often excellent, but tight rolls and uneven burns appear often enough in owner reports to justify a Yellow construction-risk flag.",
+    "productionLines": [
+      "Handmade in Cuba",
+      "Wrapper: Cuban",
+      "Binder: Cuban",
+      "Filler: Cuban"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Marevas / Petit Corona",
+      "5⅛″ × 42",
+      "About 40–55 min smoke"
+    ],
+    "smokeTime": "About 40–55 min smoke",
+    "experienceTags": [
+      "Nicotine: Medium"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/montecristo-no-4/",
+      "https://cigarbox.com.au/products/montecristo-no-4-cuban-5-1-8-x-42rg",
+      "https://www.theindexcigars.com.au/products/montecristo-no-4",
+      "https://www.cigarworld.com.au/aud/products/montecristo-no.4-%252d-single-%252d-%285-1%7B47%7D16%22-x-42%29.html"
+    ],
+    "priceChecked": "2026-09-24",
+    "stockChecked": "2026-09-24"
+  },
+  "note": "Add Montecristo No. 4 to the Panatelas, Petit Coronas & Petit Robustos subsection. Benchmark the current Cigar Hut A$49 single, with exact Australian retailer links for Cigar Box, The Index and Cigarworld. Append without disturbing existing ranks or unrelated catalogue data. Leave Flavour unrated until personally tasted."
+}
