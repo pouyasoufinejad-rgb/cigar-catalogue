@@ -1,0 +1,51 @@
+{
+  "id": "2026-09-24-add-tatuaje-petit-cazadores",
+  "operation": "upsert-entry",
+  "key": "tatuaje-petit-cazadores-reserva",
+  "entry": {
+    "brand": "Tatuaje",
+    "title": "Petit Cazadores Reserva",
+    "eyebrow": "Compact Broadleaf pepper-and-cocoa profile",
+    "packagePrice": 29,
+    "packageLabel": "single cigar",
+    "price": 29,
+    "country": "Nicaragua",
+    "length": 4,
+    "ring": 40,
+    "strength": 7,
+    "quality": 8,
+    "risk": 2,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "imageUrl": "https://cigarbox.com.au/cdn/shop/files/TatuajePetitCazadores_d49738a7-ced9-4da3-9d7d-c99ff75c361e_medium.png?v=1709796747",
+    "summaryHtml": "<strong>Black pepper, cocoa, leather, earth, dark coffee and restrained sweetness</strong> come through with unusual concentration for a 4″ × 40 cigar. The Connecticut Broadleaf wrapper carries a large share of the flavour in this small format, giving the smoke a dense, spicy start that settles into darker coffee, cocoa and leather.",
+    "noteHtml": "The broad wrapper-to-filler ratio makes this a concentrated little Broadleaf cigar rather than a mild quick smoke. Reviews are consistently positive on flavour, but firm or tight draws recur often enough to justify a Yellow construction-risk flag.",
+    "productionLines": [
+      "Handmade in Nicaragua by My Father Cigars",
+      "Wrapper: Connecticut Broadleaf",
+      "Binder: Nicaraguan",
+      "Filler: Nicaraguan"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "Uncut",
+      "Covered foot",
+      "No cellophane",
+      "Compact 4″ × 40 Petit Corona",
+      "About 30–45 min smoke"
+    ],
+    "smokeTime": "About 30–45 min smoke",
+    "experienceTags": [
+      "Nicotine: Medium–High"
+    ],
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/tatuaje-petit-cazadores-4-x-40rg-1"
+    ],
+    "priceChecked": "2026-09-24",
+    "stockChecked": "2026-09-24"
+  },
+  "note": "Add Tatuaje Petit Cazadores Reserva to the Panatelas, Petit Coronas & Petit Robustos subsection using the verified Cigar Box A$29 single and exact product page. Append without disturbing existing ranks or unrelated catalogue data."
+}
