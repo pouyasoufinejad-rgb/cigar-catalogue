@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-tatuaje-petit-cazadores-reserva",
+  "operation": "upsert-entry",
+  "key": "tatuaje-petit-cazadores-reserva",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium–High",
+      "Pairings: Espresso, dark chocolate, rum (projected)",
+      "Occasion: Quick smoke, after a meal, outdoor smoke"
+    ]
+  }
+}

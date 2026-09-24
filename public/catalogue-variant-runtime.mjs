@@ -31,9 +31,17 @@ const aud = value => {
   return 'A' + String.fromCharCode(36) + amount;
 };
 
+// Matches the Worker: a line that only reports the absence of a single is not shown.
+const EMPTY_CHEAPEST_SINGLE = /^cheapest single\s*:\s*(no\b|none\b|not\b|n\/a\b|-+$)/i;
+
+export function isEmptyCheapestSingle(line) {
+  return EMPTY_CHEAPEST_SINGLE.test(String(line || '').trim());
+}
+
 function cheapestSingleText(lines) {
   return (Array.isArray(lines) ? lines : [])
-    .find(line => /^cheapest single\s*:/i.test(String(line || '').trim())) || '';
+    .find(line => /^cheapest single\s*:/i.test(String(line || '').trim())
+      && !isEmptyCheapestSingle(line)) || '';
 }
 
 export function syncCheapestSingleLine(card, lines) {

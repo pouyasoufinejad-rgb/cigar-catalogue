@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-sin-compromiso-paladin-de-saka",
+  "operation": "upsert-entry",
+  "key": "sin-compromiso-paladin-de-saka",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium–High (projected)",
+      "Pairings: Espresso, dark chocolate, bourbon (projected)",
+      "Occasion: Long evening, after a meal, relaxed session"
+    ]
+  }
+}

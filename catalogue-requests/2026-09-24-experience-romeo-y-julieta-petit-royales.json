@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-romeo-y-julieta-petit-royales",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-petit-royales",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium",
+      "Pairings: Coffee, walnut, cognac (projected)",
+      "Occasion: Quick smoke, after a meal, outdoor smoke"
+    ]
+  }
+}

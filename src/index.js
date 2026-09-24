@@ -687,9 +687,23 @@ function aud(value) {
   return 'A' + String.fromCharCode(36) + (Number.isInteger(number) ? number.toFixed(0) : number.toFixed(2));
 }
 
+// "Cheapest single: no in-stock Australian single found" states an absence, and it does it
+// twice: once in the Practical column and again in its own box under the facts. Neither
+// tells a reader anything they could act on, so it is not rendered at all.
+export const EMPTY_CHEAPEST_SINGLE = /^cheapest single\s*:\s*(no\b|none\b|not\b|n\/a\b|-+$)/i;
+
+export function isEmptyCheapestSingle(line) {
+  return EMPTY_CHEAPEST_SINGLE.test(String(line || '').trim());
+}
+
+export function visiblePracticalLines(lines) {
+  return (Array.isArray(lines) ? lines : []).filter(line => !isEmptyCheapestSingle(line));
+}
+
 function cheapestSingleText(record = {}) {
   const lines = Array.isArray(record.practicalLines) ? record.practicalLines : [];
-  return lines.find(line => /^cheapest single\s*:/i.test(String(line || '').trim())) || '';
+  return lines.find(line => /^cheapest single\s*:/i.test(String(line || '').trim())
+    && !isEmptyCheapestSingle(line)) || '';
 }
 
 function cheapestSingleMarkup(record = {}) {
@@ -828,7 +842,7 @@ export function renderEntryCard(rawEntry) {
       ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" data-image-source-key="${esc(entry.imageSourceKey)}" src="">`
       : '';
   const production = entry.productionLines.map(line => `<span class="artmeta-line">${esc(line)}</span>`).join('');
-  const practical = entry.practicalLines.map(line => `<span class="artmeta-line">${esc(line)}</span>`).join('');
+  const practical = visiblePracticalLines(entry.practicalLines).map(line => `<span class="artmeta-line">${esc(line)}</span>`).join('');
   const experience = entry.experienceTags.length
     ? `<div class="tag-groups"><div class="tag-group"><span class="tag-label">Experience</span><div class="tag-items">${entry.experienceTags.map(tag => `<span class="tag-chip">${esc(tag)}</span>`).join('')}</div></div></div>`
     : '';

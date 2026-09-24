@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-montecristo-no-4",
+  "operation": "upsert-entry",
+  "key": "montecristo-no-4",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium",
+      "Pairings: Coffee, dark chocolate, cognac (projected)",
+      "Occasion: Relaxed session, after a meal, evening smoke"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-cohiba-wide-short",
+  "operation": "upsert-entry",
+  "key": "cohiba-wide-short",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium",
+      "Pairings: Espresso, dark chocolate, rum (projected)",
+      "Occasion: Quick smoke, after a meal, outdoor smoke"
+    ]
+  }
+}

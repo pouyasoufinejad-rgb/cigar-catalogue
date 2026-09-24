@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-24-experience-kfc-sweets-chunky",
+  "operation": "upsert-entry",
+  "key": "kfc-sweets-chunky",
+  "entry": {
+    "experienceTags": [
+      "Nicotine: Medium (projected)",
+      "Pairings: Bourbon, maple, espresso (projected)",
+      "Occasion: Quick smoke, outdoor smoke, after a meal"
+    ]
+  }
+}
