@@ -1,6 +1,7 @@
-import { sizeRatingForRing, sizeTierForRing } from './catalogue-size-rules.mjs';
+import { sizeRatingForRing, sizeTierForDimensions } from './catalogue-size-rules.mjs';
 
 const RING_INPUT_ID = 'catalogue-v139-ring';
+const LENGTH_INPUT_ID = 'catalogue-v139-length';
 const SIZE_INPUT_ID = 'catalogue-admin-size';
 const SAVE_BUTTON_ID = 'catalogue-admin-save';
 
@@ -85,13 +86,16 @@ export function refreshSizeRatings(root = document) {
   return updated;
 }
 
-export function syncAdminSizeFromRing(root = document) {
-  const ringInput = root?.getElementById?.(RING_INPUT_ID) || root?.querySelector?.(`#${RING_INPUT_ID}`);
-  const sizeInput = root?.getElementById?.(SIZE_INPUT_ID) || root?.querySelector?.(`#${SIZE_INPUT_ID}`);
+export function syncAdminSizeFromDimensions(root = document) {
+  const field = id => root?.getElementById?.(id) || root?.querySelector?.(`#${id}`);
+  const ringInput = field(RING_INPUT_ID);
+  const sizeInput = field(SIZE_INPUT_ID);
   if (!ringInput || !sizeInput) return null;
   const ring = finite(ringInput.value, 0);
   if (!(ring > 0)) return null;
-  const tier = sizeTierForRing(ring);
+  // A missing length input leaves the tier on ring alone rather than guessing at one.
+  const length = finite(field(LENGTH_INPUT_ID)?.value, 0);
+  const tier = sizeTierForDimensions(ring, length);
   if (sizeInput.value !== tier) {
     sizeInput.value = tier;
     sizeInput.dispatchEvent?.(new Event('change', { bubbles: true }));
@@ -105,7 +109,7 @@ function scheduleRefresh() {
   refreshTimer = setTimeout(() => {
     refreshTimer = 0;
     refreshSizeRatings(document);
-    syncAdminSizeFromRing(document);
+    syncAdminSizeFromDimensions(document);
   }, 0);
 }
 
@@ -113,7 +117,7 @@ export function installCatalogueSizePresentation() {
   if (typeof document === 'undefined') return;
   const start = () => {
     refreshSizeRatings(document);
-    syncAdminSizeFromRing(document);
+    syncAdminSizeFromDimensions(document);
 
     document.addEventListener('input', event => {
       if (event.target?.id === RING_INPUT_ID) scheduleRefresh();
@@ -123,10 +127,10 @@ export function installCatalogueSizePresentation() {
     });
     document.addEventListener('click', event => {
       if (event.target?.id === SAVE_BUTTON_ID || event.target?.closest?.(`#${SAVE_BUTTON_ID}`)) {
-        syncAdminSizeFromRing(document);
+        syncAdminSizeFromDimensions(document);
         return;
       }
-      queueMicrotask?.(() => syncAdminSizeFromRing(document));
+      queueMicrotask?.(() => syncAdminSizeFromDimensions(document));
     }, true);
 
     if (typeof MutationObserver !== 'undefined' && document.body) {

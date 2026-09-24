@@ -1,4 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
+import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
 
 export function sanitiseKey(value) {
   return String(value || '')
@@ -327,11 +328,10 @@ function sanitiseMarkup(html) {
   });
   return template.innerHTML;
 }
+// This used to carry its own thresholds, which disagreed with the catalogue's: ring 31 was
+// gold on a card and silver in the editor. One rule now decides everywhere.
 function deriveSize(length, ring) {
-  const l = finiteNumber(length); const r = finiteNumber(ring);
-  if (l >= 4 && r >= 32) return 'gold';
-  if (l >= 4 && r >= 28) return 'silver';
-  return 'bronze';
+  return sizeTierForDimensions(finiteNumber(ring), finiteNumber(length));
 }
 export function retailerLabel(urlValue) {
   try {

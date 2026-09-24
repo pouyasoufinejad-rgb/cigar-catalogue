@@ -4,7 +4,7 @@ import {
   normaliseVariants,
   variantEffectiveRecord,
   variantSlug
-} from './catalogue-variants.mjs?v=blend-variants-1';
+} from './catalogue-variants.mjs?v=volume-size-1';
 
 const clone = value => JSON.parse(JSON.stringify(value ?? null));
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);

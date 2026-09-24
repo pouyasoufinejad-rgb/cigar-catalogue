@@ -2,7 +2,7 @@ import {
   blendEffectiveRecord,
   normaliseBlendVariants,
   normaliseVariants
-} from './catalogue-variants.mjs?v=blend-variants-1';
+} from './catalogue-variants.mjs?v=volume-size-1';
 import {
   updateBlendVariant,
   updateSizeVariant,
@@ -12,7 +12,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=volume-size-1';
+} from './catalogue-variant-runtime.mjs?v=volume-size-2';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';

@@ -7,6 +7,8 @@ import {
   sizeScoreForDimensions,
   sizeLengthAdjustment,
   sizeTierForRing,
+  sizeTierForDimensions,
+  sizeTierForScore,
   sizeRatingForRing,
   SIZE_REFERENCE_LENGTH,
   SIZE_LENGTH_FLOOR,
@@ -52,13 +54,13 @@ test('catalogue runtime loader installs the updated size presentation', () => {
   assert.match(source, /import\(['"]\.\/catalogue-size-presentation\.mjs\?v=[a-z0-9-]+['"]\)/);
 });
 
-test('size presentation derives card display and editor saves from ring gauge', () => {
+test('size presentation derives card display and editor saves from length and ring', () => {
   const source = fs.readFileSync(new URL('../public/catalogue-size-presentation.mjs', import.meta.url), 'utf8');
   assert.match(source, /sizeRatingForRing\(ring, length\)/);
   assert.match(source, /subscore\.textContent = `\$\{score\}\/10`/);
-  assert.match(source, /const tier = sizeTierForRing\(ring\)/);
+  assert.match(source, /const tier = sizeTierForDimensions\(ring, length\)/);
   assert.match(source, /SAVE_BUTTON_ID/);
-  assert.match(source, /syncAdminSizeFromRing\(document\)/);
+  assert.match(source, /syncAdminSizeFromDimensions\(document\)/);
 });
 
 
@@ -102,4 +104,52 @@ test('the score stays inside 1 to 10 at the extremes', () => {
     const score = sizeScoreForDimensions(ring, length);
     assert.ok(score >= 1 && score <= 10 && Number.isInteger(score), `${length}x${ring} -> ${score}`);
   }
+});
+
+
+test('the tier reproduces the old ring bands at the reference length', () => {
+  // Length is what moves a cigar between tiers. At the neutral length nothing should have
+  // moved at all, or this change quietly re-medalled the whole catalogue.
+  for (let ring = 1; ring <= 80; ring += 1) {
+    assert.equal(sizeTierForDimensions(ring, SIZE_REFERENCE_LENGTH), sizeTierForRing(ring),
+      `${ring} RG at the reference length`);
+  }
+});
+
+test('length moves a cigar between tiers', () => {
+  // The defect: a lancero and a cigarillo shared a medal as well as a score.
+  assert.equal(sizeTierForDimensions(20, 3.5), 'bronze');
+  assert.equal(sizeTierForDimensions(20, 7), 'silver');
+  // And a stubby fat one loses the gold its girth alone would have bought.
+  assert.equal(sizeTierForRing(50), 'gold');
+  assert.equal(sizeTierForDimensions(50, 2.5), 'silver');
+});
+
+test('the medal and the number cannot disagree', () => {
+  for (const ring of [18, 20, 24, 30, 33, 40, 44, 50, 56, 60, 70]) {
+    for (const length of [2.5, 3.5, 4, 4.5, 5, 6, 7]) {
+      const rating = sizeRatingForRing(ring, length);
+      const expected = ring >= 57 && sizeTierForScore(rating.score) === 'gold'
+        ? 'silver'
+        : sizeTierForScore(rating.score);
+      assert.equal(rating.tier, expected, `${length}x${ring} showed ${rating.score}/10 as ${rating.tier}`);
+    }
+  }
+});
+
+test('a very fat cigar stays demoted however much tobacco it holds', () => {
+  // That band is a girth preference, not a measure of size, and it did not change.
+  assert.equal(sizeTierForDimensions(60, 7), 'silver');
+  assert.equal(sizeTierForDimensions(70, 7), 'silver');
+  assert.equal(sizeTierForDimensions(56, 7), 'gold', 'and it starts at 57, not before');
+});
+
+test('the editor and the catalogue agree on the tier', () => {
+  // The editor carried its own thresholds, so ring 31 was gold on a card and silver in the
+  // editor. Both now come from one function.
+  const admin = fs.readFileSync(new URL('../public/catalogue-admin-unified-v139.mjs', import.meta.url), 'utf8');
+  assert.match(admin, /import \{ sizeTierForDimensions \} from '\.\/catalogue-size-rules\.mjs'/);
+  assert.doesNotMatch(admin, /if \(l >= 4 && r >= 32\) return 'gold'/,
+    'the editor must not keep a second set of thresholds');
+  assert.equal(sizeTierForDimensions(31, 5), 'gold', 'the case the two used to disagree on');
 });

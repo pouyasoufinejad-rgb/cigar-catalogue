@@ -15,7 +15,7 @@ import {
   promoteVariantPatch,
   resolveSearchQuery,
   variantEffectiveRecord
-} from './catalogue-variants.mjs?v=blend-variants-1';
+} from './catalogue-variants.mjs?v=volume-size-1';
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=flavour-weight-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
 import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=flavour-weight-1';

@@ -47,9 +47,28 @@ export function sizeTierForRing(value) {
   return 'bronze';
 }
 
+// The tier comes from the same score the laurel prints, so the medal and the number can
+// never disagree. At the reference length this reproduces the ring bands exactly; length
+// is what moves a cigar between them.
+export function sizeTierForScore(score) {
+  if (score >= 7) return 'gold';
+  if (score >= 5) return 'silver';
+  return 'bronze';
+}
+
+export const SIZE_FAT_RING = 57;
+
+export function sizeTierForDimensions(ring, length) {
+  const tier = sizeTierForScore(sizeScoreForDimensions(ring, length));
+  // A very fat cigar stays demoted whatever its volume. That band is a girth preference
+  // rather than a measure of size, and it has not changed.
+  if (finiteRing(ring) >= SIZE_FAT_RING && tier === 'gold') return 'silver';
+  return tier;
+}
+
 export function sizeRatingForRing(value, length) {
   return {
-    tier: sizeTierForRing(value),
+    tier: sizeTierForDimensions(value, length),
     score: sizeScoreForDimensions(value, length),
   };
 }

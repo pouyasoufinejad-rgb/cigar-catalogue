@@ -8,7 +8,7 @@
 // Nothing here renders or reads the DOM, so the Worker and the browser share one definition
 // of what a variant means and score it identically.
 
-import { sizeTierForRing } from './catalogue-size-rules.mjs';
+import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
 
 // The fields a vitola may legitimately change. Blend and production data is deliberately
 // absent: wrapper, binder, filler, country, strength, quality and flavour describe the
@@ -101,7 +101,7 @@ export function normaliseVariant(input, index = 0) {
   // A Size medal follows from the ring gauge, so a variant that changes ring gets its own
   // medal without anyone restating it. An explicit tier still wins if one is given.
   if (['gold', 'silver', 'bronze'].includes(raw.size)) variant.size = raw.size;
-  else if (variant.ring) variant.size = sizeTierForRing(variant.ring);
+  else if (variant.ring) variant.size = sizeTierForDimensions(variant.ring, variant.length);
   return variant;
 }
 
@@ -258,7 +258,7 @@ export function normaliseBlendVariant(input, index = 0) {
   }
 
   if (['gold', 'silver', 'bronze'].includes(raw.size)) variant.size = raw.size;
-  else if (variant.ring) variant.size = sizeTierForRing(variant.ring);
+  else if (variant.ring) variant.size = sizeTierForDimensions(variant.ring, variant.length);
 
   if (Array.isArray(raw.sizeVariants)) {
     variant.sizeVariants = normaliseVariants(raw);
