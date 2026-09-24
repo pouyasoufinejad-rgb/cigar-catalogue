@@ -24,8 +24,9 @@ test('size score follows the agreed ring-gauge preference bands', () => {
     [35, 8], [38, 8],
     [39, 9], [40, 9],
     [41, 10], [44, 10],
-    [45, 9], [48, 9],
-    [49, 8], [56, 8],
+    [45, 10], [48, 10],
+    [49, 9], [56, 9],
+    [57, 8], [70, 8],
   ];
 
   for (const [ring, expected] of cases) {
@@ -44,7 +45,7 @@ test('size rating returns both medal tier and numeric score', () => {
   assert.deepEqual(sizeRatingForRing(32), { tier: 'gold', score: 7 });
   assert.deepEqual(sizeRatingForRing(35), { tier: 'gold', score: 8 });
   assert.deepEqual(sizeRatingForRing(42), { tier: 'gold', score: 10 });
-  assert.deepEqual(sizeRatingForRing(50), { tier: 'gold', score: 8 });
+  assert.deepEqual(sizeRatingForRing(50), { tier: 'gold', score: 9 });
 });
 
 test('catalogue runtime loader installs the updated size presentation', () => {
@@ -74,7 +75,7 @@ test('the Size score reads length, not ring alone', () => {
   // The agreed table, so a change to the curve has to be deliberate.
   const cases = [
     [3.5, 20, 3], [4, 30, 6], [4.5, 44, 10],
-    [5, 50, 8], [6, 52, 9], [7, 48, 10], [7, 20, 5]
+    [5, 50, 9], [6, 52, 10], [7, 48, 10], [7, 20, 5]
   ];
   for (const [length, ring, expected] of cases) {
     assert.equal(sizeScoreForDimensions(ring, length), expected, `${length}x${ring}`);
@@ -120,9 +121,11 @@ test('length moves a cigar between tiers', () => {
   // The defect: a lancero and a cigarillo shared a medal as well as a score.
   assert.equal(sizeTierForDimensions(20, 3.5), 'bronze');
   assert.equal(sizeTierForDimensions(20, 7), 'silver');
-  // And a stubby fat one loses the gold its girth alone would have bought.
+  // A stub keeps gold now that 49-56 scores 9: the -2 floor only takes it to 7, which is
+  // still gold. It has to fall further than that to lose the medal.
   assert.equal(sizeTierForRing(50), 'gold');
-  assert.equal(sizeTierForDimensions(50, 2.5), 'silver');
+  assert.equal(sizeTierForDimensions(50, 2.5), 'gold');
+  assert.equal(sizeTierForDimensions(33, 3), 'silver', 'a short thin one does lose it');
 });
 
 test('the medal and the number cannot disagree', () => {
@@ -152,4 +155,25 @@ test('the editor and the catalogue agree on the tier', () => {
   assert.doesNotMatch(admin, /if \(l >= 4 && r >= 32\) return 'gold'/,
     'the editor must not keep a second set of thresholds');
   assert.equal(sizeTierForDimensions(31, 5), 'gold', 'the case the two used to disagree on');
+});
+
+
+test('a fatter cigar of the same length never scores below a thinner one', () => {
+  // The bug this pins: KFC Sweets Chunky at 4x46 scored 9 while Deadwood Leather Rose
+  // Petite Corona at 4x43 scored 10, although the Chunky holds 14% more tobacco. A score
+  // called Size cannot go down as the cigar gets bigger, short of genuinely fat.
+  assert.ok(sizeScoreForDimensions(46, 4) >= sizeScoreForDimensions(43, 4),
+    'the Chunky must not rank below the Leather Rose');
+  assert.equal(sizeScoreForDimensions(46, 4), 10);
+  assert.equal(sizeScoreForDimensions(43, 4), 10);
+
+  // And generally, across the range the catalogue actually uses.
+  // Up to the top of the plateau. Above 48 a deliberate fat penalty takes over, which is
+  // a girth preference and not this rule's business.
+  for (let ring = 20; ring < 48; ring += 1) {
+    assert.ok(sizeScoreForDimensions(ring + 1, 4.5) >= sizeScoreForDimensions(ring, 4.5),
+      `${ring + 1} RG scored below ${ring} RG`);
+  }
+  assert.ok(sizeScoreForDimensions(49, 4.5) < sizeScoreForDimensions(48, 4.5),
+    'and the fat penalty above 48 is intentional');
 });

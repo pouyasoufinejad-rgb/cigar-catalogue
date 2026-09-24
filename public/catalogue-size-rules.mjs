@@ -12,10 +12,12 @@ export function sizeScoreForRing(value) {
   if (ring <= 34) return 7;
   if (ring <= 38) return 8;
   if (ring <= 40) return 9;
-  if (ring <= 44) return 10;
-  if (ring <= 48) return 9;
-  if (ring <= 56) return 8;
-  return 7;
+  // The peak runs to 48, not 44. Stopping at 44 punished a cigar for being fatter than the
+  // favourite gauge while calling the result its size: a 4x46 scored below a 4x43 despite
+  // holding 14% more tobacco. Girth is only held against a cigar once it is genuinely fat.
+  if (ring <= 48) return 10;
+  if (ring <= 56) return 9;
+  return 8;
 }
 
 // Ring alone cannot tell a 3.5in cigarillo from a 7in lancero, and they are not the same

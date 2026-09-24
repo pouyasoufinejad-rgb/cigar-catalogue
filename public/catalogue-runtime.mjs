@@ -6,7 +6,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-card-layout.mjs?v=left-shift-1');
   import('./catalogue-medal-strip.mjs?v=tight-strip-1');
   import('./catalogue-legacy-copy.mjs');
-  import('./catalogue-size-presentation.mjs?v=volume-size-2');
+  import('./catalogue-size-presentation.mjs?v=volume-size-3');
   import('./catalogue-presentation.mjs');
   import('./catalogue-recommendation-subsections.mjs?v=editor-repair-2');
   import('./catalogue-half-cohort.mjs?v=editor-repair-1');
