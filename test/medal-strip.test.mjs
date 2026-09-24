@@ -101,6 +101,39 @@ test('the laurels sit in the strip and the smoke time stays above it', () => {
   assert.notEqual(smoke.bottom, '10px');
 });
 
+test('the strip is opaque frame black, so scaled artwork cannot show through', () => {
+  const dom = mount(renderEntryCard(ENTRY));
+  const style = dom.window.getComputedStyle(dom.window.document.querySelector('.artframe .medals'));
+  // Many cards scale or cover their image past the content box with their own !important
+  // rules, so the strip has to paint over whatever lands behind it.
+  assert.match(style.backgroundColor, /rgb\(2, 2, 2\)/,
+    `the strip should be the frame black, got ${style.backgroundColor}`);
+  assert.doesNotMatch(style.backgroundColor, /rgba/, 'and fully opaque');
+});
+
+test('each tier tints its own score, still readable on black', () => {
+  const sheet = (() => {
+    const dom = mount(renderEntryCard(ENTRY));
+    return dom.window.document.getElementById(strip.STRIP_STYLE_ID).textContent;
+  })();
+  const tints = {};
+  for (const tier of ['gold', 'silver', 'bronze']) {
+    const hit = sheet.match(new RegExp(`\\.rating\\.${tier} \\.subscore\\{color:(#[0-9a-f]{6})`, 'i'));
+    assert.ok(hit, `${tier} should tint its score`);
+    tints[tier] = hit[1];
+    const [r, g, b] = [1, 3, 5].map(i => Number.parseInt(hit[1].slice(i, i + 2), 16));
+    assert.ok((r + g + b) / 3 > 110, `${tier} at ${hit[1]} is too dark for a black strip`);
+  }
+  assert.equal(new Set(Object.values(tints)).size, 3, 'the three metals must differ');
+});
+
+test('the gradient is not cut short, which drew a seam across the frame', () => {
+  const dom = mount(renderEntryCard(ENTRY));
+  const sheet = dom.window.document.getElementById(strip.STRIP_STYLE_ID).textContent;
+  assert.doesNotMatch(sheet, /\.artframe:after\{bottom:var\(--medal-strip\)/,
+    'stopping the gradient above the strip leaves a visible edge');
+});
+
 test('rating text is legible on black rather than the cream-card brown', () => {
   const dom = mount(renderEntryCard(ENTRY));
   const label = dom.window.getComputedStyle(
@@ -108,10 +141,9 @@ test('rating text is legible on black rather than the cream-card brown', () => {
   const score = dom.window.getComputedStyle(
     dom.window.document.querySelector('.artframe .medals .subscore'));
   assert.notEqual(label.color, 'rgb(115, 92, 67)', 'the cream-card brown does not read on black');
-  for (const [name, style] of [['label', label], ['score', score]]) {
-    const [r, g, b] = style.color.match(/\d+/g).map(Number);
-    assert.ok((r + g + b) / 3 > 120, `${name} should be light on black, got ${style.color}`);
-  }
+  const [r, g, b] = label.color.match(/\d+/g).map(Number);
+  assert.ok((r + g + b) / 3 > 120, `the label should be light on black, got ${label.color}`);
+  void score;
 });
 
 test('the runtime loads the strip module', async () => {

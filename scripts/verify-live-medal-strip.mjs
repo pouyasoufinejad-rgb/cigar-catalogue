@@ -23,7 +23,7 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
 
   const report = await page.evaluate(() => {
     const out = { cards: 0, outsideFrame: [], overlapArt: [], overlapSmoke: [], darkBacked: 0,
-      lightText: 0, sample: null, strayInBody: [] };
+      lightText: 0, sample: null, strayInBody: [], tierColours: {}, dimScores: [] };
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const frame = card.querySelector('.artframe');
       const medals = card.querySelector('.medals');
@@ -37,11 +37,14 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
       const img = frame.querySelector('img');
       const smoke = frame.querySelector('.artmeta-bottom');
       if (m.bottom > f.bottom + 1 || m.top < f.top) out.outsideFrame.push(card.dataset.key);
-      // The strip is meant to be blank: the artwork should stop above it.
-      if (img) {
-        const i = img.getBoundingClientRect();
-        if (i.height > 0 && i.bottom > m.top + 2) out.overlapArt.push(card.dataset.key);
-      }
+      // The strip is meant to read as blank frame black. Many cards scale or cover their
+      // artwork past the content box, so the test is whether the strip hides it, not
+      // whether the image happens to stop short.
+      void img;
+      const stripBg = getComputedStyle(medals).backgroundColor;
+      const alpha = Number(stripBg.match(/rgba?\([^)]*?,\s*([\d.]+)\)$/)?.[1] ?? '1');
+      const strip = stripBg.match(/\d+/g)?.map(Number) || [255, 255, 255];
+      if (alpha < 1 || (strip[0] + strip[1] + strip[2]) / 3 > 40) out.overlapArt.push(card.dataset.key);
       if (smoke) {
         const s = smoke.getBoundingClientRect();
         if (s.bottom > m.top + 2) out.overlapSmoke.push(card.dataset.key);
@@ -52,6 +55,14 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
       if (span) {
         const [r, g, b] = getComputedStyle(span).color.match(/\d+/g).map(Number);
         if ((r + g + b) / 3 > 120) out.lightText += 1;
+      }
+      // Every tier should tint its own score, and all of them should clear black.
+      for (const tier of ['gold', 'silver', 'bronze']) {
+        const score = medals.querySelector(`.rating.${tier} .subscore`);
+        if (!score) continue;
+        const [r, g, b] = getComputedStyle(score).color.match(/\d+/g).map(Number);
+        out.tierColours[tier] = `rgb(${r}, ${g}, ${b})`;
+        if ((r + g + b) / 3 < 110) out.dimScores.push(`${card.dataset.key}:${tier}`);
       }
       if (!out.sample) {
         out.sample = {
@@ -70,14 +81,20 @@ for (const [label, width] of [['desktop', 1440], ['mobile', 412]]) {
   console.log(`\n=== ${label} ${width}px : ${report.cards} cards`);
   if (report.sample) console.log(`   sample ${JSON.stringify(report.sample)}`);
   console.log(`   dark-backed frames: ${report.darkBacked}   light rating text: ${report.lightText}`);
+  console.log(`   score colours by tier: ${JSON.stringify(report.tierColours)}`);
 
   if (!report.cards) fail(`${label}: no cards with both a frame and a laurel row`);
   if (report.outsideFrame.length) fail(`${label}: ${report.outsideFrame.length} laurel rows are not inside the frame (${report.outsideFrame.slice(0, 3).join(', ')})`);
   if (report.strayInBody.length) fail(`${label}: ${report.strayInBody.length} cards still have a laurel row in the body`);
-  if (report.overlapArt.length) fail(`${label}: artwork runs into the strip on ${report.overlapArt.length} cards (${report.overlapArt.slice(0, 3).join(', ')})`);
+  if (report.overlapArt.length) fail(`${label}: the strip is not opaque frame black on ${report.overlapArt.length} cards (${report.overlapArt.slice(0, 3).join(', ')}), so the artwork shows through`);
   if (report.overlapSmoke.length) fail(`${label}: the smoke time overlaps the strip on ${report.overlapSmoke.length} cards`);
   if (report.darkBacked !== report.cards) fail(`${label}: only ${report.darkBacked} of ${report.cards} strips are on the frame black`);
   if (report.lightText !== report.cards) fail(`${label}: only ${report.lightText} of ${report.cards} rows use light text on the black strip`);
+  const tints = new Set(Object.values(report.tierColours));
+  if (Object.keys(report.tierColours).length >= 2 && tints.size < Object.keys(report.tierColours).length) {
+    fail(`${label}: the tiers do not tint their scores differently (${JSON.stringify(report.tierColours)})`);
+  }
+  if (report.dimScores.length) fail(`${label}: ${report.dimScores.length} scores are too dark to read on the strip`);
   if (report.sample && report.sample.stripW < report.sample.frameW - 30) {
     fail(`${label}: the strip is ${report.sample.stripW}px across a ${report.sample.frameW}px frame`);
   }
