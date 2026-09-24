@@ -25,7 +25,14 @@ export function sizeScoreForRing(value) {
 // long gains, and the gain is capped so a very long cigar cannot run away with the score.
 export const SIZE_REFERENCE_LENGTH = 4.5;
 export const SIZE_LENGTH_WEIGHT = 2.5;
-export const SIZE_LENGTH_FLOOR = -2;
+// Under four inches the curve steepens again. A third of the catalogue sits there and the
+// gentler rate was not charging enough for it. The two rates meet exactly at four inches,
+// so nothing at or above that length moves at all.
+export const SIZE_SHORT_LENGTH = 4;
+export const SIZE_SHORT_WEIGHT = 4.5;
+// Deep enough that the steeper rate does not saturate inside the range the catalogue
+// actually uses: at 4.5 per octave a three-inch cigar would otherwise sit on the floor.
+export const SIZE_LENGTH_FLOOR = -3;
 export const SIZE_LENGTH_CEILING = 1;
 
 export function sizeLengthAdjustment(length) {
@@ -33,7 +40,10 @@ export function sizeLengthAdjustment(length) {
   // An entry with no length recorded falls back to its ring score rather than being
   // punished for a missing field.
   if (!(inches > 0)) return 0;
-  const raw = SIZE_LENGTH_WEIGHT * Math.log2(inches / SIZE_REFERENCE_LENGTH);
+  const raw = inches >= SIZE_SHORT_LENGTH
+    ? SIZE_LENGTH_WEIGHT * Math.log2(inches / SIZE_REFERENCE_LENGTH)
+    : SIZE_LENGTH_WEIGHT * Math.log2(SIZE_SHORT_LENGTH / SIZE_REFERENCE_LENGTH)
+      + SIZE_SHORT_WEIGHT * Math.log2(inches / SIZE_SHORT_LENGTH);
   return Math.max(SIZE_LENGTH_FLOOR, Math.min(SIZE_LENGTH_CEILING, raw));
 }
 

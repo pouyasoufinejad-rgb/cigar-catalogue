@@ -13,6 +13,9 @@ import {
   SIZE_REFERENCE_LENGTH,
   SIZE_LENGTH_FLOOR,
   SIZE_LENGTH_CEILING,
+  SIZE_SHORT_LENGTH,
+  SIZE_SHORT_WEIGHT,
+  SIZE_LENGTH_WEIGHT,
 } from '../public/catalogue-size-rules.mjs';
 
 test('size score follows the agreed ring-gauge preference bands', () => {
@@ -121,10 +124,10 @@ test('length moves a cigar between tiers', () => {
   // The defect: a lancero and a cigarillo shared a medal as well as a score.
   assert.equal(sizeTierForDimensions(20, 3.5), 'bronze');
   assert.equal(sizeTierForDimensions(20, 7), 'silver');
-  // A stub keeps gold now that 49-56 scores 9: the -2 floor only takes it to 7, which is
-  // still gold. It has to fall further than that to lose the medal.
+  // A stub loses the gold its girth alone would have bought, now that under four inches
+  // charges 4.5 a octave and the floor reaches -3.
   assert.equal(sizeTierForRing(50), 'gold');
-  assert.equal(sizeTierForDimensions(50, 2.5), 'gold');
+  assert.equal(sizeTierForDimensions(50, 2.5), 'silver');
   assert.equal(sizeTierForDimensions(33, 3), 'silver', 'a short thin one does lose it');
 });
 
@@ -176,4 +179,38 @@ test('a fatter cigar of the same length never scores below a thinner one', () =>
   }
   assert.ok(sizeScoreForDimensions(49, 4.5) < sizeScoreForDimensions(48, 4.5),
     'and the fat penalty above 48 is intentional');
+});
+
+
+test('under four inches is charged at a steeper rate than above it', () => {
+  assert.ok(SIZE_SHORT_WEIGHT > SIZE_LENGTH_WEIGHT,
+    'a short cigar should lose more per inch than a long one gains');
+
+  // The two rates have to meet exactly at the boundary, or a hair either side of four
+  // inches would jump a score for no reason anyone could explain.
+  const below = sizeLengthAdjustment(SIZE_SHORT_LENGTH - 0.0001);
+  const at = sizeLengthAdjustment(SIZE_SHORT_LENGTH);
+  assert.ok(Math.abs(below - at) < 0.001, `${below} and ${at} should meet at the boundary`);
+
+  // Steeper below, and strictly so.
+  const gentle = inches => SIZE_LENGTH_WEIGHT * Math.log2(inches / 4.5);
+  for (const inches of [3, 3.25, 3.5, 3.75]) {
+    assert.ok(sizeLengthAdjustment(inches) < gentle(inches),
+      `${inches}in should be charged more than the old flat rate`);
+  }
+  // Nothing at or above four inches moves at all.
+  for (const inches of [4, 4.25, 4.5, 5, 6, 7]) {
+    assert.ok(Math.abs(sizeLengthAdjustment(inches) - Math.max(-3, Math.min(1, gentle(inches)))) < 1e-9,
+      `${inches}in must be untouched`);
+  }
+});
+
+test('the short-cigar penalty does not saturate inside the catalogue', () => {
+  // The catalogue holds cards down to 3in. If the floor bound before that, every short
+  // cigar below the floor would score the same however short it got.
+  assert.ok(sizeLengthAdjustment(3) > SIZE_LENGTH_FLOOR,
+    'a three-inch cigar should still be on the curve, not pinned to the floor');
+  assert.ok(sizeLengthAdjustment(3.5) > sizeLengthAdjustment(3),
+    'and shorter must always mean a bigger penalty through that range');
+  assert.ok(sizeLengthAdjustment(3) > sizeLengthAdjustment(2.5));
 });
