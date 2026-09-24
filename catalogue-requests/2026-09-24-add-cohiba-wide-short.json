@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-24-add-cohiba-wide-short",
+  "operation": "upsert-entry",
+  "key": "cohiba-wide-short",
+  "entry": {
+    "brand": "Cohiba",
+    "title": "Wide Short — Pack of 6",
+    "eyebrow": "Wider Cuban Cohiba cigarillo",
+    "rank": 19,
+    "packageCount": 6,
+    "packageLabel": "pack of 6",
+    "packagePrice": 72,
+    "price": 12,
+    "country": "Cuba",
+    "length": 3.875,
+    "ring": 31,
+    "strength": 6,
+    "quality": 7,
+    "risk": 1,
+    "stock": "in",
+    "subsection": "coronets-cigarillos",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "summaryHtml": "<strong>Cream, cedar, toasted nuts, coffee, cocoa, earth and pepper</strong> come through with more smoke volume and breadth than the standard Cohiba Short. The 31-ring format keeps the classic dry Cuban cedar-and-coffee character while softening some of the narrow cigarillo sharpness, with cocoa, nuttiness and gentle sweetness appearing through the middle.",
+    "noteHtml": "The Wide Short is Cohiba’s larger machine-made short format, launched after the standard Short with a longer body and thicker diameter. Review consensus is notably positive on draw, burn and smoke output for a cigarillo, with the main limitation being the short session rather than lack of flavour.",
+    "productionLines": [
+      "Machine-made in Cuba",
+      "100% Cuban black tobacco",
+      "Wrapper: Cuban tobacco",
+      "Binder: Cuban tobacco",
+      "Filler: Cuban tobacco"
+    ],
+    "practicalLines": [
+      "Pack of 6",
+      "Each cigarillo individually cellophane-wrapped",
+      "Each cigarillo banded",
+      "3⅞″ × 31",
+      "About 20 min smoke"
+    ],
+    "smokeTime": "About 20 min smoke",
+    "experienceTags": [
+      "Nicotine: Medium"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/cohiba-wide-short/",
+      "https://www.theindexcigars.com.au/products/cohiba-wide-short"
+    ],
+    "priceChecked": "2026-09-24",
+    "stockChecked": "2026-09-24"
+  },
+  "note": "Add Cohiba Wide Short at rank 19 in Coronets & Cigarillos. Benchmark Cigar Hut’s current A$72 pack of 6, equivalent to A$12 per cigarillo. Include The Index because it sells both singles at A$17.30 and packs of 6 at A$101.80. Re-rank only the affected active subsection and preserve all unrelated catalogue data. Leave Flavour unrated until personally tasted."
+}
