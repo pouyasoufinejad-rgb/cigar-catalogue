@@ -10,6 +10,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/cleanup-live-markup-notes.mjs'
+      - 'scripts/cleanup-live-status-filler.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
       - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
@@ -26,6 +27,7 @@ on:
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/cleanup-live-markup-notes.mjs'
+      - 'scripts/cleanup-live-status-filler.mjs'
       - 'scripts/normalise-live-card-structure.mjs'
       - 'scripts/repair-pre-sidebar-live-state.mjs'
       - 'test/**'
@@ -88,6 +90,7 @@ jobs:
           files=()
           cleanup_changed=false
           note_cleanup_changed=false
+          filler_cleanup_changed=false
           structure_changed=false
           repair_changed=false
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
@@ -109,6 +112,9 @@ jobs:
               if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/cleanup-live-markup-notes.mjs' | grep -q .; then
                 note_cleanup_changed=true
               fi
+              if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/cleanup-live-status-filler.mjs' | grep -q .; then
+                filler_cleanup_changed=true
+              fi
               if git diff --name-only --diff-filter=AM "${BEFORE_SHA}" "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
               fi
@@ -122,6 +128,9 @@ jobs:
               fi
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-markup-notes.mjs' | grep -q .; then
                 note_cleanup_changed=true
+              fi
+              if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/cleanup-live-status-filler.mjs' | grep -q .; then
+                filler_cleanup_changed=true
               fi
               if git diff-tree --no-commit-id --name-only -r --diff-filter=AM "${GITHUB_SHA}" -- 'scripts/normalise-live-card-structure.mjs' | grep -q .; then
                 structure_changed=true
@@ -159,6 +168,11 @@ jobs:
           if [[ "${note_cleanup_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
             echo "Replacing redundant markup notes with cigar-specific editorial notes"
             node scripts/cleanup-live-markup-notes.mjs
+          fi
+
+          if [[ "${filler_cleanup_changed}" == "true" ]] || (( ${#files[@]} > 0 )); then
+            echo "Removing tasting-status filler from Experience chips"
+            node scripts/cleanup-live-status-filler.mjs
           fi
 
           if [[ "${repair_changed}" == "true" ]]; then

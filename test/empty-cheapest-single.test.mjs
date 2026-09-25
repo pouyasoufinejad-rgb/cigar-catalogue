@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
+import { readFile } from 'node:fs/promises';
 
 import { renderEntryCard, isEmptyCheapestSingle, visiblePracticalLines } from '../src/index.js';
 import { isEmptyCheapestSingle as runtimeIsEmpty } from '../public/catalogue-variant-runtime.mjs';
@@ -65,4 +66,19 @@ test('filtering leaves every other practical line in its original order', () => 
   assert.deepEqual(visiblePracticalLines(lines), ['Tin of 10', 'Uncut', 'Protected']);
   assert.deepEqual(visiblePracticalLines([]), []);
   assert.deepEqual(visiblePracticalLines(undefined), []);
+});
+
+test('selecting a size does not re-add the line the Worker left out', async () => {
+  // The runtime rewrites the Practical column from the stored lines whenever a card is
+  // touched, so a filter on the Worker alone is undone the moment the page loads.
+  const { visiblePracticalLines: runtimeVisible } = await import('../public/catalogue-variant-runtime.mjs');
+  const lines = ['Tin of 10', 'Cheapest single: no in-stock Australian single found', 'Uncut'];
+  assert.deepEqual(runtimeVisible(lines), ['Tin of 10', 'Uncut']);
+  assert.deepEqual(runtimeVisible(lines), visiblePracticalLines(lines),
+    'the two filters have to agree or one undoes the other');
+
+  const source = await readFile(
+    new URL('../public/catalogue-variant-runtime.mjs', import.meta.url), 'utf8');
+  assert.match(source, /practical\.innerHTML = heading \+ visiblePracticalLines\(/,
+    'the Practical column must be written through the filter, not from the raw lines');
 });

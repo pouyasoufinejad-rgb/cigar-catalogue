@@ -38,6 +38,13 @@ export function isEmptyCheapestSingle(line) {
   return EMPTY_CHEAPEST_SINGLE.test(String(line || '').trim());
 }
 
+// Matches the Worker's filter. Selecting a size rewrites the Practical column from the
+// stored lines, so without this the line the Worker left out comes straight back the
+// moment the runtime touches the card.
+export function visiblePracticalLines(lines) {
+  return (Array.isArray(lines) ? lines : []).filter(line => !isEmptyCheapestSingle(line));
+}
+
 function cheapestSingleText(lines) {
   return (Array.isArray(lines) ? lines : [])
     .find(line => /^cheapest single\s*:/i.test(String(line || '').trim())
@@ -436,7 +443,7 @@ export function applyVariantToCard(card, record, variantId) {
     const practical = card.querySelector('.artmeta-right');
     if (practical) {
       const heading = practical.querySelector('.artmeta-title')?.outerHTML || '';
-      practical.innerHTML = heading + effective.practicalLines
+      practical.innerHTML = heading + visiblePracticalLines(effective.practicalLines)
         .map(line => `<span class="artmeta-line">${line}</span>`).join('');
     }
   }
