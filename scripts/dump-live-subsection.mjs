@@ -28,13 +28,20 @@ const entries = state.entries || {};
 // Actions log reads return the tail, so a long subsection loses its first entries. Naming
 // keys narrows the dump to exactly what is being looked at.
 const wanted = new Set(String(process.env.DUMP_KEYS || '').split(',').map(v => v.trim()).filter(Boolean));
-const keys = section?.entryKeys?.length
+// A wrong section id used to print nothing at all, which reads identically to "the card
+// does not exist". Named keys are dumped whatever the section lookup did.
+const sectionKeys = section?.entryKeys?.length
   ? section.entryKeys
   : Object.keys(cards).filter(key => (cards[key]?.subsection || entries[key]?.subsection) === sectionId).sort();
+const keys = wanted.size ? [...wanted] : sectionKeys;
 
-for (const key of (wanted.size ? keys.filter(key => wanted.has(key)) : keys)) {
+for (const key of keys) {
   const card = cards[key] || {};
   const entry = entries[key] || null;
+  if (!cards[key] && !entry) {
+    console.log(`ENTRY ${key} MISSING no card and no dynamic entry under this key`);
+    continue;
+  }
   const merged = { ...card, ...(entry || {}) };
   const picked = fields
     .filter(field => merged[field] !== undefined && merged[field] !== '')
