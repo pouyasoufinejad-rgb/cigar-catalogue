@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-25-cigarworld-link-romeo-y-julieta-petit-royales",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-petit-royales",
+  "entry": {
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/romeo-y-julieta-petit-royales/",
+      "https://www.theindexcigars.com.au/products/romeo-y-julieta-petit-royal",
+      "https://www.cigarworld.com.au/aud/products/romeo-y-julieta-petit-royales-%252d-at-3-pack-%252d-%283-3%7B47%7D4%22-%2895mm%29-x-47%29.html"
+    ]
+  }
+}

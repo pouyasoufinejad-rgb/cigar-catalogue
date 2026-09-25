@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-25-cigarworld-link-sin-compromiso-paladin-de-saka",
+  "operation": "upsert-entry",
+  "key": "sin-compromiso-paladin-de-saka",
+  "entry": {
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/joya-de-nicaragua-sin-compromiso-paladin-de-saka-7-x-52rg-1",
+      "https://www.cigarworld.com.au/aud/products/dunbarton-%252d-sin-compromiso-%252d-paladin-%252d-single-%287%22-x-52%29.html"
+    ]
+  }
+}
