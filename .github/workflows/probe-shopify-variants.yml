@@ -1,0 +1,33 @@
+name: Probe Shopify product variants
+
+# Read-only diagnostic. Prints the variant title, price and availability a Shopify
+# storefront publishes for a product, so a pack-versus-single call is read from the
+# store's own data rather than inferred from prices scattered across the rendered page.
+# The agent sandbox's egress proxy refuses .com.au, so this runs here. Writes nothing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'Comma- or space-separated Shopify product URLs'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Read the published variants
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe
+        env:
+          PROBE_URLS: ${{ inputs.urls }}
+        run: node scripts/probe-shopify-variants.mjs
