@@ -1,0 +1,55 @@
+{
+  "id": "2026-09-25-arturo-fuente-cubanitos-maduro-blend",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "title": "Cubanitos Maduro",
+        "eyebrow": "Broadleaf-wrapped counterpart to the Cameroon Cubanito",
+        "packagePrice": 129,
+        "packageCount": 10,
+        "packageLabel": "tin of 10",
+        "price": 12.9,
+        "country": "DR",
+        "length": 4.5,
+        "ring": 32,
+        "strength": 7,
+        "quality": 8,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Dark cocoa, molasses, espresso and a cedar-and-black-pepper finish</strong> sit at the centre of the Broadleaf-wrapped Cubanito. The aged Dominican binder and filler are the same core the Natural uses, with a Connecticut Broadleaf wrapper in place of the African Cameroon, trading the Cameroon's dry aromatic spice for darker sugar and a heavier, sweeter body. The Index rates it 3 out of 5 against the Natural's 2 out of 5, which is what a Broadleaf wrapper usually does to a blend at this size without changing the short 4½″ × 32 format.",
+        "noteHtml": "Connecticut Broadleaf at a 32 ring gauge is an unusual pairing: the leaf is thick and oily enough that it normally wants a larger cigar to carry it, so a coronet-sized Broadleaf leans on wrapper flavour rather than filler volume. The Dominican core is shared with the Natural, which makes the wrapper the entire difference between the two.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Medium-filler format",
+          "Wrapper: Connecticut Broadleaf",
+          "Binder: Dominican",
+          "Filler: Dominican"
+        ],
+        "practicalLines": [
+          "Tin of 10",
+          "Uncut",
+          "Cheapest single: The Index A$15.60",
+          "4½″ × 32",
+          "Slow-to-moderate cadence"
+        ],
+        "smokeTime": "25–35 min smoke",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/arturo-fuente-cubanitos-maduro/",
+          "https://www.theindexcigars.com.au/products/arturo-fuente-cubanitos-maduro"
+        ],
+        "priceChecked": "2026-09-25",
+        "stockChecked": "2026-09-25"
+      }
+    ],
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Nest Arturo Fuente Cubanitos Maduro under the existing Cubanitos card as a blend variant. It is a genuine separate blend rather than a size: Connecticut Broadleaf wrapper against the Natural's African Cameroon, over the same Dominican binder and filler, in the same 4.5 by 32 vitola. CigarHut currently lists the Maduro tin of 10 at A$129 in stock, giving A$12.90 per stick, which is cheaper than The Index's A$139.70 tin. The Index publishes Single A$15.60 and Tin of 10 A$139.70 as the two purchase variants for both blends, so A$15.60 is the cheapest currently available Australian single and The Index is one of the preferred retailers. Firmin lists the Maduro at A$149 but is out of stock, so it is not linked. Strength is set one step above the Natural's 6 because The Index rates the Maduro 3 out of 5 against the Natural's 2 out of 5; quality, risk and smoke time follow the Natural, which shares the factory, core and vitola. Flavour is left unrated, as on the parent. The live card carried no blendVariants, so this list creates them rather than replacing existing ones. Preserve all unrelated parent fields."
+}
