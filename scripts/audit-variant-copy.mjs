@@ -12,15 +12,27 @@ import { DEFAULT_BASE_URL } from './publish-catalogue-request.mjs';
 const baseUrl = String(process.env.CATALOGUE_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
 const COPY = ['summaryHtml', 'noteHtml', 'practicalLines', 'productionLines'];
 
-// Any "5 x 43", "5in x 43", "5.5″ × 46" written into prose.
-const SIZE_IN_TEXT = /(\d+(?:[.,]\d+)?|\d+\s*\d+\/\d+)\s*(?:in\b|inch(?:es)?|[″"'’])?\s*[x×]\s*(\d{2})\b/gi;
+// The catalogue writes lengths three ways: 5, 5.5, and 4½ with a typographic fraction.
+// Missing the third meant the audit could not read most of its own copy, so a variant
+// inheriting "At 4½″ × 38" read as having no size conflict at all.
+const VULGAR = Object.freeze({
+  '½': 0.5, '⅓': 1 / 3, '⅔': 2 / 3, '¼': 0.25, '¾': 0.75,
+  '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875
+});
+const FRACTIONS = Object.keys(VULGAR).join('');
+const SIZE_IN_TEXT = new RegExp(
+  `(\\d+)\\s*(?:([${FRACTIONS}])|[.,](\\d+)|\\s(\\d+)\\/(\\d+))?`
+  + `\\s*(?:in\\b|inch(?:es)?|[\u2033"'\u2019])?\\s*[x\u00d7]\\s*(\\d{2})\\b`, 'gi');
 
 export function sizesMentioned(html) {
   const text = String(html || '').replace(/<[^>]+>/g, ' ');
   const out = [];
-  for (const match of text.matchAll(SIZE_IN_TEXT)) {
-    const length = Number(String(match[1]).replace(',', '.').replace(/\s+/, ''));
-    const ring = Number(match[2]);
+  for (const [, whole, vulgar, decimal, numerator, denominator, ringText] of text.matchAll(SIZE_IN_TEXT)) {
+    let length = Number(whole);
+    if (vulgar) length += VULGAR[vulgar];
+    else if (decimal) length = Number(`${whole}.${decimal}`);
+    else if (numerator && denominator) length += Number(numerator) / Number(denominator);
+    const ring = Number(ringText);
     if (length > 2 && length < 10 && ring >= 18 && ring <= 80) out.push({ length, ring });
   }
   return out;
