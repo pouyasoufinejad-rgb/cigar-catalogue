@@ -45,6 +45,11 @@ for (const key of (wanted.size ? keys.filter(key => wanted.has(key)) : keys)) {
   if (links.length) console.log(`   LINKS ${JSON.stringify(links)}`);
   const variants = merged.sizeVariants || [];
   if (variants.length) console.log(`   VARIANTS ${JSON.stringify(variants)}`);
+  // Blends were invisible here, so a patch rewriting blendVariants could not be checked
+  // against what the card already had. Printed even when empty, because "none" is the
+  // fact a caller about to replace the list needs.
+  const blends = merged.blendVariants || [];
+  console.log(`   BLENDS ${blends.length} default=${JSON.stringify(merged.defaultBlendVariantId || '')} ${JSON.stringify(blends)}`);
 }
 console.log(`TOTAL_CARDS ${Object.keys(cards).length} TOTAL_ENTRIES ${Object.keys(entries).length}`);
 console.log('SUBSECTION_DUMP_COMPLETE_READ_ONLY');
