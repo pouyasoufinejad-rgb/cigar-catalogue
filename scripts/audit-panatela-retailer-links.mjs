@@ -13,12 +13,13 @@ const baseUrl = String(process.env.CATALOGUE_BASE_URL || DEFAULT_BASE_URL).repla
 const sectionId = String(process.env.SUBSECTION_ID || 'petit-panatelas').trim();
 
 export const RETAILERS = Object.freeze([
-  { id: 'theindex', label: 'The Index', host: 'theindexcigars.com.au',
+  { id: 'theindex', label: 'The Index', host: 'theindexcigars.com.au', home: 'https://www.theindexcigars.com.au',
     indexes: ['https://www.theindexcigars.com.au/sitemap_products_1.xml?from=1&to=99999999999',
               'https://www.theindexcigars.com.au/sitemap.xml'] },
-  { id: 'cigarhut', label: 'CigarHut', host: 'cigarhut.com.au',
-    indexes: ['https://www.cigarhut.com.au/sitemap.xml', 'https://www.cigarhut.com.au/sitemap_index.xml'] },
-  { id: 'cigarworld', label: 'Cigarworld', host: 'cigarworld.com.au',
+  { id: 'cigarhut', label: 'CigarHut', host: 'cigarhut.com.au', home: 'https://www.cigarhut.com.au',
+    indexes: ['https://www.cigarhut.com.au/sitemap.xml', 'https://www.cigarhut.com.au/sitemap_index.xml',
+              'https://www.cigarhut.com.au/sitemap.xml.gz', 'https://www.cigarhut.com.au/pub/sitemap.xml'] },
+  { id: 'cigarworld', label: 'Cigarworld', host: 'cigarworld.com.au', home: 'https://www.cigarworld.com.au',
     indexes: ['https://www.cigarworld.com.au/aud/sitemap.xml', 'https://www.cigarworld.com.au/sitemap.xml'] }
 ]);
 
@@ -52,9 +53,17 @@ async function text(url) {
 }
 
 // Follows one level of sitemap index, which is how most shops split their product list.
+// robots.txt is where a shop actually declares its sitemap. Guessing at paths is how the
+// CigarHut harvest came back with zero URLs and made every gap look like "they do not
+// stock it", which is the worst way for this to fail: silently and confidently.
+async function declaredSitemaps(retailer) {
+  const robots = await text(`${retailer.home}/robots.txt`);
+  return [...robots.matchAll(/^\s*sitemap:\s*(\S+)/gim)].map(match => match[1]);
+}
+
 async function harvest(retailer) {
   const urls = new Set();
-  const queue = [...retailer.indexes];
+  const queue = [...(await declaredSitemaps(retailer)), ...retailer.indexes];
   const seen = new Set();
   while (queue.length && urls.size < 20000) {
     const url = queue.shift();
@@ -88,7 +97,8 @@ console.log(`SUBSECTION ${sectionId}: ${keys.length} entries`);
 const harvested = {};
 for (const retailer of RETAILERS) {
   harvested[retailer.id] = await harvest(retailer);
-  console.log(`INDEX ${retailer.label}: ${harvested[retailer.id].length} product urls`);
+  const n = harvested[retailer.id].length;
+  console.log(`INDEX ${retailer.label}: ${n} product urls${n ? '' : '   <-- HARVEST FAILED, its gaps below mean nothing'}`);
 }
 
 for (const key of keys) {
@@ -108,9 +118,9 @@ for (const key of keys) {
     if (links.some(link => link.includes(retailer.host))) continue;
     const ranked = harvested[retailer.id]
       .map(url => ({ url, s: score(wanted, tokens(url)) }))
-      .filter(row => row.s >= 0.6)
+      .filter(row => row.s >= 0.8)
       .sort((a, b) => b.s - a.s)
-      .slice(0, 2);
+      .slice(0, 3);
     gaps.push({ retailer: retailer.label, ranked });
   }
   if (!gaps.length) continue;
@@ -121,4 +131,5 @@ for (const key of keys) {
     for (const row of gap.ranked) console.log(`       ${row.s.toFixed(2)} ${row.url}`);
   }
 }
-console.log('\nLINK_AUDIT_DONE');
+console.log('\nHARVEST ' + RETAILERS.map(r => `${r.label}=${harvested[r.id].length}`).join('  '));
+console.log('LINK_AUDIT_DONE');
