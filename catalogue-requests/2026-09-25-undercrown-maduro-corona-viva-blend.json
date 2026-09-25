@@ -1,0 +1,39 @@
+{
+  "id": "2026-09-25-undercrown-maduro-corona-viva-blend",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "defaultBlendVariantId": "undercrown-10",
+    "blendVariants": [
+      {
+        "id": "undercrown-10",
+        "label": "Undercrown 10"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "title": "Undercrown Maduro Corona Viva",
+        "eyebrow": "Sweeter San Andrés counterpart",
+        "length": 5.625,
+        "ring": 46,
+        "packageLabel": "single cigar",
+        "packagePrice": 42,
+        "price": 42,
+        "packageCount": 1,
+        "stock": "in",
+        "country": "Nicaragua",
+        "retailerLinks": [
+          "https://www.cigarworld.com.au/aud/products/drew-estate-undercrown-maduro-corona-viva-%285-5%7B47%7D8%22-x-46%29-%252d-single.html"
+        ],
+        "practicalLines": [
+          "single cigar",
+          "Uncut",
+          "Protected",
+          "Forgiving Cadence"
+        ],
+        "summaryHtml": "<strong>Cocoa, espresso, black pepper, earth and dark fruit sweetness</strong> make the Maduro the rounder, sweeter side of the Undercrown family. A Mexican San Andrés Otapan Negro wrapper sits over a Connecticut River Valley stalk-cut habano binder with Brazilian Mata Fina and Nicaraguan filler, which gives it more chocolate and less of the pepper spike that defines Undercrown 10.",
+        "noteHtml": "At 5⅝″ × 46 the Maduro Corona Viva is a longer and slightly wider cigar than the Undercrown 10 that shares its name."
+      }
+    ]
+  }
+}
