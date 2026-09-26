@@ -95,7 +95,8 @@ test('each mask is pure alpha at a common size, so the page can tint it', async 
 // would show as an icon that does not match the bar beside it.
 test('each declared colour is still the colour of its own artwork', async () => {
   const sources = {
-    sweet: '15.png', spice: '14.png', earth: '13.png', nuts: '12.webp', cedar: '11.webp'
+    sweet: '15.png', spice: '14.png', earth: '13.png', nuts: '12.webp', cedar: '11.webp',
+    smoke: '16.png', pepper: '17.png'
   };
   const dir = '/tmp/claude-0/-home-user-cigar-catalogue/8fe72223-0a57-5095-9c3a-e6853003096c/images/';
   for (const [id, file] of Object.entries(sources)) {
@@ -106,7 +107,12 @@ test('each declared colour is still the colour of its own artwork', async () => 
   }
 });
 
-test('axes still awaiting artwork are declared but excluded from the drawn set', () => {
+test('every axis now has artwork, so none falls back to a plain disc', () => {
+  assert.equal(FLAVOUR_AXES_WITH_ART.length, FLAVOUR_AXES.length);
+  for (const axis of FLAVOUR_AXES) assert.ok(axis.mask, `${axis.id} has a mask`);
+});
+
+test('an axis without artwork is still handled, should one ever be added', () => {
   const drawn = new Set(FLAVOUR_AXES_WITH_ART.map(axis => axis.id));
   for (const axis of FLAVOUR_AXES) {
     assert.equal(drawn.has(axis.id), Boolean(axis.mask), `${axis.id} is drawn only if it has a mask`);
@@ -152,11 +158,14 @@ test('the row carries its axis colour once, for both the icon and the pips', () 
   assert.match(row.querySelector('.flavour-icon').getAttribute('style'), /mask-image:url\('\/art\/flavour\/cedar-[0-9a-f]{8}\.png'\)/);
 });
 
-test('an axis without artwork yet still gets a row, as a plain disc', () => {
-  const doc = parse(flavourProfileMarkup({ pepper: 3 }));
+test('an axis without artwork gets a row as a plain disc, not a broken image', () => {
+  // Every shipped axis has art now, so this is driven with a stand-in that has none.
+  const unpainted = [{ id: 'pepper', label: 'Pepper', colour: '#a43c2c', mask: '' }];
+  const doc = parse(flavourProfileMarkup({ pepper: 3 }, unpainted));
   const icon = doc.querySelector('.flavour-axis[data-axis="pepper"] .flavour-icon');
   assert.ok(icon.classList.contains('flavour-icon-plain'), 'no mask requested');
   assert.equal(icon.getAttribute('style'), null, 'and no mask url');
+  assert.equal(doc.querySelectorAll('.flavour-pip.is-on').length, 3, 'the pips still fill');
 });
 
 test('the profile is announced, not left as decoration', () => {

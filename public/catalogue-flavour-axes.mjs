@@ -17,12 +17,12 @@ export const FLAVOUR_SCALE_MAX = 5;
 
 export const FLAVOUR_AXES = Object.freeze([
   { id: 'sweet',  label: 'Sweet',  colour: '#fcf4e4', art: 'sugar crystals' },
-  { id: 'pepper', label: 'Pepper', colour: '#b03e2e', art: 'pepper grinder' },
+  { id: 'pepper', label: 'Pepper', colour: '#a43c2c', art: 'pepper grinder' },
   { id: 'spice',  label: 'Spice',  colour: '#bc4c1c', art: 'spice bowl' },
   { id: 'earth',  label: 'Earth',  colour: '#141414', art: 'soil and trowel' },
   { id: 'nuts',   label: 'Nuts',   colour: '#ac743c', art: 'hazelnuts' },
   { id: 'cedar',  label: 'Cedar',  colour: '#c48c5c', art: 'cedar wood' },
-  { id: 'smoke',  label: 'Smoke',  colour: '#5c5c5c', art: 'smoke curls' }
+  { id: 'smoke',  label: 'Smoke',  colour: '#5c5c64', art: 'smoke curls' }
 ].map(axis => Object.freeze({ ...axis, mask: FLAVOUR_ART[axis.id] || '' })));
 
 // An axis whose artwork has not been built yet has no mask, and the page has to cope with
@@ -68,9 +68,12 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g,
 // bar invites reading a precision that is not there. Every pip carries the same neutral
 // hairline whatever the axis colour is: Sweet is ivory on a cream card and would otherwise
 // be a row of invisible boxes, and Earth is near-black against the dark frame.
-export function flavourProfileMarkup(input) {
+// `axisList` exists so the no-artwork path stays reachable once every axis has art. It is
+// the only way to exercise a fallback that otherwise only fires the day an eighth axis is
+// added, which is exactly when nobody is looking at it.
+export function flavourProfileMarkup(input, axisList = FLAVOUR_AXES) {
   const profile = normaliseFlavourProfile(input);
-  const axes = FLAVOUR_AXES.filter(axis => Object.prototype.hasOwnProperty.call(profile, axis.id));
+  const axes = axisList.filter(axis => Object.prototype.hasOwnProperty.call(profile, axis.id));
   if (!axes.length) return '';
 
   const rows = axes.map(axis => {
