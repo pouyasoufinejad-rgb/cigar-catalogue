@@ -1,0 +1,36 @@
+{
+  "id": "2026-09-27-flavour-profile-arturo-fuente-cubanitos-10",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "spice": 3,
+      "nuts": 4,
+      "cedar": 3
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "spice": 3,
+          "nuts": 4,
+          "cedar": 3
+        }
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "earth": 3,
+          "cedar": 3
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}
