@@ -494,6 +494,19 @@ function savedRatingsForCard(card) {
   return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
 }
 
+
+// Profiles can arrive after the initial HTML through catalogue state. Redraw them on the
+// same state sweep that already repaints ratings, Value and laurels. This also means an
+// admin edit can add or remove axes without requiring a blend switch or page reload.
+function syncFlavourProfileForCard(card, profile) {
+  const existing = card?.querySelector?.('.flavour-profile');
+  const markup = flavourProfileMarkup(profile);
+  if (!markup) { existing?.remove(); return; }
+  if (existing) { existing.outerHTML = markup; return; }
+  const facts = card.querySelector('.card-face-front .facts') || card.querySelector('.facts');
+  if (facts) facts.insertAdjacentHTML('afterend', markup);
+}
+
 function refreshAllCards() {
   refreshTimer = 0;
   ensureStyle();
@@ -502,6 +515,7 @@ function refreshAllCards() {
     const saved = savedRatingsForCard(card);
     const flavour = own(saved, 'flavour') ? saved.flavour : null;
     ensureFlavourRating(card, flavour);
+    syncFlavourProfileForCard(card, saved.flavourProfile);
     refreshValueForCard(card, flavour);
     refreshLaurelForCard(card, saved);
   });
