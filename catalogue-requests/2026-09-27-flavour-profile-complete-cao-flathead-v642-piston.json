@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-cao-flathead-v642-piston",
+  "operation": "upsert-entry",
+  "key": "cao-flathead-v642-piston",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 4,
+      "earth": 4,
+      "nuts": 3
+    }
+  },
+  "note": "Complete the whole-catalogue flavour-profile sweep from the card's existing tasting copy. Only clearly relevant axes are populated; omitted axes remain blank and all intensities stay editable."
+}
