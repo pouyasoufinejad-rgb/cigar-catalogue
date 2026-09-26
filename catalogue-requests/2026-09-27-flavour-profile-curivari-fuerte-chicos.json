@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-27-flavour-profile-curivari-fuerte-chicos",
+  "operation": "upsert-entry",
+  "key": "curivari-fuerte-chicos",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 5
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
