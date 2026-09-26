@@ -7,6 +7,7 @@ on:
       - 'catalogue-requests/**'
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
+      - 'scripts/audit-live-flavour-profiles.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/cleanup-live-markup-notes.mjs'
@@ -24,6 +25,7 @@ on:
       - 'catalogue-requests/**'
       - 'public/**'
       - 'scripts/publish-catalogue-request.mjs'
+      - 'scripts/audit-live-flavour-profiles.mjs'
       - 'scripts/publish-live-catalogue-request.mjs'
       - 'scripts/cleanup-live-card-copy.mjs'
       - 'scripts/cleanup-live-markup-notes.mjs'
@@ -189,6 +191,20 @@ jobs:
             echo "Normalising Production and Practical structures across current live catalogue"
             node scripts/normalise-live-card-structure.mjs
           fi
+
+      - name: Verify every live active card renders its flavour profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if node scripts/audit-live-flavour-profiles.mjs --strict; then
+              exit 0
+            fi
+            echo "Live flavour rendering not complete yet; retrying in 10 seconds ($attempt/12)."
+            sleep 10
+          done
+          echo "::error::Live catalogue still has missing flavour-profile data or markup after retries."
+          exit 1
 
       - name: Upload pre-repair live-state backup
         if: ${{ always() && hashFiles('pre-repair-live-state.json') != '' }}
