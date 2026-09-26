@@ -88,7 +88,8 @@ export function flavourProfileMarkup(input, axisList = FLAVOUR_AXES) {
     return `<div class="flavour-axis" data-axis="${esc(axis.id)}" style="--flavour-colour:${esc(axis.colour)}"`
       + ` role="img" aria-label="${esc(axis.label)} ${value} of ${FLAVOUR_SCALE_MAX}"`
       + ` title="${esc(axis.label)} ${value}/${FLAVOUR_SCALE_MAX}">`
-      + `${icon}<span class="flavour-pips">${pips}</span></div>`;
+      + `${icon}<span class="flavour-label">${esc(axis.label)}</span>`
+      + `<span class="flavour-pips">${pips}</span></div>`;
   }).join('');
 
   return `<div class="flavour-profile" aria-label="Flavour profile">${rows}</div>`;

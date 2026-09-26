@@ -1,6 +1,11 @@
 import { deriveValue } from './catalogue-value.mjs';
 import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=entry-flavour-1';
 import {
+  FLAVOUR_AXES,
+  FLAVOUR_SCALE_MAX,
+  normaliseFlavourProfile
+} from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
+import {
   deriveOverallScore,
   flavourRatingMarkup,
   flavourTier as tierForScore,
@@ -27,6 +32,39 @@ function finite(value, fallback = 0) {
 
 export { flavourRatingMarkup, normaliseFlavour };
 
+
+// Only the axes actually typed in. A cigar that tastes of nothing but cedar and pepper
+// should carry two bars, not seven, five of which say zero: a blank axis means the cigar
+// was not judged on it, and that is different from judging it absent.
+export function profileFromEditorFields(root = globalThis.document) {
+  const profile = {};
+  for (const axis of FLAVOUR_AXES) {
+    const input = root?.getElementById?.(`catalogue-admin-flavour-${axis.id}`);
+    const entered = String(input?.value ?? '').trim();
+    if (entered === '') continue;
+    const score = Number(entered);
+    if (!Number.isFinite(score)) continue;
+    profile[axis.id] = Math.max(0, Math.min(FLAVOUR_SCALE_MAX, Math.round(score)));
+  }
+  return profile;
+}
+
+export function injectFlavourProfileIntoStatePayload(payload, key, profile) {
+  const source = payload && typeof payload === 'object' ? payload : {};
+  const cards = source.cards && typeof source.cards === 'object' ? source.cards : {};
+  const safeKey = String(key || '').trim();
+  if (!safeKey) return source;
+  return {
+    ...source,
+    cards: {
+      ...cards,
+      [safeKey]: {
+        ...(cards[safeKey] && typeof cards[safeKey] === 'object' ? cards[safeKey] : {}),
+        flavourProfile: normaliseFlavourProfile(profile)
+      }
+    }
+  };
+}
 
 export function injectFlavourIntoStatePayload(payload, key, value) {
   const source = payload && typeof payload === 'object' ? payload : {};
@@ -364,6 +402,23 @@ function ensureFlavourEditor() {
   field.className = host.className || 'catalogue-admin-field';
   field.innerHTML = '<label for="catalogue-admin-flavour">Flavour</label><input id="catalogue-admin-flavour" type="number" min="1" max="10" step="1" placeholder="Unrated"><small class="catalogue-admin-derived">Flavour intensity / richness. Leave blank for unrated.</small>';
   host.insertAdjacentElement('afterend', field);
+
+  // The profile is per-axis and every axis is optional, so this is a row of blanks rather
+  // than seven zeroes. Leaving one blank keeps that bar off the card entirely.
+  const profileField = document.createElement('div');
+  profileField.className = host.className || 'catalogue-admin-field';
+  profileField.id = 'catalogue-admin-flavour-profile';
+  const inputs = FLAVOUR_AXES.map(axis =>
+    `<span class="catalogue-admin-axis"><label for="catalogue-admin-flavour-${axis.id}">`
+    + `<i class="flavour-icon" style="--flavour-colour:${axis.colour};-webkit-mask-image:url('${axis.mask}');mask-image:url('${axis.mask}')"></i>`
+    + `${axis.label}</label>`
+    + `<input id="catalogue-admin-flavour-${axis.id}" type="number" min="0" max="${FLAVOUR_SCALE_MAX}" step="1" placeholder="—"></span>`
+  ).join('');
+  profileField.innerHTML = `<label>Flavour profile 0\u2013${FLAVOUR_SCALE_MAX}</label>`
+    + `<div class="catalogue-admin-axes">${inputs}</div>`
+    + '<small class="catalogue-admin-derived">Only the axes this cigar actually shows. '
+    + 'Leave an axis blank to keep it off the card; 0 means judged and absent.</small>';
+  field.insertAdjacentElement('afterend', profileField);
 }
 
 export function previewFlavourAdjustedValue() {
@@ -410,7 +465,18 @@ function populateEditorField() {
   const saved = state.cards?.[key];
   const score = saved && own(saved, 'flavour') ? normaliseFlavour(saved.flavour) : null;
   input.value = score === null ? '' : String(score);
+  populateProfileFields(saved);
   setTimeout(previewFlavourAdjustedValue, 0);
+}
+
+function populateProfileFields(saved) {
+  const merged = { ...(saved || {}), ...(state.entries?.[selectedKey()] || {}) };
+  const profile = normaliseFlavourProfile(merged.flavourProfile);
+  for (const axis of FLAVOUR_AXES) {
+    const field = document.getElementById(`catalogue-admin-flavour-${axis.id}`);
+    if (!field) continue;
+    field.value = own(profile, axis.id) ? String(profile[axis.id]) : '';
+  }
 }
 
 // The ratings this sweep should paint onto one card.
@@ -459,7 +525,8 @@ function scheduleRefresh() {
 function installSavePipeline() {
   registerCatalogueStateTransform('flavour', 10, payload => {
     if (!pendingSave || Date.now() - pendingSave.at >= 15000) return payload;
-    const injected = injectFlavourIntoStatePayload(payload, pendingSave.key, pendingSave.flavour);
+    const withFlavour = injectFlavourIntoStatePayload(payload, pendingSave.key, pendingSave.flavour);
+    const injected = injectFlavourProfileIntoStatePayload(withFlavour, pendingSave.key, pendingSave.profile);
     pendingSave = null;
     return injected;
   });
@@ -502,7 +569,9 @@ function bindEvents() {
       const key = selectedKey();
       const input = document.getElementById('catalogue-admin-flavour');
       const modal = document.getElementById('catalogue-admin');
-      if (key && input && modal && !modal.hidden) pendingSave = { key, flavour: input.value, at: Date.now() };
+      if (key && input && modal && !modal.hidden) {
+        pendingSave = { key, flavour: input.value, profile: profileFromEditorFields(), at: Date.now() };
+      }
     }
     if (event.target?.closest?.('#catalogue-admin-toggle')) setTimeout(populateEditorField, 0);
   }, true);

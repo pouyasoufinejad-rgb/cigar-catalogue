@@ -211,6 +211,66 @@ test('the stylesheet paints the icon with the row colour and keeps every pip out
   const href = page.match(/<link rel="stylesheet" href="(\/css\/catalogue-[0-9a-f]{10}\.css)">/)[1];
   const css = await readFile(new URL(`../public${href}`, import.meta.url), 'utf8');
   assert.match(css, /\.flavour-icon\{[^}]*background-color:var\(--flavour-colour\)/);
+  // The name is set in the catalogue's own label face, not a browser default.
+  assert.match(css, /\.flavour-label\{[^}]*font-family:Cinzel/);
+  const iconSize = css.match(/\.flavour-icon\{flex:none;width:(\d+)px/)?.[1];
+  assert.ok(Number(iconSize) >= 20, `the icon should be legible, it is ${iconSize}px`);
   assert.match(css, /\.flavour-pip\{[^}]*border:1px solid/);
   assert.match(css, /\.flavour-pip\.is-on\{background:var\(--flavour-colour\)\}/);
+});
+
+// Editing. Every card must be adjustable, not just the ones carrying blend variants, and
+// an axis has to be addable and removable at any time.
+test('the profile editor reads only the axes actually filled in', async () => {
+  const { profileFromEditorFields } = await import('../public/catalogue-flavour.mjs');
+  const values = { sweet: '4', cedar: '0', pepper: '', earth: '   ', nuts: 'nonsense', smoke: '9' };
+  const fakeDocument = {
+    getElementById: id => {
+      const axis = id.replace('catalogue-admin-flavour-', '');
+      return Object.prototype.hasOwnProperty.call(values, axis) ? { value: values[axis] } : null;
+    }
+  };
+  const profile = profileFromEditorFields(fakeDocument);
+  assert.deepEqual(profile, { sweet: 4, cedar: 0, smoke: 5 }, 'blanks and junk are left out, 9 clamps to 5');
+  assert.equal('pepper' in profile, false, 'a blank axis stays off the card');
+  assert.equal('cedar' in profile, true, 'a typed zero is kept, since it is a judgement');
+});
+
+test('a profile saved from the admin panel lands on the card override', async () => {
+  const { injectFlavourProfileIntoStatePayload } = await import('../public/catalogue-flavour.mjs');
+  const payload = { cards: { alpha: { flavour: 7 }, beta: { flavour: 3 } } };
+  const next = injectFlavourProfileIntoStatePayload(payload, 'alpha', { cedar: 3, bogus: 9 });
+  assert.deepEqual(next.cards.alpha.flavourProfile, { cedar: 3 }, 'unknown axes are dropped');
+  assert.equal(next.cards.alpha.flavour, 7, 'the existing rating is preserved');
+  assert.deepEqual(next.cards.beta, { flavour: 3 }, 'other cards are untouched');
+});
+
+test('clearing every axis removes the profile rather than leaving stale bars', async () => {
+  const { injectFlavourProfileIntoStatePayload } = await import('../public/catalogue-flavour.mjs');
+  const payload = { cards: { alpha: { flavourProfile: { cedar: 3, sweet: 2 } } } };
+  const next = injectFlavourProfileIntoStatePayload(payload, 'alpha', {});
+  assert.deepEqual(next.cards.alpha.flavourProfile, {});
+  assert.equal(flavourProfileMarkup(next.cards.alpha.flavourProfile), '', 'and the card draws nothing');
+});
+
+test('a partly profiled cigar draws only the axes it was judged on', () => {
+  const doc = parse(flavourProfileMarkup({ cedar: 3, pepper: 4 }));
+  assert.deepEqual([...doc.querySelectorAll('.flavour-axis')].map(n => n.dataset.axis), ['pepper', 'cedar']);
+  assert.equal(doc.querySelectorAll('.flavour-axis').length, 2, 'the other five stay off the card');
+});
+
+test('each row names its axis in visible text, not only to screen readers', () => {
+  const doc = parse(renderEntryCard({ ...CARD, flavourProfile: { cedar: 3, pepper: 4 } }));
+  const labels = [...doc.querySelectorAll('.flavour-axis .flavour-label')].map(n => n.textContent);
+  assert.deepEqual(labels, ['Pepper', 'Cedar']);
+});
+
+test('the page links the stylesheet whose contents it actually has', async () => {
+  const { hashedName } = await import('../scripts/rehash-stylesheet.mjs');
+  const page = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const linked = page.match(/\/css\/(catalogue-[0-9a-f]{10}\.css)/)[1];
+  const css = await readFile(new URL(`../public/css/${linked}`, import.meta.url), 'utf8');
+  // /css/* is served immutable, so a name describing contents it no longer has would pin
+  // stale rules in every browser that had already cached it.
+  assert.equal(hashedName(css), linked);
 });

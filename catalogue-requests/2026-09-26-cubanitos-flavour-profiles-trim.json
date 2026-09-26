@@ -1,0 +1,31 @@
+{
+  "id": "2026-09-26-cubanitos-flavour-profiles-trim",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "spice": 3,
+      "nuts": 4,
+      "cedar": 3
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "earth": 3,
+          "cedar": 3
+        }
+      }
+    ],
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Trim both Cubanitos profiles to the axes each blend's own copy actually claims. The first pass set all seven on both blends, which reads as a scorecard rather than a profile and says the cigar was judged on flavours its description never mentions. The Natural's copy names chestnut, baking spice, coffee bean, cedar and gentle sweetness, so nuts, spice, cedar and sweet only; it claims no pepper, earth or smoke. The Maduro's names dark cocoa, molasses, espresso and a cedar-and-black-pepper finish over a heavier, sweeter body, so sweet, pepper, earth and cedar; it claims no nut note. A blank axis means the cigar was not judged on it, which is not the same as judging it absent, and every axis stays editable from the admin panel. Editorial readings of the existing copy, not tasting data."
+}
