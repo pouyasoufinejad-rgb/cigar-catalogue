@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-davidoff-escurio-petit-robusto",
+  "operation": "upsert-entry",
+  "key": "davidoff-escurio-petit-robusto",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 5,
+      "spice": 4,
+      "earth": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}
