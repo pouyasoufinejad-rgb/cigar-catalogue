@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-liga-t52-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-t52-coronets",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 5,
+      "smoke": 2
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
