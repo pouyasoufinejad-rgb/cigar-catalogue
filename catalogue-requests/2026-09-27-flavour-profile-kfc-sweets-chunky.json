@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-kfc-sweets-chunky",
+  "operation": "upsert-entry",
+  "key": "kfc-sweets-chunky",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "spice": 3,
+      "smoke": 5
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}
