@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-kfc-ponies-sweets",
+  "operation": "upsert-entry",
+  "key": "kfc-ponies-sweets",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "spice": 3,
+      "smoke": 5
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}
