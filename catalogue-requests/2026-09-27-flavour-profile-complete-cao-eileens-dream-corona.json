@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-cao-eileens-dream-corona",
+  "operation": "upsert-entry",
+  "key": "cao-eileens-dream-corona",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "nuts": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
