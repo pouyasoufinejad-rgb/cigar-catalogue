@@ -24,7 +24,11 @@ test('every artwork reference resolves to a file whose contents match its name',
   const srcs = [...page.matchAll(/<img\b[^>]*?\bsrc=["'](\/art\/[^"']+)["']/g)].map(m => m[1]);
   assert.ok(srcs.length > 40, `expected the catalogue artwork, found ${srcs.length}`);
 
-  const onDisk = new Set(await readdir(artDir));
+  // Card artwork sits directly in /art. Subdirectories hold art referenced from modules
+  // rather than from the page, such as the flavour masks, which are checked by their own
+  // test; listing them here would read them as artwork nothing points at.
+  const onDisk = new Set((await readdir(artDir, { withFileTypes: true }))
+    .filter(entry => entry.isFile()).map(entry => entry.name));
   for (const src of srcs) {
     const name = src.slice('/art/'.length);
     assert.ok(onDisk.has(name), `${src} has no file behind it`);
