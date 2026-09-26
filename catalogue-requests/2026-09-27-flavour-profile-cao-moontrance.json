@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-27-flavour-profile-cao-moontrance",
+  "operation": "upsert-entry",
+  "key": "cao-moontrance",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
