@@ -1,0 +1,54 @@
+{
+  "id": "2026-09-26-add-romeo-y-julieta-julieta",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-julieta",
+  "entry": {
+    "brand": "Romeo y Julieta",
+    "title": "Julieta",
+    "eyebrow": "Slender handmade Cuban petit panetela",
+    "rank": 15,
+    "packagePrice": 104,
+    "packageCount": 5,
+    "packageLabel": "tin of 5",
+    "price": 20.8,
+    "country": "Cuba",
+    "length": 4.75,
+    "ring": 33,
+    "strength": 6,
+    "quality": 7,
+    "risk": 2,
+    "stock": "unknown",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "coronets-cigarillos",
+    "summaryHtml": "<strong>Cedar, toasted almond, hay, cream, floral notes, hazelnut, cocoa, honey and black pepper</strong> define this slender handmade Romeo y Julieta. The 33-ring format keeps the profile concentrated and aromatic, opening woody and nutty before developing cream, floral sweetness and darker cocoa toward the finish.",
+    "noteHtml": "A handmade Cuban petit panetela presented in tins of five. Reviews describe a balanced medium-strength smoke with more nuance than its narrow format suggests, though the 33-ring construction warrants some draw-risk caution. No current Australian single listing was verified, so the catalogue price is derived from Cigar Hut's A$104 tin of five.",
+    "productionLines": [
+      "Handmade in Cuba",
+      "Wrapper: Cuban",
+      "Binder: Cuban",
+      "Filler: Cuban"
+    ],
+    "practicalLines": [
+      "Tin of 5",
+      "4¾″ × 33",
+      "Petit panetela / Julieta No. 6",
+      "About 20–30 min smoke",
+      "No current Australian single verified"
+    ],
+    "smokeTime": "About 20–30 min smoke",
+    "experienceTags": [
+      "Nicotine: Medium"
+    ],
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/romeo-y-julieta-julieta/",
+      "https://www.theindexcigars.com.au/products/romeo-y-julieta-julieta",
+      "https://www.sydneycigar.com.au/romeo-y-julieta-julieta/"
+    ],
+    "priceNote": "Cigar Hut tin of 5: A$104, equivalent to A$20.80 each. No current Australian single listing verified.",
+    "priceChecked": "2026-09-26",
+    "stockChecked": "2026-09-26"
+  },
+  "note": "Add Romeo y Julieta Julieta at rank 15 in Coronets & Cigarillos. Use Cigar Hut's A$104 tin of five as the value benchmark, equivalent to A$20.80 per cigar. The Index and Sydney Cigar House are linked as tracked retailers but are currently sold out. No current Australian single listing was verified. Re-rank only the affected active subsection and preserve unrelated catalogue data. Leave Flavour unrated until personally tasted."
+}
