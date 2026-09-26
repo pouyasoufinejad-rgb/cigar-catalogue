@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-sin-compromiso-paladin-de-saka",
+  "operation": "upsert-entry",
+  "key": "sin-compromiso-paladin-de-saka",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 3,
+      "earth": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}
