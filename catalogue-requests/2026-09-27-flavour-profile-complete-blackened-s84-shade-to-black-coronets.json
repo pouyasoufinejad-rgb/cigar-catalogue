@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-blackened-s84-shade-to-black-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-s84-shade-to-black-coronets",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 3,
+      "cedar": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
