@@ -1,0 +1,21 @@
+name: Verify live flavour profile
+
+# Read-only diagnostic. Counts the served cards that actually draw a flavour profile and
+# checks every mask the page references resolves. Writes nothing and needs no secrets.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Read the live page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/verify-live-flavour-profile.mjs
