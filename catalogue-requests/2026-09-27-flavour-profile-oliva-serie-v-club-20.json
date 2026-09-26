@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-oliva-serie-v-club-20",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-club-20",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
