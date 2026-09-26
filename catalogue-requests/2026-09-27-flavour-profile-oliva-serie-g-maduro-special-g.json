@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-oliva-serie-g-maduro-special-g",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-g-maduro-special-g",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "spice": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
