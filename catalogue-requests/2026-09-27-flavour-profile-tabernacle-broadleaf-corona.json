@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-tabernacle-broadleaf-corona",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4,
+      "nuts": 4,
+      "smoke": 2
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
