@@ -1,5 +1,12 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveOverallScore, overallScoreTier, overallScoreTitle } from './catalogue-overall-score.mjs?v=flavour-weight-1';
+import {
+  deriveOverallScore,
+  flavourRatingMarkup,
+  flavourTier as tierForScore,
+  normaliseFlavour,
+  overallScoreTier,
+  overallScoreTitle
+} from './catalogue-overall-score.mjs?v=entry-flavour-1';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -17,26 +24,8 @@ function finite(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
-export function normaliseFlavour(value) {
-  if (value === '' || value === null || value === undefined) return null;
-  const number = Number(value);
-  if (!Number.isFinite(number)) return null;
-  return Math.max(1, Math.min(10, Math.round(number)));
-}
+export { flavourRatingMarkup, normaliseFlavour };
 
-function tierForScore(value) {
-  return value >= 7 ? 'gold' : value >= 5 ? 'silver' : 'bronze';
-}
-
-export function flavourRatingMarkup(value) {
-  const score = normaliseFlavour(value);
-  if (score === null) {
-    return '<div class="rating flavour-unrated"><span>Flavour</span><i aria-hidden="true" class="medal flavour-unrated-medal"></i><b>Unrated</b><small class="subscore">—</small></div>';
-  }
-  const tier = tierForScore(score);
-  const scoreClass = score >= 8 ? 'score-high' : score >= 5 ? 'score-mid' : 'score-low';
-  return `<div class="rating ${tier} ${scoreClass}"><span>Flavour</span><i aria-hidden="true" class="medal ${tier}"></i><b>${tier[0].toUpperCase() + tier.slice(1)}</b><small class="subscore">${score}/10</small></div>`;
-}
 
 export function injectFlavourIntoStatePayload(payload, key, value) {
   const source = payload && typeof payload === 'object' ? payload : {};

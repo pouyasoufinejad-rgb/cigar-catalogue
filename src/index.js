@@ -1,5 +1,5 @@
 import { deriveValue } from '../public/catalogue-value.mjs';
-import { overallScoreMarkup } from '../public/catalogue-overall-score.mjs';
+import { flavourRatingMarkup, normaliseFlavour, overallScoreMarkup } from '../public/catalogue-overall-score.mjs';
 import {
   blendEffectiveRecord,
   defaultBlendVariantId,
@@ -300,6 +300,14 @@ export function normaliseEntry(input, keyOverride = '') {
     country: text(raw.country, 'Unknown').trim(),
     strength: score(raw.strength, 5),
     quality,
+    // Nullable, unlike every other rating: an unrated cigar has no Flavour, and the schema
+    // drops what it does not name, so leaving this out silently erased the score on every
+    // write and left the rendered card with no Flavour medal at all.
+    //
+    // Only written when the entry actually states one. Clients merge the card override
+    // under the entry, so an entry that always carried `flavour: null` would shadow a real
+    // score sitting on the card override and blank it everywhere.
+    ...(own(raw, 'flavour') ? { flavour: normaliseFlavour(raw.flavour) } : {}),
     size,
     risk: integer(raw.risk, 1, 1, 3),
     stock,
@@ -858,6 +866,7 @@ export function renderEntryCard(rawEntry) {
   // The laurels live in the black strip at the bottom of the image frame, under the smoke
   // time, rather than down in the card body.
   const medalsMarkup = `<div class="medals">${medalRating('Strength', entry.strength)}`
+    + `${flavourRatingMarkup(entry.flavour)}`
     + `${medalRating('Quality', entry.quality)}${sizeRating(entry.size)}`
     + `${entry.priceUnverified ? unratedValueRating() : medalRating('Value', valueScore)}</div>`;
   const sizeFootprint = Math.max(0.32, Math.min(1.15, (Math.max(entry.length, 1) / 5) * (Math.max(entry.ring, 1) / 50))).toFixed(4);
@@ -1021,7 +1030,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=169"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=170"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -1067,7 +1076,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '151');
+  headers.set('x-cigar-catalogue-version', '152');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');

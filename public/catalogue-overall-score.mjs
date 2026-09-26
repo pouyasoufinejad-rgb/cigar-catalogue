@@ -16,6 +16,35 @@ export const SCORE_WEIGHTS = Object.freeze({
   strength: 0.8
 });
 
+// Flavour is the one rating that can legitimately be absent: a cigar nobody has smoked has
+// no flavour score, and that is not the same as a score of zero. It lives here rather than
+// in the DOM-facing flavour module so the Worker can share this exact definition instead of
+// keeping a second copy that drifts.
+export function normaliseFlavour(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.max(1, Math.min(10, Math.round(number)));
+}
+
+export function flavourTier(value) {
+  return value >= 7 ? 'gold' : value >= 5 ? 'silver' : 'bronze';
+}
+
+// The Flavour medal was only ever injected by the client, so a freshly served card showed
+// Strength, Quality, Size and Value with a gap where Flavour belongs until scripts ran.
+// Rendering it here means the server and the client emit the same node, and the client's
+// injector finds it already present rather than building a second one.
+export function flavourRatingMarkup(value) {
+  const score = normaliseFlavour(value);
+  if (score === null) {
+    return '<div class="rating flavour-unrated"><span>Flavour</span><i aria-hidden="true" class="medal flavour-unrated-medal"></i><b>Unrated</b><small class="subscore">\u2014</small></div>';
+  }
+  const tier = flavourTier(score);
+  const scoreClass = score >= 8 ? 'score-high' : score >= 5 ? 'score-mid' : 'score-low';
+  return `<div class="rating ${tier} ${scoreClass}"><span>Flavour</span><i aria-hidden="true" class="medal ${tier}"></i><b>${tier[0].toUpperCase() + tier.slice(1)}</b><small class="subscore">${score}/10</small></div>`;
+}
+
 function ratedScore(value) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) return null;
