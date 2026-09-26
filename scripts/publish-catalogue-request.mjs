@@ -266,8 +266,40 @@ function patchForDynamic(entryPatch) {
   return patch;
 }
 
+function mergeVariantObjects(existingList, patchList) {
+  if (!Array.isArray(patchList)) return patchList;
+  const byId = new Map();
+  for (const variant of Array.isArray(existingList) ? existingList : []) {
+    if (!isRecord(variant)) continue;
+    const id = String(variant.id || variant.label || '').trim().toLowerCase();
+    if (id) byId.set(id, clone(variant));
+  }
+  const output = [];
+  const seen = new Set();
+  for (const variant of patchList) {
+    if (!isRecord(variant)) continue;
+    const id = String(variant.id || variant.label || '').trim().toLowerCase();
+    if (!id) continue;
+    const merged = { ...(byId.get(id) || {}), ...clone(variant) };
+    output.push(merged);
+    seen.add(id);
+  }
+  for (const [id, variant] of byId) {
+    if (!seen.has(id)) output.push(variant);
+  }
+  return output;
+}
+
+function mergePatch(existing, patch) {
+  const next = { ...(existing || {}), ...(patch || {}) };
+  if (Array.isArray(patch?.blendVariants)) {
+    next.blendVariants = mergeVariantObjects(existing?.blendVariants, patch.blendVariants);
+  }
+  return next;
+}
+
 function mergeCard(existing, patch) {
-  return { ...stripDerivedCardValue(existing), ...patchForCard(patch) };
+  return mergePatch(stripDerivedCardValue(existing), patchForCard(patch));
 }
 
 function rankNumber(card) {
@@ -613,7 +645,7 @@ export async function publishRequestDocument(input, options = {}) {
 
   let nextEntry = null;
   if (target === 'dynamic') {
-    nextEntry = { ...(existingDynamic || {}), ...patchForDynamic(entryPatch), key: request.key };
+    nextEntry = { ...mergePatch(existingDynamic || {}, patchForDynamic(entryPatch)), key: request.key };
     ensureNewDynamicMinimum(nextEntry);
   }
 
