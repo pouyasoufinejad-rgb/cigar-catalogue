@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-aj-fernandez-new-world-cameroon-short-robusto",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-cameroon-short-robusto",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "spice": 4,
+      "nuts": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
