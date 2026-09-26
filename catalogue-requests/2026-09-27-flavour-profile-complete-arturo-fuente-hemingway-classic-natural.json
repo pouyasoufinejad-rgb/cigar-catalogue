@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-arturo-fuente-hemingway-classic-natural",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-hemingway-classic-natural",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "spice": 2,
+      "nuts": 4,
+      "cedar": 5
+    }
+  },
+  "note": "Complete the whole-catalogue flavour-profile sweep from the card's existing tasting copy. Only clearly relevant axes are populated; omitted axes remain blank and all intensities stay editable."
+}
