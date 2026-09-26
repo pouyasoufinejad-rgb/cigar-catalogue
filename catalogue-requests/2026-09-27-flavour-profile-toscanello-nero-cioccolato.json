@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-toscanello-nero-cioccolato",
+  "operation": "upsert-entry",
+  "key": "toscanello-nero-cioccolato",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "smoke": 5
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
