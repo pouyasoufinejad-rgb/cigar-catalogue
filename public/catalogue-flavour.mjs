@@ -495,6 +495,28 @@ function savedRatingsForCard(card) {
   return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
 }
 
+// Flavour-profile data can live on either side of the state model: static cards are
+// patched through cards[], while dynamic entries live in entries[]. Admin edits are card
+// overrides and must win over an older entry value. Blend arrays are merged by id so a
+// profile-only variant patch cannot erase the rest of the variant while we read it.
+function profileRecordForCard(card) {
+  const key = card?.dataset?.key || '';
+  const entry = state.entries?.[key] || {};
+  const override = state.cards?.[key] || {};
+  const merged = { ...entry, ...override };
+  const entryBlends = normaliseBlendVariants(entry);
+  const overrideBlends = normaliseBlendVariants(override);
+  if (entryBlends.length || overrideBlends.length) {
+    const byId = new Map(entryBlends.map(variant => [variant.id, { ...variant }]));
+    for (const variant of overrideBlends) {
+      byId.set(variant.id, { ...(byId.get(variant.id) || {}), ...variant });
+    }
+    merged.blendVariants = [...byId.values()];
+  }
+  if (!normaliseBlendVariants(merged).length) return merged;
+  return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
+}
+
 
 // Profiles can arrive after the initial HTML through catalogue state. Redraw them on the
 // same state sweep that already repaints ratings, Value and laurels. This also means an
@@ -516,7 +538,7 @@ function refreshAllCards() {
     const saved = savedRatingsForCard(card);
     const flavour = own(saved, 'flavour') ? saved.flavour : null;
     ensureFlavourRating(card, flavour);
-    syncFlavourProfileForCard(card, saved.flavourProfile);
+    syncFlavourProfileForCard(card, profileRecordForCard(card).flavourProfile);
     refreshValueForCard(card, flavour);
     refreshLaurelForCard(card, saved);
   });

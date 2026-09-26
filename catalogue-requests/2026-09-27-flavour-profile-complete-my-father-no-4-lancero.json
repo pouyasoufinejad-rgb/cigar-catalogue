@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-my-father-no-4-lancero",
+  "operation": "upsert-entry",
+  "key": "my-father-no-4-lancero",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 5,
+      "spice": 4,
+      "nuts": 3,
+      "cedar": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}

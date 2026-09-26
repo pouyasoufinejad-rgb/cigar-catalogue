@@ -919,7 +919,7 @@ function formatSizeNumber(value) {
 
 const STRUCTURAL_OVERRIDE_FIELDS = new Set([
   'brand', 'title', 'packagePrice', 'packageLabel', 'price', 'country', 'length', 'ring', 'risk',
-  'taster', 'retailerLinks', 'imageUrl', 'smokeTime'
+  'taster', 'retailerLinks', 'imageUrl', 'smokeTime', 'flavourProfile'
 ]);
 
 export function applyStructuralOverridesToHtml(html, cards) {
@@ -973,6 +973,15 @@ export function applyStructuralOverridesToHtml(html, cards) {
       } else {
         const artframeOpenRx = /(<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>)/i;
         if (artframeOpenRx.test(card)) card = card.replace(artframeOpenRx, `$1<img alt="" src="${esc(imageUrl)}">`);
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(override, 'flavourProfile')) {
+      const markup = flavourProfileMarkup(override.flavourProfile);
+      const hasProfile = /class=["'][^"']*\bflavour-profile\b/i.test(card);
+      if (!hasProfile && markup) {
+        const profileFactsRx = /<div class=["']facts["']>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<div[^>]*><b>[\s\S]*?<\/b><small>[\s\S]*?<\/small><\/div>\s*<\/div>/i;
+        if (profileFactsRx.test(card)) card = card.replace(profileFactsRx, match => match + markup);
       }
     }
 
@@ -1042,7 +1051,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=175"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=176"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -1088,7 +1097,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '157');
+  headers.set('x-cigar-catalogue-version', '158');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');

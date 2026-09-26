@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-liga-privada-no-9-petit-corona-oscuro",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-petit-corona-oscuro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "earth": 5
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}

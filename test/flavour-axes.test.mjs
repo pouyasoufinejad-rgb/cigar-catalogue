@@ -121,7 +121,7 @@ test('an axis without artwork is still handled, should one ever be added', () =>
 
 // Rendering. The profile is drawn on the front of the card, under the facts.
 import { JSDOM } from 'jsdom';
-import { renderEntryCard } from '../src/index.js';
+import { applyStructuralOverridesToHtml, renderEntryCard } from '../src/index.js';
 import { flavourProfileMarkup } from '../public/catalogue-flavour-axes.mjs';
 import { blendEffectiveRecord } from '../public/catalogue-variants.mjs';
 
@@ -185,6 +185,17 @@ test('the profile sits on the front face, under the facts', () => {
   const profile = doc.querySelector('.flavour-profile');
   assert.ok(profile.closest('.card-face-front'), 'front face, not behind the flip');
   assert.equal(profile.previousElementSibling?.className, 'facts');
+});
+
+test('a static card override gets its flavour profile server-rendered before the browser runtime runs', () => {
+  const shell = renderEntryCard({ ...CARD, flavourProfile: {} });
+  const hydrated = applyStructuralOverridesToHtml(shell, {
+    [CARD.key]: { flavourProfile: { pepper: 4, cedar: 2 } }
+  });
+  const doc = parse(hydrated);
+  const rows = [...doc.querySelectorAll('.flavour-axis')].map(node => node.dataset.axis);
+  assert.deepEqual(rows, ['pepper', 'cedar']);
+  assert.equal(doc.querySelector('.flavour-profile')?.previousElementSibling?.className, 'facts');
 });
 
 test('a measured zero renders an empty bar, which is not the same as no bar', () => {

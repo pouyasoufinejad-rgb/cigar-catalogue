@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-my-father-le-bijou-100-anos-corona-especial",
+  "operation": "upsert-entry",
+  "key": "my-father-le-bijou-100-anos-corona-especial",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "earth": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}

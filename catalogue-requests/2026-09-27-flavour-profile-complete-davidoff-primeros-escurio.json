@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-davidoff-primeros-escurio",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-escurio",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "spice": 3
+    }
+  },
+  "note": "Complete the whole-catalogue flavour-profile sweep from the card's existing tasting copy. Only clearly relevant axes are populated; omitted axes remain blank and all intensities stay editable."
+}
