@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-oliva-serie-v-melanio-no4",
+  "operation": "upsert-entry",
+  "key": "oliva-serie-v-melanio-no4",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 3,
+      "nuts": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}
