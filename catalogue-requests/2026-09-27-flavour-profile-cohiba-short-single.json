@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-cohiba-short-single",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-single",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 3,
+      "earth": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}

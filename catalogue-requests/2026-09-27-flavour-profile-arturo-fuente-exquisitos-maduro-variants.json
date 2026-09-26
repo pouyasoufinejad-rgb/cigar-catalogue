@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-27-flavour-profile-arturo-fuente-exquisitos-maduro-variants",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 2,
+          "nuts": 3,
+          "cedar": 5
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}

@@ -1,0 +1,24 @@
+{
+  "id": "2026-09-27-flavour-profile-foundation-wise-man-corojo-corona-variants",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-corojo-corona",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "corojo",
+        "label": "Corojo"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 4,
+          "spice": 2,
+          "earth": 4
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}

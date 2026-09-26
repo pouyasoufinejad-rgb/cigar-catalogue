@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-aj-fernandez-new-world-oscuro",
+  "operation": "upsert-entry",
+  "key": "aj-fernandez-new-world-oscuro",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}

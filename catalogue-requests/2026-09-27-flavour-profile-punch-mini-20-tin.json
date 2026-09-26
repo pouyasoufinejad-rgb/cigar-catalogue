@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-punch-mini-20-tin",
+  "operation": "upsert-entry",
+  "key": "punch-mini-20-tin",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4,
+      "nuts": 3
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}

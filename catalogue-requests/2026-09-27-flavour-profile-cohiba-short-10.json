@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-cohiba-short-10",
+  "operation": "upsert-entry",
+  "key": "cohiba-short-10",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 3,
+      "earth": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}

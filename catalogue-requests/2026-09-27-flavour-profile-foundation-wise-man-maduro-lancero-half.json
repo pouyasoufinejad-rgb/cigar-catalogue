@@ -1,0 +1,31 @@
+{
+  "id": "2026-09-27-flavour-profile-foundation-wise-man-maduro-lancero-half",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-maduro-lancero-half",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 3,
+      "spice": 4,
+      "earth": 3,
+      "nuts": 2
+    },
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "corojo",
+        "label": "Corojo",
+        "flavourProfile": {
+          "sweet": 3,
+          "spice": 4,
+          "nuts": 4,
+          "cedar": 4
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}

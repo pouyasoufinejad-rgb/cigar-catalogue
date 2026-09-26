@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-tabak-especial-cafecita-negra",
+  "operation": "upsert-entry",
+  "key": "tabak-especial-cafecita-negra",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "earth": 3
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}

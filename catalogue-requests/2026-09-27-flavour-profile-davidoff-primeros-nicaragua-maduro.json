@@ -1,0 +1,28 @@
+{
+  "id": "2026-09-27-flavour-profile-davidoff-primeros-nicaragua-maduro",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "spice": 2,
+      "earth": 4
+    },
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 4
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}

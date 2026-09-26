@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-tatuaje-petit-cazadores-reserva",
+  "operation": "upsert-entry",
+  "key": "tatuaje-petit-cazadores-reserva",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 5,
+      "earth": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}

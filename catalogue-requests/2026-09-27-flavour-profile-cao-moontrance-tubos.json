@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-27-flavour-profile-cao-moontrance-tubos",
+  "operation": "upsert-entry",
+  "key": "cao-moontrance-tubos",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}

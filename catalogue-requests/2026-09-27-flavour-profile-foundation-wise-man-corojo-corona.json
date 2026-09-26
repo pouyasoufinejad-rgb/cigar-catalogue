@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-27-flavour-profile-foundation-wise-man-corojo-corona",
+  "operation": "upsert-entry",
+  "key": "foundation-wise-man-corojo-corona",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "spice": 4,
+      "earth": 3,
+      "nuts": 2,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}

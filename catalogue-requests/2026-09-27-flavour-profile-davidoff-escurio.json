@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-davidoff-escurio",
+  "operation": "upsert-entry",
+  "key": "davidoff-escurio",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 3
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}

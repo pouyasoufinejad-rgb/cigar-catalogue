@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-alonso-menendez-gold-cigarillo",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-gold-cigarillo",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "earth": 2
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}

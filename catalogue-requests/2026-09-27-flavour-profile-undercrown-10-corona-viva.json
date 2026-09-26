@@ -1,0 +1,28 @@
+{
+  "id": "2026-09-27-flavour-profile-undercrown-10-corona-viva",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 5,
+      "earth": 4,
+      "cedar": 3
+    },
+    "blendVariants": [
+      {
+        "id": "undercrown-10",
+        "label": "Undercrown 10"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 3,
+          "pepper": 3,
+          "earth": 4
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}

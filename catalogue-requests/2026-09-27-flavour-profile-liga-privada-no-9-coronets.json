@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-liga-privada-no-9-coronets",
+  "operation": "upsert-entry",
+  "key": "liga-privada-no-9-coronets",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 4,
+      "earth": 5
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}

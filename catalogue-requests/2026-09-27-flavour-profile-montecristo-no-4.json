@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-montecristo-no-4",
+  "operation": "upsert-entry",
+  "key": "montecristo-no-4",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 3,
+      "earth": 4,
+      "nuts": 3,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}

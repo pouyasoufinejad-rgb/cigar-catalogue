@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-partagas-serie-puritos",
+  "operation": "upsert-entry",
+  "key": "partagas-serie-puritos",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4,
+      "nuts": 3,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-27-flavour-profile-drew-estate-factory-smokes-sweet-toro",
+  "operation": "upsert-entry",
+  "key": "drew-estate-factory-smokes-sweet-toro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5
+    }
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}
