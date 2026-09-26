@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-drew-estate-acid-krush-red-cameroon",
+  "operation": "upsert-entry",
+  "key": "drew-estate-acid-krush-red-cameroon",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "spice": 3,
+      "earth": 2,
+      "nuts": 3
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
