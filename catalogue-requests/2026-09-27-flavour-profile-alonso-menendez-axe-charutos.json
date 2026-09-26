@@ -1,0 +1,11 @@
+{
+  "id": "2026-09-27-flavour-profile-alonso-menendez-axe-charutos",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-axe-charutos",
+  "entry": {
+    "flavourProfile": {
+      "earth": 3
+    }
+  },
+  "note": "Seed only flavour axes supported by existing catalogue tasting/research copy. Omitted axes remain blank, not zero. Values remain editable in the admin panel."
+}
