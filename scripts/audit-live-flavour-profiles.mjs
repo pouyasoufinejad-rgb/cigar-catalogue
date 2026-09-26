@@ -46,6 +46,9 @@ const articles = [...html.matchAll(/<article\b[^>]*\bdata-key=["']([^"']+)["'][^
 
 const seen = new Set();
 const missing = [];
+const missingMarkup = [];
+const axisMismatch = [];
+let rendered = 0;
 for (const item of articles) {
   if (seen.has(item.key)) continue;
   seen.add(item.key);
@@ -55,12 +58,32 @@ for (const item of articles) {
     ? blendEffectiveRecord(record, defaultBlendVariantId(record)).record
     : record;
   const profile = normaliseFlavourProfile(effective.flavourProfile);
-  if (Object.keys(profile).length) continue;
+  const expectedAxes = Object.keys(profile);
   const h3 = item.html.match(/<h3>[\s\S]*?<\/h3>/i)?.[0] || '';
   const summary = item.html.match(/<p\b[^>]*\bclass=["'][^"']*\bsummary\b[^"']*["'][^>]*>[\s\S]*?<\/p>/i)?.[0] || '';
-  missing.push({ key: item.key, title: cleanText(h3), summary: cleanText(summary) });
+
+  if (!expectedAxes.length) {
+    missing.push({ key: item.key, title: cleanText(h3), summary: cleanText(summary) });
+    continue;
+  }
+
+  if (!/\bclass=["'][^"']*\bflavour-profile\b/i.test(item.html)) {
+    missingMarkup.push({ key: item.key, expectedAxes });
+    continue;
+  }
+
+  const actualAxes = [...item.html.matchAll(/\bdata-axis=["']([a-z]+)["']/gi)].map(match => match[1]);
+  const absent = expectedAxes.filter(axis => !actualAxes.includes(axis));
+  if (absent.length) {
+    axisMismatch.push({ key: item.key, expectedAxes, actualAxes, absent });
+    continue;
+  }
+  rendered += 1;
 }
 
-console.log(`Flavour profile coverage: ${seen.size - missing.length}/${seen.size} live active cards profiled.`);
+console.log(`Flavour profile data coverage: ${seen.size - missing.length}/${seen.size} live active cards profiled.`);
+console.log(`Flavour profile rendered coverage: ${rendered}/${seen.size} live active cards displaying their saved axes.`);
 for (const item of missing) console.log(`MISSING_PROFILE ${item.key} | ${item.title} | ${item.summary}`);
-if (strict && missing.length) process.exitCode = 1;
+for (const item of missingMarkup) console.log(`MISSING_MARKUP ${item.key} | expected=${item.expectedAxes.join(',')}`);
+for (const item of axisMismatch) console.log(`AXIS_MISMATCH ${item.key} | expected=${item.expectedAxes.join(',')} actual=${item.actualAxes.join(',')} absent=${item.absent.join(',')}`);
+if (strict && (missing.length || missingMarkup.length || axisMismatch.length)) process.exitCode = 1;
