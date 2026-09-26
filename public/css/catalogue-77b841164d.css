@@ -670,3 +670,18 @@ article.card[data-flipped="1"] .card-flip::after{transform:rotate(180deg)}
 @keyframes card-face-turn{from{transform:perspective(900px) rotateY(-13deg);opacity:.25}to{transform:none;opacity:1}}
 article.card[data-flipped="1"] .card-face-back,article.card:not([data-flipped]) .card-faces>.card-face-front{animation:card-face-turn .36s cubic-bezier(.4,0,.2,1)}
 @media(prefers-reduced-motion:reduce){.card-face,.card-flip,.card-flip::after{animation:none!important;transition:none!important}}
+
+/* catalogue-flavour-profile */
+/* Flavour profile: a tiny tinted icon and five intensity pips per axis. The icon is an
+   alpha mask painted with the axis colour, so the icon and its pips cannot disagree. */
+.flavour-profile{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 14px;margin:0 0 14px}
+.flavour-axis{display:flex;align-items:center;gap:7px;min-width:0}
+.flavour-icon{flex:none;width:15px;height:15px;background-color:var(--flavour-colour);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
+/* An axis still waiting on its artwork shows its colour as a disc. */
+.flavour-icon-plain{border-radius:50%;box-shadow:inset 0 0 0 1px rgba(38,23,14,.34)}
+.flavour-pips{display:flex;gap:3px;flex:1;min-width:0}
+/* Every pip keeps the same neutral hairline whatever colour fills it. Sweet is ivory on a
+   cream card and would otherwise be a row of invisible boxes. */
+.flavour-pip{flex:1;height:7px;min-width:5px;border:1px solid rgba(38,23,14,.26);background:rgba(38,23,14,.05)}
+.flavour-pip.is-on{background:var(--flavour-colour)}
+@media(max-width:520px){.flavour-profile{grid-template-columns:1fr}}

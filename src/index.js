@@ -1,6 +1,10 @@
 import { deriveValue } from '../public/catalogue-value.mjs';
 import { flavourRatingMarkup, normaliseFlavour, overallScoreMarkup } from '../public/catalogue-overall-score.mjs';
 import {
+  flavourProfileMarkup,
+  normaliseFlavourProfile
+} from '../public/catalogue-flavour-axes.mjs';
+import {
   BACK_CLASS,
   FACES_CLASS,
   FRONT_CLASS,
@@ -315,6 +319,7 @@ export function normaliseEntry(input, keyOverride = '') {
     // under the entry, so an entry that always carried `flavour: null` would shadow a real
     // score sitting on the card override and blank it everywhere.
     ...(own(raw, 'flavour') ? { flavour: normaliseFlavour(raw.flavour) } : {}),
+    flavourProfile: normaliseFlavourProfile(raw.flavourProfile),
     size,
     risk: integer(raw.risk, 1, 1, 3),
     stock,
@@ -885,7 +890,7 @@ export function renderEntryCard(rawEntry) {
     flavour: entry.flavour,
     size: sizeScoreForDimensions(entry.ring, entry.length),
     value: valueScore
-  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${cheapestSingleMarkup(entry)}${entry.priceUnverified
+  })}${countryFlag}<span class="country-name">${esc(countryLabel(entry.country))}</span></div></div><div class="facts"><div><b>${entry.priceUnverified ? '—' : aud(entry.packagePrice)}</b><small>${esc(entry.packageLabel)}</small></div><div><b>${entry.priceUnverified ? '—' : aud(entry.price)}</b><small>per stick</small></div><div class="size-only"><b>${entry.length}″ × ${entry.ring}</b><small>length x ring gauge</small></div></div>${flavourProfileMarkup(entry.flavourProfile)}${cheapestSingleMarkup(entry)}${entry.priceUnverified
     ? `<div class="value-calc value-unrated"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>No verified AU price for this size</span><span>Ratio <b>—</b></span></div>`
     : `<div class="value-calc ${tierName(valueScore)}"><span>Q${entry.quality} benchmark <b>${aud(valueInfo.benchmark)}</b></span><span>Actual <b>${aud(entry.price)}</b></span><span>Ratio <b>${Number.isFinite(valueInfo.ratio) ? valueInfo.ratio.toFixed(2) : '—'}×</b></span></div>`}${stockHtml(entry)}${links}</div><div class="${BACK_CLASS}"${backFaceAttributes(entry.key)}>${experience}<p class="summary">${entry.summaryHtml}</p>${note}</div></div>${flipControlMarkup(entry.key)}</div></article>`;
 }
@@ -1037,7 +1042,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=172"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=173"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
@@ -1083,7 +1088,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '154');
+  headers.set('x-cigar-catalogue-version', '155');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');

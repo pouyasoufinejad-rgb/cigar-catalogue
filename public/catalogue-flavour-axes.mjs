@@ -58,3 +58,35 @@ export function normaliseFlavourProfile(input) {
 export function hasFlavourProfile(profile) {
   return Object.keys(normaliseFlavourProfile(profile)).length > 0;
 }
+
+const esc = value => String(value ?? '').replace(/[&<>"']/g,
+  ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+// One row per profiled axis: the icon, then the intensity as filled pips.
+//
+// Pips rather than a continuous bar, because the scale is five whole steps and a part-full
+// bar invites reading a precision that is not there. Every pip carries the same neutral
+// hairline whatever the axis colour is: Sweet is ivory on a cream card and would otherwise
+// be a row of invisible boxes, and Earth is near-black against the dark frame.
+export function flavourProfileMarkup(input) {
+  const profile = normaliseFlavourProfile(input);
+  const axes = FLAVOUR_AXES.filter(axis => Object.prototype.hasOwnProperty.call(profile, axis.id));
+  if (!axes.length) return '';
+
+  const rows = axes.map(axis => {
+    const value = profile[axis.id];
+    const pips = Array.from({ length: FLAVOUR_SCALE_MAX }, (_, index) =>
+      `<i class="flavour-pip${index < value ? ' is-on' : ''}"></i>`).join('');
+    // An axis whose artwork has not been built yet still gets a row; it shows its colour as
+    // a plain disc rather than asking the browser for a file that is not there.
+    const icon = axis.mask
+      ? `<i class="flavour-icon" style="-webkit-mask-image:url('${esc(axis.mask)}');mask-image:url('${esc(axis.mask)}')"></i>`
+      : '<i class="flavour-icon flavour-icon-plain"></i>';
+    return `<div class="flavour-axis" data-axis="${esc(axis.id)}" style="--flavour-colour:${esc(axis.colour)}"`
+      + ` role="img" aria-label="${esc(axis.label)} ${value} of ${FLAVOUR_SCALE_MAX}"`
+      + ` title="${esc(axis.label)} ${value}/${FLAVOUR_SCALE_MAX}">`
+      + `${icon}<span class="flavour-pips">${pips}</span></div>`;
+  }).join('');
+
+  return `<div class="flavour-profile" aria-label="Flavour profile">${rows}</div>`;
+}

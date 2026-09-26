@@ -3,7 +3,7 @@
 // artwork's own colour and that no mask has quietly lost its shape.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import sharp from 'sharp';
 
 import {
@@ -111,4 +111,97 @@ test('axes still awaiting artwork are declared but excluded from the drawn set',
   for (const axis of FLAVOUR_AXES) {
     assert.equal(drawn.has(axis.id), Boolean(axis.mask), `${axis.id} is drawn only if it has a mask`);
   }
+});
+
+// Rendering. The profile is drawn on the front of the card, under the facts.
+import { JSDOM } from 'jsdom';
+import { renderEntryCard } from '../src/index.js';
+import { flavourProfileMarkup } from '../public/catalogue-flavour-axes.mjs';
+import { blendEffectiveRecord } from '../public/catalogue-variants.mjs';
+
+const CARD = Object.freeze({
+  key: 'profile-fixture', brand: 'Brand', title: 'Title', eyebrow: 'Eyebrow', rank: 1,
+  length: 5, ring: 44, price: 20, packagePrice: 20, packageLabel: 'single cigar',
+  country: 'DR', strength: 7, quality: 8, flavour: 7, risk: 1, stock: 'in',
+  summaryHtml: '<strong>Prose.</strong>', productionLines: ['Handmade'],
+  practicalLines: ['Single cigar'], smokeTime: '40 min smoke', retailerLinks: [],
+  flavourProfile: { sweet: 2, pepper: 4, earth: 5, cedar: 3 }
+});
+
+const parse = html => new JSDOM(`<!doctype html><body>${html}</body>`).window.document;
+
+test('a profiled card draws one row per profiled axis, in catalogue order', () => {
+  const doc = parse(renderEntryCard(CARD));
+  const axes = [...doc.querySelectorAll('.flavour-axis')].map(node => node.dataset.axis);
+  assert.deepEqual(axes, ['sweet', 'pepper', 'earth', 'cedar'], 'only profiled axes, in order');
+});
+
+test('each row fills exactly as many pips as its intensity', () => {
+  const doc = parse(renderEntryCard(CARD));
+  for (const [id, expected] of Object.entries(CARD.flavourProfile)) {
+    const row = doc.querySelector(`.flavour-axis[data-axis="${id}"]`);
+    assert.equal(row.querySelectorAll('.flavour-pip').length, FLAVOUR_SCALE_MAX, `${id} pip count`);
+    assert.equal(row.querySelectorAll('.flavour-pip.is-on').length, expected, `${id} filled pips`);
+  }
+});
+
+test('the row carries its axis colour once, for both the icon and the pips', () => {
+  const doc = parse(renderEntryCard(CARD));
+  const row = doc.querySelector('.flavour-axis[data-axis="cedar"]');
+  assert.match(row.getAttribute('style'), /--flavour-colour:#c48c5c/);
+  assert.match(row.querySelector('.flavour-icon').getAttribute('style'), /mask-image:url\('\/art\/flavour\/cedar-[0-9a-f]{8}\.png'\)/);
+});
+
+test('an axis without artwork yet still gets a row, as a plain disc', () => {
+  const doc = parse(flavourProfileMarkup({ pepper: 3 }));
+  const icon = doc.querySelector('.flavour-axis[data-axis="pepper"] .flavour-icon');
+  assert.ok(icon.classList.contains('flavour-icon-plain'), 'no mask requested');
+  assert.equal(icon.getAttribute('style'), null, 'and no mask url');
+});
+
+test('the profile is announced, not left as decoration', () => {
+  const doc = parse(renderEntryCard(CARD));
+  const row = doc.querySelector('.flavour-axis[data-axis="earth"]');
+  assert.equal(row.getAttribute('role'), 'img');
+  assert.equal(row.getAttribute('aria-label'), 'Earth 5 of 5');
+});
+
+test('an unprofiled card draws nothing at all', () => {
+  const doc = parse(renderEntryCard({ ...CARD, flavourProfile: {} }));
+  assert.equal(doc.querySelector('.flavour-profile'), null);
+});
+
+test('the profile sits on the front face, under the facts', () => {
+  const doc = parse(renderEntryCard(CARD));
+  const profile = doc.querySelector('.flavour-profile');
+  assert.ok(profile.closest('.card-face-front'), 'front face, not behind the flip');
+  assert.equal(profile.previousElementSibling?.className, 'facts');
+});
+
+test('a measured zero renders an empty bar, which is not the same as no bar', () => {
+  const zero = parse(renderEntryCard({ ...CARD, flavourProfile: { earth: 0 } }));
+  assert.ok(zero.querySelector('.flavour-axis[data-axis="earth"]'), 'zero still gets a row');
+  assert.equal(zero.querySelectorAll('.flavour-pip.is-on').length, 0);
+});
+
+test('a blend variant carries its own profile and does not inherit the parent one', () => {
+  const record = {
+    ...CARD,
+    blendVariants: [
+      { id: 'one', label: 'One' },
+      { id: 'two', label: 'Two', flavourProfile: { smoke: 5, nuts: 1 } }
+    ],
+    defaultBlendVariantId: 'one'
+  };
+  assert.deepEqual(blendEffectiveRecord(record, 'one').record.flavourProfile, CARD.flavourProfile);
+  assert.deepEqual(blendEffectiveRecord(record, 'two').record.flavourProfile, { nuts: 1, smoke: 5 });
+});
+
+test('the stylesheet paints the icon with the row colour and keeps every pip outlined', async () => {
+  const page = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const href = page.match(/<link rel="stylesheet" href="(\/css\/catalogue-[0-9a-f]{10}\.css)">/)[1];
+  const css = await readFile(new URL(`../public${href}`, import.meta.url), 'utf8');
+  assert.match(css, /\.flavour-icon\{[^}]*background-color:var\(--flavour-colour\)/);
+  assert.match(css, /\.flavour-pip\{[^}]*border:1px solid/);
+  assert.match(css, /\.flavour-pip\.is-on\{background:var\(--flavour-colour\)\}/);
 });

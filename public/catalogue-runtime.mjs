@@ -17,6 +17,6 @@ if (typeof document !== 'undefined') {
   import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-7');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
-  import('./catalogue-variant-runtime.mjs?v=card-faces-1');
-  import('./catalogue-variant-editor.mjs?v=1');
+  import('./catalogue-variant-runtime.mjs?v=flavour-profile-1');
+  import('./catalogue-variant-editor.mjs?v=flavour-profile-1');
 }

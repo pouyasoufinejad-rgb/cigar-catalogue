@@ -1,0 +1,37 @@
+{
+  "id": "2026-09-26-cubanitos-flavour-profiles",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 1,
+      "spice": 3,
+      "earth": 1,
+      "nuts": 4,
+      "cedar": 3,
+      "smoke": 2
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "spice": 2,
+          "earth": 3,
+          "nuts": 2,
+          "cedar": 3,
+          "smoke": 3
+        }
+      }
+    ],
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Seed flavour profiles for the Cubanitos card so the new intensity bars have something to draw. Both are read off each blend's own catalogue summary rather than invented: the Natural's copy names chestnut, baking spice, coffee bean, cedar and gentle sweetness over a Cameroon wrapper, so nuts leads at 4 with spice and cedar at 3 and sweetness low at 2. The Maduro's copy names dark cocoa, molasses, espresso and a cedar-and-black-pepper finish with a heavier, sweeter body, so sweet leads at 4 with pepper, earth, cedar and smoke raised against the Natural. These are an editorial starting point for the bars, not tasting data; neither blend has been smoked. The blendVariants list restates both blends because a patch replaces that array wholesale, and only flavourProfile is set on each, so every other field on both blends is preserved."
+}

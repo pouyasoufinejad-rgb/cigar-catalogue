@@ -9,6 +9,7 @@
 // of what a variant means and score it identically.
 
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
+import { hasFlavourProfile, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs';
 
 // The fields a vitola may legitimately change. Blend and production data is deliberately
 // absent: wrapper, binder, filler, country, strength, quality and flavour describe the
@@ -28,7 +29,7 @@ export const VARIANT_FIELDS = Object.freeze([
 // independent selectors layered on top of it.
 export const BLEND_VARIANT_FIELDS = Object.freeze([
   ...VARIANT_FIELDS,
-  'productionLines', 'strength', 'quality', 'flavour', 'risk', 'country',
+  'productionLines', 'strength', 'quality', 'flavour', 'flavourProfile', 'risk', 'country',
   'experienceTags', 'sizeVariants', 'defaultVariantId'
 ]);
 
@@ -256,6 +257,11 @@ export function normaliseBlendVariant(input, index = 0) {
     const flavour = raw.flavour === null || raw.flavour === '' ? null : boundedScore(raw.flavour);
     variant.flavour = flavour;
   }
+  // A blend can taste different from its parent, so it carries its own profile. Absent
+  // means "not profiled" and inherits; an empty object would read as "profiled as nothing".
+  if (own(raw, 'flavourProfile') && hasFlavourProfile(raw.flavourProfile)) {
+    variant.flavourProfile = normaliseFlavourProfile(raw.flavourProfile);
+  }
 
   if (['gold', 'silver', 'bronze'].includes(raw.size)) variant.size = raw.size;
   else if (variant.ring) variant.size = sizeTierForDimensions(variant.ring, variant.length);
@@ -332,6 +338,7 @@ export function blendEffectiveRecord(record, requestedId = '') {
     merged.strength = 0;
     merged.quality = 0;
     merged.flavour = null;
+    merged.flavourProfile = {};
     merged.sizeVariants = [];
     merged.defaultVariantId = '';
   }

@@ -19,6 +19,7 @@ import {
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=flavour-weight-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
 import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=blend-flavour-1';
+import { flavourProfileMarkup } from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
 
 export const VARIANT_QUERY_PARAM = 'variant';
 export const BLEND_QUERY_PARAM = 'blend';
@@ -216,6 +217,19 @@ function frontFace(card) {
   return card?.querySelector?.('.card-face-front') || card?.querySelector?.('.cardbody') || null;
 }
 
+// The profile belongs to the blend, so switching blends has to redraw it rather than leave
+// the previous blend's bars sitting under the new one's name.
+function syncFlavourProfile(card, profile) {
+  const existing = card.querySelector('.flavour-profile');
+  const markup = flavourProfileMarkup(profile);
+  if (!markup) { existing?.remove(); return; }
+  if (existing) { existing.outerHTML = markup; return; }
+  // Under the facts, where the served card puts it.
+  const facts = card.querySelector('.card-face-front .facts') || card.querySelector('.facts');
+  if (facts) facts.insertAdjacentHTML('afterend', markup);
+  else frontFace(card)?.insertAdjacentHTML('afterbegin', markup);
+}
+
 function syncExperienceTags(card, tags) {
   card.querySelector('.tag-groups')?.remove();
   if (!Array.isArray(tags) || !tags.length) return;
@@ -357,6 +371,7 @@ function applyBlendPresentation(card, effective) {
   applyNumericRating(card, 'Strength', effective.strength, 'strength');
   applyNumericRating(card, 'Quality', effective.quality, 'quality');
   ensureFlavourRating(card, effective.flavour ?? null);
+  syncFlavourProfile(card, effective.flavourProfile);
   syncExperienceTags(card, effective.experienceTags);
   syncNote(card, effective.noteHtml || '');
 

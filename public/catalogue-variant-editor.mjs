@@ -3,6 +3,7 @@ import {
   normaliseBlendVariants,
   normaliseVariants
 } from './catalogue-variants.mjs?v=volume-size-1';
+import { FLAVOUR_AXES, FLAVOUR_SCALE_MAX, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
 import {
   updateBlendVariant,
   updateSizeVariant,
@@ -161,7 +162,15 @@ function renderFields(kind, snapshot) {
       field('Strength /10','strength', value('strength'),'number','step="1" min="1" max="10"'),
       field('Quality /10','quality', value('quality'),'number','step="1" min="1" max="10"'),
       field('Flavour /10','flavour', value('flavour'),'number','step="1" min="1" max="10"'),
-      field('Risk 1–3','risk', value('risk'),'number','step="1" min="1" max="3"')
+      field('Risk 1–3','risk', value('risk'),'number','step="1" min="1" max="3"'),
+      // One field per flavour axis. Blank means the axis has not been profiled, which is
+      // not the same as a measured zero, so the field is left empty rather than showing 0.
+      ...FLAVOUR_AXES.map(axis => {
+        const profile = normaliseFlavourProfile(raw.flavourProfile ?? effective.flavourProfile);
+        const current = Object.prototype.hasOwnProperty.call(profile, axis.id) ? profile[axis.id] : '';
+        return field(`${axis.label} 0–${FLAVOUR_SCALE_MAX}`, `flavour_${axis.id}`, current,
+          'number', `step="1" min="0" max="${FLAVOUR_SCALE_MAX}"`);
+      })
     );
     fields.push(
       field('Production, one line per row','productionLines', lines(value('productionLines')),'textarea'),
@@ -240,6 +249,19 @@ function formPatch(form, kind) {
     patch.flavour = flavour ? Math.round(flavour) : null;
     const risk = numberValue(form,'risk',{allowBlank:true,min:1,max:3});
     if (risk) patch.risk = Math.round(risk);
+
+    // Blank clears the axis rather than storing a zero: an unprofiled axis has no bar, a
+    // zero-rated one has an empty bar, and the editor has to be able to say either.
+    const profile = {};
+    for (const axis of FLAVOUR_AXES) {
+      const input = form.elements[`flavour_${axis.id}`];
+      const entered = text(input?.value).trim();
+      if (entered === '') continue;
+      const score = Number(entered);
+      if (!Number.isFinite(score)) continue;
+      profile[axis.id] = Math.max(0, Math.min(FLAVOUR_SCALE_MAX, Math.round(score)));
+    }
+    patch.flavourProfile = profile;
   }
   return patch;
 }
