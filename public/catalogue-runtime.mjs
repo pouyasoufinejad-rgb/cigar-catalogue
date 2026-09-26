@@ -1,7 +1,7 @@
 if (typeof document !== 'undefined') {
   import('./catalogue-direct-edit.mjs?v=variant-edit-1');
   import('./catalogue-direct-persistence.mjs?v=variant-edit-1');
-  import('./catalogue-flavour.mjs?v=flavour-profile-1');
+  import('./catalogue-flavour.mjs?v=flavour-profile-2');
   import('./catalogue-size-value-runtime.mjs?v=volume-size-1');
   import('./catalogue-card-layout.mjs?v=left-shift-1');
   import('./catalogue-medal-strip.mjs?v=tight-strip-1');
@@ -17,6 +17,6 @@ if (typeof document !== 'undefined') {
   import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
   import('./catalogue-control-sidebar.mjs?v=sidebar-controls-7');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
-  import('./catalogue-variant-runtime.mjs?v=flavour-profile-1');
+  import('./catalogue-variant-runtime.mjs?v=flavour-profile-2');
   import('./catalogue-variant-editor.mjs?v=flavour-profile-1');
 }
