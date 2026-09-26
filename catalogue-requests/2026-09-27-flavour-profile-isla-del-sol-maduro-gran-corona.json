@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-isla-del-sol-maduro-gran-corona",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "earth": 3
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes. Omitted axes stay blank and all values remain editable."
+}
