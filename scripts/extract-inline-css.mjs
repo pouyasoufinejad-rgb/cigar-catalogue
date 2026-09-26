@@ -46,8 +46,16 @@ export function cssFileName(css) {
 
 export function rewritePage(html, fileName) {
   const blocks = collect(html);
-  if (!blocks.length) return html;
   const link = `<link rel="stylesheet" href="/css/${fileName}">`;
+  // Already extracted once: the link is in place and only its hash moves. Inserting a
+  // second link instead would leave the page pulling two stylesheets, the stale one first.
+  if (html.match(LINK_RX)) {
+    const relinked = html.replace(LINK_RX, link);
+    if (!blocks.length) return relinked;
+    return relinked.replace(STYLE_RX, (raw, _attrs, _css, offset) =>
+      (blocks.some(block => block.index === offset) ? '' : raw));
+  }
+  if (!blocks.length) return html;
   let seen = 0;
   return html.replace(STYLE_RX, (raw, _attrs, _css, offset) => {
     if (!blocks.some(block => block.index === offset)) return raw;
@@ -59,12 +67,19 @@ export function rewritePage(html, fileName) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const html = await readFile(pageUrl, 'utf8');
   const blocks = collect(html);
+  const current = html.match(LINK_RX);
   if (!blocks.length) {
-    const current = html.match(LINK_RX);
     console.log(current ? `already extracted: ${current[1]}` : 'nothing to extract');
     process.exit(0);
   }
-  const css = concatenate(blocks);
+  // The stylesheet already pulled out of this page is the leading content, not something to
+  // replace. Without this, adding one <style> block and re-running would rewrite the whole
+  // stylesheet as that single block and silently drop every rule extracted before it.
+  const existing = current
+    ? await readFile(new URL(current[1], cssDir), 'utf8').catch(() => '')
+    : '';
+  if (current && !existing) throw new Error(`Linked stylesheet ${current[1]} is missing; refusing to rebuild without it.`);
+  const css = existing ? `${existing.trimEnd()}\n\n${concatenate(blocks)}` : concatenate(blocks);
   const name = cssFileName(css);
   const next = rewritePage(html, name);
   console.log(`${blocks.length} blocks, ${(css.length / 1024).toFixed(0)}KB -> /css/${name}`);

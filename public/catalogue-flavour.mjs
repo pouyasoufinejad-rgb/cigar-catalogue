@@ -535,7 +535,10 @@ export function initFlavourRuntime() {
   loadState();
 }
 
-if (typeof document !== 'undefined') {
+// Guarded like every other runtime module. Unguarded, merely importing this file started
+// the runtime, and its loadState() fetch then hung whatever imported it: a test harness has
+// no catalogue API to answer, so the request never settles and the process never exits.
+if (typeof document !== 'undefined' && !globalThis.__CATALOGUE_VARIANT_TEST__) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFlavourRuntime, { once: true });
   else initFlavourRuntime();
 }

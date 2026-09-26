@@ -649,3 +649,24 @@ h3{font-size:24px!important;margin:6px 0 12px!important}
   .medals .rating:not(.risk) .subscore{font-size:10.5px}
   .medals .rating:not(.risk)>span{padding-top:5px}
 }
+
+/* catalogue-card-faces */
+/* Two faces per card. The front carries the ratings, prices, stock and retailer links; the
+   back carries the Experience chips and the prose. Only one is ever in flow, so turning the
+   card over makes the front genuinely shorter rather than reserving the taller face's room. */
+.card-faces{position:relative;display:flex;flex-direction:column;flex:1}
+.card-face{display:flex;flex-direction:column;flex:1;min-width:0}
+/* .shop pushes itself down with margin-top:auto, which needs the flex column to continue
+   through the faces rather than stopping at .cardbody. */
+.card-face-back,article.card[data-flipped="1"] .card-face-front{position:absolute;inset:0;visibility:hidden;opacity:0;pointer-events:none}
+article.card[data-flipped="1"] .card-face-back{position:static;visibility:visible;opacity:1;pointer-events:auto}
+.card-face-back>:last-child{margin-bottom:0}
+.card-flip{margin-top:14px;align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:none;cursor:pointer;border:1px solid var(--gold);color:var(--gold);font-family:Cinzel,serif;font-size:11.4px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;transition:background-color .2s ease,color .2s ease}
+.card-flip::after{content:"\21BB";font-family:inherit;font-size:13px;line-height:1;transition:transform .34s ease}
+.card-flip:hover,.card-flip:focus-visible{background:var(--gold);color:var(--black)}
+article.card[data-flipped="1"] .card-flip::after{transform:rotate(180deg)}
+/* The turn itself. A literal 180deg rotation would mirror the text mid-flip, so the card
+   swings through a shallow angle and the faces cross-fade at the same time. */
+@keyframes card-face-turn{from{transform:perspective(900px) rotateY(-13deg);opacity:.25}to{transform:none;opacity:1}}
+article.card[data-flipped="1"] .card-face-back,article.card:not([data-flipped]) .card-faces>.card-face-front{animation:card-face-turn .36s cubic-bezier(.4,0,.2,1)}
+@media(prefers-reduced-motion:reduce){.card-face,.card-flip,.card-flip::after{animation:none!important;transition:none!important}}

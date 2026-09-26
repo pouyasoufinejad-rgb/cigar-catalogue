@@ -143,7 +143,9 @@ function announceVariantChange(card, resolved) {
 
 function replaceShopLinks(card, links) {
   const existing = [...card.querySelectorAll('a.shop[href]')];
-  const body = card.querySelector('.cardbody');
+  // The front face, not the card body: appending to the body would drop the links below
+  // both faces and the flip control, outside the column that pushes them to the bottom.
+  const body = frontFace(card);
   if (!body) return;
   existing.forEach(node => node.remove());
   links.forEach((url, index) => {
@@ -204,11 +206,21 @@ function replaceMetaLines(card, selector, lines) {
   }
 }
 
+// The prose and the Experience chips live on the card's back face. Rebuilding them into
+// the front would put a blend's tasting copy on top of its prices.
+function backFace(card) {
+  return card?.querySelector?.('.card-face-back') || card?.querySelector?.('.cardbody') || null;
+}
+
+function frontFace(card) {
+  return card?.querySelector?.('.card-face-front') || card?.querySelector?.('.cardbody') || null;
+}
+
 function syncExperienceTags(card, tags) {
   card.querySelector('.tag-groups')?.remove();
   if (!Array.isArray(tags) || !tags.length) return;
-  const medals = card.querySelector('.medals');
-  if (!medals) return;
+  const host = backFace(card);
+  if (!host) return;
   const groups = document.createElement('div');
   groups.className = 'tag-groups';
   const group = document.createElement('div');
@@ -226,7 +238,8 @@ function syncExperienceTags(card, tags) {
   }
   group.append(label, items);
   groups.appendChild(group);
-  medals.insertAdjacentElement('afterend', groups);
+  // Chips lead the back face, ahead of the summary and the note.
+  host.insertAdjacentElement('afterbegin', groups);
 }
 
 function syncNote(card, html) {
@@ -240,7 +253,7 @@ function syncNote(card, html) {
     note.className = 'mog-note';
     const summary = card.querySelector('p.summary');
     if (summary) summary.insertAdjacentElement('afterend', note);
-    else card.querySelector('.cardbody')?.appendChild(note);
+    else backFace(card)?.appendChild(note);
   }
   note.innerHTML = html;
 }
