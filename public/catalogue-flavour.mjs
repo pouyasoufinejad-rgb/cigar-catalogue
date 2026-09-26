@@ -1,4 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
+import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=entry-flavour-1';
 import {
   deriveOverallScore,
   flavourRatingMarkup,
@@ -412,18 +413,42 @@ function populateEditorField() {
   setTimeout(previewFlavourAdjustedValue, 0);
 }
 
+// The ratings this sweep should paint onto one card.
+//
+// This used to read the card override alone. On a card showing an alternate blend that is
+// the wrong cigar's rating: the sweep reruns on every state refresh, so a Maduro rated 9
+// was repainted with the Natural's 7 moments after the blend selector applied it, and the
+// Value and overall score derived from it went with it. Cards without blends keep reading
+// the override exactly as before.
+function savedRatingsForCard(card) {
+  const key = card?.dataset?.key || '';
+  const override = state.cards?.[key] || {};
+  const merged = { ...override, ...(state.entries?.[key] || {}) };
+  if (!normaliseBlendVariants(merged).length) return override;
+  return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
+}
+
 function refreshAllCards() {
   refreshTimer = 0;
   ensureStyle();
   ensureFlavourEditor();
   document.querySelectorAll('article.card[data-key]').forEach(card => {
-    const saved = state.cards?.[card.dataset.key] || {};
+    const saved = savedRatingsForCard(card);
     const flavour = own(saved, 'flavour') ? saved.flavour : null;
     ensureFlavourRating(card, flavour);
     refreshValueForCard(card, flavour);
     refreshLaurelForCard(card, saved);
   });
   populateEditorField();
+}
+
+// Apply a catalogue state and repaint immediately. The listeners below debounce through
+// scheduleRefresh; this is the undebounced entry point, so a caller can apply state and
+// read the result back without waiting on a timer.
+export function applyCatalogueState(next) {
+  if (!next || typeof next !== 'object') return;
+  state = next;
+  refreshAllCards();
 }
 
 function scheduleRefresh() {

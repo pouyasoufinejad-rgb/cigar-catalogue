@@ -18,7 +18,7 @@ import {
 } from './catalogue-variants.mjs?v=volume-size-1';
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=flavour-weight-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
-import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=entry-flavour-1';
+import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=blend-flavour-1';
 
 export const VARIANT_QUERY_PARAM = 'variant';
 export const BLEND_QUERY_PARAM = 'blend';
