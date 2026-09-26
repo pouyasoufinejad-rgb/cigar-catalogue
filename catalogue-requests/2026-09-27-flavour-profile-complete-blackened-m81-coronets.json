@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-blackened-m81-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-m81-coronets",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 5,
+      "earth": 4,
+      "cedar": 3
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
