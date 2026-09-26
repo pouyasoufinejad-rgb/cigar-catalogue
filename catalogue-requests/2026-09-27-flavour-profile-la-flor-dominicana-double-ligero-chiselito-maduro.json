@@ -1,0 +1,32 @@
+{
+  "id": "2026-09-27-flavour-profile-la-flor-dominicana-double-ligero-chiselito-maduro",
+  "operation": "upsert-entry",
+  "key": "la-flor-dominicana-double-ligero-chiselito-maduro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "spice": 4,
+      "earth": 3,
+      "cedar": 3
+    },
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 5,
+          "spice": 4,
+          "nuts": 3,
+          "cedar": 4
+        }
+      }
+    ]
+  },
+  "note": "Editorial flavour-profile seed. Blend variants carry their own profile where the blend changes the flavour. Omitted axes stay blank and all values remain editable."
+}
