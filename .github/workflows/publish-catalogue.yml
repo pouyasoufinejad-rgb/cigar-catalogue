@@ -63,6 +63,8 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm test
+      - name: Report live flavour-profile coverage
+        run: node scripts/audit-live-flavour-profiles.mjs
 
   publish:
     name: Publish changed catalogue requests
