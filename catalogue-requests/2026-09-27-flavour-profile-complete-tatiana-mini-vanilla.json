@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-tatiana-mini-vanilla",
+  "operation": "upsert-entry",
+  "key": "tatiana-mini-vanilla",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "cedar": 2
+    }
+  },
+  "note": "Complete the whole-catalogue flavour-profile sweep from the card's existing tasting copy. Only clearly relevant axes are populated; omitted axes remain blank and all intensities stay editable."
+}
