@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-complete-foundation-charter-oak-maduro-rothschild",
+  "operation": "upsert-entry",
+  "key": "foundation-charter-oak-maduro-rothschild",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 4,
+      "earth": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Selective flavour-profile coverage derived from the existing catalogue tasting/research copy. Only relevant axes are populated; omitted axes remain absent and editable."
+}
