@@ -1,0 +1,73 @@
+{
+  "id": "2026-09-27-repair-cubanitos-maduro-after-profile-sweep",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "spice": 3,
+      "nuts": 4,
+      "cedar": 3
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "spice": 3,
+          "nuts": 4,
+          "cedar": 3
+        }
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "title": "Cubanitos Maduro",
+        "eyebrow": "Broadleaf-wrapped counterpart to the Cameroon Cubanito",
+        "packagePrice": 129,
+        "packageCount": 10,
+        "packageLabel": "tin of 10",
+        "price": 12.9,
+        "country": "DR",
+        "length": 4.5,
+        "ring": 32,
+        "strength": 7,
+        "quality": 8,
+        "risk": 1,
+        "stock": "in",
+        "summaryHtml": "<strong>Dark cocoa, molasses, espresso and a cedar-and-black-pepper finish</strong> sit at the centre of the Broadleaf-wrapped Cubanito. The aged Dominican binder and filler are the same core the Natural uses, with a Connecticut Broadleaf wrapper in place of the African Cameroon, trading the Cameroon's dry aromatic spice for darker sugar and a heavier, sweeter body.",
+        "noteHtml": "Connecticut Broadleaf at a 32 ring gauge is an unusual pairing. The Dominican core is shared with the Natural, making the wrapper the principal blend difference.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Medium-filler format",
+          "Wrapper: Connecticut Broadleaf",
+          "Binder: Dominican",
+          "Filler: Dominican"
+        ],
+        "practicalLines": [
+          "Tin of 10",
+          "Uncut",
+          "Cheapest single: The Index A$15.60",
+          "4½″ × 32",
+          "Slow-to-moderate cadence"
+        ],
+        "smokeTime": "25–35 min smoke",
+        "retailerLinks": [
+          "https://www.cigarhut.com.au/arturo-fuente-cubanitos-maduro/",
+          "https://www.theindexcigars.com.au/products/arturo-fuente-cubanitos-maduro"
+        ],
+        "priceChecked": "2026-09-25",
+        "stockChecked": "2026-09-25",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "earth": 3,
+          "cedar": 3
+        }
+      }
+    ],
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Restore the complete Maduro blend variant after the flavour-profile sweep replaced its object with a partial profile-only variant. Keep both blend-specific flavour profiles editable."
+}
