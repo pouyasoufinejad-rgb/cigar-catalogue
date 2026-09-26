@@ -3,7 +3,8 @@ import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-varian
 import {
   FLAVOUR_AXES,
   FLAVOUR_SCALE_MAX,
-  normaliseFlavourProfile
+  normaliseFlavourProfile,
+  flavourProfileMarkup
 } from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
 import {
   deriveOverallScore,
