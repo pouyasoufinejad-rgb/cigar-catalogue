@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-flavour-profile-romeo-y-julieta-julieta",
+  "operation": "upsert-entry",
+  "key": "romeo-y-julieta-julieta",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 2,
+      "nuts": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Editorial flavour-profile seed from existing catalogue notes and review consensus. Omitted axes stay blank and all values remain editable."
+}
