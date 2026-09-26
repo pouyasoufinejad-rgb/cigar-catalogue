@@ -139,4 +139,4 @@ test('a partial blend profile patch preserves complete dynamic variant data', as
   assert.deepEqual(maduro.productionLines, ['Wrapper: Connecticut Broadleaf']);
   assert.deepEqual(maduro.retailerLinks, ['https://example.com/maduro']);
   assert.deepEqual(maduro.flavourProfile, { sweet: 4, pepper: 3 });
-};
+});
