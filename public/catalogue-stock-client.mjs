@@ -1,4 +1,4 @@
-import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=146';
+import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=148';
 
 const STOCK_API = '/api/stock';
 const STOCK_CHECK_API = '/api/stock/check';
@@ -57,6 +57,13 @@ article.card{
   width:100%!important;
   max-width:var(--catalogue-card-max-width)!important;
   margin-inline:auto!important;
+}
+@supports (content-visibility:auto){
+  article.card{content-visibility:auto;contain-intrinsic-size:auto 1000px}
+  article.card:focus-within{content-visibility:visible}
+}
+@media print{
+  article.card{content-visibility:visible!important;contain-intrinsic-size:none!important}
 }
 article.card .artframe{
   min-height:var(--catalogue-artframe-min-height)!important;

@@ -43,15 +43,21 @@ test('every artwork reference resolves to a file whose contents match its name',
   assert.deepEqual(orphans, [], 'files nothing references should not ship');
 });
 
-test('extracted artwork is lazy, which the fixed-height frame makes safe', async () => {
+test('card artwork stays lazy while the above-the-fold header art is prioritised', async () => {
   const tags = page.match(/<img\b[^>]*?\/art\/[^>]*?>/g) || [];
   assert.ok(tags.length > 40);
+  const header = tags.find(tag => /header-illustration/.test(page.slice(Math.max(0, page.indexOf(tag) - 80), page.indexOf(tag)))) || tags[0];
+  assert.match(header, /loading="eager"/, 'the header illustration is the page LCP candidate');
+  assert.match(header, /fetchpriority="high"/);
+  assert.match(header, /decoding="async"/);
+
   for (const tag of tags) {
+    if (tag === header) continue;
     assert.match(tag, /loading="lazy"/, `not lazy: ${tag.slice(0, 90)}`);
     assert.match(tag, /decoding="async"/);
   }
-  // Without a frame that reserves its own height, a lazily-arriving image would shove the
-  // page around as the reader scrolls.
+  // Without a frame that reserves its own height, a lazily-arriving card image would shove
+  // the page around as the reader scrolls.
   assert.match(await readPageCss(), /\.artframe\{height:360px/);
 });
 
