@@ -7,6 +7,7 @@ export const FLAVOUR_ART = Object.freeze({
   pepper: '/art/flavour/pepper-8ac68d26.png',
   spice: '/art/flavour/spice-eb3fcc39.png',
   earth: '/art/flavour/earth-aeab6fa7.png',
+  coffee: '/art/flavour/coffee-016b787c.png',
   nuts: '/art/flavour/nuts-c4475a06.png',
   cedar: '/art/flavour/cedar-3e28ec91.png',
   smoke: '/art/flavour/smoke-d0c22568.png'
