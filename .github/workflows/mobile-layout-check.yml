@@ -47,9 +47,9 @@ jobs:
         env:
           STRIP_NEIGHBOUR_KEYS: ${{ inputs.neighbour_keys }}
         run: node scripts/verify-live-card-strip.mjs
-      - name: Check the size-variant system
+      - name: Check the reported Chromium crash URL and repaired blend records
         if: ${{ always() }}
-        run: node scripts/verify-live-variants.mjs
+        run: node scripts/verify-live-reported-breakpoint.mjs
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
