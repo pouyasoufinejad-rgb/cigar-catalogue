@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-27-coffee-profile-blackened-s84-shade-to-black-coronets",
+  "operation": "upsert-entry",
+  "key": "blackened-s84-shade-to-black-coronets",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 3,
+      "coffee": 4,
+      "cedar": 4
+    }
+  },
+  "note": "Add Coffee as a selective flavour axis because the existing catalogue tasting/research copy directly identifies coffee, espresso, mocha or café notes. Intensity uses the same 0–5 scale as the other axes: 5 dominant/infused, 4 prominent, 3 clear secondary, 2 background."
+}
