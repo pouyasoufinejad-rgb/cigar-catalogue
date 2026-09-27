@@ -1,3 +1,5 @@
+import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
+
 const STATE_API = '/api/catalogue-overrides';
 const STYLE_ID = 'catalogue-direct-edit-style';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
@@ -189,6 +191,7 @@ function closeDiagnosticSections() {
 }
 
 function enterEditMode() {
+  const viewport = captureViewport();
   editMode = true;
   ensureStyles();
   ensurePanel();
@@ -197,9 +200,11 @@ function enterEditMode() {
   const toggle = q('catalogue-admin-toggle');
   if (toggle) toggle.textContent = 'Finish editing';
   updatePanelFor(selected);
+  restoreViewportAfterLayout(viewport);
 }
 
 function exitEditMode() {
+  const viewport = captureViewport();
   editMode = false;
   document.body.classList.remove('catalogue-direct-edit-mode');
   if (selected) {
@@ -211,6 +216,7 @@ function exitEditMode() {
   const toggle = q('catalogue-admin-toggle');
   if (toggle) toggle.textContent = 'Edit catalogue';
   updatePanelFor(null);
+  restoreViewportAfterLayout(viewport);
 }
 
 function onToggleCapture(event) {
@@ -265,6 +271,7 @@ async function fetchState() {
 
 async function saveSelected() {
   if (!selected) return;
+  const viewport = captureViewport();
   const save = panel.querySelector('[data-direct="save"]');
   const old = save.textContent;
   save.disabled = true;
@@ -282,10 +289,12 @@ async function saveSelected() {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (${response.status})`);
     save.textContent = 'Saved';
+    restoreViewportAfterLayout(viewport);
     setTimeout(() => { save.textContent = old; save.disabled = false; }, 900);
   } catch (error) {
     save.textContent = 'Save failed';
     save.disabled = false;
+    restoreViewportAfterLayout(viewport);
     globalThis.alert?.(error.message || String(error));
   }
 }

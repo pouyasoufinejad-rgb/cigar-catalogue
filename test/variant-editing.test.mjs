@@ -117,7 +117,7 @@ test('variant editor cannot be silently blocked by native form validation', () =
 test('variant editor resets the save button every time it opens and closes', () => {
   const occurrences = variantEditorSource.match(/resetVariantSaveControl\(modal\)/g) || [];
   assert.ok(occurrences.length >= 2, 'open and close paths should both reset the save control');
-  assert.match(variantEditorSource, /if \(editContext === context && saveGeneration === generation\) closeEditor\(\)/);
+  assert.match(variantEditorSource, /if \(editContext === context && saveGeneration === generation\) \{[\s\S]*?closeEditor\(\)[\s\S]*?restoreViewportAfterLayout\(viewport\)[\s\S]*?\}/);
 });
 
 test('variant editor shares the same variant runtime module instance as the page', () => {
