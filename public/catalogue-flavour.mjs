@@ -389,6 +389,14 @@ html body .country-above .country-flag{transform:scale(1.1);margin-inline:2px}
 html body .country-above .overall-score{transform:scale(1.1);margin-inline:2px}
 html body .laurel-badge{width:30px;height:28px}
 html body .laurel-badge i{font-size:18px}
+/* Slightly larger flavour profile so the icon artwork, axis names and intensity bars read
+   at the same visual weight as the surrounding card controls without taking over the card. */
+html body .flavour-profile{grid-template-columns:repeat(auto-fit,minmax(202px,1fr));gap:8px 18px}
+html body .flavour-axis{gap:10px}
+html body .flavour-label{flex-basis:62px;font-size:11px}
+html body .flavour-icon{width:27px;height:27px}
+html body .flavour-pips{gap:4px}
+html body .flavour-pip{height:11px;min-width:6px}
 `;
   document.head.appendChild(style);
 }
