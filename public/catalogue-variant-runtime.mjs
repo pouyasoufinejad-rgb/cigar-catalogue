@@ -725,10 +725,12 @@ async function saveDefaultPatch(key, patch, { fetchImpl = fetch, token = '' } = 
     method:'PUT',
     headers:{
       'content-type':'application/json',
-      authorization:`Bearer ${adminToken(token)}`
+      authorization:`Bearer ${adminToken(token)}`,
+      'x-catalogue-state-revision':String(Number.isSafeInteger(Number(fresh.revision)) ? Number(fresh.revision) : 0)
     },
     body:JSON.stringify({
       version:3,
+      revision:fresh.revision,
       cards,
       sections:{ ...(fresh.sections || {}) },
       entries
