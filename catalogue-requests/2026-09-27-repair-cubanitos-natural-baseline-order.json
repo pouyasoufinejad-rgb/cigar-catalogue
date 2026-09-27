@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-repair-cubanitos-natural-baseline-order",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "blendVariants": [
+      { "id": "natural", "label": "Natural", "packageCount": 10 },
+      { "id": "maduro", "label": "Maduro" }
+    ]
+  },
+  "note": "Restore Natural as the first/baseline blend, matching the existing Natural parent record and the complete-variant repair request. The reversed live order makes the Natural default lose its saved price, dimensions, tobacco and tasting copy. Preserve both variants' current fields, Coffee profiles, selected default and the separately repaired Maduro strength. The Natural parent purchase format is pack of 10; replace the normalised shell's fallback count of 1."
+}
