@@ -3,7 +3,7 @@
 // Each mask is named for a hash of its own contents, because /art/* is served
 // immutable. Re-run the build after changing any flavour artwork.
 export const FLAVOUR_ART = Object.freeze({
-  sweet: '/art/flavour/sweet-39e5a2a2.png',
+  sweet: '/art/flavour/sweet-8ac01709.png',
   pepper: '/art/flavour/pepper-8ac68d26.png',
   spice: '/art/flavour/spice-eb3fcc39.png',
   earth: '/art/flavour/earth-aeab6fa7.png',
