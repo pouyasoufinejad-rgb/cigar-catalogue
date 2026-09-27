@@ -75,7 +75,11 @@ test('every built mask is named for a hash of its own contents', async () => {
     assert.ok(files.includes(name), `${id} mask ${name} is on disk`);
     assert.match(name, new RegExp(`^${id}-[0-9a-f]{8}\\.png$`), `${name} carries a content hash`);
   }
-  assert.equal(files.length, Object.keys(FLAVOUR_ART).length, 'no stale masks left behind');
+  // /art/* is immutable, so previously deployed content-hashed masks may remain on disk.
+  // Any historical file must still be one of the known flavour axes and content-hashed.
+  for (const name of files) {
+    assert.match(name, /^(sweet|pepper|spice|earth|coffee|nuts|cedar|smoke)-[0-9a-f]{8}\\.png$/, `${name} is an immutable content-hashed flavour mask`);
+  }
 });
 
 test('each mask is pure alpha at a common size, so the page can tint it', async () => {
@@ -96,6 +100,27 @@ test('each mask is pure alpha at a common size, so the page can tint it', async 
     assert.ok(coverage > 0.05, `${axis.id} still has a shape (${(coverage * 100).toFixed(1)}%)`);
     assert.ok(coverage < 0.75, `${axis.id} is line art, not a filled block`);
   }
+});
+
+test('Sweet is solid white and its six cube faces are filled', async () => {
+  const axis = flavourAxis('sweet');
+  assert.equal(axis.colour, '#ffffff');
+  assert.match(axis.mask, /^\/art\/flavour\/sweet-[0-9a-f]{8}\.png$/);
+
+  const file = new URL(axis.mask.replace('/art/flavour/', ''), ART_DIR);
+  const { data, info } = await sharp(await stat(file).then(() => file.pathname))
+    .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const alphaAt = (x, y) => data[(y * info.width + x) * 4 + 3];
+
+  // One point near the centre of each visible cube face. These were transparent in the
+  // hollow-outline mask, so this directly guards the requested filled-cube treatment.
+  for (const [x, y] of [[43, 25], [24, 58], [62, 58], [88, 73], [75, 96], [102, 96]]) {
+    assert.ok(alphaAt(x, y) > 240, `Sweet cube face at ${x},${y} stays filled`);
+  }
+
+  let ink = 0;
+  for (let i = 0; i < info.width * info.height; i++) if (data[i * 4 + 3] > 24) ink += 1;
+  assert.ok(ink / (info.width * info.height) > 0.45, 'Sweet mask keeps filled cube coverage');
 });
 
 // A colour edited here but not in the art, or art replaced without updating the colour,

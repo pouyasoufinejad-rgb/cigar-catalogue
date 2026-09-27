@@ -4,10 +4,9 @@
 // The bar and its icon take the same colour from the same place, because the point of the
 // colour is to tie them together and two declarations would eventually disagree.
 //
-// The colours are the artwork's own, sampled from the supplied icons rather than chosen to
-// resemble them, so a mask tinted with its axis colour is indistinguishable from the
-// original drawing. scripts/build-flavour-icons.mjs re-samples on every build and says so
-// if a value here has drifted from the art.
+// The colours are normally sampled from the supplied icons. Sweet is intentionally pure
+// white so its now-filled cube mask stays prominent on the cream card background.
+// scripts/build-flavour-icons.mjs re-samples supplied source art and reports colour drift.
 //
 // No DOM access: the Worker renders these into the card.
 
@@ -16,7 +15,7 @@ import { FLAVOUR_ART } from './catalogue-flavour-art.mjs?v=coffee-axis-1';
 export const FLAVOUR_SCALE_MAX = 5;
 
 export const FLAVOUR_AXES = Object.freeze([
-  { id: 'sweet',  label: 'Sweet',  colour: '#fcf4e4', art: 'sugar crystals' },
+  { id: 'sweet',  label: 'Sweet',  colour: '#ffffff', art: 'sugar crystals' },
   { id: 'pepper', label: 'Pepper', colour: '#a43c2c', art: 'pepper grinder' },
   { id: 'spice',  label: 'Spice',  colour: '#bc4c1c', art: 'spice bowl' },
   { id: 'earth',  label: 'Earth',  colour: '#141414', art: 'soil and trowel' },
