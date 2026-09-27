@@ -378,12 +378,11 @@ export function stateRevision(value) {
 function mergeCardMaps(existingInput, incomingInput) {
   const existing = normaliseCardOverrides(existingInput);
   if (!isRecord(incomingInput)) return existing;
-  const combined = { ...existing };
-  for (const [key, incoming] of Object.entries(incomingInput)) {
-    if (!isRecord(incoming)) continue;
-    combined[key] = { ...(isRecord(existing[key]) ? existing[key] : {}), ...incoming };
-  }
-  return normaliseCardOverrides(combined);
+  // Missing cards are preserved, so a truncated/stale payload cannot erase the catalogue.
+  // A card that is explicitly present remains an authoritative replacement: archive/rank
+  // flows intentionally remove fields such as rank, and preserving omitted properties inside
+  // that one card would resurrect stale state.
+  return normaliseCardOverrides({ ...existing, ...incomingInput });
 }
 
 function mergeEntryMaps(existingInput, incomingInput) {
