@@ -123,7 +123,7 @@ function ensureModal() {
   modal = document.createElement('div');
   modal.id = MODAL_ID;
   modal.hidden = true;
-  modal.innerHTML = '<div class="variant-edit-dialog" role="dialog" aria-modal="true"><div class="variant-edit-head"><h2>Edit variant</h2><button type="button" data-variant-edit-close>Close</button></div><form><div class="variant-edit-grid"></div><div class="variant-edit-actions"><span class="variant-edit-status"></span><button type="button" data-variant-edit-cancel>Cancel</button><button type="submit">Save variant</button></div></form></div>';
+  modal.innerHTML = '<div class="variant-edit-dialog" role="dialog" aria-modal="true"><div class="variant-edit-head"><h2>Edit variant</h2><button type="button" data-variant-edit-close>Close</button></div><form novalidate><div class="variant-edit-grid"></div><div class="variant-edit-actions"><span class="variant-edit-status"></span><button type="button" data-variant-edit-cancel>Cancel</button><button type="submit" data-variant-edit-save>Save variant</button></div></form></div>';
   document.body.appendChild(modal);
   modal.addEventListener('click', event => {
     if (event.target === modal || event.target.closest?.('[data-variant-edit-close],[data-variant-edit-cancel]')) closeEditor();
@@ -140,10 +140,10 @@ function renderFields(kind, snapshot) {
     field('Label','label', value('label')),
     field('Title','title', value('title')),
     field('Eyebrow','eyebrow', value('eyebrow')),
-    field('Length (in)','length', value('length'),'number','step="0.01" min="0"'),
+    field('Length (in)','length', value('length'),'number','step="0.001" min="0"'),
     field('Ring gauge','ring', value('ring'),'number','step="1" min="0"'),
     field('Package price (AUD)','packagePrice', value('packagePrice'),'number','step="0.01" min="0"'),
-    field('Package count','packageCount', value('packageCount') || 1,'number','step="1" min="1" max="10"'),
+    field('Package count','packageCount', value('packageCount') || 1,'number','step="1" min="1" max="100"'),
     field('Package label','packageLabel', value('packageLabel')),
     field('Per-stick price override','price', value('price'),'number','step="0.01" min="0"'),
     field('Stock','stock', value('stock')),
@@ -181,6 +181,31 @@ function renderFields(kind, snapshot) {
 }
 
 let editContext = null;
+let closeTimer = 0;
+let saveGeneration = 0;
+
+export function resetVariantSaveControl(root = document) {
+  const submit = root?.querySelector?.('[data-variant-edit-save],button[type="submit"]');
+  if (!submit) return false;
+  submit.disabled = false;
+  submit.removeAttribute('aria-busy');
+  submit.textContent = 'Save variant';
+  return true;
+}
+
+function setVariantSaveBusy(form, busy) {
+  const submit = form?.querySelector?.('[data-variant-edit-save],button[type="submit"]');
+  if (!submit) return null;
+  submit.disabled = Boolean(busy);
+  if (busy) {
+    submit.setAttribute('aria-busy', 'true');
+    submit.textContent = 'Saving…';
+  } else {
+    submit.removeAttribute('aria-busy');
+    submit.textContent = 'Save variant';
+  }
+  return submit;
+}
 
 async function openEditor(card, kind) {
   const key = card?.dataset?.key || '';
@@ -194,6 +219,11 @@ async function openEditor(card, kind) {
   if (!snapshot.id) throw new Error(`No active ${kind} variant found.`);
 
   const modal = ensureModal();
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = 0;
+  }
+  resetVariantSaveControl(modal);
   const label = snapshot.raw?.label || snapshot.effective?.title || snapshot.id;
   modal.querySelector('h2').textContent = `Edit ${kind} · ${label}`;
   modal.querySelector('.variant-edit-grid').innerHTML = renderFields(kind, snapshot);
@@ -204,8 +234,15 @@ async function openEditor(card, kind) {
 }
 
 function closeEditor() {
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = 0;
+  }
   const modal = document.getElementById(MODAL_ID);
-  if (modal) modal.hidden = true;
+  if (modal) {
+    resetVariantSaveControl(modal);
+    modal.hidden = true;
+  }
   editContext = null;
 }
 
@@ -224,7 +261,7 @@ function formPatch(form, kind) {
     priceChecked:text(form.elements.priceChecked.value).trim(),
     stockChecked:text(form.elements.stockChecked.value).trim()
   };
-  const packageCount = Math.round(numberValue(form,'packageCount',{min:1,max:10}));
+  const packageCount = Math.round(numberValue(form,'packageCount',{min:1,max:100}));
   const length = numberValue(form,'length',{allowBlank:true,min:0});
   const ring = numberValue(form,'ring',{allowBlank:true,min:0,max:100});
   const packagePrice = numberValue(form,'packagePrice',{allowBlank:true,min:0});
@@ -268,22 +305,23 @@ function formPatch(form, kind) {
 
 async function saveEditor(event) {
   event.preventDefault();
-  if (!editContext) return;
+  const context = editContext;
+  if (!context) return;
   const form = event.currentTarget;
   const status = form.querySelector('.variant-edit-status');
-  const submit = form.querySelector('button[type="submit"]');
+  const generation = ++saveGeneration;
+  setVariantSaveBusy(form, true);
   status.textContent = 'Saving…';
-  submit.disabled = true;
   try {
     const fresh = await fetchState();
-    const record = recordFromState(fresh, editContext.key);
+    const record = recordFromState(fresh, context.key);
     if (!record) throw new Error('Catalogue record no longer exists.');
-    const patch = formPatch(form, editContext.kind);
+    const patch = formPatch(form, context.kind);
     let updated;
-    if (editContext.kind === 'blend') {
-      updated = updateBlendVariant(record, editContext.blendId, patch);
+    if (context.kind === 'blend') {
+      updated = updateBlendVariant(record, context.blendId, patch);
     } else {
-      updated = updateSizeVariant(record, editContext.sizeId, patch, editContext.blendId);
+      updated = updateSizeVariant(record, context.sizeId, patch, context.blendId);
     }
 
     const cards = { ...(fresh.cards || {}) };
@@ -293,8 +331,8 @@ async function saveEditor(event) {
     if (Array.isArray(updated.sizeVariants)) structuralPatch.sizeVariants = clone(updated.sizeVariants);
     if (updated.defaultBlendVariantId) structuralPatch.defaultBlendVariantId = updated.defaultBlendVariantId;
     if (updated.defaultVariantId) structuralPatch.defaultVariantId = updated.defaultVariantId;
-    cards[editContext.key] = { ...(cards[editContext.key] || {}), ...structuralPatch };
-    if (entries[editContext.key]) entries[editContext.key] = { ...entries[editContext.key], ...structuralPatch };
+    cards[context.key] = { ...(cards[context.key] || {}), ...structuralPatch };
+    if (entries[context.key]) entries[context.key] = { ...entries[context.key], ...structuralPatch };
 
     const response = await adminFetch(STATE_API, {
       method:'PUT',
@@ -306,19 +344,24 @@ async function saveEditor(event) {
 
     const saved = await fetchState();
     setVariantState(saved);
-    const savedRecord = recordFromState(saved, editContext.key);
+    const savedRecord = recordFromState(saved, context.key);
     if (savedRecord) {
       if (normaliseBlendVariants(savedRecord).length) {
-        applyBlendToCard(editContext.card, savedRecord, editContext.blendId, editContext.sizeId);
-      } else if (editContext.sizeId) {
-        applyVariantToCard(editContext.card, savedRecord, editContext.sizeId);
+        applyBlendToCard(context.card, savedRecord, context.blendId, context.sizeId);
+      } else if (context.sizeId) {
+        applyVariantToCard(context.card, savedRecord, context.sizeId);
       }
     }
     status.textContent = 'Saved ✓';
-    setTimeout(closeEditor, 450);
+    setVariantSaveBusy(form, false);
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      closeTimer = 0;
+      if (editContext === context && saveGeneration === generation) closeEditor();
+    }, 450);
   } catch (error) {
     status.textContent = error.message || 'Save failed';
-    submit.disabled = false;
+    setVariantSaveBusy(form, false);
   }
 }
 
