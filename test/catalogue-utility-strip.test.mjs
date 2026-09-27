@@ -23,4 +23,6 @@ test('utility conversion preserves stock hooks and hashed stylesheet', async () 
   const css = await readFile(new URL('../public/css/' + stylesheet, import.meta.url), 'utf8');
   assert.match(css, /\.catalogue-utility-strip\{/);
   assert.match(css, /\.catalogue-utility>summary\{/);
+  assert.match(css, /\.catalogue-utility-icon\{[\s\S]*left:50%;[\s\S]*top:50%;[\s\S]*transform:translate\(-50%,-50%\)/);
+  assert.match(css, /\.catalogue-utility>summary::marker\{content:""\}/);
 });
