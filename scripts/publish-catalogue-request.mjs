@@ -115,6 +115,8 @@ function normaliseStateShape(value) {
   for (const [key, card] of Object.entries(isRecord(input.cards) ? input.cards : {})) cards[key] = stripDerivedCardValue(card);
   return {
     version: 3,
+    revision: Number.isSafeInteger(Number(input.revision)) && Number(input.revision) >= 0 ? Number(input.revision) : 0,
+    updatedAt: String(input.updatedAt || ''),
     cards,
     sections: isRecord(input.sections) ? clone(input.sections) : {},
     entries: isRecord(input.entries) ? clone(input.entries) : {}
@@ -448,28 +450,35 @@ async function uploadImage(fetchImpl, baseUrl, token, key, imageData) {
   if (!downloaded.equals(imageData.bytes)) throw new Error('Image verification bytes do not match the uploaded image.');
 }
 
-async function putEntry(fetchImpl, baseUrl, token, key, entry) {
+function revisionHeaders(revision, headers = {}) {
+  const output = { ...headers };
+  const value = Number(revision);
+  if (Number.isSafeInteger(value) && value >= 0) output['x-catalogue-state-revision'] = String(value);
+  return output;
+}
+
+async function putEntry(fetchImpl, baseUrl, token, key, entry, revision) {
   const url = `${baseUrl}/api/catalogue-entry/${encodeURIComponent(key)}`;
   return fetchJson(fetchImpl, url, {
     method: 'PUT',
-    headers: buildHeaders(token, { 'content-type': 'application/json' }),
+    headers: buildHeaders(token, revisionHeaders(revision, { 'content-type': 'application/json' })),
     body: JSON.stringify(entry)
   }, 'Entry write', token);
 }
 
-async function deleteEntry(fetchImpl, baseUrl, token, key) {
+async function deleteEntry(fetchImpl, baseUrl, token, key, revision) {
   const url = `${baseUrl}/api/catalogue-entry/${encodeURIComponent(key)}`;
   return fetchJson(fetchImpl, url, {
     method: 'DELETE',
-    headers: buildHeaders(token)
+    headers: buildHeaders(token, revisionHeaders(revision))
   }, 'Entry delete', token);
 }
 
 async function putState(fetchImpl, baseUrl, token, state) {
   return fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides`, {
     method: 'PUT',
-    headers: buildHeaders(token, { 'content-type': 'application/json' }),
-    body: JSON.stringify({ version: 3, cards: state.cards, sections: state.sections })
+    headers: buildHeaders(token, revisionHeaders(state.revision, { 'content-type': 'application/json' })),
+    body: JSON.stringify({ version: 3, revision:state.revision, cards: state.cards, sections: state.sections })
   }, 'Catalogue state write', token);
 }
 
@@ -612,7 +621,7 @@ export async function publishRequestDocument(input, options = {}) {
     // that obsolete record entirely instead of leaving a duplicate in the Archived grid.
     // It is intentionally idempotent so a retry can finish cleanup after a partial delete.
     if (existingCard && !existingDynamic) throw new Error('delete-entry can only remove a dynamic catalogue entry.');
-    if (existingDynamic) await deleteEntry(fetchImpl, baseUrl, token, request.key);
+    if (existingDynamic) await deleteEntry(fetchImpl, baseUrl, token, request.key, state.revision);
 
     let verifiedStateRaw = await fetchJson(fetchImpl, `${baseUrl}/api/catalogue-overrides?verify=1`, { headers: { accept: 'application/json' }, cache: 'no-store' }, 'Catalogue state read-back');
     let verifiedState = normaliseStateShape(verifiedStateRaw);
@@ -716,12 +725,20 @@ export async function publishRequestDocument(input, options = {}) {
     displacedEntries.push([key, { ...entry, rank: cardRank }]);
   }
   for (const [key, entry] of displacedEntries) {
-    await putEntry(fetchImpl, baseUrl, token, key, entry);
+    const result = await putEntry(fetchImpl, baseUrl, token, key, entry, state.revision);
+    if (Number.isSafeInteger(Number(result?.revision))) state.revision = Number(result.revision);
+    if (result?.updatedAt) state.updatedAt = String(result.updatedAt);
     state.entries[key] = entry;
   }
 
-  if (target === 'dynamic') await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry);
-  await putState(fetchImpl, baseUrl, token, state);
+  if (target === 'dynamic') {
+    const result = await putEntry(fetchImpl, baseUrl, token, request.key, nextEntry, state.revision);
+    if (Number.isSafeInteger(Number(result?.revision))) state.revision = Number(result.revision);
+    if (result?.updatedAt) state.updatedAt = String(result.updatedAt);
+  }
+  const stateWrite = await putState(fetchImpl, baseUrl, token, state);
+  if (Number.isSafeInteger(Number(stateWrite?.revision))) state.revision = Number(stateWrite.revision);
+  if (stateWrite?.updatedAt) state.updatedAt = String(stateWrite.updatedAt);
 
   let savedEntry = null;
   if (target === 'dynamic') {
