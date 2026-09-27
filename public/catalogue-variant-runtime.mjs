@@ -792,7 +792,7 @@ function ensureStyle() {
 article.card.search-hit{outline:2px solid #c69d2c;outline-offset:3px}
 .catalogue-variant-default{margin-left:6px;border:1px solid rgba(195,162,80,.5);border-radius:6px;background:rgba(255,250,240,.7);color:#6c4a0d;font:700 10px Cinzel,serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;cursor:pointer}
 .catalogue-variant-default[disabled]{opacity:.45;cursor:default}
-.catalogue-variant-search{display:flex;flex-direction:column;gap:4px;margin:6px 0 12px}
+.catalogue-variant-search{display:flex;flex-direction:column;gap:4px;margin:10px 0 12px}
 .catalogue-variant-search-label{font-family:Cinzel,serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a6b34}
 .catalogue-variant-search input{box-sizing:border-box;width:100%;border:1px solid rgba(195,162,80,.5);border-radius:7px;background:rgba(255,250,240,.85);color:#5b321d;font:13px Georgia,serif;padding:6px 9px}
 .catalogue-variant-search input:focus{outline:1px solid #c69d2c;border-color:#c69d2c}
