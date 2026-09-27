@@ -53,35 +53,62 @@ export function profileFromEditorFields(root = globalThis.document) {
 export function injectFlavourProfileIntoStatePayload(payload, key, profile) {
   const source = payload && typeof payload === 'object' ? payload : {};
   const cards = source.cards && typeof source.cards === 'object' ? source.cards : {};
+  const entries = source.entries && typeof source.entries === 'object' ? source.entries : {};
   const safeKey = String(key || '').trim();
   if (!safeKey) return source;
-  return {
+  const normalised = normaliseFlavourProfile(profile);
+  const next = {
     ...source,
     cards: {
       ...cards,
       [safeKey]: {
         ...(cards[safeKey] && typeof cards[safeKey] === 'object' ? cards[safeKey] : {}),
-        flavourProfile: normaliseFlavourProfile(profile)
+        flavourProfile: normalised
       }
     }
   };
+  // Dynamic entries are rendered from entries[], so keep their authoritative record in
+  // sync with the card override. Without this the next editor reload resurrects the old
+  // profile from entries[] even though the card override did save.
+  if (entries[safeKey] && typeof entries[safeKey] === 'object') {
+    next.entries = {
+      ...entries,
+      [safeKey]: {
+        ...entries[safeKey],
+        flavourProfile: normalised
+      }
+    };
+  }
+  return next;
 }
 
 export function injectFlavourIntoStatePayload(payload, key, value) {
   const source = payload && typeof payload === 'object' ? payload : {};
   const cards = source.cards && typeof source.cards === 'object' ? source.cards : {};
+  const entries = source.entries && typeof source.entries === 'object' ? source.entries : {};
   const safeKey = String(key || '').trim();
   if (!safeKey) return source;
-  return {
+  const normalised = normaliseFlavour(value);
+  const next = {
     ...source,
     cards: {
       ...cards,
       [safeKey]: {
         ...(cards[safeKey] && typeof cards[safeKey] === 'object' ? cards[safeKey] : {}),
-        flavour: normaliseFlavour(value)
+        flavour: normalised
       }
     }
   };
+  if (entries[safeKey] && typeof entries[safeKey] === 'object') {
+    next.entries = {
+      ...entries,
+      [safeKey]: {
+        ...entries[safeKey],
+        flavour: normalised
+      }
+    };
+  }
+  return next;
 }
 
 // Gem and Crown are decided by the number of Gold rating fields and nothing else.
@@ -479,7 +506,9 @@ function populateEditorField() {
 }
 
 function populateProfileFields(saved) {
-  const merged = { ...(saved || {}), ...(state.entries?.[selectedKey()] || {}) };
+  // The card override is the live admin override and must win over an older dynamic-entry
+  // value. The previous order did the opposite, making a successful edit look unsaved.
+  const merged = { ...(state.entries?.[selectedKey()] || {}), ...(saved || {}) };
   const profile = normaliseFlavourProfile(merged.flavourProfile);
   for (const axis of FLAVOUR_AXES) {
     const field = document.getElementById(`catalogue-admin-flavour-${axis.id}`);
@@ -583,7 +612,11 @@ function installSavePipeline() {
       return;
     }
     if (event.method === 'PUT') {
-      state = { ...state, cards: event.state.cards || state.cards || {} };
+      state = {
+        ...state,
+        cards: event.state.cards || state.cards || {},
+        entries: event.state.entries || state.entries || {}
+      };
       scheduleRefresh();
     }
   });
