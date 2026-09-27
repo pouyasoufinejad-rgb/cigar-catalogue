@@ -31,6 +31,13 @@ test('the eight axes are declared once, in catalogue order, with distinct colour
   }
 });
 
+test('Coffee uses the supplied bean artwork and one dark-brown colour for both icon and pips', () => {
+  const axis = flavourAxis('coffee');
+  assert.equal(axis.label, 'Coffee');
+  assert.equal(axis.colour, '#743c24');
+  assert.match(axis.mask, /^\/art\/flavour\/coffee-[0-9a-f]{8}\.png$/);
+});
+
 test('an unprofiled axis is absent, not zero', () => {
   assert.equal(normaliseFlavourIntensity(undefined), null);
   assert.equal(normaliseFlavourIntensity(null), null);
