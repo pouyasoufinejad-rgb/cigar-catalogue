@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-27-repair-undercrown-maduro-production-lines",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "productionLines": [
+          "Wrapper: Mexican San Andrés Otapan Negro",
+          "Binder: Connecticut River Valley stalk-cut Habano",
+          "Filler: Brazilian Mata Fina and Nicaraguan"
+        ]
+      }
+    ]
+  },
+  "note": "Populate the empty alternate-blend Production section from the tobacco composition already recorded in its saved summaryHtml and the 2026-09-25 original blend request. An alternate blend intentionally cannot inherit the different Undercrown 10 tobacco composition. Preserve all prices, ratings, profiles, copy, links, size options and blend ordering."
+}
