@@ -58,6 +58,13 @@ article.card{
   max-width:var(--catalogue-card-max-width)!important;
   margin-inline:auto!important;
 }
+@supports (content-visibility:auto){
+  article.card{content-visibility:auto;contain-intrinsic-size:auto 1000px}
+  article.card:focus-within{content-visibility:visible}
+}
+@media print{
+  article.card{content-visibility:visible!important;contain-intrinsic-size:none!important}
+}
 article.card .artframe{
   min-height:var(--catalogue-artframe-min-height)!important;
 }
