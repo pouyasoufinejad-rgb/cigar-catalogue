@@ -46,7 +46,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-8/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-9/);
 });
 
 test('the sidebar sits left of its old anchor without its left edge leaving the window', () => {
@@ -58,7 +58,9 @@ test('the sidebar sits left of its old anchor without its left edge leaving the 
   // its left edge walks off the left of the window on a viewport with no room to give.
   assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px - var\(--rail-shift\)\)\)/);
   assert.match(sidebarSource, /box-sizing:border-box/);
-  assert.match(sidebarSource, /padding:6px 8px 0 0/);
+  assert.match(sidebarSource, /padding:4px 8px 0 0/);
+  assert.match(sidebarSource, /overflow-y:hidden/);
+  assert.match(sidebarSource, /:has\(\[data-brand-line-toggle\]\[aria-expanded=\"true\"\]\)\{overflow-y:auto\}/);
   assert.match(sidebarSource, /scrollbar-gutter:stable/);
 
   // Solve the two cases by hand: while the width is capped at 250px the rail really moves
@@ -216,4 +218,14 @@ test('CAO and Drew Estate sidebar filters match span-rendered catalogue cards', 
   assert.equal(davidoffCard.classList.contains('brand-line-filter-hidden'), true);
 
   dom.window.close();
+});
+
+
+test('collapsed desktop sidebar uses compact spacing and only scrolls when brands are expanded', () => {
+  assert.match(sidebarSource, /top:12px/);
+  assert.match(sidebarSource, /max-height:calc\(100vh - 24px\)/);
+  assert.match(sidebarSource, /#\$\{SIDEBAR_ID\}\{[\s\S]*gap:6px/);
+  assert.match(sidebarSource, /catalogue-convenience-toolbar[\s\S]*padding:7px!important;[\s\S]*gap:5px!important;/);
+  assert.match(sidebarSource, /\.controls\{[\s\S]*padding:8px!important;[\s\S]*gap:6px!important;/);
+  assert.match(sidebarSource, /\.catalogue-sidebar-choice\{[\s\S]*min-height:30px;[\s\S]*padding:5px 7px;/);
 });
