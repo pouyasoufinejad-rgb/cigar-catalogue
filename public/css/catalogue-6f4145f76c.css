@@ -681,11 +681,13 @@ article.card[data-flipped="1"] .card-face-back,article.card:not([data-flipped]) 
    same place. */
 .flavour-label{flex:0 0 58px;font-family:Cinzel,serif;text-transform:uppercase;font-size:10px;letter-spacing:.09em;font-weight:700;color:#735c43;line-height:1.2}
 .flavour-icon{flex:none;width:24px;height:24px;background-color:var(--flavour-colour);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
-/* Slightly more visual weight for the four finer masks, without changing their 24px layout slot. */
+/* Slightly more visual weight for the finer masks, without changing their 24px layout slot. */
 .flavour-axis[data-axis="pepper"] .flavour-icon,
 .flavour-axis[data-axis="spice"] .flavour-icon,
 .flavour-axis[data-axis="earth"] .flavour-icon,
-.flavour-axis[data-axis="cedar"] .flavour-icon{transform:scale(1.08);transform-origin:center}
+.flavour-axis[data-axis="cedar"] .flavour-icon,
+.flavour-axis[data-axis="nuts"] .flavour-icon,
+.flavour-axis[data-axis="smoke"] .flavour-icon{transform:scale(1.12);transform-origin:center}
 
 /* An axis still waiting on its artwork shows its colour as a disc. */
 .flavour-icon-plain{border-radius:50%;box-shadow:inset 0 0 0 1px rgba(38,23,14,.34)}
