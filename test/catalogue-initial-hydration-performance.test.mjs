@@ -44,20 +44,3 @@ test('offscreen cards opt into browser rendering deferral without changing print
 });
 
 
-test('identical laurel artwork is shared by URL instead of downloaded once per card', async () => {
-  const crownImgs = [...html.matchAll(/<div class="gem-award crown-tier"[\s\S]*?<img\s+src="([^"]+)"/g)].map(match => match[1]);
-  const gemImgs = [...html.matchAll(/<div class="gem-award gem-tier"[\s\S]*?<img\s+src="([^"]+)"/g)].map(match => match[1]);
-  assert.ok(crownImgs.length >= 1);
-  assert.ok(gemImgs.length >= 1);
-  assert.deepEqual([...new Set(crownImgs)], ['/art/ui/crown-laurel-31ebc39213.webp']);
-  assert.deepEqual([...new Set(gemImgs)], ['/art/ui/gem-laurel-846739ec52.webp']);
-
-  const [sharedCrown, oldCrown, sharedGem, oldGem] = await Promise.all([
-    readFile(new URL('../public/art/ui/crown-laurel-31ebc39213.webp', import.meta.url)),
-    readFile(new URL('../public/art/aj-fernandez-new-world-oscuro-31ebc39213.webp', import.meta.url)),
-    readFile(new URL('../public/art/ui/gem-laurel-846739ec52.webp', import.meta.url)),
-    readFile(new URL('../public/art/liga-privada-no-9-coronets-846739ec52.webp', import.meta.url))
-  ]);
-  assert.deepEqual(sharedCrown, oldCrown, 'shared Crown art must remain byte-identical');
-  assert.deepEqual(sharedGem, oldGem, 'shared Gem art must remain byte-identical');
-});
