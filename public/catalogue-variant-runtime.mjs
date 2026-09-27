@@ -1,3 +1,4 @@
+import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 // Selecting a size on a card, without changing what the catalogue shows by default.
 //
 // Two ideas are kept apart deliberately. The default variant is saved state: it is what a
@@ -71,10 +72,7 @@ export function syncCheapestSingleLine(card, lines) {
 }
 
 function storedRecord(state, key) {
-  const card = state?.cards?.[key];
-  const entry = state?.entries?.[key];
-  if (!card && !entry) return null;
-  return { key, ...(card || {}), ...(entry || {}) };
+  return catalogueRecordFromState(state, key);
 }
 
 // Catalogue keys are already restricted to lowercase letters, digits, hyphen and
@@ -693,44 +691,85 @@ export function openSearchResult(query) {
   return hit;
 }
 
-// Promoting the active size to the saved default. This is the only path here that writes.
-export async function promoteActiveVariant(key, { fetchImpl = fetch } = {}) {
+const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
+
+function adminToken(override = '') {
+  const explicit = String(override || '').trim();
+  if (explicit) return explicit;
+  let stored = '';
+  try { stored = String(sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY) || '').trim(); } catch (_) {}
+  if (stored) return stored;
+  const entered = String(globalThis.prompt?.('Admin token required to change the catalogue.') || '').trim();
+  if (!entered) throw new Error('Admin token is required to save catalogue changes.');
+  try { sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, entered); } catch (_) {}
+  return entered;
+}
+
+async function freshState(fetchImpl) {
+  const response = await fetchImpl(`${STATE_API}?default_edit=${Date.now()}`, {
+    cache:'no-store',
+    headers:{ accept:'application/json' }
+  });
+  if (!response?.ok) throw new Error(`Could not load fresh catalogue state (HTTP ${response?.status}).`);
+  return response.json();
+}
+
+async function saveDefaultPatch(key, patch, { fetchImpl = fetch, token = '' } = {}) {
+  const fresh = await freshState(fetchImpl);
+  const cards = { ...(fresh.cards || {}) };
+  const entries = { ...(fresh.entries || {}) };
+  cards[key] = { ...(cards[key] || {}), ...patch };
+  if (entries[key]) entries[key] = { ...entries[key], ...patch };
+
+  const response = await fetchImpl(STATE_API, {
+    method:'PUT',
+    headers:{
+      'content-type':'application/json',
+      authorization:`Bearer ${adminToken(token)}`
+    },
+    body:JSON.stringify({
+      version:3,
+      cards,
+      sections:{ ...(fresh.sections || {}) },
+      entries
+    })
+  });
+  const payload = await response?.json?.().catch?.(() => ({})) || {};
+  if (!response?.ok) throw new Error(payload.error || `Could not save variant default (HTTP ${response?.status}).`);
+
+  const saved = await freshState(fetchImpl);
+  const verified = catalogueRecordFromState(saved, key);
+  for (const [field, expected] of Object.entries(patch)) {
+    if (verified?.[field] !== expected) throw new Error('The server accepted the save but the new default did not survive read-back.');
+  }
+  setVariantState(saved);
+  return saved;
+}
+
+// Promoting an active size/blend is a full-state authenticated PUT. The old path sent a
+// partial unauthenticated POST even though the Worker only accepts PUT, so the button could
+// never reliably persist and a naive PUT of that partial body would have deleted other cards.
+export async function promoteActiveVariant(key, options = {}) {
   const card = document.querySelector(cardSelector(key));
   const record = storedRecord(liveState, key);
   if (!card || !record) return null;
   const patch = promoteVariantPatch(record, card.dataset.activeVariant || '');
   if (!patch) return null;
 
-  const response = await fetchImpl(STATE_API, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ cards: { [key]: patch }, entries: { [key]: patch } })
-  });
-  if (!response?.ok) throw new Error(`Could not save the default size (HTTP ${response?.status}).`);
-
-  if (liveState?.cards?.[key]) liveState.cards[key].defaultVariantId = patch.defaultVariantId;
-  if (liveState?.entries?.[key]) liveState.entries[key].defaultVariantId = patch.defaultVariantId;
+  await saveDefaultPatch(key, patch, options);
   card.dataset.defaultVariant = patch.defaultVariantId;
   writeVariantToUrl(key, patch.defaultVariantId, storedRecord(liveState, key));
   return patch;
 }
 
-export async function promoteActiveBlend(key, { fetchImpl = fetch } = {}) {
+export async function promoteActiveBlend(key, options = {}) {
   const card = document.querySelector(cardSelector(key));
   const record = storedRecord(liveState, key);
   if (!card || !record) return null;
   const patch = promoteBlendVariantPatch(record, card.dataset.activeBlend || '');
   if (!patch) return null;
 
-  const response = await fetchImpl(STATE_API, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ cards: { [key]: patch }, entries: { [key]: patch } })
-  });
-  if (!response?.ok) throw new Error(`Could not save the default blend (HTTP ${response?.status}).`);
-
-  if (liveState?.cards?.[key]) liveState.cards[key].defaultBlendVariantId = patch.defaultBlendVariantId;
-  if (liveState?.entries?.[key]) liveState.entries[key].defaultBlendVariantId = patch.defaultBlendVariantId;
+  await saveDefaultPatch(key, patch, options);
   card.dataset.defaultBlend = patch.defaultBlendVariantId;
   writeBlendToUrl(key, patch.defaultBlendVariantId, card.dataset.activeVariant || '', storedRecord(liveState, key));
   return patch;
