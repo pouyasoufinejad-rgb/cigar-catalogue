@@ -6,7 +6,7 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=185\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=186\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
@@ -36,5 +36,5 @@ test('runtime version-busts both desktop layout modules', () => {
 });
 
 test('runtime version-busts the variant runtime carrying search spacing', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-variant-runtime\.mjs\?v=search-spacing-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-variant-runtime\.mjs\?v=search-spacing-2['"]\)/);
 });
