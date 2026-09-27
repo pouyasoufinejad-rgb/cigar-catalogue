@@ -61,6 +61,12 @@ test('partial blend patches preserve the existing blend order and only append ne
 
   const appended = mergeVariantObjects(existing, [{ id:'sun-grown', label:'Sun Grown' }]);
   assert.deepEqual(appended.map(item => item.id), ['maduro', 'natural', 'sun-grown']);
+
+  const reordered = mergeVariantObjects(existing, [
+    { id:'natural', label:'Natural' },
+    { id:'maduro', label:'Maduro' }
+  ]);
+  assert.deepEqual(reordered.map(item => item.id), ['natural', 'maduro'], 'a complete variant list may intentionally repair ordering');
 });
 
 test('partial update of an existing dynamic entry preserves unrelated fields and updates cards', async () => {
