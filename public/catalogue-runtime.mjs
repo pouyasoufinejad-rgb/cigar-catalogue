@@ -15,7 +15,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-convenience.mjs?v=retailer-dropdown-1');
   import('./catalogue-convenience-refinements.mjs');
   import('./catalogue-filter-refinements.mjs?v=retailer-price-filters-1');
-  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-7');
+  import('./catalogue-control-sidebar.mjs?v=sidebar-controls-8');
   import('./catalogue-no-parent-tier.mjs?v=no-parent-tier-1');
   import('./catalogue-variant-runtime.mjs?v=coffee-axis-1');
   import('./catalogue-variant-editor.mjs?v=scroll-stability-1');
