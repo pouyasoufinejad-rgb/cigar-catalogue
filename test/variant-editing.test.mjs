@@ -121,7 +121,7 @@ test('variant editor resets the save button every time it opens and closes', () 
 });
 
 test('variant editor shares the same variant runtime module instance as the page', () => {
-  assert.match(variantEditorSource, /catalogue-variant-runtime\.mjs\?v=coffee-axis-1/);
+  assert.match(variantEditorSource, /catalogue-variant-runtime\.mjs\?v=search-spacing-1/);
 });
 
 test('viewport preservation restores scroll after synchronous and animation-frame movement', () => {
