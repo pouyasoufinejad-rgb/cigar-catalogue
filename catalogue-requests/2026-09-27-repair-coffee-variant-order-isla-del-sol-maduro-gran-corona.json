@@ -1,0 +1,30 @@
+{
+  "id": "2026-09-27-repair-coffee-variant-order-isla-del-sol-maduro-gran-corona",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "earth": 3,
+      "coffee": 5
+    },
+    "defaultBlendVariantId": "maduro",
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 5,
+          "coffee": 5,
+          "nuts": 4,
+          "cedar": 3
+        }
+      }
+    ]
+  },
+  "note": "Repair blend ordering after a partial Coffee-profile publish moved an alternate blend ahead of the baseline. Restore the baseline-first order and retain Coffee on the relevant parent/variant profile without replacing unrelated variant metadata."
+}
