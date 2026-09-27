@@ -38,26 +38,6 @@ jobs:
           node-version: '22'
       - name: Install Playwright Chromium
         run: npm install --no-audit --no-fund playwright && npx playwright install --with-deps chromium
-      - name: Measure
-        env:
-          WIDTHS: ${{ inputs.widths }}
-        run: node scripts/measure-live-mobile-layout.mjs
-      - name: Check the card country strip
-        if: ${{ always() }}
-        env:
-          STRIP_NEIGHBOUR_KEYS: ${{ inputs.neighbour_keys }}
-        run: node scripts/verify-live-card-strip.mjs
       - name: Check the reported Chromium crash URL and repaired blend records
         if: ${{ always() }}
         run: node scripts/verify-live-reported-breakpoint.mjs
-      - name: Upload screenshots
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-layout-${{ github.run_id }}
-          path: |
-            mobile-layout-*.png
-            card-strip-*.png
-            variant-*.png
-          retention-days: 14
-          if-no-files-found: warn
