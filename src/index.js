@@ -614,6 +614,16 @@ function revisionConflictResponse(expected, current) {
   }, { status:409 });
 }
 
+function revisionPreconditionResponse() {
+  return json({
+    error:'This editor is out of date and cannot safely save. Reload the catalogue before editing again.'
+  }, { status:428 });
+}
+
+function browserWriteNeedsRevision(request) {
+  return Boolean(request?.headers?.get?.('origin'));
+}
+
 export function stateBackupKey(revision) {
   const safeRevision = Number.isSafeInteger(Number(revision)) && Number(revision) >= 0 ? Number(revision) : 0;
   return `${STATE_BACKUP_PREFIX}${safeRevision % STATE_BACKUP_SLOTS}`;
@@ -661,6 +671,7 @@ export async function handleState(request, env) {
   const currentRevision = stateRevision(existing);
   const expected = expectedRevision(request);
   if (Number.isNaN(expected)) return json({ error:'Invalid catalogue revision.' }, { status:400 });
+  if (browserWriteNeedsRevision(request) && expected === null) return revisionPreconditionResponse();
   if (expected !== null && expected !== currentRevision) return revisionConflictResponse(expected, currentRevision);
   const merged = mergeState(existing, parsed);
   let saved;
@@ -705,6 +716,7 @@ export async function handleEntry(request, env, rawKey) {
   const currentRevision = stateRevision(rawState);
   const expected = expectedRevision(request);
   if (Number.isNaN(expected)) return json({ error:'Invalid catalogue revision.' }, { status:400 });
+  if (browserWriteNeedsRevision(request) && expected === null) return revisionPreconditionResponse();
   if (expected !== null && expected !== currentRevision) return revisionConflictResponse(expected, currentRevision);
 
   if (request.method === 'PUT') {
