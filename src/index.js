@@ -376,17 +376,22 @@ export function stateRevision(value) {
 }
 
 function mergeCardMaps(existingInput, incomingInput) {
-  const existing = normaliseCardOverrides(existingInput);
+  const existing = isRecord(existingInput) ? clone(existingInput) : {};
   if (!isRecord(incomingInput)) return existing;
-  // Missing cards are preserved, so a truncated/stale payload cannot erase the catalogue.
-  // A card that is explicitly present remains an authoritative replacement: archive/rank
-  // flows intentionally remove fields such as rank, and preserving omitted properties inside
-  // that one card would resurrect stale state.
-  return normaliseCardOverrides({ ...existing, ...incomingInput });
+  // Missing cards stay byte-for-byte untouched. Only cards explicitly present in the
+  // payload are normalised/replaced, so a section-only or truncated write cannot rewrite
+  // unrelated records as a side effect.
+  const output = { ...existing };
+  for (const [key, incoming] of Object.entries(incomingInput)) {
+    if (!isRecord(incoming)) continue;
+    const normalised = normaliseCardOverrides({ [key]:incoming });
+    if (normalised[key]) output[key] = normalised[key];
+  }
+  return output;
 }
 
 function mergeEntryMaps(existingInput, incomingInput) {
-  const existing = normaliseEntries(existingInput);
+  const existing = isRecord(existingInput) ? clone(existingInput) : {};
   if (!isRecord(incomingInput)) return existing;
   const combined = { ...existing };
   for (const [key, incoming] of Object.entries(incomingInput)) {
@@ -431,14 +436,14 @@ export function mergeState(existingInput, incomingInput) {
     revision: existing.revision,
     updatedAt: new Date().toISOString(),
     cards: own(incoming, 'cards')
-      ? mergeCardMaps(existing.cards, incoming.cards)
-      : clone(existing.cards),
+      ? mergeCardMaps(rawExisting.cards, incoming.cards)
+      : (isRecord(rawExisting.cards) ? clone(rawExisting.cards) : clone(existing.cards)),
     sections: own(incoming, 'sections')
-      ? mergeSections(existing.sections, incoming.sections)
-      : clone(existing.sections),
+      ? mergeSections(rawExisting.sections, incoming.sections)
+      : (isRecord(rawExisting.sections) ? clone(rawExisting.sections) : clone(existing.sections)),
     entries: own(incoming, 'entries')
-      ? mergeEntryMaps(existing.entries, incoming.entries)
-      : clone(existing.entries)
+      ? mergeEntryMaps(rawExisting.entries, incoming.entries)
+      : (isRecord(rawExisting.entries) ? clone(rawExisting.entries) : clone(existing.entries))
   };
 }
 
