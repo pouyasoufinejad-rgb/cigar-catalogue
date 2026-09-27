@@ -1,0 +1,29 @@
+{
+  "id": "2026-09-27-repair-exquisitos-natural-corrupted-copy",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "eyebrow": "Sun-grown Dominican small panatela",
+        "summaryHtml": "<strong>Cedar, toasted nuts, coffee, light pepper and caramel sweetness</strong> lead a compact, wrapper-forward profile. The Ecuadorian sun-grown leaf brings more spice and dry wood than a shade-wrapped cigar, while the Dominican core keeps the smoke rounded and steady. At 33 ring the wrapper stays prominent, with a concentrated cedar-and-coffee finish rather than the darker cocoa weight of the Maduro.",
+        "noteHtml": "Untasted.",
+        "productionLines": [
+          "Handmade in the Dominican Republic",
+          "Wrapper: Ecuadorian Sun Grown",
+          "Binder: Dominican Republic",
+          "Filler: Dominican Republic"
+        ],
+        "practicalLines": [
+          "Single cigar",
+          "Uncut",
+          "Protected",
+          "Lenient Cadence"
+        ]
+      }
+    ]
+  },
+  "note": "Repair Natural-only copy and construction fields that were overwritten by the Maduro parent during the earlier partial blend-profile corruption. Preserve all current Natural pricing, retailer links, dimensions, ratings, image, stock and Coffee profile."
+}
