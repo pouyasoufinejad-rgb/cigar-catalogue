@@ -313,13 +313,15 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   t.diagnostic('COHORT OWNERSHIP PASS: Half-Cigar and Taster bounds remain independent; returning to recommendations restores subsection-local bounds.');
 
   const expectedSections = structuredClone(state.sections.recommendationSubsections);
+  const saveButton = window.document.getElementById('catalogue-admin-save');
+  await waitFor(() => saveButton && !saveButton.disabled, 'full editor save button never became ready', 8000);
   putBodies.length = 0;
-  window.document.getElementById('catalogue-admin-save').click();
+  saveButton.click();
   try {
-    await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
+    await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state', 8000);
   } catch (error) {
     const status = window.document.getElementById('catalogue-admin-status')?.textContent || '';
-    throw new Error(`${error.message}; admin status: ${status || '(empty)'}`);
+    throw new Error(`${error.message}; admin status: ${status || '(empty)'}; save disabled: ${Boolean(saveButton?.disabled)}`);
   }
   await delay(20);
   assert.equal(putBodies.length, 1);
