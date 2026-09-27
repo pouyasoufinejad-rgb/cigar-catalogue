@@ -11,7 +11,7 @@ test('compact catalogue utility icons sit above ranked recommendations', () => {
   assert.match(html, /aria-label="Legend &amp; scoring guide"/);
   assert.match(html, /aria-label="Benchmarks"/);
   assert.match(html, /aria-label="Live stock checks"/);
-  assert.equal((html.match(/class="catalogue-utility[^"]*"/g) || []).filter((value) => !value.includes('strip') && !value.includes('icon')).length, 3);
+  assert.equal((html.match(/name="catalogue-utility"/g) || []).length, 3);
 });
 
 test('utility conversion preserves stock hooks and hashed stylesheet', async () => {
