@@ -46,7 +46,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-7/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-8/);
 });
 
 test('the sidebar sits left of its old anchor without its left edge leaving the window', () => {
@@ -57,6 +57,9 @@ test('the sidebar sits left of its old anchor without its left edge leaving the 
   // The width has to subtract the same shift. Without that the rail keeps its width and
   // its left edge walks off the left of the window on a viewport with no room to give.
   assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px - var\(--rail-shift\)\)\)/);
+  assert.match(sidebarSource, /box-sizing:border-box/);
+  assert.match(sidebarSource, /padding:6px 8px 0 0/);
+  assert.match(sidebarSource, /scrollbar-gutter:stable/);
 
   // Solve the two cases by hand: while the width is capped at 250px the rail really moves
   // left, and once the window is too narrow for that the left edge is pinned instead.
