@@ -17,10 +17,10 @@ import {
   resolveSearchQuery,
   variantEffectiveRecord
 } from './catalogue-variants.mjs?v=volume-size-1';
-import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=flavour-weight-1';
+import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=coffee-axis-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
-import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=flavour-profile-4';
-import { flavourProfileMarkup } from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
+import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=coffee-axis-1';
+import { flavourProfileMarkup } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 
 export const VARIANT_QUERY_PARAM = 'variant';
 export const BLEND_QUERY_PARAM = 'blend';

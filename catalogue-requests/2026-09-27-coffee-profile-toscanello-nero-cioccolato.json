@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-coffee-profile-toscanello-nero-cioccolato",
+  "operation": "upsert-entry",
+  "key": "toscanello-nero-cioccolato",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "coffee": 4,
+      "smoke": 5
+    }
+  },
+  "note": "Add Coffee as a selective flavour axis because the existing catalogue tasting/research copy directly identifies coffee, espresso, mocha or café notes. Intensity uses the same 0–5 scale as the other axes: 5 dominant/infused, 4 prominent, 3 clear secondary, 2 background."
+}

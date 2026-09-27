@@ -4,7 +4,7 @@ import {
   normaliseBlendVariants,
   normaliseVariants
 } from './catalogue-variants.mjs?v=volume-size-1';
-import { FLAVOUR_AXES, FLAVOUR_SCALE_MAX, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
+import { FLAVOUR_AXES, FLAVOUR_SCALE_MAX, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 import {
   updateBlendVariant,
   updateSizeVariant,
@@ -14,7 +14,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=edit-consistency-1';
+} from './catalogue-variant-runtime.mjs?v=coffee-axis-1';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';

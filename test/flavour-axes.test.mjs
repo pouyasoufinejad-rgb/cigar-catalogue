@@ -21,14 +21,21 @@ import { sampleColour } from '../scripts/build-flavour-icons.mjs';
 
 const ART_DIR = new URL('../public/art/flavour/', import.meta.url);
 
-test('the seven axes are declared once, in catalogue order, with distinct colours', () => {
-  assert.deepEqual(FLAVOUR_AXIS_IDS, ['sweet', 'pepper', 'spice', 'earth', 'nuts', 'cedar', 'smoke']);
+test('the eight axes are declared once, in catalogue order, with distinct colours', () => {
+  assert.deepEqual(FLAVOUR_AXIS_IDS, ['sweet', 'pepper', 'spice', 'earth', 'coffee', 'nuts', 'cedar', 'smoke']);
   const colours = FLAVOUR_AXES.map(axis => axis.colour.toLowerCase());
   assert.equal(new Set(colours).size, colours.length, 'no two axes share a colour');
   for (const axis of FLAVOUR_AXES) {
     assert.match(axis.colour, /^#[0-9a-f]{6}$/i, `${axis.id} has a full hex colour`);
     assert.ok(axis.label, `${axis.id} has a label`);
   }
+});
+
+test('Coffee uses the supplied bean artwork and one dark-brown colour for both icon and pips', () => {
+  const axis = flavourAxis('coffee');
+  assert.equal(axis.label, 'Coffee');
+  assert.equal(axis.colour, '#743c24');
+  assert.match(axis.mask, /^\/art\/flavour\/coffee-[0-9a-f]{8}\.png$/);
 });
 
 test('an unprofiled axis is absent, not zero', () => {
@@ -47,9 +54,9 @@ test('intensities are clamped to the scale and rounded', () => {
 });
 
 test('a profile keeps only real values for named axes, in catalogue order', () => {
-  const profile = normaliseFlavourProfile({ cedar: 4, sweet: 2, bogus: 5, smoke: null, earth: 0 });
-  assert.deepEqual(Object.keys(profile), ['sweet', 'earth', 'cedar']);
-  assert.deepEqual(profile, { sweet: 2, earth: 0, cedar: 4 });
+  const profile = normaliseFlavourProfile({ cedar: 4, coffee: 3, sweet: 2, bogus: 5, smoke: null, earth: 0 });
+  assert.deepEqual(Object.keys(profile), ['sweet', 'earth', 'coffee', 'cedar']);
+  assert.deepEqual(profile, { sweet: 2, earth: 0, coffee: 3, cedar: 4 });
   assert.equal(hasFlavourProfile({}), false);
   assert.equal(hasFlavourProfile({ bogus: 3 }), false);
   assert.equal(hasFlavourProfile({ earth: 0 }), true);
@@ -234,7 +241,7 @@ test('the stylesheet paints the icon with the row colour and keeps every pip out
 // an axis has to be addable and removable at any time.
 test('the profile editor reads only the axes actually filled in', async () => {
   const { profileFromEditorFields } = await import('../public/catalogue-flavour.mjs');
-  const values = { sweet: '4', cedar: '0', pepper: '', earth: '   ', nuts: 'nonsense', smoke: '9' };
+  const values = { sweet: '4', coffee: '3', cedar: '0', pepper: '', earth: '   ', nuts: 'nonsense', smoke: '9' };
   const fakeDocument = {
     getElementById: id => {
       const axis = id.replace('catalogue-admin-flavour-', '');
@@ -242,7 +249,7 @@ test('the profile editor reads only the axes actually filled in', async () => {
     }
   };
   const profile = profileFromEditorFields(fakeDocument);
-  assert.deepEqual(profile, { sweet: 4, cedar: 0, smoke: 5 }, 'blanks and junk are left out, 9 clamps to 5');
+  assert.deepEqual(profile, { sweet: 4, coffee: 3, cedar: 0, smoke: 5 }, 'blanks and junk are left out, 9 clamps to 5');
   assert.equal('pepper' in profile, false, 'a blank axis stays off the card');
   assert.equal('cedar' in profile, true, 'a typed zero is kept, since it is a judgement');
 });
@@ -283,7 +290,7 @@ test('clearing every axis removes the profile rather than leaving stale bars', a
 test('a partly profiled cigar draws only the axes it was judged on', () => {
   const doc = parse(flavourProfileMarkup({ cedar: 3, pepper: 4 }));
   assert.deepEqual([...doc.querySelectorAll('.flavour-axis')].map(n => n.dataset.axis), ['pepper', 'cedar']);
-  assert.equal(doc.querySelectorAll('.flavour-axis').length, 2, 'the other five stay off the card');
+  assert.equal(doc.querySelectorAll('.flavour-axis').length, 2, 'the other six stay off the card');
 });
 
 test('each row names its axis in visible text, not only to screen readers', () => {

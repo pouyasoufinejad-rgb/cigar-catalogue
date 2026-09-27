@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-27-coffee-profile-joya-antano-1970-cigarillo",
+  "operation": "upsert-entry",
+  "key": "joya-antano-1970-cigarillo",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 2,
+      "pepper": 5,
+      "earth": 5,
+      "coffee": 3,
+      "cedar": 3
+    }
+  },
+  "note": "Add Coffee as a selective flavour axis because the existing catalogue tasting/research copy directly identifies coffee, espresso, mocha or café notes. Intensity uses the same 0–5 scale as the other axes: 5 dominant/infused, 4 prominent, 3 clear secondary, 2 background."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "2026-09-27-coffee-profile-davidoff-primeros-nicaragua-maduro",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "spice": 2,
+      "earth": 4,
+      "coffee": 4
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 4,
+          "coffee": 3
+        }
+      }
+    ]
+  },
+  "note": "Add Coffee as a selective flavour axis to the parent and/or blend variant where existing catalogue research identifies coffee, espresso, mocha or café notes. Variant profiles remain independent and retain only relevant axes."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "2026-09-27-coffee-profile-rocky-patel-sun-grown-juniors",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "earth": 4,
+      "coffee": 3,
+      "cedar": 4
+    },
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "earth": 4,
+          "coffee": 4
+        }
+      }
+    ]
+  },
+  "note": "Add Coffee as a selective flavour axis to the parent and/or blend variant where existing catalogue research identifies coffee, espresso, mocha or café notes. Variant profiles remain independent and retain only relevant axes."
+}

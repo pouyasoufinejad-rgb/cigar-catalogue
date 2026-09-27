@@ -1,0 +1,27 @@
+{
+  "id": "2026-09-27-coffee-profile-arturo-fuente-exquisitos-maduro",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 3,
+      "coffee": 4,
+      "cedar": 4
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 2,
+          "coffee": 3,
+          "nuts": 3,
+          "cedar": 5
+        }
+      }
+    ]
+  },
+  "note": "Add Coffee as a selective flavour axis to the parent and/or blend variant where existing catalogue research identifies coffee, espresso, mocha or café notes. Variant profiles remain independent and retain only relevant axes."
+}

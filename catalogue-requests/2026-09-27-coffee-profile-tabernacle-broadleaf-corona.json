@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-27-coffee-profile-tabernacle-broadleaf-corona",
+  "operation": "upsert-entry",
+  "key": "tabernacle-broadleaf-corona",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 4,
+      "earth": 4,
+      "coffee": 5,
+      "nuts": 4,
+      "smoke": 2
+    }
+  },
+  "note": "Add Coffee as a selective flavour axis because the existing catalogue tasting/research copy directly identifies coffee, espresso, mocha or café notes. Intensity uses the same 0–5 scale as the other axes: 5 dominant/infused, 4 prominent, 3 clear secondary, 2 background."
+}

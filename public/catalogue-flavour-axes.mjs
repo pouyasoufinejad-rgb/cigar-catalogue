@@ -1,4 +1,4 @@
-// The seven flavour axes a cigar is profiled against.
+// The eight flavour axes a cigar is profiled against.
 //
 // One definition for all of it: the label, the colour, and the mask the icon is drawn from.
 // The bar and its icon take the same colour from the same place, because the point of the
@@ -11,7 +11,7 @@
 //
 // No DOM access: the Worker renders these into the card.
 
-import { FLAVOUR_ART } from './catalogue-flavour-art.mjs';
+import { FLAVOUR_ART } from './catalogue-flavour-art.mjs?v=coffee-axis-1';
 
 export const FLAVOUR_SCALE_MAX = 5;
 
@@ -20,6 +20,7 @@ export const FLAVOUR_AXES = Object.freeze([
   { id: 'pepper', label: 'Pepper', colour: '#a43c2c', art: 'pepper grinder' },
   { id: 'spice',  label: 'Spice',  colour: '#bc4c1c', art: 'spice bowl' },
   { id: 'earth',  label: 'Earth',  colour: '#141414', art: 'soil and trowel' },
+  { id: 'coffee', label: 'Coffee', colour: '#743c24', art: 'coffee beans' },
   { id: 'nuts',   label: 'Nuts',   colour: '#ac743c', art: 'hazelnuts' },
   { id: 'cedar',  label: 'Cedar',  colour: '#c48c5c', art: 'cedar wood' },
   { id: 'smoke',  label: 'Smoke',  colour: '#5c5c64', art: 'smoke curls' }
@@ -69,7 +70,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g,
 // hairline whatever the axis colour is: Sweet is ivory on a cream card and would otherwise
 // be a row of invisible boxes, and Earth is near-black against the dark frame.
 // `axisList` exists so the no-artwork path stays reachable once every axis has art. It is
-// the only way to exercise a fallback that otherwise only fires the day an eighth axis is
+// the only way to exercise a fallback that otherwise only fires the day a ninth axis is
 // added, which is exactly when nobody is looking at it.
 export function flavourProfileMarkup(input, axisList = FLAVOUR_AXES) {
   const profile = normaliseFlavourProfile(input);

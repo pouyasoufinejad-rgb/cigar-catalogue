@@ -314,7 +314,12 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   const expectedSections = structuredClone(state.sections.recommendationSubsections);
   putBodies.length = 0;
   window.document.getElementById('catalogue-admin-save').click();
-  await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
+  try {
+    await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
+  } catch (error) {
+    const status = window.document.getElementById('catalogue-admin-status')?.textContent || '';
+    throw new Error(`${error.message}; admin status: ${status || '(empty)'}`);
+  }
   await delay(20);
   assert.equal(putBodies.length, 1);
   const saved = putBodies[0];
