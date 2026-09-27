@@ -266,26 +266,36 @@ function patchForDynamic(entryPatch) {
   return patch;
 }
 
-function mergeVariantObjects(existingList, patchList) {
+export function mergeVariantObjects(existingList, patchList) {
   if (!Array.isArray(patchList)) return patchList;
-  const byId = new Map();
-  for (const variant of Array.isArray(existingList) ? existingList : []) {
-    if (!isRecord(variant)) continue;
-    const id = String(variant.id || variant.label || '').trim().toLowerCase();
-    if (id) byId.set(id, clone(variant));
-  }
-  const output = [];
-  const seen = new Set();
+  const existing = Array.isArray(existingList) ? existingList.filter(isRecord) : [];
+  const patches = new Map();
+  const patchOrder = [];
   for (const variant of patchList) {
     if (!isRecord(variant)) continue;
     const id = String(variant.id || variant.label || '').trim().toLowerCase();
     if (!id) continue;
-    const merged = { ...(byId.get(id) || {}), ...clone(variant) };
-    output.push(merged);
+    patches.set(id, clone(variant));
+    patchOrder.push(id);
+  }
+
+  // A partial variant patch must not reorder the existing list. The first blend is the
+  // baseline data source, so moving a patched alternate blend to index 0 changes which
+  // profile/copy inherits from the parent and can blank the saved default blend entirely.
+  // Preserve existing order and merge by id; only genuinely new variants append in the
+  // order they appear in the patch.
+  const output = [];
+  const seen = new Set();
+  for (const variant of existing) {
+    const id = String(variant.id || variant.label || '').trim().toLowerCase();
+    if (!id) continue;
+    output.push({ ...clone(variant), ...(patches.get(id) || {}) });
     seen.add(id);
   }
-  for (const [id, variant] of byId) {
-    if (!seen.has(id)) output.push(variant);
+  for (const id of patchOrder) {
+    if (seen.has(id)) continue;
+    output.push(patches.get(id));
+    seen.add(id);
   }
   return output;
 }
