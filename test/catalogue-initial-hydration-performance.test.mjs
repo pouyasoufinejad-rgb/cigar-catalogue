@@ -39,8 +39,8 @@ test('the above-the-fold header illustration is never lazy-loaded', () => {
 });
 
 test('offscreen cards opt into browser rendering deferral without changing print output', () => {
-  assert.match(html, /article\.card\{content-visibility:auto;contain-intrinsic-size:auto 1000px\}/);
-  assert.match(html, /@media print\{article\.card\{content-visibility:visible!important;contain-intrinsic-size:none!important\}\}/);
+  assert.match(stock, /article\.card\{content-visibility:auto;contain-intrinsic-size:auto 1000px\}/);
+  assert.match(stock, /@media print\{[\s\S]*?article\.card\{content-visibility:visible!important;contain-intrinsic-size:none!important\}/);
 });
 
 
