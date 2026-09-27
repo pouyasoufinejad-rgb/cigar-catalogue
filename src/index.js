@@ -378,13 +378,31 @@ export function stateRevision(value) {
 function mergeCardMaps(existingInput, incomingInput) {
   const existing = isRecord(existingInput) ? clone(existingInput) : {};
   if (!isRecord(incomingInput)) return existing;
-  // Missing cards stay byte-for-byte untouched. Only cards explicitly present in the
-  // payload are normalised/replaced, so a section-only or truncated write cannot rewrite
-  // unrelated records as a side effect.
+  // Missing cards stay byte-for-byte untouched. A present card is field-merged so future
+  // fields that an older writer does not know about cannot disappear. The few fields whose
+  // absence has deliberate meaning in ranking/archive flows are handled explicitly below.
   const output = { ...existing };
   for (const [key, incoming] of Object.entries(incomingInput)) {
     if (!isRecord(incoming)) continue;
-    const normalised = normaliseCardOverrides({ [key]:incoming });
+    const prior = isRecord(existing[key]) ? existing[key] : {};
+    const merged = { ...prior, ...incoming };
+
+    // Archived cards deliberately stop carrying an active rank/subsection.
+    if (incoming.archived === true) {
+      if (!own(incoming, 'rank')) delete merged.rank;
+      if (!own(incoming, 'subsection')) delete merged.subsection;
+    }
+    // Moving an archived card back into an active/non-main cohort deliberately drops the
+    // archived subsection marker when the current writer does not retain it.
+    if (incoming.archived === false && prior.archived === true && !own(incoming, 'archivedSubsection')) {
+      delete merged.archivedSubsection;
+    }
+    if ((incoming.catalogueType === 'half' || incoming.catalogueType === 'taster' || incoming.taster === true)
+        && !own(incoming, 'subsection')) {
+      delete merged.subsection;
+    }
+
+    const normalised = normaliseCardOverrides({ [key]:merged });
     if (normalised[key]) output[key] = normalised[key];
   }
   return output;
