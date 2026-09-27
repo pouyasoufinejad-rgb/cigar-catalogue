@@ -1,4 +1,4 @@
-// The seven flavour axes a cigar is profiled against.
+// The eight flavour axes a cigar is profiled against.
 //
 // One definition for all of it: the label, the colour, and the mask the icon is drawn from.
 // The bar and its icon take the same colour from the same place, because the point of the
@@ -20,6 +20,7 @@ export const FLAVOUR_AXES = Object.freeze([
   { id: 'pepper', label: 'Pepper', colour: '#a43c2c', art: 'pepper grinder' },
   { id: 'spice',  label: 'Spice',  colour: '#bc4c1c', art: 'spice bowl' },
   { id: 'earth',  label: 'Earth',  colour: '#141414', art: 'soil and trowel' },
+  { id: 'coffee', label: 'Coffee', colour: '#743c24', art: 'coffee beans' },
   { id: 'nuts',   label: 'Nuts',   colour: '#ac743c', art: 'hazelnuts' },
   { id: 'cedar',  label: 'Cedar',  colour: '#c48c5c', art: 'cedar wood' },
   { id: 'smoke',  label: 'Smoke',  colour: '#5c5c64', art: 'smoke curls' }
