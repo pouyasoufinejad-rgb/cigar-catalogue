@@ -254,6 +254,8 @@ test('the stylesheet paints the icon with the row colour and keeps every pip out
   const href = page.match(/<link rel="stylesheet" href="(\/css\/catalogue-[0-9a-f]{10}\.css)">/)[1];
   const css = await readFile(new URL(`../public${href}`, import.meta.url), 'utf8');
   assert.match(css, /\.flavour-icon\{[^}]*background-color:var\(--flavour-colour\)/);
+  assert.match(css, /data-axis="pepper"[\s\S]*data-axis="spice"[\s\S]*data-axis="earth"[\s\S]*data-axis="cedar"[\s\S]*transform:scale\(1\.08\)/);
+  assert.doesNotMatch(css, /data-axis="(sweet|coffee|nuts|smoke)"[^}]*transform:scale/);
   // The name is set in the catalogue's own label face, not a browser default.
   assert.match(css, /\.flavour-label\{[^}]*font-family:Cinzel/);
   const iconSize = css.match(/\.flavour-icon\{flex:none;width:(\d+)px/)?.[1];
