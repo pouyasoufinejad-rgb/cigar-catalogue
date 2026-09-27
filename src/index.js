@@ -53,6 +53,10 @@ export const STATE_KEY = 'catalogue-overrides';
 export const LEGACY_STATE_KEY = 'catalogue-overrides-v2';
 export const IMAGE_PREFIX = 'catalogue-image:';
 export const IMAGE_META_PREFIX = 'catalogue-image-meta:';
+export const STATE_BACKUP_PREFIX = 'catalogue-state-backup:';
+export const STATE_BACKUP_LATEST_KEY = 'catalogue-state-backup:latest';
+export const STATE_BACKUP_SLOTS = 12;
+export const STATE_REVISION_HEADER = 'x-catalogue-state-revision';
 export const MAX_STATE_BYTES = 4 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = new Set(['image/webp', 'image/jpeg', 'image/png']);
@@ -289,6 +293,8 @@ export function sizeBucket(value) {
 
 export function normaliseEntry(input, keyOverride = '') {
   const raw = isRecord(input) ? input : {};
+  const preserved = { ...raw };
+  delete preserved.value;
   const key = sanitiseKey(keyOverride || raw.key);
   const length = Math.max(0, finite(raw.length));
   const ring = Math.max(0, integer(raw.ring, 0, 0, 100));
@@ -299,6 +305,7 @@ export function normaliseEntry(input, keyOverride = '') {
   const stockPin = ['in', 'out', 'hold'].includes(raw.stockPin) ? raw.stockPin : '';
   const imageUrl = text(raw.imageUrl).startsWith('/') ? text(raw.imageUrl) : '';
   return {
+    ...preserved,
     key,
     brand: text(raw.brand).trim(),
     title: text(raw.title).trim(),
@@ -363,6 +370,40 @@ function normaliseEntries(value) {
   return output;
 }
 
+export function stateRevision(value) {
+  const revision = Number(value?.revision);
+  return Number.isSafeInteger(revision) && revision >= 0 ? revision : 0;
+}
+
+function mergeCardMaps(existingInput, incomingInput) {
+  const existing = normaliseCardOverrides(existingInput);
+  if (!isRecord(incomingInput)) return existing;
+  const combined = { ...existing };
+  for (const [key, incoming] of Object.entries(incomingInput)) {
+    if (!isRecord(incoming)) continue;
+    combined[key] = { ...(isRecord(existing[key]) ? existing[key] : {}), ...incoming };
+  }
+  return normaliseCardOverrides(combined);
+}
+
+function mergeEntryMaps(existingInput, incomingInput) {
+  const existing = normaliseEntries(existingInput);
+  if (!isRecord(incomingInput)) return existing;
+  const combined = { ...existing };
+  for (const [key, incoming] of Object.entries(incomingInput)) {
+    const safe = sanitiseKey(key);
+    if (!safe || !isRecord(incoming)) continue;
+    combined[safe] = normaliseEntry({ ...(isRecord(existing[safe]) ? existing[safe] : {}), ...incoming }, safe);
+  }
+  return combined;
+}
+
+function mergeSections(existingInput, incomingInput) {
+  const existing = record(existingInput);
+  if (!isRecord(incomingInput)) return existing;
+  return { ...existing, ...clone(incomingInput) };
+}
+
 export function normaliseState(input) {
   const raw = isRecord(input) ? input : {};
   const rawEntries = own(raw, 'entries') && isRecord(raw.entries) ? raw.entries : null;
@@ -370,7 +411,9 @@ export function normaliseState(input) {
   const legacyHtmlEntries = values.length > 0 && values.every(entry => isRecord(entry) && typeof entry.html === 'string' && !entry.brand && !entry.title);
   const entries = rawEntries ? (legacyHtmlEntries ? defaultEntries() : normaliseEntries(rawEntries)) : defaultEntries();
   return {
+    ...raw,
     version: 3,
+    revision: stateRevision(raw),
     updatedAt: text(raw.updatedAt),
     cards: normaliseCardOverrides(raw.cards),
     sections: record(raw.sections),
@@ -383,18 +426,93 @@ export function mergeState(existingInput, incomingInput) {
   const existing = normaliseState(rawExisting);
   const incoming = isRecord(incomingInput) ? incomingInput : {};
   return {
+    ...rawExisting,
+    ...incoming,
     version: 3,
+    revision: existing.revision,
     updatedAt: new Date().toISOString(),
     cards: own(incoming, 'cards')
-      ? normaliseCardOverrides(incoming.cards)
-      : (isRecord(rawExisting.cards) ? clone(rawExisting.cards) : existing.cards),
+      ? mergeCardMaps(existing.cards, incoming.cards)
+      : clone(existing.cards),
     sections: own(incoming, 'sections')
-      ? record(incoming.sections)
-      : (isRecord(rawExisting.sections) ? clone(rawExisting.sections) : existing.sections),
+      ? mergeSections(existing.sections, incoming.sections)
+      : clone(existing.sections),
     entries: own(incoming, 'entries')
-      ? normaliseEntries(incoming.entries)
-      : (isRecord(rawExisting.entries) ? clone(rawExisting.entries) : existing.entries)
+      ? mergeEntryMaps(existing.entries, incoming.entries)
+      : clone(existing.entries)
   };
+}
+
+function variantIds(list) {
+  return new Set((Array.isArray(list) ? list : [])
+    .filter(isRecord)
+    .map(item => String(item.id || item.label || '').trim().toLowerCase())
+    .filter(Boolean));
+}
+
+function assertVariantIdsPreserved(beforeList, afterList, label) {
+  const before = variantIds(beforeList);
+  const after = variantIds(afterList);
+  for (const id of before) {
+    if (!after.has(id)) throw new Error(`${label} would remove saved variant "${id}". Use a dedicated destructive migration instead.`);
+  }
+}
+
+function validateVariantTree(before, after, label) {
+  if (!isRecord(before) || !isRecord(after)) return;
+  assertVariantIdsPreserved(before.sizeVariants, after.sizeVariants, `${label} size variants`);
+  assertVariantIdsPreserved(before.blendVariants, after.blendVariants, `${label} blend variants`);
+
+  const afterBlendById = new Map((Array.isArray(after.blendVariants) ? after.blendVariants : [])
+    .filter(isRecord)
+    .map(item => [String(item.id || item.label || '').trim().toLowerCase(), item]));
+  for (const blend of Array.isArray(before.blendVariants) ? before.blendVariants : []) {
+    if (!isRecord(blend)) continue;
+    const id = String(blend.id || blend.label || '').trim().toLowerCase();
+    if (!id || !afterBlendById.has(id)) continue;
+    assertVariantIdsPreserved(blend.sizeVariants, afterBlendById.get(id)?.sizeVariants, `${label} blend "${id}" size variants`);
+  }
+}
+
+function recommendationMemberCount(sections) {
+  const list = Array.isArray(sections?.recommendationSubsections) ? sections.recommendationSubsections : [];
+  return list.reduce((sum, section) => sum + (Array.isArray(section?.entryKeys) ? section.entryKeys.length : 0), 0);
+}
+
+export function validateStateTransition(existingInput, nextInput, options = {}) {
+  const existing = normaliseState(existingInput);
+  const next = normaliseState(nextInput);
+  const allowedDeletedKeys = new Set(Array.isArray(options.allowedDeletedKeys) ? options.allowedDeletedKeys : []);
+
+  for (const key of Object.keys(existing.cards)) {
+    if (!next.cards[key] && !allowedDeletedKeys.has(key)) throw new Error(`Catalogue write would remove card "${key}".`);
+  }
+  for (const key of Object.keys(existing.entries)) {
+    if (!next.entries[key] && !allowedDeletedKeys.has(key)) throw new Error(`Catalogue write would remove entry "${key}".`);
+  }
+
+  for (const [key, before] of Object.entries(existing.entries)) {
+    const after = next.entries[key];
+    if (!after) continue;
+    if (String(before.brand || '').trim() && !String(after.brand || '').trim()) throw new Error(`Catalogue write would blank brand for "${key}".`);
+    if (String(before.title || '').trim() && !String(after.title || '').trim()) throw new Error(`Catalogue write would blank title for "${key}".`);
+    validateVariantTree(before, after, `Entry "${key}"`);
+  }
+  for (const [key, before] of Object.entries(existing.cards)) {
+    const after = next.cards[key];
+    if (after) validateVariantTree(before, after, `Card "${key}"`);
+  }
+
+  const beforeMembers = recommendationMemberCount(existing.sections);
+  const afterMembers = recommendationMemberCount(next.sections);
+  const removedMembers = beforeMembers - afterMembers;
+  if (beforeMembers >= 3 && afterMembers === 0) {
+    throw new Error('Catalogue write would empty all recommendation subsection membership.');
+  }
+  if (removedMembers > Math.max(3, Math.ceil(beforeMembers * 0.35))) {
+    throw new Error(`Catalogue write would remove ${removedMembers} recommendation memberships at once.`);
+  }
+  return true;
 }
 
 function json(data, init = {}) {
@@ -481,8 +599,46 @@ export async function readState(env) {
   return normaliseState(await readRawState(env));
 }
 
-async function writeState(env, state) {
-  await env.CATALOGUE_STATE.put(STATE_KEY, JSON.stringify(state));
+function expectedRevision(request) {
+  const raw = request?.headers?.get?.(STATE_REVISION_HEADER);
+  if (raw == null || raw === '') return null;
+  const revision = Number(raw);
+  return Number.isSafeInteger(revision) && revision >= 0 ? revision : Number.NaN;
+}
+
+function revisionConflictResponse(expected, current) {
+  return json({
+    error:`Catalogue changed since this edit was loaded. Reload before saving again.`,
+    expectedRevision:expected,
+    currentRevision:current
+  }, { status:409 });
+}
+
+export function stateBackupKey(revision) {
+  const safeRevision = Number.isSafeInteger(Number(revision)) && Number(revision) >= 0 ? Number(revision) : 0;
+  return `${STATE_BACKUP_PREFIX}${safeRevision % STATE_BACKUP_SLOTS}`;
+}
+
+async function writeState(env, state, options = {}) {
+  const existingRaw = options.existingRaw ?? await readRawState(env);
+  const currentRevision = stateRevision(existingRaw);
+  const next = normaliseState({
+    ...state,
+    version:3,
+    revision:currentRevision + 1,
+    updatedAt:new Date().toISOString()
+  });
+  validateStateTransition(existingRaw, next, { allowedDeletedKeys:options.allowedDeletedKeys });
+
+  if (hasMeaningfulState(existingRaw)) {
+    const backup = JSON.stringify(normaliseState(existingRaw));
+    await Promise.all([
+      env.CATALOGUE_STATE.put(stateBackupKey(currentRevision), backup),
+      env.CATALOGUE_STATE.put(STATE_BACKUP_LATEST_KEY, backup)
+    ]);
+  }
+  await env.CATALOGUE_STATE.put(STATE_KEY, JSON.stringify(next));
+  return next;
 }
 
 export async function handleState(request, env) {
@@ -502,15 +658,25 @@ export async function handleState(request, env) {
   try { parsed = JSON.parse(body); }
   catch (_) { return json({ error: 'Invalid JSON.' }, { status: 400 }); }
   const existing = await readRawState(env);
+  const currentRevision = stateRevision(existing);
+  const expected = expectedRevision(request);
+  if (Number.isNaN(expected)) return json({ error:'Invalid catalogue revision.' }, { status:400 });
+  if (expected !== null && expected !== currentRevision) return revisionConflictResponse(expected, currentRevision);
   const merged = mergeState(existing, parsed);
-  await writeState(env, merged);
+  let saved;
+  try {
+    saved = await writeState(env, merged, { existingRaw:existing });
+  } catch (error) {
+    return json({ error:error.message || 'Catalogue write rejected.' }, { status:409 });
+  }
   return json({
     ok: true,
     version: 3,
-    cards: Object.keys(merged.cards).length,
-    sections: Object.keys(merged.sections).length,
-    entries: Object.keys(merged.entries).length,
-    updatedAt: merged.updatedAt
+    revision:saved.revision,
+    cards: Object.keys(saved.cards).length,
+    sections: Object.keys(saved.sections).length,
+    entries: Object.keys(saved.entries).length,
+    updatedAt: saved.updatedAt
   });
 }
 
@@ -534,7 +700,12 @@ export async function handleEntry(request, env, rawKey) {
   const denied = await requireAdminWrite(request, env);
   if (denied) return denied;
   if (!env?.CATALOGUE_STATE) return json({ error: 'CATALOGUE_STATE KV binding is unavailable.' }, { status: 503 });
-  const state = await readState(env);
+  const rawState = await readRawState(env);
+  const state = normaliseState(rawState);
+  const currentRevision = stateRevision(rawState);
+  const expected = expectedRevision(request);
+  if (Number.isNaN(expected)) return json({ error:'Invalid catalogue revision.' }, { status:400 });
+  if (expected !== null && expected !== currentRevision) return revisionConflictResponse(expected, currentRevision);
 
   if (request.method === 'PUT') {
     const body = await request.text();
@@ -542,26 +713,32 @@ export async function handleEntry(request, env, rawKey) {
     let parsed;
     try { parsed = JSON.parse(body); }
     catch (_) { return json({ error: 'Invalid JSON.' }, { status: 400 }); }
-    const entry = normaliseEntry(parsed, key);
+    const entry = normaliseEntry({ ...(state.entries[key] || {}), ...parsed }, key);
     if (!entry.brand || !entry.title) return json({ error: 'Brand and title are required.' }, { status: 400 });
     state.entries[key] = entry;
-    state.version = 3;
-    state.updatedAt = new Date().toISOString();
-    await writeState(env, state);
-    return json({ ok: true, entry });
+    let saved;
+    try {
+      saved = await writeState(env, state, { existingRaw:rawState });
+    } catch (error) {
+      return json({ error:error.message || 'Entry write rejected.' }, { status:409 });
+    }
+    return json({ ok: true, entry:saved.entries[key], revision:saved.revision, updatedAt:saved.updatedAt });
   }
 
   if (!state.entries[key]) return json({ error: 'Entry not found.' }, { status: 404 });
   delete state.entries[key];
   delete state.cards[key];
-  state.version = 3;
-  state.updatedAt = new Date().toISOString();
-  await writeState(env, state);
+  let saved;
+  try {
+    saved = await writeState(env, state, { existingRaw:rawState, allowedDeletedKeys:[key] });
+  } catch (error) {
+    return json({ error:error.message || 'Entry delete rejected.' }, { status:409 });
+  }
   await Promise.all([
     env.CATALOGUE_STATE.delete(`${IMAGE_PREFIX}${key}`),
     env.CATALOGUE_STATE.delete(`${IMAGE_META_PREFIX}${key}`)
   ]);
-  return json({ ok: true, key });
+  return json({ ok: true, key, revision:saved.revision, updatedAt:saved.updatedAt });
 }
 
 export async function handleStock(request, env) {
