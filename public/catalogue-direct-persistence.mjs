@@ -1,3 +1,4 @@
+import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=1';
 
 const STATE_API = '/api/catalogue-overrides';
@@ -214,7 +215,7 @@ async function saveSelectedVerified() {
     const layoutPatch = layoutFromCard(card);
     const cards = { ...(state.cards || {}) };
     const entries = { ...(state.entries || {}) };
-    const record = { key, ...(cards[key] || {}), ...(entries[key] || {}) };
+    const record = catalogueRecordFromState({ cards, entries }, key) || { key };
     const blendVariantId = card.dataset.activeBlend || '';
     const sizeVariantId = card.dataset.activeVariant || '';
     let structuralPatch = {};

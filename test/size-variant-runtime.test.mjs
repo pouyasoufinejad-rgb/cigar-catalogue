@@ -132,28 +132,36 @@ test('an unpriced size shows no price and an unrated Value', async () => {
   assert.equal(factOf(card, 1), 'A$44');
 });
 
-test('promoting the active size saves only the default and leaves ratings alone', async () => {
+test('promoting the active size saves the default with an authenticated full-state PUT', async () => {
   const dom = mount({ admin: true });
   const api = await runtime();
-  const state = STATE();
-  api.setVariantState(state);
+  let saved = STATE();
+  api.setVariantState(saved);
 
-  const sent = [];
-  const fetchImpl = async (url, options) => {
-    sent.push({ url, body: JSON.parse(options.body) });
-    return { ok: true, status: 200 };
+  const writes = [];
+  const fetchImpl = async (url, options = {}) => {
+    const method = String(options.method || 'GET').toUpperCase();
+    if (method === 'GET') return { ok:true, status:200, json:async () => structuredClone(saved) };
+    if (method === 'PUT') {
+      saved = JSON.parse(options.body);
+      writes.push({ url, options, body:structuredClone(saved) });
+      return { ok:true, status:200, json:async () => ({ ok:true }) };
+    }
+    throw new Error(`Unexpected ${method}`);
   };
 
   api.selectVariant(NO_9.key, 'short-panatela');
-  const patch = await api.promoteActiveVariant(NO_9.key, { fetchImpl });
+  const patch = await api.promoteActiveVariant(NO_9.key, { fetchImpl, token:'test-token' });
 
   assert.deepEqual(patch, { defaultVariantId: 'short-panatela' });
-  assert.equal(sent.length, 1);
-  assert.equal(sent[0].url, '/api/catalogue-overrides');
-  // The write touches the default and nothing else: no price, no rating, no rank.
-  assert.deepEqual(Object.keys(sent[0].body.cards[NO_9.key]), ['defaultVariantId']);
-  assert.deepEqual(Object.keys(sent[0].body.entries[NO_9.key]), ['defaultVariantId']);
-  assert.equal(state.cards[NO_9.key].defaultVariantId, 'short-panatela');
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].url, '/api/catalogue-overrides');
+  assert.equal(writes[0].options.method, 'PUT');
+  assert.equal(writes[0].options.headers.authorization, 'Bearer test-token');
+  assert.equal(saved.cards[NO_9.key].defaultVariantId, 'short-panatela');
+  assert.equal(saved.entries[NO_9.key].defaultVariantId, 'short-panatela');
+  assert.equal(saved.cards[AXE.key].title, AXE.title, 'unrelated cards survive the full-state write');
+  assert.equal(saved.cards[NO_9.key].quality, NO_9.quality, 'ratings are preserved');
   assert.equal(cardOf(dom, NO_9.key).dataset.defaultVariant, 'short-panatela');
 });
 

@@ -1,3 +1,4 @@
+import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import { deriveValue } from './catalogue-value.mjs';
 import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=entry-flavour-1';
 import {
@@ -526,9 +527,8 @@ function populateProfileFields(saved) {
 // the override exactly as before.
 function savedRatingsForCard(card) {
   const key = card?.dataset?.key || '';
-  const override = state.cards?.[key] || {};
-  const merged = { ...override, ...(state.entries?.[key] || {}) };
-  if (!normaliseBlendVariants(merged).length) return override;
+  const merged = catalogueRecordFromState(state, key) || {};
+  if (!normaliseBlendVariants(merged).length) return merged;
   return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
 }
 
@@ -538,18 +538,7 @@ function savedRatingsForCard(card) {
 // profile-only variant patch cannot erase the rest of the variant while we read it.
 function profileRecordForCard(card) {
   const key = card?.dataset?.key || '';
-  const entry = state.entries?.[key] || {};
-  const override = state.cards?.[key] || {};
-  const merged = { ...entry, ...override };
-  const entryBlends = normaliseBlendVariants(entry);
-  const overrideBlends = normaliseBlendVariants(override);
-  if (entryBlends.length || overrideBlends.length) {
-    const byId = new Map(entryBlends.map(variant => [variant.id, { ...variant }]));
-    for (const variant of overrideBlends) {
-      byId.set(variant.id, { ...(byId.get(variant.id) || {}), ...variant });
-    }
-    merged.blendVariants = [...byId.values()];
-  }
+  const merged = catalogueRecordFromState(state, key) || {};
   if (!normaliseBlendVariants(merged).length) return merged;
   return blendEffectiveRecord(merged, card.dataset.activeBlend || '').record;
 }

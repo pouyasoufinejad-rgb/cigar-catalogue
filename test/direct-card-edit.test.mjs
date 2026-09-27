@@ -52,7 +52,7 @@ test('full editor exposes structural product fields rather than only inline text
 });
 
 test('verified layout persistence remains loaded alongside the direct editor', () => {
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs\?v=variant-edit-1'\)/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs\?v=edit-consistency-1'\)/);
   assert.match(persistence, /\/api\/catalogue-overrides/);
 });
 
