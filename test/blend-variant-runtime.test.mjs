@@ -277,23 +277,32 @@ test('blend selections are deep-linkable and searchable', async () => {
   assert.equal(hit.blendVariantId, 'maduro');
 });
 
-test('promoting a blend saves only its display default', async () => {
+test('promoting a blend saves its display default with an authenticated full-state PUT', async () => {
   const dom = mount({ admin: true });
   const api = await runtime();
-  const live = state();
-  api.setVariantState(live);
+  let saved = state();
+  api.setVariantState(saved);
   api.selectBlend(ROCKY.key, 'maduro');
 
-  const sent = [];
-  const fetchImpl = async (url, options) => {
-    sent.push({ url, body: JSON.parse(options.body) });
-    return { ok: true, status: 200 };
+  const writes = [];
+  const fetchImpl = async (url, options = {}) => {
+    const method = String(options.method || 'GET').toUpperCase();
+    if (method === 'GET') return { ok:true, status:200, json:async () => structuredClone(saved) };
+    if (method === 'PUT') {
+      saved = JSON.parse(options.body);
+      writes.push({ url, options, body:structuredClone(saved) });
+      return { ok:true, status:200, json:async () => ({ ok:true }) };
+    }
+    throw new Error(`Unexpected ${method}`);
   };
-  const patch = await api.promoteActiveBlend(ROCKY.key, { fetchImpl });
+  const patch = await api.promoteActiveBlend(ROCKY.key, { fetchImpl, token:'test-token' });
 
   assert.deepEqual(patch, { defaultBlendVariantId: 'maduro' });
-  assert.equal(sent.length, 1);
-  assert.deepEqual(Object.keys(sent[0].body.cards[ROCKY.key]), ['defaultBlendVariantId']);
-  assert.deepEqual(Object.keys(sent[0].body.entries[ROCKY.key]), ['defaultBlendVariantId']);
-  assert.equal(live.cards[ROCKY.key].defaultBlendVariantId, 'maduro');
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].options.method, 'PUT');
+  assert.equal(writes[0].options.headers.authorization, 'Bearer test-token');
+  assert.equal(saved.cards[ROCKY.key].defaultBlendVariantId, 'maduro');
+  assert.equal(saved.entries[ROCKY.key].defaultBlendVariantId, 'maduro');
+  assert.equal(saved.cards[ROCKY.key].title, ROCKY.title, 'the rest of the card survives');
+  assert.equal(saved.cards[ROCKY.key].quality, ROCKY.quality, 'ratings are preserved');
 });
