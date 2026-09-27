@@ -6,7 +6,7 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=184\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=185\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
@@ -33,4 +33,8 @@ test('runtime version-busts the convenience module carrying the compact-card rul
 test('runtime version-busts both desktop layout modules', () => {
   assert.match(runtime, /import\(['"]\.\/catalogue-card-layout\.mjs\?v=left-shift-1['"]\)/);
   assert.match(runtime, /import\(['"]\.\/catalogue-control-sidebar\.mjs\?v=sidebar-controls-8['"]\)/);
+});
+
+test('runtime version-busts the variant runtime carrying search spacing', () => {
+  assert.match(runtime, /import\(['"]\.\/catalogue-variant-runtime\.mjs\?v=search-spacing-1['"]\)/);
 });
