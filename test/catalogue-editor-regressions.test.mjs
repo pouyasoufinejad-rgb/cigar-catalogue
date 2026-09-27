@@ -77,7 +77,7 @@ test('Legend and Benchmarks full-editor fields are converted to explicit collaps
 });
 
 test('browser module chain loads the catalogue editor behaviour guard', () => {
-  assert.match(loaderSource, /import\('\.\/catalogue-editor-behaviour\.mjs'\)/);
+  assert.match(loaderSource, /import\('\.\/catalogue-editor-behaviour\.mjs\?v=scroll-stability-1'\)/);
 });
 
 
