@@ -1,3 +1,4 @@
+import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import { deriveValue } from './catalogue-value.mjs';
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
 
@@ -438,9 +439,8 @@ function effectiveStructure(card, state) {
   if (!card) return {};
   const key = card.dataset.key;
   const base = existingStructureFromCard(card);
-  const dynamic = state.entries?.[key] || {};
-  const override = state.cards?.[key] || {};
-  return { ...base, ...dynamic, ...Object.fromEntries(Object.entries(override).filter(([name]) => ['brand','title','packagePrice','packageLabel','price','country','length','ring','risk','taster','retailerLinks','smokeTime','imageUrl'].includes(name))) };
+  const layered = catalogueRecordFromState(state, key) || {};
+  return { ...base, ...Object.fromEntries(Object.entries(layered).filter(([name]) => ['brand','title','packagePrice','packageLabel','price','country','length','ring','risk','taster','retailerLinks','smokeTime','imageUrl'].includes(name))) };
 }
 function updateRiskVisual(card, risk) {
   const value = Math.max(1, Math.min(3, Math.round(finiteNumber(risk, 1))));
@@ -868,7 +868,7 @@ function createDynamicCard(key, entry, state) {
   const host = dynamicCardHost(entry);
   if (!host) throw new Error('Cannot hydrate dynamic catalogue entries because no catalogue card container exists.');
   host.appendChild(card);
-  const merged = { ...entry, ...(state.cards?.[key] || {}) };
+  const merged = catalogueRecordFromState(state, key) || { ...entry };
   applyStructuralOverrideToCard(card, merged);
   applyEditorialToCard(card, merged);
   return card;
@@ -878,7 +878,7 @@ function hydrateDynamicEntries(state) {
   for (const [key, entry] of Object.entries(state.entries || {})) {
     let card = document.querySelector('article.card[data-key="' + CSS.escape(key) + '"]');
     if (!card) { card = createDynamicCard(key, entry, state); created++; }
-    else if (card.dataset.dynamicEntry === '1') applyEditorialToCard(card, { ...entry, ...(state.cards?.[key] || {}) });
+    else if (card.dataset.dynamicEntry === '1') applyEditorialToCard(card, (catalogueRecordFromState(state, key) || { ...entry }));
   }
   return created;
 }
@@ -933,7 +933,7 @@ async function loadStateForBrowser({ showMessage = false, applyStructural = true
     for (const card of document.querySelectorAll('article.card[data-key]')) {
       const key = card.dataset.key;
       if (applyStructural) applyStructuralOverrideToCard(card, effectiveStructure(card, stateForBrowser));
-      const editorial = card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key] ? { ...stateForBrowser.entries[key], ...(stateForBrowser.cards?.[key] || {}) } : (stateForBrowser.cards?.[key] || {});
+      const editorial = card.dataset.dynamicEntry === '1' && stateForBrowser.entries?.[key] ? (catalogueRecordFromState(stateForBrowser, key) || {}) : (stateForBrowser.cards?.[key] || {});
       applyEditorialToCard(card, editorial);
       rehomeCardForSavedState(card, editorial, document);
     }
