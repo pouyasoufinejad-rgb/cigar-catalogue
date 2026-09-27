@@ -58,6 +58,29 @@ async function fetchState() {
   return response.json();
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function variantPatchMatches(saved, patch) {
+  if (!saved || typeof saved !== 'object') return false;
+  if (Array.isArray(patch.blendVariants)
+      && JSON.stringify(saved.blendVariants || []) !== JSON.stringify(patch.blendVariants)) return false;
+  if (Array.isArray(patch.sizeVariants)
+      && JSON.stringify(saved.sizeVariants || []) !== JSON.stringify(patch.sizeVariants)) return false;
+  if (patch.defaultBlendVariantId != null && saved.defaultBlendVariantId !== patch.defaultBlendVariantId) return false;
+  if (patch.defaultVariantId != null && saved.defaultVariantId !== patch.defaultVariantId) return false;
+  return true;
+}
+
+async function verifyVariantSave(key, patch) {
+  let latest = null;
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    latest = await fetchState();
+    if (variantPatchMatches(latest.cards?.[key], patch)) return latest;
+    if (attempt < 9) await wait(250);
+  }
+  throw new Error('The server accepted the save but KV read-back still contains the old variant data.');
+}
+
 function recordFromState(state, key) {
   return catalogueRecordFromState(state, key);
 }
@@ -340,7 +363,8 @@ async function saveEditor(event) {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (HTTP ${response.status}).`);
 
-    const saved = await fetchState();
+    status.textContent = 'Verifying…';
+    const saved = await verifyVariantSave(context.key, structuralPatch);
     setVariantState(saved);
     const savedRecord = recordFromState(saved, context.key);
     if (savedRecord) {
