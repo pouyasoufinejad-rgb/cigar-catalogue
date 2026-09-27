@@ -1,0 +1,32 @@
+{
+  "id": "2026-09-27-repair-coffee-variant-order-arturo-fuente-exquisitos-maduro",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-exquisitos-maduro",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 3,
+      "coffee": 4,
+      "cedar": 4
+    },
+    "defaultBlendVariantId": "maduro",
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro"
+      },
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 2,
+          "pepper": 2,
+          "coffee": 3,
+          "nuts": 3,
+          "cedar": 5
+        }
+      }
+    ]
+  },
+  "note": "Repair blend ordering after a partial Coffee-profile publish moved an alternate blend ahead of the baseline. Restore the baseline-first order and retain Coffee on the relevant parent/variant profile without replacing unrelated variant metadata."
+}
