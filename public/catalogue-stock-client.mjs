@@ -1,4 +1,4 @@
-import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=146';
+import { adminWriteFetch } from './catalogue-admin-unified-v139.mjs?v=148';
 
 const STOCK_API = '/api/stock';
 const STOCK_CHECK_API = '/api/stock/check';
