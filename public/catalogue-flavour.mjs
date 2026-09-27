@@ -6,7 +6,7 @@ import {
   FLAVOUR_SCALE_MAX,
   normaliseFlavourProfile,
   flavourProfileMarkup
-} from './catalogue-flavour-axes.mjs?v=flavour-profile-1';
+} from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 import {
   deriveOverallScore,
   flavourRatingMarkup,
