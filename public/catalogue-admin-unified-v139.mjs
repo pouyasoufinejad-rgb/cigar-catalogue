@@ -1159,6 +1159,30 @@ async function putState(payload) {
   if (!response.ok) throw new Error(data.error || `Catalogue save failed with HTTP ${response.status}`);
   return data;
 }
+
+const saveVerifyDelay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function editPatchMatches(saved, patch) {
+  if (!saved || typeof saved !== 'object') return false;
+  for (const [key, expected] of Object.entries(patch || {})) {
+    if (JSON.stringify(saved[key]) !== JSON.stringify(expected)) return false;
+  }
+  return true;
+}
+
+async function verifyCardEdit(key, patch) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const response = await fetch(`${STATE_API}?edit_verify=${Date.now()}`, {
+      cache:'no-store',
+      headers:{ accept:'application/json' }
+    });
+    if (!response.ok) throw new Error(`Could not verify catalogue save (HTTP ${response.status}).`);
+    const latest = await response.json();
+    if (editPatchMatches(latest?.cards?.[key], patch)) return latest;
+    if (attempt < 9) await saveVerifyDelay(250);
+  }
+  throw new Error('The server accepted the save but KV read-back still contains the old card data.');
+}
 async function saveUnified() {
   const saveButton = q('catalogue-admin-save'); const reloadButton = q('catalogue-admin-reload');
   saveButton.disabled = true; reloadButton.disabled = true;
@@ -1202,9 +1226,11 @@ async function saveUnified() {
       if (dynamic) await putEntry(key, plan.entryPayload);
     }
     setStatus('Saving catalogue fields and sections to Cloudflare KV…');
+    const verificationPatch = { ...structural, ...editorial };
     await putState(plan.statePayload);
+    setStatus('Verifying saved catalogue fields…');
+    stateForBrowser = await verifyCardEdit(key, verificationPatch);
     setStatus('Saved site-wide. Refreshing catalogue…');
-    await new Promise(resolve => setTimeout(resolve, 250));
     await loadStateForBrowser({ showMessage: false, applyStructural: true });
     if (!serverAvailableForBrowser) {
       location.reload();
