@@ -224,8 +224,9 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   });
   window.sessionStorage.setItem('cigar-catalogue-admin-token', 'test-token');
 
-  const adminUrl = new URL(ADMIN_URL);
-  adminUrl.searchParams.set('dom-smoke', '1');
+  const pageAdminSpec = html.match(/catalogue-admin-unified-v139\.mjs\?v=[^"'\s<]+/)?.[0] || '';
+  assert.ok(pageAdminSpec, 'versioned admin module must be present in the page shell');
+  const adminUrl = new URL('../public/' + pageAdminSpec, import.meta.url);
   await import(adminUrl.href);
   const runtimeSource = await readFile(RUNTIME_URL, 'utf8');
   const runtimeModules = await importRuntimeModules(runtimeSource);
