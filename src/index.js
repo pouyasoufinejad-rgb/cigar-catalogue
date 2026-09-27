@@ -1011,7 +1011,9 @@ export function applyStructuralOverridesToHtml(html, cards) {
       shopRx.lastIndex = 0;
       card = card.replace(shopRx, '');
       if (newLinks) {
-        card = card.replace(/<\/div>\s*<\/article>\s*$/i, `${newLinks}</div></article>`);
+        const faceBoundaryRx = /(<\/div>)(<div\b[^>]*\bclass=[\"'][^\"']*\bcard-face-back\b[^\"']*[\"'][^>]*>)/i;
+        if (faceBoundaryRx.test(card)) card = card.replace(faceBoundaryRx, `${newLinks}$1$2`);
+        else card = card.replace(/<\/div>\s*<\/article>\s*$/i, `${newLinks}</div></article>`);
       } else if (!hadShop) {
       }
     }
