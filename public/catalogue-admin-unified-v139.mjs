@@ -499,9 +499,17 @@ export function refreshAllValueDisplays(root = document) {
   return cards.length;
 }
 
+function frontFaceHost(card) {
+  return card?.querySelector?.('.card-face-front') || card?.querySelector?.('.cardbody') || null;
+}
+
+function backFaceHost(card) {
+  return card?.querySelector?.('.card-face-back') || card?.querySelector?.('.cardbody') || null;
+}
+
 function replaceShopLinks(card, links) {
   card.querySelectorAll('a.shop').forEach(node => node.remove());
-  const body = card.querySelector('.cardbody');
+  const body = frontFaceHost(card);
   if (!body) return;
   for (const [index, url] of links.entries()) {
     const a = document.createElement('a');
@@ -512,7 +520,7 @@ function replaceShopLinks(card, links) {
     body.appendChild(a);
   }
 }
-function applyStructuralOverrideToCard(card, override) {
+export function applyStructuralOverrideToCard(card, override) {
   if (!card || !override) return;
   const h3 = card.querySelector('h3');
   if (h3 && (own(override, 'brand') || own(override, 'title'))) {
@@ -627,14 +635,14 @@ function replaceDynamicArtmeta(card, selector, title, html) {
 }
 function replaceDynamicExperience(card, tags) {
   let groups = card.querySelector('.tag-groups');
-  const body = card.querySelector('.cardbody');
+  const body = backFaceHost(card);
   if (!body) return;
   if (!groups) {
     groups = document.createElement('div');
     groups.className = 'tag-groups';
-    const summary = card.querySelector('.summary');
-    insertBeforeReference(body, groups, summary);
   }
+  const summary = body.querySelector('.summary');
+  insertBeforeReference(body, groups, summary);
   groups.innerHTML = '';
   const clean = Array.isArray(tags) ? tags.map(v => String(v || '').trim()).filter(Boolean) : [];
   if (!clean.length) { groups.hidden = true; return; }
@@ -757,7 +765,7 @@ export function resetDynamicFreshness(card, saved = {}) {
   row.setAttribute('aria-label', label + '; Dynamic catalogue entry');
 }
 
-function applyEditorialToCard(card, saved = {}) {
+export function applyEditorialToCard(card, saved = {}) {
   if (!card) return;
   const isDynamic = card.dataset.dynamicEntry === '1';
 
@@ -792,9 +800,12 @@ function applyEditorialToCard(card, saved = {}) {
       if (!note) {
         note = document.createElement('p');
         note.className = 'mog-note';
-        const shop = card.querySelector('a.shop');
-        if (shop) shop.insertAdjacentElement('beforebegin', note);
-        else card.querySelector('.cardbody')?.appendChild(note);
+      }
+      const back = backFaceHost(card);
+      if (back) {
+        const summary = back.querySelector('p.summary');
+        if (summary) summary.insertAdjacentElement('afterend', note);
+        else back.appendChild(note);
       }
       note.innerHTML = noteHtml;
     } else note?.remove();

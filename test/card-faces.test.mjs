@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 
-import { renderEntryCard } from '../src/index.js';
+import { applyStructuralOverridesToHtml, renderEntryCard } from '../src/index.js';
 import { BACK_FACE_SELECTORS, FRONT_LABEL, BACK_LABEL } from '../public/catalogue-card-faces.mjs';
 import { splitAll } from '../scripts/split-static-card-faces.mjs';
 
@@ -172,4 +172,19 @@ test('rebuilding a blend puts its chips and note back on the back face', async (
   // The runtime leaves jsdom timers pending, which is harmless in a browser and stops the
   // test process exiting here. Closing the window clears them.
   t.after(() => dom.window.close());
+});
+
+
+test('server-side retailer-link overrides stay inside the front face', () => {
+  const source = renderEntryCard(ENTRY);
+  const updated = applyStructuralOverridesToHtml(source, {
+    [ENTRY.key]: { retailerLinks:['https://example.com/new-buy'] }
+  });
+  const card = cardOf(updated);
+
+  assert.equal(card.querySelectorAll('a.shop').length, 1);
+  assert.ok(card.querySelector('.card-face-front a.shop'));
+  assert.equal(card.querySelector('.card-face-back a.shop'), null);
+  assert.equal(card.querySelector('.cardbody > a.shop'), null);
+  assert.match(card.querySelector('.card-face-front a.shop').getAttribute('href'), /new-buy/);
 });
