@@ -16,7 +16,7 @@ import {
   promoteVariantPatch,
   resolveSearchQuery,
   variantEffectiveRecord
-} from './catalogue-variants.mjs?v=volume-size-1';
+} from './catalogue-variants.mjs?v=data-safeguards-1';
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=coffee-axis-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
 import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=coffee-axis-1';
