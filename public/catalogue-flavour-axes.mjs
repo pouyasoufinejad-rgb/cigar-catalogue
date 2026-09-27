@@ -11,7 +11,7 @@
 //
 // No DOM access: the Worker renders these into the card.
 
-import { FLAVOUR_ART } from './catalogue-flavour-art.mjs';
+import { FLAVOUR_ART } from './catalogue-flavour-art.mjs?v=coffee-axis-1';
 
 export const FLAVOUR_SCALE_MAX = 5;
 
