@@ -1,0 +1,25 @@
+{
+  "id": "2026-09-27-coffee-profile-isla-del-sol-maduro-gran-corona",
+  "operation": "upsert-entry",
+  "key": "isla-del-sol-maduro-gran-corona",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 5,
+      "earth": 3,
+      "coffee": 5
+    },
+    "blendVariants": [
+      {
+        "id": "natural",
+        "label": "Natural",
+        "flavourProfile": {
+          "sweet": 5,
+          "coffee": 5,
+          "nuts": 4,
+          "cedar": 3
+        }
+      }
+    ]
+  },
+  "note": "Add Coffee as a selective flavour axis to the parent and/or blend variant where existing catalogue research identifies coffee, espresso, mocha or café notes. Variant profiles remain independent and retain only relevant axes."
+}
