@@ -1,5 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=1';
+import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=data-safeguards-1';
 
 const STATE_API = '/api/catalogue-overrides';
 const STORAGE_KEY = 'catalogue-direct-layout-v1';
