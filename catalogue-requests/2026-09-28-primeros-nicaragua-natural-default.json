@@ -1,0 +1,9 @@
+{
+  "id": "2026-09-28-primeros-nicaragua-natural-default",
+  "operation": "upsert-entry",
+  "key": "davidoff-primeros-nicaragua-maduro",
+  "entry": {
+    "defaultBlendVariantId": "natural"
+  },
+  "note": "Make Primeros Nicaragua Natural the primary displayed blend; preserve the Maduro baseline, variant ordering and all other fields."
+}
