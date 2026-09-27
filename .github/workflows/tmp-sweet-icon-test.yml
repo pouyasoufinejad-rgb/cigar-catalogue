@@ -1,0 +1,18 @@
+name: Temporary Sweet icon test
+
+on:
+  push:
+    branches:
+      - fix/sweet-solid-icon-20260927
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
