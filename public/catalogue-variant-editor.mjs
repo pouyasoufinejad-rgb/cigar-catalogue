@@ -361,8 +361,11 @@ async function saveEditor(event) {
 
     const response = await adminFetch(STATE_API, {
       method:'PUT',
-      headers:{ 'content-type':'application/json' },
-      body:JSON.stringify({ version:3, cards, sections:{ ...(fresh.sections || {}) }, entries })
+      headers:{
+        'content-type':'application/json',
+        'x-catalogue-state-revision':String(Number.isSafeInteger(Number(fresh.revision)) ? Number(fresh.revision) : 0)
+      },
+      body:JSON.stringify({ version:3, revision:fresh.revision, cards, sections:{ ...(fresh.sections || {}) }, entries })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (HTTP ${response.status}).`);
