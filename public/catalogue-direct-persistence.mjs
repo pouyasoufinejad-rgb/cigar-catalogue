@@ -238,8 +238,11 @@ async function saveSelectedVerified() {
 
     const response = await adminWriteFetch(STATE_API, {
       method:'PUT',
-      headers:{ 'content-type':'application/json' },
-      body:JSON.stringify({ version:3, cards, sections:{ ...(state.sections || {}) }, entries })
+      headers:{
+        'content-type':'application/json',
+        'x-catalogue-state-revision':String(Number.isSafeInteger(Number(state.revision)) ? Number(state.revision) : 0)
+      },
+      body:JSON.stringify({ version:3, revision:state.revision, cards, sections:{ ...(state.sections || {}) }, entries })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (${response.status})`);
