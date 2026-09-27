@@ -1,6 +1,7 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import { deriveValue } from './catalogue-value.mjs';
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
+import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
 
 export function sanitiseKey(value) {
   return String(value || '')
@@ -1195,6 +1196,7 @@ async function verifyCardEdit(key, patch) {
   throw new Error('The server accepted the save but KV read-back still contains the old card data.');
 }
 async function saveUnified() {
+  const viewport = captureViewport();
   const saveButton = q('catalogue-admin-save'); const reloadButton = q('catalogue-admin-reload');
   saveButton.disabled = true; reloadButton.disabled = true;
   try {
@@ -1253,6 +1255,7 @@ async function saveUnified() {
     removeDraftOption();
     rebuildCardSelectFromDom(key);
     closeEditor();
+    restoreViewportAfterLayout(viewport);
     saveButton.disabled = false;
     reloadButton.disabled = false;
     setStatus('Saved site-wide.');
@@ -1293,6 +1296,7 @@ function onTypeChanged() {
 function openEditor() {
   const modal = q('catalogue-admin');
   if (!modal) return;
+  const viewport = captureViewport();
   rebuildCardSelectFromDom();
   if (modeForBrowser === 'edit') populateSelectedFields();
   modal.hidden = false;
@@ -1300,19 +1304,24 @@ function openEditor() {
   setStatus(serverAvailableForBrowser
     ? `Connected to Cloudflare KV. ${Object.keys(stateForBrowser.cards).length} saved card overrides and ${Object.keys(stateForBrowser.entries).length} dynamic entries loaded.`
     : 'Cloudflare KV has not loaded yet.', !serverAvailableForBrowser);
+  restoreViewportAfterLayout(viewport);
 }
 
 function closeEditor() {
   const modal = q('catalogue-admin');
   if (!modal) return;
+  const viewport = captureViewport();
   modal.hidden = true;
   document.body.style.overflow = '';
+  restoreViewportAfterLayout(viewport);
 }
 
 async function reloadEditorState() {
+  const viewport = captureViewport();
   await loadStateForBrowser({ showMessage: true, applyStructural: true });
   rebuildCardSelectFromDom();
   if (modeForBrowser === 'edit') populateSelectedFields();
+  restoreViewportAfterLayout(viewport);
 }
 
 export function initUnifiedAdmin() {
