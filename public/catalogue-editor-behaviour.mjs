@@ -1,3 +1,5 @@
+import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
+
 const MAIN_TYPE = 'main';
 const HALF_TYPE = 'half';
 const TASTER_TYPE = 'taster';
@@ -201,7 +203,9 @@ function installEditClickHooks(root) {
   clickTarget.addEventListener?.('click', event => {
     const toggle = event.target?.closest?.(`#${EDIT_TOGGLE_ID}`);
     if (!toggle) return;
+    const viewport = captureViewport(root);
     closePublicDiagnostics(root);
+    restoreViewportAfterLayout(viewport, root);
     const modal = root.getElementById?.(ADMIN_MODAL_ID);
     setTimeout(() => {
       installCatalogueTypeGuard(root);
