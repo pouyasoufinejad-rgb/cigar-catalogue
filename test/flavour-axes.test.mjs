@@ -290,7 +290,7 @@ test('clearing every axis removes the profile rather than leaving stale bars', a
 test('a partly profiled cigar draws only the axes it was judged on', () => {
   const doc = parse(flavourProfileMarkup({ cedar: 3, pepper: 4 }));
   assert.deepEqual([...doc.querySelectorAll('.flavour-axis')].map(n => n.dataset.axis), ['pepper', 'cedar']);
-  assert.equal(doc.querySelectorAll('.flavour-axis').length, 2, 'the other five stay off the card');
+  assert.equal(doc.querySelectorAll('.flavour-axis').length, 2, 'the other six stay off the card');
 });
 
 test('each row names its axis in visible text, not only to screen readers', () => {
