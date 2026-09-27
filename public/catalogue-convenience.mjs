@@ -230,7 +230,11 @@ article.card.convenience-compact .retailer-matrix,
 article.card.convenience-compact .shop{display:none!important}
 article.card.convenience-compact .cardbody{padding-bottom:12px!important}
 .retailer-matrix{margin:12px 0 4px;border:1px solid rgba(217,188,112,.18);border-radius:10px;overflow:hidden;background:rgba(12,10,8,.55);font:10px/1.3 system-ui,sans-serif}
-.retailer-matrix-title{padding:8px 9px;color:#d8c18a;font-weight:700;border-bottom:1px solid rgba(217,188,112,.14)}
+.retailer-matrix-title{padding:8px 9px;color:#d8c18a;font-weight:700;cursor:pointer;list-style:none;user-select:none}
+.retailer-matrix-title::-webkit-details-marker{display:none}
+.retailer-matrix-title::before{content:'▸';display:inline-block;width:14px;color:#bfa45e}
+.retailer-matrix[open]>.retailer-matrix-title{border-bottom:1px solid rgba(217,188,112,.14)}
+.retailer-matrix[open]>.retailer-matrix-title::before{content:'▾'}
 .retailer-matrix-grid{display:grid;grid-template-columns:minmax(90px,1.1fr) 72px minmax(120px,1.4fr) 50px;align-items:stretch}
 .retailer-matrix-cell{padding:7px 8px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);min-width:0}
 .retailer-matrix-head{color:#9f9277;font-size:9px;text-transform:uppercase;letter-spacing:.05em;background:rgba(255,255,255,.025)}
@@ -330,7 +334,7 @@ function stockLabel(status) {
   return 'Unknown';
 }
 
-function decorateRetailerMatrix(card) {
+export function decorateRetailerMatrix(card) {
   if (!card?.querySelectorAll) return false;
   const legacyLinks = Array.from(card.querySelectorAll('.shop'));
   if (!legacyLinks.length) return false;
@@ -339,8 +343,14 @@ function decorateRetailerMatrix(card) {
   const packageText = factText(card, 0);
   const perStickText = formatPerStick(card);
   let matrix = card.querySelector('.retailer-matrix');
+  if (matrix && matrix.tagName !== 'DETAILS') {
+    const replacement = document.createElement('details');
+    replacement.className = 'retailer-matrix';
+    matrix.replaceWith(replacement);
+    matrix = replacement;
+  }
   if (!matrix) {
-    matrix = document.createElement('div');
+    matrix = document.createElement('details');
     matrix.className = 'retailer-matrix';
     legacyLinks[0].insertAdjacentElement('beforebegin', matrix);
   }
@@ -351,7 +361,7 @@ function decorateRetailerMatrix(card) {
     const price = retailerPriceForRow(result, url, label, index, packageText, perStickText);
     return `<div class="retailer-matrix-cell">${escapeHtml(label)}</div><div class="retailer-matrix-cell retailer-matrix-stock" data-stock="${escapeHtml(status)}">${escapeHtml(stockLabel(status))}</div><div class="retailer-matrix-cell">${escapeHtml(price)}</div><div class="retailer-matrix-cell"><a class="retailer-matrix-open" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open</a></div>`;
   }).join('');
-  matrix.innerHTML = `<div class="retailer-matrix-title">Retailers</div><div class="retailer-matrix-grid"><div class="retailer-matrix-cell retailer-matrix-head">Retailer</div><div class="retailer-matrix-cell retailer-matrix-head">Stock</div><div class="retailer-matrix-cell retailer-matrix-head">Price</div><div class="retailer-matrix-cell retailer-matrix-head">Open</div>${rows}</div>`;
+  matrix.innerHTML = `<summary class="retailer-matrix-title">Retailers</summary><div class="retailer-matrix-grid"><div class="retailer-matrix-cell retailer-matrix-head">Retailer</div><div class="retailer-matrix-cell retailer-matrix-head">Stock</div><div class="retailer-matrix-cell retailer-matrix-head">Price</div><div class="retailer-matrix-cell retailer-matrix-head">Open</div>${rows}</div>`;
   legacyLinks.forEach(legacyLink => { legacyLink.hidden = true; });
   return true;
 }
