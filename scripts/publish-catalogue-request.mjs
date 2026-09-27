@@ -266,26 +266,47 @@ function patchForDynamic(entryPatch) {
   return patch;
 }
 
-function mergeVariantObjects(existingList, patchList) {
+export function mergeVariantObjects(existingList, patchList) {
   if (!Array.isArray(patchList)) return patchList;
-  const byId = new Map();
-  for (const variant of Array.isArray(existingList) ? existingList : []) {
-    if (!isRecord(variant)) continue;
-    const id = String(variant.id || variant.label || '').trim().toLowerCase();
-    if (id) byId.set(id, clone(variant));
-  }
-  const output = [];
-  const seen = new Set();
+  const existing = Array.isArray(existingList) ? existingList.filter(isRecord) : [];
+  const patches = new Map();
+  const patchOrder = [];
   for (const variant of patchList) {
     if (!isRecord(variant)) continue;
     const id = String(variant.id || variant.label || '').trim().toLowerCase();
     if (!id) continue;
-    const merged = { ...(byId.get(id) || {}), ...clone(variant) };
-    output.push(merged);
-    seen.add(id);
+    patches.set(id, clone(variant));
+    patchOrder.push(id);
   }
-  for (const [id, variant] of byId) {
-    if (!seen.has(id)) output.push(variant);
+
+  // A partial variant patch must not reorder the existing list. The first blend is the
+  // baseline data source, so moving a patched alternate blend to index 0 changes which
+  // profile/copy inherits from the parent and can blank the saved default blend entirely.
+  // Preserve existing order and merge by id; only genuinely new variants append in the
+  // order they appear in the patch.
+  const existingById = new Map();
+  const existingOrder = [];
+  for (const variant of existing) {
+    const id = String(variant.id || variant.label || '').trim().toLowerCase();
+    if (!id || existingById.has(id)) continue;
+    existingById.set(id, clone(variant));
+    existingOrder.push(id);
+  }
+
+  // Supplying every existing id is an explicit full-list edit, so its order is meaningful
+  // and can repair a previously corrupted baseline order. A subset is only a patch and
+  // therefore cannot move an alternate blend ahead of the baseline.
+  const fullListEdit = existingOrder.length > 0 && existingOrder.every(id => patches.has(id));
+  const order = fullListEdit
+    ? [...patchOrder, ...existingOrder.filter(id => !patches.has(id))]
+    : [...existingOrder, ...patchOrder.filter(id => !existingById.has(id))];
+
+  const output = [];
+  const seen = new Set();
+  for (const id of order) {
+    if (seen.has(id)) continue;
+    output.push({ ...(existingById.get(id) || {}), ...(patches.get(id) || {}) });
+    seen.add(id);
   }
   return output;
 }

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import {
   validateRequest,
   publishRequestDocument,
+  mergeVariantObjects,
   MAX_IMAGE_BYTES
 } from '../scripts/publish-catalogue-request.mjs';
 
@@ -40,6 +41,32 @@ test('validateRequest rejects unsafe keys and unsupported operations', () => {
   assert.throws(() => validateRequest({ operation: 'destroy-entry', key: 'safe-key' }), /Unsupported operation/);
   assert.equal(validateRequest({ operation: 'delete-entry', key: 'safe-key' }).operation, 'delete-entry');
   assert.equal(validateRequest({ operation: 'upsert-entry', key: 'safe-key', entry: { brand: 'A', title: 'B' } }).key, 'safe-key');
+});
+
+test('partial blend patches preserve the existing blend order and only append new variants', () => {
+  const existing = [
+    { id:'maduro', label:'Maduro', title:'Base blend', flavourProfile:{ coffee:4 } },
+    { id:'natural', label:'Natural', title:'Natural blend', flavourProfile:{ cedar:4 } }
+  ];
+
+  const patched = mergeVariantObjects(existing, [
+    { id:'natural', label:'Natural', flavourProfile:{ coffee:3, cedar:4 } }
+  ]);
+
+  assert.deepEqual(patched.map(item => item.id), ['maduro', 'natural']);
+  assert.equal(patched[0].title, 'Base blend');
+  assert.deepEqual(patched[0].flavourProfile, { coffee:4 });
+  assert.equal(patched[1].title, 'Natural blend');
+  assert.deepEqual(patched[1].flavourProfile, { coffee:3, cedar:4 });
+
+  const appended = mergeVariantObjects(existing, [{ id:'sun-grown', label:'Sun Grown' }]);
+  assert.deepEqual(appended.map(item => item.id), ['maduro', 'natural', 'sun-grown']);
+
+  const reordered = mergeVariantObjects(existing, [
+    { id:'natural', label:'Natural' },
+    { id:'maduro', label:'Maduro' }
+  ]);
+  assert.deepEqual(reordered.map(item => item.id), ['natural', 'maduro'], 'a complete variant list may intentionally repair ordering');
 });
 
 test('partial update of an existing dynamic entry preserves unrelated fields and updates cards', async () => {

@@ -1,0 +1,30 @@
+{
+  "id": "2026-09-27-repair-coffee-variant-order-undercrown-10-corona-viva",
+  "operation": "upsert-entry",
+  "key": "undercrown-10-corona-viva",
+  "entry": {
+    "flavourProfile": {
+      "pepper": 5,
+      "earth": 4,
+      "cedar": 3
+    },
+    "defaultBlendVariantId": "undercrown-10",
+    "blendVariants": [
+      {
+        "id": "undercrown-10",
+        "label": "Undercrown 10"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 3,
+          "pepper": 3,
+          "earth": 4,
+          "coffee": 4
+        }
+      }
+    ]
+  },
+  "note": "Repair blend ordering after a partial Coffee-profile publish moved an alternate blend ahead of the baseline. Restore the baseline-first order and retain Coffee on the relevant parent/variant profile without replacing unrelated variant metadata."
+}
