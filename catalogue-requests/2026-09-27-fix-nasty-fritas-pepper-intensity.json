@@ -1,0 +1,13 @@
+{
+  "id": "2026-09-27-fix-nasty-fritas-pepper-intensity",
+  "operation": "upsert-entry",
+  "key": "liga-privada-unico-nasty-fritas",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 1,
+      "earth": 4
+    }
+  },
+  "note": "Apply the user's attempted edit: reduce Pepper intensity from 4/5 to 1/5 while preserving Sweet 3/5 and Earth 4/5."
+}
