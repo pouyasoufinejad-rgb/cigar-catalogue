@@ -561,7 +561,10 @@ function ensureStyles(root = document) {
   right:calc(50vw + 650px + var(--rail-shift));
   width:min(250px,calc(50vw - 660px - var(--rail-shift)));
   max-height:calc(100vh - 36px);
+  box-sizing:border-box;
+  padding:6px 8px 0 0;
   overflow:auto;
+  scrollbar-gutter:stable;
   display:flex;
   flex-direction:column;
   gap:10px;
