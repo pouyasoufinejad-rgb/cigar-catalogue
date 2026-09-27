@@ -9,7 +9,7 @@
 // of what a variant means and score it identically.
 
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
-import { hasFlavourProfile, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs';
+import { hasFlavourProfile, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 
 // The fields a vitola may legitimately change. Blend and production data is deliberately
 // absent: wrapper, binder, filler, country, strength, quality and flavour describe the
