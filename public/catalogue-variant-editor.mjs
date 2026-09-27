@@ -14,7 +14,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=coffee-axis-1';
+} from './catalogue-variant-runtime.mjs?v=data-safeguards-1';
 import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
 
 const STATE_API = '/api/catalogue-overrides';
