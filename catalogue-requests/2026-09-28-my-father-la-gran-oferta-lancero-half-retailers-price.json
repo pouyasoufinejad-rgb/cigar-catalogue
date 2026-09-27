@@ -1,0 +1,31 @@
+{
+  "id": "2026-09-28-my-father-la-gran-oferta-lancero-half-retailers-price",
+  "operation": "upsert-entry",
+  "key": "my-father-la-gran-oferta-lancero",
+  "entry": {
+    "title": "La Gran Oferta Lancero",
+    "packagePrice": 50.95,
+    "packageLabel": "single cigar",
+    "price": 50.95,
+    "stock": "out",
+    "taster": false,
+    "catalogueType": "half",
+    "archived": false,
+    "rank": 999,
+    "retailerLinks": [
+      "https://cigarbox.com.au/products/my-father-la-gran-oferta-lancero-7-5-x-38rg-1",
+      "https://aucigars.com/products/my-father-la-gran-oferta-lancero-cigar"
+    ],
+    "noteHtml": "Cigar Box lists the single at A$50.95; Cigar Box and AuCigars currently show the exact Lancero unavailable.",
+    "practicalLines": [
+      "Single cigar",
+      "A$50.95 per cigar",
+      "7.5″ × 38 Lancero",
+      "Long, narrow format",
+      "Slow cadence recommended"
+    ],
+    "priceChecked": "2026-09-28",
+    "stockChecked": "2026-09-28"
+  },
+  "note": "Correct La Gran Oferta Lancero to the exact Cigar Box single price, add both verified Australian retailer links, unarchive it, and move it to the end of the Half-Cigar cohort. Value remains automatic."
+}
