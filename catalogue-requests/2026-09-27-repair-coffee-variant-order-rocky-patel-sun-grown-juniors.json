@@ -1,0 +1,32 @@
+{
+  "id": "2026-09-27-repair-coffee-variant-order-rocky-patel-sun-grown-juniors",
+  "operation": "upsert-entry",
+  "key": "rocky-patel-sun-grown-juniors",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 3,
+      "pepper": 4,
+      "earth": 4,
+      "coffee": 3,
+      "cedar": 4
+    },
+    "defaultBlendVariantId": "sun-grown",
+    "blendVariants": [
+      {
+        "id": "sun-grown",
+        "label": "Sun Grown"
+      },
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "flavourProfile": {
+          "sweet": 4,
+          "pepper": 3,
+          "earth": 4,
+          "coffee": 4
+        }
+      }
+    ]
+  },
+  "note": "Repair blend ordering after a partial Coffee-profile publish moved an alternate blend ahead of the baseline. Restore the baseline-first order and retain Coffee on the relevant parent/variant profile without replacing unrelated variant metadata."
+}
