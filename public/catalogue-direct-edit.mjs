@@ -1,3 +1,5 @@
+import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
+
 const STATE_API = '/api/catalogue-overrides';
 const STYLE_ID = 'catalogue-direct-edit-style';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
@@ -189,6 +191,7 @@ function closeDiagnosticSections() {
 }
 
 function enterEditMode() {
+  const viewport = captureViewport();
   editMode = true;
   ensureStyles();
   ensurePanel();
@@ -197,9 +200,11 @@ function enterEditMode() {
   const toggle = q('catalogue-admin-toggle');
   if (toggle) toggle.textContent = 'Finish editing';
   updatePanelFor(selected);
+  restoreViewportAfterLayout(viewport);
 }
 
 function exitEditMode() {
+  const viewport = captureViewport();
   editMode = false;
   document.body.classList.remove('catalogue-direct-edit-mode');
   if (selected) {
@@ -211,6 +216,7 @@ function exitEditMode() {
   const toggle = q('catalogue-admin-toggle');
   if (toggle) toggle.textContent = 'Edit catalogue';
   updatePanelFor(null);
+  restoreViewportAfterLayout(viewport);
 }
 
 function onToggleCapture(event) {
