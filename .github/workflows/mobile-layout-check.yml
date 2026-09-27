@@ -7,6 +7,9 @@ name: Mobile layout check
 # Read-only, needs no secrets.
 
 on:
+  push:
+    branches:
+      - diag/live-browser-after-rollback-20260927
   workflow_dispatch:
     inputs:
       widths:
