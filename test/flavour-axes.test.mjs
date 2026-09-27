@@ -256,6 +256,22 @@ test('a profile saved from the admin panel lands on the card override', async ()
   assert.deepEqual(next.cards.beta, { flavour: 3 }, 'other cards are untouched');
 });
 
+test('a dynamic entry flavour profile save updates both the card override and the entry record', async () => {
+  const { injectFlavourProfileIntoStatePayload } = await import('../public/catalogue-flavour.mjs');
+  const payload = {
+    cards: { nasty: { flavourProfile: { pepper: 4 } } },
+    entries: { nasty: { key:'nasty', flavourProfile: { sweet: 3, pepper: 4, earth: 4 } } }
+  };
+  const next = injectFlavourProfileIntoStatePayload(payload, 'nasty', { sweet: 3, pepper: 1, earth: 4 });
+  assert.deepEqual(next.cards.nasty.flavourProfile, { sweet: 3, pepper: 1, earth: 4 });
+  assert.deepEqual(next.entries.nasty.flavourProfile, { sweet: 3, pepper: 1, earth: 4 });
+});
+
+test('profile editor gives a saved card override precedence over a stale dynamic entry value', async () => {
+  const source = await readFile(new URL('../public/catalogue-flavour.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const merged = \{ \.\.\.\(state\.entries\?\.\[selectedKey\(\)\] \|\| \{\}\), \.\.\.\(saved \|\| \{\}\) \};/);
+});
+
 test('clearing every axis removes the profile rather than leaving stale bars', async () => {
   const { injectFlavourProfileIntoStatePayload } = await import('../public/catalogue-flavour.mjs');
   const payload = { cards: { alpha: { flavourProfile: { cedar: 3, sweet: 2 } } } };
