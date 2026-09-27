@@ -41,3 +41,6 @@ jobs:
       - name: Check the reported Chromium crash URL and repaired blend records
         if: ${{ always() }}
         run: node scripts/verify-live-reported-breakpoint.mjs
+      - name: Audit repaired blend variant metadata
+        if: ${{ always() }}
+        run: node scripts/audit-live-complete-variants.mjs
