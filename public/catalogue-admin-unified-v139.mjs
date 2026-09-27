@@ -600,7 +600,8 @@ export function applyDynamicCountryFlag(card, countryValue) {
     const flag = document.createElement('span');
     flag.className = 'country-flag flag-' + slug;
     flag.setAttribute('aria-hidden','true');
-    row.insertBefore(flag, countryName || row.firstChild);
+    const reference = countryName?.parentNode === row ? countryName : row.firstChild;
+    row.insertBefore(flag, reference || null);
   }
 }
 function replaceDynamicArtmeta(card, selector, title, html) {
@@ -624,7 +625,8 @@ function replaceDynamicExperience(card, tags) {
     groups = document.createElement('div');
     groups.className = 'tag-groups';
     const summary = card.querySelector('.summary');
-    body.insertBefore(groups, summary || null);
+    const host = summary?.parentNode || body;
+    host.insertBefore(groups, summary?.parentNode === host ? summary : null);
   }
   groups.innerHTML = '';
   const clean = Array.isArray(tags) ? tags.map(v => String(v || '').trim()).filter(Boolean) : [];
@@ -669,7 +671,8 @@ function renderManualStock(card, mode) {
     row = document.createElement('div');
     row.className = 'freshness';
     const medals = card.querySelector('.medals');
-    body.insertBefore(row, medals || null);
+    const host = medals?.parentNode || body;
+    host.insertBefore(row, medals?.parentNode === host ? medals : null);
   }
   if (!row) return;
   let stateNode = row.querySelector('.stock-state');
@@ -738,7 +741,8 @@ export function resetDynamicFreshness(card, saved = {}) {
     row = document.createElement('div');
     row.className = 'freshness';
     const medals = card.querySelector('.medals');
-    body.insertBefore(row, medals || null);
+    const host = medals?.parentNode || body;
+    host.insertBefore(row, medals?.parentNode === host ? medals : null);
   }
   if (!row) return;
   row.className = 'freshness live-stock-' + (card.dataset.stock === 'in' ? 'in' : card.dataset.stock === 'out' ? 'out' : 'unknown');
