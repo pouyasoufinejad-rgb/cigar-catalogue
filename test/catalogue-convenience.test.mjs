@@ -11,7 +11,8 @@ import {
   matchRetailerStatus,
   retailerPriceAttribution,
   cardMatchesPersonalFilter,
-  isCardExpanded
+  isCardExpanded,
+  decorateRetailerMatrix
 } from '../public/catalogue-convenience.mjs';
 
 const moduleUrl = new URL('../public/catalogue-convenience.mjs', import.meta.url);
@@ -216,6 +217,28 @@ test('compare UI provides a four-cigar tray and a full comparison field set', as
   assert.match(source, /Escape/);
   for (const field of ['Price / stick', 'Package', 'Dimensions', 'Strength', 'Quality', 'Flavour', 'Size', 'Value', 'Smoke time', 'Stock', 'Personal status', 'Production']) {
     assert.ok(source.includes(field), `compare UI should include ${field}`);
+  }
+});
+
+test('retailer matrix is a closed details dropdown by default', () => {
+  const dom = new JSDOM(`<!doctype html><body><article class="card" data-key="x" data-price="20">
+    <div class="cardbody">
+      <div class="facts"><div><b>A$20</b><small>single cigar</small></div><div><b>A$20</b><small>per stick</small></div><div><b>5″ × 44</b><small>length x ring gauge</small></div></div>
+      <a class="shop" href="https://www.cigarhut.com.au/test/">View at CigarHut</a>
+    </div>
+  </article></body>`, { url:'https://example.test/' });
+  const previousDocument = globalThis.document;
+  globalThis.document = dom.window.document;
+  try {
+    const card = dom.window.document.querySelector('.card');
+    assert.equal(decorateRetailerMatrix(card), true);
+    const matrix = card.querySelector('.retailer-matrix');
+    assert.equal(matrix.tagName, 'DETAILS');
+    assert.equal(matrix.open, false);
+    assert.equal(matrix.querySelector(':scope > summary')?.textContent, 'Retailers');
+    assert.ok(matrix.querySelector('.retailer-matrix-grid'));
+  } finally {
+    globalThis.document = previousDocument;
   }
 });
 

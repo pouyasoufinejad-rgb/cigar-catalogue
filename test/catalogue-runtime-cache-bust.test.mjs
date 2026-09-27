@@ -6,7 +6,7 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=176\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=177\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
@@ -27,7 +27,7 @@ test('runtime version-busts the half-cohort module containing the rank-bound rep
 // picks it up if this URL changes. Bumping it without also bumping the outer bootstrap
 // above would achieve nothing: the cached runtime would go on requesting the old URL.
 test('runtime version-busts the convenience module carrying the compact-card rules', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-convenience\.mjs\?v=compact-retailer-matrix-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-convenience\.mjs\?v=retailer-dropdown-1['"]\)/);
 });
 
 test('runtime version-busts both desktop layout modules', () => {

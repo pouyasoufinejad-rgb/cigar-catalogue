@@ -34,6 +34,14 @@ function finiteNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+export function insertBeforeReference(fallbackParent, node, reference = null) {
+  const parent = reference?.parentNode || fallbackParent;
+  if (!parent?.insertBefore || !node) return null;
+  const safeReference = reference?.parentNode === parent ? reference : null;
+  parent.insertBefore(node, safeReference);
+  return parent;
+}
+
 export function mergeCardOverride(existing, patch) {
   const output = { ...(existing && typeof existing === 'object' ? existing : {}) };
   delete output.value;
@@ -600,7 +608,8 @@ export function applyDynamicCountryFlag(card, countryValue) {
     const flag = document.createElement('span');
     flag.className = 'country-flag flag-' + slug;
     flag.setAttribute('aria-hidden','true');
-    row.insertBefore(flag, countryName || row.firstChild);
+    const reference = countryName?.parentNode === row ? countryName : row.firstChild;
+    row.insertBefore(flag, reference || null);
   }
 }
 function replaceDynamicArtmeta(card, selector, title, html) {
@@ -624,7 +633,7 @@ function replaceDynamicExperience(card, tags) {
     groups = document.createElement('div');
     groups.className = 'tag-groups';
     const summary = card.querySelector('.summary');
-    body.insertBefore(groups, summary || null);
+    insertBeforeReference(body, groups, summary);
   }
   groups.innerHTML = '';
   const clean = Array.isArray(tags) ? tags.map(v => String(v || '').trim()).filter(Boolean) : [];
@@ -669,7 +678,7 @@ function renderManualStock(card, mode) {
     row = document.createElement('div');
     row.className = 'freshness';
     const medals = card.querySelector('.medals');
-    body.insertBefore(row, medals || null);
+    insertBeforeReference(body, row, medals);
   }
   if (!row) return;
   let stateNode = row.querySelector('.stock-state');
@@ -738,7 +747,7 @@ export function resetDynamicFreshness(card, saved = {}) {
     row = document.createElement('div');
     row.className = 'freshness';
     const medals = card.querySelector('.medals');
-    body.insertBefore(row, medals || null);
+    insertBeforeReference(body, row, medals);
   }
   if (!row) return;
   row.className = 'freshness live-stock-' + (card.dataset.stock === 'in' ? 'in' : card.dataset.stock === 'out' ? 'out' : 'unknown');
