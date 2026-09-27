@@ -1,0 +1,15 @@
+{
+  "id": "2026-09-27-repair-cubanitos-maduro-strength-drift",
+  "operation": "upsert-entry",
+  "key": "arturo-fuente-cubanitos-10",
+  "entry": {
+    "blendVariants": [
+      {
+        "id": "maduro",
+        "label": "Maduro",
+        "strength": 7
+      }
+    ]
+  },
+  "note": "Restore the Cubanitos Maduro blend strength to the catalogue's last explicit value of 7 after the recent partial-variant corruption left it at 8. Preserve all other current Maduro metadata and flavour-profile fields."
+}
