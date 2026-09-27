@@ -13,7 +13,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=no-empty-single-1';
+} from './catalogue-variant-runtime.mjs?v=flavour-profile-3';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
