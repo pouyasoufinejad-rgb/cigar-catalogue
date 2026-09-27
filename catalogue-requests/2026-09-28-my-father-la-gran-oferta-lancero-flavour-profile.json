@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-28-my-father-la-gran-oferta-lancero-flavour-profile",
+  "operation": "upsert-entry",
+  "key": "my-father-la-gran-oferta-lancero",
+  "entry": {
+    "flavourProfile": {
+      "sweet": 4,
+      "pepper": 4,
+      "spice": 3,
+      "coffee": 4
+    }
+  },
+  "note": "Add the missing selective flavour profile required for this reactivated Half-Cigar entry, based on its existing catalogue copy: black-cherry sweetness, black pepper, spice and espresso."
+}
