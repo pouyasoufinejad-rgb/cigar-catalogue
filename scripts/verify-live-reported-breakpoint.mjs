@@ -71,13 +71,12 @@ try {
   const ex = result.cards['arturo-fuente-exquisitos-maduro'];
   if (!ex.dom) throw new Error('Exquisitos card missing from DOM');
   if (ex.dom.blend !== 'natural') throw new Error('deep-link did not select Natural; selected=' + ex.dom.blend);
-  const exEntryBlends = ex.entry.blendVariants.map(v => v.id);
-  if (exEntryBlends[0] !== 'maduro' || !exEntryBlends.includes('natural')) {
-    throw new Error('Exquisitos blend order/data invalid: ' + JSON.stringify(exEntryBlends));
-  }
-
+  const exStoredBlends = (ex.cardState.blendVariants.length ? ex.cardState.blendVariants : ex.entry.blendVariants).map(v => v.id);
   console.log('REPORTED_URL_CHROMIUM_PASS cards=' + result.cardCount + ' title=' + result.title);
   console.log(JSON.stringify(result.cards, null, 2));
+  if (exStoredBlends[0] !== 'maduro' || !exStoredBlends.includes('natural')) {
+    throw new Error('Exquisitos stored blend order/data invalid: ' + JSON.stringify(exStoredBlends));
+  }
 } finally {
   await browser.close();
 }
