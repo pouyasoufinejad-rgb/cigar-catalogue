@@ -497,17 +497,17 @@ function ensureStyles(root = document) {
 #${EXTRA_ID}{
   display:flex;
   flex-direction:column;
-  gap:10px;
-  margin:0 0 14px;
+  gap:6px;
+  margin:0 0 10px;
 }
 #${EXTRA_ID} .catalogue-sidebar-section{
-  padding:10px;
+  padding:7px;
   border:1px solid rgba(195,162,80,.35);
   border-radius:10px;
   background:rgba(10,9,7,.94);
 }
 #${EXTRA_ID} .catalogue-sidebar-heading{
-  margin:0 0 8px;
+  margin:0 0 5px;
   color:#d7bf7b;
   font-size:11px;
   font-weight:800;
@@ -516,7 +516,7 @@ function ensureStyles(root = document) {
 #${EXTRA_ID} .catalogue-sidebar-list{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:5px;
+  gap:4px;
 }
 /* The display:grid rule above is an id+class selector, so it outranks the browser's
    built-in [hidden]{display:none}. Without this the hidden attribute sets but the list
@@ -524,11 +524,11 @@ function ensureStyles(root = document) {
 #${EXTRA_ID} .catalogue-sidebar-list[hidden]{display:none!important}
 #${EXTRA_ID} .catalogue-sidebar-choice{
   width:100%;
-  min-height:34px;
+  min-height:30px;
   display:flex;
   align-items:center;
-  gap:8px;
-  padding:7px 9px;
+  gap:6px;
+  padding:5px 7px;
   border:1px solid rgba(255,255,255,.12);
   border-radius:7px;
   background:rgba(255,255,255,.035);
@@ -552,7 +552,7 @@ function ensureStyles(root = document) {
 #${SIDEBAR_ID}{
   position:fixed;
   z-index:44;
-  top:18px;
+  top:12px;
   /* The whole rail moves left by this much, and the cards move with it, so the layout
      stops sitting hard against the right edge of the window. The width subtracts the same
      amount, which keeps the rail's left edge exactly where it was rather than pushing it
@@ -560,16 +560,18 @@ function ensureStyles(root = document) {
   --rail-shift:${RAIL_SHIFT}px;
   right:calc(50vw + 650px + var(--rail-shift));
   width:min(250px,calc(50vw - 660px - var(--rail-shift)));
-  max-height:calc(100vh - 36px);
+  max-height:calc(100vh - 24px);
   box-sizing:border-box;
-  padding:6px 8px 0 0;
-  overflow:auto;
+  padding:4px 8px 0 0;
+  overflow-x:hidden;
+  overflow-y:hidden;
   scrollbar-gutter:stable;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:6px;
   scrollbar-width:thin;
 }
+#${SIDEBAR_ID}:has([data-brand-line-toggle][aria-expanded="true"]){overflow-y:auto}
 #${SIDEBAR_ID} #${EXTRA_ID}{margin:0}
 #${SIDEBAR_ID} #${EXTRA_ID} .catalogue-sidebar-list{grid-template-columns:1fr}
 #${SIDEBAR_ID} .catalogue-convenience-toolbar{
@@ -577,11 +579,11 @@ function ensureStyles(root = document) {
   top:auto!important;
   width:100%!important;
   margin:0!important;
-  padding:9px!important;
+  padding:7px!important;
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
-  gap:8px!important;
+  gap:5px!important;
 }
 #${SIDEBAR_ID} .catalogue-convenience-toolbar .convenience-toolbar-group{
   width:100%!important;
@@ -593,11 +595,11 @@ function ensureStyles(root = document) {
 #${SIDEBAR_ID} .controls{
   width:100%!important;
   margin:0!important;
-  padding:10px!important;
+  padding:8px!important;
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
-  gap:10px!important;
+  gap:6px!important;
   border:1px solid rgba(195,162,80,.35);
   border-radius:10px;
   background:rgba(10,9,7,.94);
@@ -607,26 +609,26 @@ function ensureStyles(root = document) {
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
-  gap:8px!important;
+  gap:5px!important;
 }
 #${SIDEBAR_ID} .controls label{display:block!important;width:100%!important}
 #${SIDEBAR_ID} .controls select{
   display:block!important;
   width:100%!important;
   min-width:0!important;
-  margin:4px 0 0!important;
-  padding:7px 26px 7px 8px!important;
+  margin:3px 0 0!important;
+  padding:6px 26px 6px 8px!important;
   font-size:12px!important;
 }
 #${SIDEBAR_ID} .toggle{
   width:100%!important;
   display:grid!important;
   grid-template-columns:1fr!important;
-  gap:5px!important;
+  gap:4px!important;
 }
 #${SIDEBAR_ID} .toggle button{
   width:100%!important;
-  padding:7px 8px!important;
+  padding:6px 8px!important;
   text-align:left!important;
   line-height:1.25!important;
 }
