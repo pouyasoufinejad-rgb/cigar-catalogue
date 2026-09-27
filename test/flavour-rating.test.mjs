@@ -88,6 +88,13 @@ test('laurels are decided by the Gold count alone, with no strength gate and no 
   assert.equal(deriveAutoLaurel(threeGolds), 'none');
 });
 
+test('flavour profile presentation is slightly larger and remains compact', () => {
+  assert.match(flavourSource, /\.flavour-label\{flex-basis:62px;font-size:11px\}/);
+  assert.match(flavourSource, /\.flavour-icon\{width:27px;height:27px\}/);
+  assert.match(flavourSource, /\.flavour-pip\{height:11px;min-width:6px\}/);
+  assert.match(flavourSource, /\.flavour-pips\{gap:4px\}/);
+});
+
 test('browser runtime loads Flavour UI, card hydration and save interception', () => {
   // Versioned because the size runtime registers the single Value writer on this exact
   // module instance; see test/value-single-writer.test.mjs, which pins every importer to
