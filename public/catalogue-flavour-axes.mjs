@@ -70,7 +70,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g,
 // hairline whatever the axis colour is: Sweet is ivory on a cream card and would otherwise
 // be a row of invisible boxes, and Earth is near-black against the dark frame.
 // `axisList` exists so the no-artwork path stays reachable once every axis has art. It is
-// the only way to exercise a fallback that otherwise only fires the day an eighth axis is
+// the only way to exercise a fallback that otherwise only fires the day a ninth axis is
 // added, which is exactly when nobody is looking at it.
 export function flavourProfileMarkup(input, axisList = FLAVOUR_AXES) {
   const profile = normaliseFlavourProfile(input);
