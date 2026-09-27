@@ -15,6 +15,7 @@ import {
   applyVariantToCard,
   setVariantState
 } from './catalogue-variant-runtime.mjs?v=coffee-axis-1';
+import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';
@@ -231,6 +232,7 @@ function setVariantSaveBusy(form, busy) {
 async function openEditor(card, kind) {
   const key = card?.dataset?.key || '';
   if (!key) return;
+  const viewport = captureViewport();
   const state = await fetchState();
   const record = recordFromState(state, key);
   if (!record) throw new Error('Catalogue record not found.');
@@ -252,6 +254,7 @@ async function openEditor(card, kind) {
   editContext = { key, kind, blendId, sizeId, state, record, card };
   modal.hidden = false;
   modal.querySelector('input,textarea,select')?.focus?.({ preventScroll:true });
+  restoreViewportAfterLayout(viewport);
 }
 
 function closeEditor() {
@@ -328,6 +331,7 @@ async function saveEditor(event) {
   event.preventDefault();
   const context = editContext;
   if (!context) return;
+  const viewport = captureViewport();
   const form = event.currentTarget;
   const status = form.querySelector('.variant-edit-status');
   const generation = ++saveGeneration;
@@ -374,12 +378,16 @@ async function saveEditor(event) {
         applyVariantToCard(context.card, savedRecord, context.sizeId);
       }
     }
+    restoreViewportAfterLayout(viewport);
     status.textContent = 'Saved ✓';
     setVariantSaveBusy(form, false);
     if (closeTimer) clearTimeout(closeTimer);
     closeTimer = setTimeout(() => {
       closeTimer = 0;
-      if (editContext === context && saveGeneration === generation) closeEditor();
+      if (editContext === context && saveGeneration === generation) {
+        closeEditor();
+        restoreViewportAfterLayout(viewport);
+      }
     }, 450);
   } catch (error) {
     status.textContent = error.message || 'Save failed';
