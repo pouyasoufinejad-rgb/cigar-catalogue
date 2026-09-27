@@ -271,6 +271,7 @@ async function fetchState() {
 
 async function saveSelected() {
   if (!selected) return;
+  const viewport = captureViewport();
   const save = panel.querySelector('[data-direct="save"]');
   const old = save.textContent;
   save.disabled = true;
@@ -288,10 +289,12 @@ async function saveSelected() {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Save failed (${response.status})`);
     save.textContent = 'Saved';
+    restoreViewportAfterLayout(viewport);
     setTimeout(() => { save.textContent = old; save.disabled = false; }, 900);
   } catch (error) {
     save.textContent = 'Save failed';
     save.disabled = false;
+    restoreViewportAfterLayout(viewport);
     globalThis.alert?.(error.message || String(error));
   }
 }
