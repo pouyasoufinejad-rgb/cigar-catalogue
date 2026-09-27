@@ -6,11 +6,11 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=183\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=184\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=scroll-stability-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=data-safeguards-1['"]\)/);
 });
 
 test('runtime version-busts the recommendation subsection module containing the observer repair', () => {
