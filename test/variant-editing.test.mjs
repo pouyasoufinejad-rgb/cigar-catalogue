@@ -8,6 +8,10 @@ import {
   variantEditSnapshot
 } from '../public/catalogue-variant-edit-model.mjs';
 import { preserveViewport } from '../public/catalogue-variant-runtime.mjs';
+import { resetVariantSaveControl } from '../public/catalogue-variant-editor.mjs';
+import { readFile } from 'node:fs/promises';
+
+const variantEditorSource = await readFile(new URL('../public/catalogue-variant-editor.mjs', import.meta.url), 'utf8');
 
 const FIXTURE = {
   key:'variant-parent',
@@ -88,6 +92,36 @@ test('variant editor snapshot shows inherited base-blend values without inventin
   assert.equal(snapshot.raw.packageCount, undefined);
   assert.equal(snapshot.effective.title, 'Base');
   assert.equal(snapshot.effective.summaryHtml, 'parent summary');
+});
+
+test('variant save control is reusable after a completed save', () => {
+  const removed = [];
+  const button = {
+    disabled:true,
+    textContent:'Saving…',
+    removeAttribute(name) { removed.push(name); }
+  };
+  const root = { querySelector() { return button; } };
+  assert.equal(resetVariantSaveControl(root), true);
+  assert.equal(button.disabled, false);
+  assert.equal(button.textContent, 'Save variant');
+  assert.deepEqual(removed, ['aria-busy']);
+});
+
+test('variant editor cannot be silently blocked by native form validation', () => {
+  assert.match(variantEditorSource, /<form novalidate>/);
+  assert.match(variantEditorSource, /Length \(in\).*step="0\.001"/);
+  assert.match(variantEditorSource, /Package count.*max="100"/);
+});
+
+test('variant editor resets the save button every time it opens and closes', () => {
+  const occurrences = variantEditorSource.match(/resetVariantSaveControl\(modal\)/g) || [];
+  assert.ok(occurrences.length >= 2, 'open and close paths should both reset the save control');
+  assert.match(variantEditorSource, /if \(editContext === context && saveGeneration === generation\) closeEditor\(\)/);
+});
+
+test('variant editor shares the same variant runtime module instance as the page', () => {
+  assert.match(variantEditorSource, /catalogue-variant-runtime\.mjs\?v=flavour-profile-3/);
 });
 
 test('viewport preservation restores scroll after synchronous and animation-frame movement', () => {
