@@ -1,0 +1,12 @@
+{
+  "id": "2026-09-27-coffee-profile-alonso-menendez-axe-charutos",
+  "operation": "upsert-entry",
+  "key": "alonso-menendez-axe-charutos",
+  "entry": {
+    "flavourProfile": {
+      "earth": 3,
+      "coffee": 3
+    }
+  },
+  "note": "Add Coffee as a selective flavour axis because the existing catalogue tasting/research copy directly identifies coffee, espresso, mocha or café notes. Intensity uses the same 0–5 scale as the other axes: 5 dominant/infused, 4 prominent, 3 clear secondary, 2 background."
+}
