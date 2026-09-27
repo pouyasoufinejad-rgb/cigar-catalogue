@@ -3,13 +3,13 @@ import {
   blendEffectiveRecord,
   normaliseBlendVariants,
   normaliseVariants
-} from './catalogue-variants.mjs?v=volume-size-1';
+} from './catalogue-variants.mjs?v=data-safeguards-1';
 import { FLAVOUR_AXES, FLAVOUR_SCALE_MAX, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 import {
   updateBlendVariant,
   updateSizeVariant,
   variantEditSnapshot
-} from './catalogue-variant-edit-model.mjs?v=1';
+} from './catalogue-variant-edit-model.mjs?v=data-safeguards-1';
 import {
   applyBlendToCard,
   applyVariantToCard,
