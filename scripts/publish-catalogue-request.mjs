@@ -284,17 +284,28 @@ export function mergeVariantObjects(existingList, patchList) {
   // profile/copy inherits from the parent and can blank the saved default blend entirely.
   // Preserve existing order and merge by id; only genuinely new variants append in the
   // order they appear in the patch.
-  const output = [];
-  const seen = new Set();
+  const existingById = new Map();
+  const existingOrder = [];
   for (const variant of existing) {
     const id = String(variant.id || variant.label || '').trim().toLowerCase();
-    if (!id) continue;
-    output.push({ ...clone(variant), ...(patches.get(id) || {}) });
-    seen.add(id);
+    if (!id || existingById.has(id)) continue;
+    existingById.set(id, clone(variant));
+    existingOrder.push(id);
   }
-  for (const id of patchOrder) {
+
+  // Supplying every existing id is an explicit full-list edit, so its order is meaningful
+  // and can repair a previously corrupted baseline order. A subset is only a patch and
+  // therefore cannot move an alternate blend ahead of the baseline.
+  const fullListEdit = existingOrder.length > 0 && existingOrder.every(id => patches.has(id));
+  const order = fullListEdit
+    ? [...patchOrder, ...existingOrder.filter(id => !patches.has(id))]
+    : [...existingOrder, ...patchOrder.filter(id => !existingById.has(id))];
+
+  const output = [];
+  const seen = new Set();
+  for (const id of order) {
     if (seen.has(id)) continue;
-    output.push(patches.get(id));
+    output.push({ ...(existingById.get(id) || {}), ...(patches.get(id) || {}) });
     seen.add(id);
   }
   return output;
