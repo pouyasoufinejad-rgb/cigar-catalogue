@@ -121,7 +121,7 @@ test('variant editor resets the save button every time it opens and closes', () 
 });
 
 test('variant editor shares the same variant runtime module instance as the page', () => {
-  assert.match(variantEditorSource, /catalogue-variant-runtime\.mjs\?v=search-spacing-2/);
+  assert.match(variantEditorSource, /catalogue-variant-runtime\.mjs\?v=search-spacing-3/);
 });
 
 test('viewport preservation restores scroll after synchronous and animation-frame movement', () => {
@@ -160,5 +160,5 @@ test('viewport preservation restores scroll after synchronous and animation-fram
 
 test('catalogue search sits slightly lower above the cards', async () => {
   const source = await readFile(new URL('../public/catalogue-variant-runtime.mjs', import.meta.url), 'utf8');
-  assert.match(source, /\.catalogue-variant-search\{[^}]*margin:10px 0 12px/);
+  assert.match(source, /\.catalogue-variant-search\{[^}]*margin:14px 0 12px/);
 });
