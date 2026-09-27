@@ -78,7 +78,7 @@ test('every built mask is named for a hash of its own contents', async () => {
   // /art/* is immutable, so previously deployed content-hashed masks may remain on disk.
   // Any historical file must still be one of the known flavour axes and content-hashed.
   for (const name of files) {
-    assert.match(name, /^(sweet|pepper|spice|earth|coffee|nuts|cedar|smoke)-[0-9a-f]{8}\\.png$/, `${name} is an immutable content-hashed flavour mask`);
+    assert.match(name, /^(sweet|pepper|spice|earth|coffee|nuts|cedar|smoke)-[0-9a-f]{8}\.png$/, `${name} is an immutable content-hashed flavour mask`);
   }
 });
 
