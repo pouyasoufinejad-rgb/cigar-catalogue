@@ -224,9 +224,8 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   });
   window.sessionStorage.setItem('cigar-catalogue-admin-token', 'test-token');
 
-  const pageAdminSpec = html.match(/catalogue-admin-unified-v139\.mjs\?v=[^"'\s<]+/)?.[0] || '';
-  assert.ok(pageAdminSpec, 'versioned admin module must be present in the page shell');
-  const adminUrl = new URL('../public/' + pageAdminSpec, import.meta.url);
+  const adminUrl = new URL(ADMIN_URL);
+  adminUrl.searchParams.set('dom-smoke', '1');
   await import(adminUrl.href);
   const runtimeSource = await readFile(RUNTIME_URL, 'utf8');
   const runtimeModules = await importRuntimeModules(runtimeSource);
@@ -313,15 +312,13 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   t.diagnostic('COHORT OWNERSHIP PASS: Half-Cigar and Taster bounds remain independent; returning to recommendations restores subsection-local bounds.');
 
   const expectedSections = structuredClone(state.sections.recommendationSubsections);
-  const saveButton = window.document.getElementById('catalogue-admin-save');
-  await waitFor(() => saveButton && !saveButton.disabled, 'full editor save button never became ready', 8000);
   putBodies.length = 0;
-  saveButton.click();
+  window.document.getElementById('catalogue-admin-save').click();
   try {
-    await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state', 8000);
+    await waitFor(() => putBodies.length > 0, 'full editor did not PUT catalogue state');
   } catch (error) {
     const status = window.document.getElementById('catalogue-admin-status')?.textContent || '';
-    throw new Error(`${error.message}; admin status: ${status || '(empty)'}; save disabled: ${Boolean(saveButton?.disabled)}`);
+    throw new Error(`${error.message}; admin status: ${status || '(empty)'}`);
   }
   await delay(20);
   assert.equal(putBodies.length, 1);

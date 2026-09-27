@@ -3,7 +3,7 @@ import {
   blendEffectiveRecord,
   normaliseBlendVariants,
   normaliseVariants
-} from './catalogue-variants.mjs?v=module-dedupe-1';
+} from './catalogue-variants.mjs?v=volume-size-1';
 import { FLAVOUR_AXES, FLAVOUR_SCALE_MAX, normaliseFlavourProfile } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 import {
   updateBlendVariant,
@@ -14,7 +14,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=module-dedupe-1';
+} from './catalogue-variant-runtime.mjs?v=coffee-axis-1';
 
 const STATE_API = '/api/catalogue-overrides';
 const ADMIN_TOKEN_SESSION_KEY = 'cigar-catalogue-admin-token';

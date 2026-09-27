@@ -1,6 +1,6 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import { deriveValue } from './catalogue-value.mjs';
-import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=module-dedupe-1';
+import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=entry-flavour-1';
 import {
   FLAVOUR_AXES,
   FLAVOUR_SCALE_MAX,
