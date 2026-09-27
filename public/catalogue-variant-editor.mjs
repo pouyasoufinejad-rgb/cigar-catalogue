@@ -1,3 +1,4 @@
+import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
 import {
   blendEffectiveRecord,
   normaliseBlendVariants,
@@ -58,10 +59,7 @@ async function fetchState() {
 }
 
 function recordFromState(state, key) {
-  const card = state?.cards?.[key];
-  const entry = state?.entries?.[key];
-  if (!card && !entry) return null;
-  return { key, ...(card || {}), ...(entry || {}) };
+  return catalogueRecordFromState(state, key);
 }
 
 function lines(value) {
