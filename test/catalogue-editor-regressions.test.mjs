@@ -158,6 +158,7 @@ test('viewport restoration follows the same visible card when layout above it ch
 test('edit catalogue, variant editing and save paths explicitly preserve the page viewport', () => {
   assert.match(behaviourSource, /captureViewport\(root\)[\s\S]*closePublicDiagnostics\(root\)[\s\S]*restoreViewportAfterLayout\(viewport, root\)/);
   assert.match(directEditSource, /function enterEditMode\(\)[\s\S]*captureViewport\(\)[\s\S]*restoreViewportAfterLayout\(viewport\)/);
+  assert.match(directEditSource, /async function saveSelected\(\)[\s\S]*captureViewport\(\)[\s\S]*restoreViewportAfterLayout\(viewport\)/);
   assert.match(variantEditorSource, /async function openEditor\(card, kind\)[\s\S]*captureViewport\(\)[\s\S]*restoreViewportAfterLayout\(viewport\)/);
   assert.match(variantEditorSource, /async function saveEditor\(event\)[\s\S]*captureViewport\(\)[\s\S]*apply(?:Blend|Variant)ToCard[\s\S]*restoreViewportAfterLayout\(viewport\)/);
   assert.match(fullEditorSource, /async function saveUnified\(\)[\s\S]*captureViewport\(\)[\s\S]*loadStateForBrowser[\s\S]*closeEditor\(\)[\s\S]*restoreViewportAfterLayout\(viewport\)/);
