@@ -56,6 +56,26 @@ export function perStickPrice({ packagePrice, packageCount, price } = {}) {
   return Math.round((total / count) * 100) / 100;
 }
 
+const SIZE_VARIANT_KNOWN_FIELDS = new Set([
+  'id','label','name','vitola','title','eyebrow','length','ring','packageLabel','packagePrice','packageCount',
+  'price','priceUnverified','retailerLinks','stock','smokeTime','imageUrl','summaryHtml','noteHtml','practicalLines',
+  'priceNote','priceChecked','stockChecked','size','value'
+]);
+
+const BLEND_VARIANT_KNOWN_FIELDS = new Set([
+  ...SIZE_VARIANT_KNOWN_FIELDS,
+  'blend','country','strength','quality','flavour','flavourProfile','risk','productionLines','experienceTags',
+  'sizeVariants','defaultVariantId'
+]);
+
+function preservedVariantFields(raw, knownFields) {
+  const output = {};
+  for (const [key, value] of Object.entries(raw || {})) {
+    if (!knownFields.has(key)) output[key] = value;
+  }
+  return output;
+}
+
 export function normaliseVariant(input, index = 0) {
   const raw = input && typeof input === 'object' ? input : {};
   const label = text(raw.label || raw.name || raw.vitola).trim();
@@ -73,6 +93,7 @@ export function normaliseVariant(input, index = 0) {
   const priceUnverified = !(price > 0);
 
   const variant = {
+    ...preservedVariantFields(raw, SIZE_VARIANT_KNOWN_FIELDS),
     id,
     label: label || id,
     priceUnverified,
@@ -212,6 +233,7 @@ export function normaliseBlendVariant(input, index = 0) {
   const packageCount = Math.max(1, Math.round(finite(raw.packageCount, 1)));
   const price = perStickPrice(raw);
   const variant = {
+    ...preservedVariantFields(raw, BLEND_VARIANT_KNOWN_FIELDS),
     id,
     label: label || id,
     priceUnverified: !(price > 0),
