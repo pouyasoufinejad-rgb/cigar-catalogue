@@ -16,7 +16,7 @@ test('manual editor reload can still reapply structural fields without a full na
 
 test('successful saves refresh current KV state in place instead of forcing a full catalogue reload', () => {
   const saveBody = admin.match(/async function saveUnified\(\) \{([\s\S]*?)\n\}\nasync function deleteDynamic/)?.[1] || '';
-  assert.match(saveBody, /await putState\(plan\.statePayload\);[\s\S]*?await loadStateForBrowser\(\{\s*showMessage:\s*false,\s*applyStructural:\s*true\s*\}\)/);
+  assert.match(saveBody, /await putState\(plan\.statePayload(?:,\s*expectedRevision)?\);[\s\S]*?await loadStateForBrowser\(\{\s*showMessage:\s*false,\s*applyStructural:\s*true\s*\}\)/);
   assert.match(saveBody, /if\s*\(!serverAvailableForBrowser\)\s*\{\s*location\.reload\(\);\s*return;\s*\}/);
   assert.doesNotMatch(saveBody, /setTimeout\(\(\) => location\.reload\(\),\s*250\)/);
 });

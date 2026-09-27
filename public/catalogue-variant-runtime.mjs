@@ -16,7 +16,7 @@ import {
   promoteVariantPatch,
   resolveSearchQuery,
   variantEffectiveRecord
-} from './catalogue-variants.mjs?v=volume-size-1';
+} from './catalogue-variants.mjs?v=data-safeguards-1';
 import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=coffee-axis-1';
 import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
 import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=coffee-axis-1';
@@ -725,10 +725,12 @@ async function saveDefaultPatch(key, patch, { fetchImpl = fetch, token = '' } = 
     method:'PUT',
     headers:{
       'content-type':'application/json',
-      authorization:`Bearer ${adminToken(token)}`
+      authorization:`Bearer ${adminToken(token)}`,
+      'x-catalogue-state-revision':String(Number.isSafeInteger(Number(fresh.revision)) ? Number(fresh.revision) : 0)
     },
     body:JSON.stringify({
       version:3,
+      revision:fresh.revision,
       cards,
       sections:{ ...(fresh.sections || {}) },
       entries

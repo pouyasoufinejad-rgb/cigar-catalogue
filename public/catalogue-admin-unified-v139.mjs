@@ -138,6 +138,7 @@ export function buildSavePlan({ state, key, dynamic, structural, editorial, sect
   cards[key] = mergeCardOverride(cards[key], { ...structural, ...editorial });
   const statePayload = {
     version: 3,
+    revision: Number.isSafeInteger(Number(current.revision)) ? Number(current.revision) : 0,
     cards,
     sections: { ...(sections && typeof sections === 'object' ? sections : {}) }
   };
@@ -1159,14 +1160,28 @@ async function uploadImage(key, file) {
   if (!response.ok) throw new Error(payload.error || `Image upload failed with HTTP ${response.status}`);
   return payload;
 }
-async function putEntry(key, entry) {
-  const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(entry) });
+function revisionWriteHeaders(revision, extra = {}) {
+  const headers = { ...extra };
+  const value = Number(revision);
+  if (Number.isSafeInteger(value) && value >= 0) headers['x-catalogue-state-revision'] = String(value);
+  return headers;
+}
+async function putEntry(key, entry, revision) {
+  const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, {
+    method:'PUT',
+    headers:revisionWriteHeaders(revision, {'content-type':'application/json'}),
+    body:JSON.stringify(entry)
+  });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || `Entry save failed with HTTP ${response.status}`);
-  return payload.entry || entry;
+  return payload;
 }
-async function putState(payload) {
-  const response = await adminWriteFetch(STATE_API, { method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
+async function putState(payload, revision = payload?.revision) {
+  const response = await adminWriteFetch(STATE_API, {
+    method:'PUT',
+    headers:revisionWriteHeaders(revision, {'content-type':'application/json'}),
+    body:JSON.stringify(payload)
+  });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Catalogue save failed with HTTP ${response.status}`);
   return data;
@@ -1225,22 +1240,32 @@ async function saveUnified() {
     editorial = { ...editorial, ...(rankState.archived !== undefined ? {archived:rankState.archived} : {}), ...(rankState.archivedAt !== undefined ? {archivedAt:rankState.archivedAt} : {}), ...(rankState.archivedRank !== undefined ? {archivedRank:rankState.archivedRank} : {}) };
     const file = q('catalogue-v139-image').files?.[0] || null;
     const dynamic = modeForBrowser !== 'edit' || Boolean(stateForBrowser.entries?.[key]);
-    let plan = buildSavePlan({ state:{...stateForBrowser,cards:cardsWithRanks}, key, dynamic, structural, editorial, sections:sectionsFromFields() });
+    let expectedRevision = Number.isSafeInteger(Number(stateForBrowser.revision)) ? Number(stateForBrowser.revision) : 0;
+    let plan = buildSavePlan({ state:{...stateForBrowser,revision:expectedRevision,cards:cardsWithRanks}, key, dynamic, structural, editorial, sections:sectionsFromFields() });
 
     if (dynamic) {
       setStatus('Saving entry to Cloudflare KV…');
-      await putEntry(key, plan.entryPayload);
+      const entryResult = await putEntry(key, plan.entryPayload, expectedRevision);
+      if (Number.isSafeInteger(Number(entryResult.revision))) expectedRevision = Number(entryResult.revision);
+      stateForBrowser.revision = expectedRevision;
+      plan.statePayload.revision = expectedRevision;
     }
     if (file) {
       setStatus(`Uploading original ${file.type.replace('image/','').toUpperCase()} image…`);
       await uploadImage(key, file);
       structural = { ...structural, imageUrl:`${IMAGE_API}${encodeURIComponent(key)}?v=${Date.now()}` };
-      plan = buildSavePlan({ state:{...stateForBrowser,cards:cardsWithRanks}, key, dynamic, structural, editorial, sections:sectionsFromFields() });
-      if (dynamic) await putEntry(key, plan.entryPayload);
+      plan = buildSavePlan({ state:{...stateForBrowser,revision:expectedRevision,cards:cardsWithRanks}, key, dynamic, structural, editorial, sections:sectionsFromFields() });
+      if (dynamic) {
+        const entryResult = await putEntry(key, plan.entryPayload, expectedRevision);
+        if (Number.isSafeInteger(Number(entryResult.revision))) expectedRevision = Number(entryResult.revision);
+        stateForBrowser.revision = expectedRevision;
+        plan.statePayload.revision = expectedRevision;
+      }
     }
     setStatus('Saving catalogue fields and sections to Cloudflare KV…');
     const verificationPatch = { ...structural, ...editorial };
-    await putState(plan.statePayload);
+    const stateResult = await putState(plan.statePayload, expectedRevision);
+    if (Number.isSafeInteger(Number(stateResult.revision))) stateForBrowser.revision = Number(stateResult.revision);
     setStatus('Verifying saved catalogue fields…');
     stateForBrowser = await verifyCardEdit(key, verificationPatch);
     setStatus('Saved site-wide. Refreshing catalogue…');
@@ -1271,7 +1296,10 @@ async function deleteDynamic() {
   if (!confirm(`Delete ${entry.brand || ''} ${entry.title || key}? This also deletes its uploaded KV image.`)) return;
   const button = q('catalogue-admin')?.querySelector('[data-catalogue-v139-action="delete"]'); if (button) button.disabled = true;
   try {
-    const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, { method:'DELETE' });
+    const response = await adminWriteFetch(`${ENTRY_API}${encodeURIComponent(key)}`, {
+      method:'DELETE',
+      headers:revisionWriteHeaders(stateForBrowser.revision)
+    });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Delete failed with HTTP ${response.status}`);
     location.reload();
