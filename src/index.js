@@ -660,9 +660,13 @@ export async function handleImage(request, env, rawKey) {
     if (!env?.CATALOGUE_STATE) return json({ error: 'CATALOGUE_STATE KV binding is unavailable.' }, { status: 503 });
     const imageKey = `${IMAGE_PREFIX}${key}`;
     const metaKey = `${IMAGE_META_PREFIX}${key}`;
-    const data = await env.CATALOGUE_STATE.get(imageKey, 'arrayBuffer');
+    const [data, storedType] = await Promise.all([
+      env.CATALOGUE_STATE.get(imageKey, 'stream'),
+      env.CATALOGUE_STATE.get(metaKey)
+    ]);
     if (!data) return new Response('Not found', { status: 404 });
-    const contentType = (await env.CATALOGUE_STATE.get(metaKey)) || 'image/png';
+    const contentType = storedType || 'image/png';
+    if (request.method === 'HEAD') await data.cancel();
     return new Response(request.method === 'HEAD' ? null : data, {
       status: 200,
       headers: {
@@ -857,9 +861,9 @@ export function renderEntryCard(rawEntry) {
   // scoring a zero price would produce and read as a judgement of the cigar.
   const valueScore = entry.priceUnverified ? null : valueInfo.score;
   const imageMarkup = entry.imageUrl
-    ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" src="${esc(entry.imageUrl)}">`
+    ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" src="${esc(entry.imageUrl)}" loading="lazy" decoding="async">`
     : entry.imageSourceKey
-      ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" data-image-source-key="${esc(entry.imageSourceKey)}" src="">`
+      ? `<img alt="${esc(`${entry.brand} ${entry.title}`)}" data-image-source-key="${esc(entry.imageSourceKey)}" src="" loading="lazy" decoding="async">`
       : '';
   const production = entry.productionLines.map(line => `<span class="artmeta-line">${esc(line)}</span>`).join('');
   const practical = visiblePracticalLines(entry.practicalLines).map(line => `<span class="artmeta-line">${esc(line)}</span>`).join('');
@@ -972,7 +976,7 @@ export function applyStructuralOverridesToHtml(html, cards) {
         card = card.replace(artImageRx, `$1${esc(imageUrl)}$2`);
       } else {
         const artframeOpenRx = /(<div\b(?=[^>]*\bclass=[\"'][^\"']*\bartframe\b[^\"']*[\"'])[^>]*>)/i;
-        if (artframeOpenRx.test(card)) card = card.replace(artframeOpenRx, `$1<img alt="" src="${esc(imageUrl)}">`);
+        if (artframeOpenRx.test(card)) card = card.replace(artframeOpenRx, `$1<img alt="" src="${esc(imageUrl)}" loading="lazy" decoding="async">`);
       }
     }
 
@@ -1053,7 +1057,7 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=189"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=190"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
