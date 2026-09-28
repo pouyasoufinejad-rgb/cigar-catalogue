@@ -754,9 +754,12 @@ export async function runStockCheck(env, state, mode = 'restock', options = {}) 
   const html = options.html != null ? String(options.html) : await loadBaseHtml(env);
   const targets = extractStockTargetsFromHtml(html, state);
   const cache = await readStockCache(env);
-  const results = { ...cache.results };
-  const meta = { lastRestockAt:Number(cache.meta.lastRestockAt) || 0, lastFullAt:Number(cache.meta.lastFullAt) || 0 };
   const isFull = mode === 'full';
+  const targetKeys = new Set(targets.map(target => target.key));
+  const results = isFull
+    ? Object.fromEntries(Object.entries(cache.results).filter(([key]) => targetKeys.has(key)))
+    : { ...cache.results };
+  const meta = { lastRestockAt:Number(cache.meta.lastRestockAt) || 0, lastFullAt:Number(cache.meta.lastFullAt) || 0 };
   const selected = targets.filter(target => {
     if (isFull) return true;
     const saved = results[target.key];
