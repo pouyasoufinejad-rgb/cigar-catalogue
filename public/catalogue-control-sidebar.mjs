@@ -564,14 +564,13 @@ function ensureStyles(root = document) {
   box-sizing:border-box;
   padding:4px 8px 0 0;
   overflow-x:hidden;
-  overflow-y:hidden;
+  overflow-y:auto;
   scrollbar-gutter:stable;
   display:flex;
   flex-direction:column;
   gap:6px;
   scrollbar-width:thin;
 }
-#${SIDEBAR_ID}:has([data-brand-line-toggle][aria-expanded="true"]){overflow-y:auto}
 #${SIDEBAR_ID} #${EXTRA_ID}{margin:0}
 #${SIDEBAR_ID} #${EXTRA_ID} .catalogue-sidebar-list{grid-template-columns:1fr}
 #${SIDEBAR_ID} .catalogue-convenience-toolbar{

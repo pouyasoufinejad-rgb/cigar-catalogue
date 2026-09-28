@@ -46,7 +46,7 @@ function catalogueFixture(url = 'https://example.test/catalogue') {
 }
 
 test('runtime loads the cache-busted control-sidebar placement module', () => {
-  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-9/);
+  assert.match(runtimeSource, /catalogue-control-sidebar\.mjs\?v=sidebar-controls-10/);
 });
 
 test('the sidebar sits left of its old anchor without its left edge leaving the window', () => {
@@ -59,8 +59,7 @@ test('the sidebar sits left of its old anchor without its left edge leaving the 
   assert.match(sidebarSource, /width:min\(250px,calc\(50vw - 660px - var\(--rail-shift\)\)\)/);
   assert.match(sidebarSource, /box-sizing:border-box/);
   assert.match(sidebarSource, /padding:4px 8px 0 0/);
-  assert.match(sidebarSource, /overflow-y:hidden/);
-  assert.match(sidebarSource, /:has\(\[data-brand-line-toggle\]\[aria-expanded=\"true\"\]\)\{overflow-y:auto\}/);
+  assert.match(sidebarSource, /overflow-y:auto/);
   assert.match(sidebarSource, /scrollbar-gutter:stable/);
 
   // Solve the two cases by hand: while the width is capped at 250px the rail really moves
@@ -221,7 +220,7 @@ test('CAO and Drew Estate sidebar filters match span-rendered catalogue cards', 
 });
 
 
-test('collapsed desktop sidebar uses compact spacing and only scrolls when brands are expanded', () => {
+test('collapsed desktop sidebar uses compact spacing and scrolls only when its content overflows', () => {
   assert.match(sidebarSource, /top:12px/);
   assert.match(sidebarSource, /max-height:calc\(100vh - 24px\)/);
   assert.match(sidebarSource, /#\$\{SIDEBAR_ID\}\{[\s\S]*gap:6px/);

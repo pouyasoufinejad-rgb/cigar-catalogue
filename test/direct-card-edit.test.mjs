@@ -9,7 +9,7 @@ const fullEditor = await readFile(new URL('../public/catalogue-admin-unified-v13
 
 test('direct editor is loaded by the runtime and owns Edit catalogue', () => {
   assert.ok(directEdit.length > 0, 'direct editor module must remain present');
-  assert.match(runtimeModule, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=scroll-stability-1['"]\)/);
+  assert.match(runtimeModule, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=startup-read-1['"]\)/);
   assert.match(directEdit, /function onToggleCapture\(event\)[\s\S]*?if \(allowModalOpen\) return;[\s\S]*?event\.stopImmediatePropagation\(\);[\s\S]*?enterEditMode\(\)/);
   assert.match(directEdit, /document\.addEventListener\('click', onToggleCapture, \{ capture: true \}\)/);
 });
@@ -52,7 +52,7 @@ test('full editor exposes structural product fields rather than only inline text
 });
 
 test('verified layout persistence remains loaded alongside the direct editor', () => {
-  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs\?v=edit-consistency-1'\)/);
+  assert.match(runtimeModule, /import\('\.\/catalogue-direct-persistence\.mjs\?v=startup-read-1'\)/);
   assert.match(persistence, /\/api\/catalogue-overrides/);
 });
 

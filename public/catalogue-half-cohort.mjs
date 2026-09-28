@@ -1,3 +1,4 @@
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -349,11 +350,16 @@ function applyStateMembership(state, root = document) {
   compactDomCohortRanks(root);
 }
 
-async function hydrateMembership(root = document) {
+async function hydrateMembership(root = document, initial = false) {
   try {
-    const response = await fetch(`${STATE_API}?half_cohort=1`, { cache: 'no-store' });
-    if (!response.ok) return false;
-    const state = await response.json();
+    let state;
+    if (initial) {
+      state = await loadInitialCatalogueState();
+    } else {
+      const response = await fetch(`${STATE_API}?half_cohort=1`, { cache: 'no-store' });
+      if (!response.ok) return false;
+      state = await response.json();
+    }
     applyStateMembership(state, root);
     syncHalfCigarSection(root);
     syncEditorType(root);
@@ -430,6 +436,7 @@ function installEditorHooks(root = document) {
     syncEditorRankBounds(root);
   });
 
+  root.addEventListener?.('catalogue:editor-populated', () => syncEditorType(root));
   root.getElementById?.('catalogue-admin-card')?.addEventListener('change', () => setTimeout(() => syncEditorType(root), 0));
   root.getElementById?.('catalogue-admin-toggle')?.addEventListener('click', () => setTimeout(() => syncEditorType(root), 0));
 }
@@ -525,7 +532,7 @@ export function installHalfCigarCohort(root = document) {
   installEditorHooks(root);
   installSavePipeline(root);
   compactDomCohortRanks(root);
-  hydrateMembership(root);
+  hydrateMembership(root, true);
 
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
   root.getElementById?.('sort-secondary')?.addEventListener('change', () => scheduleRefresh(root));

@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import sharp from 'sharp';
+import { fileURLToPath } from 'node:url';
 
 import {
   FLAVOUR_AXES,
@@ -85,7 +86,7 @@ test('every built mask is named for a hash of its own contents', async () => {
 test('each mask is pure alpha at a common size, so the page can tint it', async () => {
   for (const axis of FLAVOUR_AXES_WITH_ART) {
     const file = new URL(axis.mask.replace('/art/flavour/', ''), ART_DIR);
-    const { data, info } = await sharp(await stat(file).then(() => file.pathname))
+    const { data, info } = await sharp(await stat(file).then(() => fileURLToPath(file)))
       .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     assert.equal(info.width, 128, `${axis.id} width`);
     assert.equal(info.height, 128, `${axis.id} height`);
@@ -108,7 +109,7 @@ test('Sweet is solid white and its six cube faces are filled', async () => {
   assert.match(axis.mask, /^\/art\/flavour\/sweet-[0-9a-f]{8}\.png$/);
 
   const file = new URL(axis.mask.replace('/art/flavour/', ''), ART_DIR);
-  const { data, info } = await sharp(await stat(file).then(() => file.pathname))
+  const { data, info } = await sharp(await stat(file).then(() => fileURLToPath(file)))
     .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const alphaAt = (x, y) => data[(y * info.width + x) * 4 + 3];
 

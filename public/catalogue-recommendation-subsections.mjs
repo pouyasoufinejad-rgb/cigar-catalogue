@@ -1,3 +1,4 @@
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
@@ -21,7 +22,6 @@ export const DEFAULT_RECOMMENDATION_SUBSECTIONS = Object.freeze([
   })
 ]);
 
-const STATE_API = '/api/catalogue-overrides';
 const SUBSECTION_SELECT_ID = 'catalogue-admin-subsection';
 const SUBSECTION_EDITOR_ID = 'catalogue-admin-subsection-editor';
 let runtimeState = null;
@@ -686,9 +686,7 @@ function scheduleRefresh(root = document) {
 
 async function initialRead(root = document) {
   try {
-    const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
-    if (!response.ok) return null;
-    return hydrateRuntimeState(await response.json(), root);
+    return hydrateRuntimeState(await loadInitialCatalogueState(), root);
   } catch (_) {
     return null;
   }
@@ -703,6 +701,7 @@ export function installRecommendationSubsections(root = document) {
   initialRead(root);
   root.getElementById?.('sort')?.addEventListener('change', () => scheduleRefresh(root));
   root.addEventListener?.('catalogue:cards-refreshed', () => scheduleRefresh(root));
+  root.addEventListener?.('catalogue:editor-populated', () => syncAdminSelection(root));
   root.querySelector?.('.toggle')?.addEventListener('click', event => {
     if (event.target?.closest?.('button')) scheduleRefresh(root);
   });

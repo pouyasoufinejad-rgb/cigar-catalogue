@@ -1,4 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
 // Selecting a size on a card, without changing what the catalogue shows by default.
 //
 // Two ideas are kept apart deliberately. The default variant is saved state: it is what a
@@ -16,10 +17,10 @@ import {
   promoteVariantPatch,
   resolveSearchQuery,
   variantEffectiveRecord
-} from './catalogue-variants.mjs?v=volume-size-1';
-import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=coffee-axis-1';
-import { applySizeRatingToCard } from './catalogue-size-presentation.mjs';
-import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=coffee-axis-1';
+} from './catalogue-variants.mjs?v=startup-read-1';
+import { refreshSizeAdjustedValueForCard } from './catalogue-size-value-runtime.mjs?v=startup-read-1';
+import { applySizeRatingToCard } from './catalogue-size-presentation.mjs?v=short-penalty-1';
+import { ensureFlavourRating, refreshLaurelForCard } from './catalogue-flavour.mjs?v=startup-read-1';
 import { flavourProfileMarkup } from './catalogue-flavour-axes.mjs?v=coffee-axis-1';
 
 export const VARIANT_QUERY_PARAM = 'variant';
@@ -928,8 +929,7 @@ export function applyAllVariants() {
 export async function initVariantRuntime({ fetchImpl = fetch } = {}) {
   ensureStyle();
   try {
-    const response = await fetchImpl(`${STATE_API}?variants=${Date.now()}`, { cache: 'no-store' });
-    if (response?.ok) setVariantState(await response.json());
+    setVariantState(await loadInitialCatalogueState(fetchImpl));
   } catch { /* a card without state still renders its saved default from the server */ }
   ensureVariantSearch();
   bindSelects();

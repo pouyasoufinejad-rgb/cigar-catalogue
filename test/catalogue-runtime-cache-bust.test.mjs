@@ -6,19 +6,19 @@ const worker = await readFile(new URL('../src/index.js', import.meta.url), 'utf8
 const runtime = await readFile(new URL('../public/catalogue-runtime.mjs', import.meta.url), 'utf8');
 
 test('Worker injects a versioned runtime bootstrap so repaired editor code bypasses stale browser caches', () => {
-  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=188\"/);
+  assert.match(worker, /src=\"\/catalogue-runtime\.mjs\?v=189\"/);
 });
 
 test('cache-busted runtime restores the direct editor', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=scroll-stability-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=startup-read-1['"]\)/);
 });
 
 test('runtime version-busts the recommendation subsection module containing the observer repair', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-recommendation-subsections\.mjs\?v=editor-repair-2['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-recommendation-subsections\.mjs\?v=startup-read-1['"]\)/);
 });
 
 test('runtime version-busts the half-cohort module containing the rank-bound repair', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-half-cohort\.mjs\?v=editor-repair-1['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-half-cohort\.mjs\?v=startup-read-1['"]\)/);
 });
 
 // These checks intentionally pin the outer runtime key and editor ownership so this repair cannot silently regress.
@@ -32,9 +32,9 @@ test('runtime version-busts the convenience module carrying the compact-card rul
 
 test('runtime version-busts both desktop layout modules', () => {
   assert.match(runtime, /import\(['"]\.\/catalogue-card-layout\.mjs\?v=left-shift-1['"]\)/);
-  assert.match(runtime, /import\(['"]\.\/catalogue-control-sidebar\.mjs\?v=sidebar-controls-9['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-control-sidebar\.mjs\?v=sidebar-controls-10['"]\)/);
 });
 
 test('runtime version-busts the variant runtime carrying search spacing', () => {
-  assert.match(runtime, /import\(['"]\.\/catalogue-variant-runtime\.mjs\?v=search-spacing-3['"]\)/);
+  assert.match(runtime, /import\(['"]\.\/catalogue-variant-runtime\.mjs\?v=startup-read-1['"]\)/);
 });

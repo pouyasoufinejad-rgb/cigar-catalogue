@@ -11,7 +11,7 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
   assert.ok(runtimeSource, 'catalogue-runtime.mjs must exist');
   assert.doesNotMatch(valueSource, /import\(['"]\.\/catalogue-[^'"]+\.mjs['"]\)/);
   assert.doesNotMatch(valueSource, /\btypeof document\b|\bdocument\./);
-  assert.match(runtimeSource, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=scroll-stability-1['"]\)/, 'direct editor must own Edit catalogue');
+  assert.match(runtimeSource, /import\(['"]\.\/catalogue-direct-edit\.mjs\?v=startup-read-1['"]\)/, 'direct editor must own Edit catalogue');
 
   for (const moduleName of [
     'catalogue-direct-persistence.mjs',
@@ -38,7 +38,7 @@ test('Worker HTML transform injects the runtime bootstrap exactly once', async (
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=188"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=189"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });
