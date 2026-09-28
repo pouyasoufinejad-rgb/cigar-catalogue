@@ -1,6 +1,6 @@
 if (typeof document !== 'undefined') {
   import('./catalogue-direct-edit.mjs?v=startup-read-1');
-  import('./catalogue-direct-persistence.mjs?v=startup-read-1');
+  import('./catalogue-direct-persistence.mjs?v=seeded-state-1');
   import('./catalogue-flavour.mjs?v=startup-read-1');
   import('./catalogue-size-value-runtime.mjs?v=startup-read-1');
   import('./catalogue-card-layout.mjs?v=left-shift-1');
@@ -9,8 +9,8 @@ if (typeof document !== 'undefined') {
   import('./catalogue-legacy-copy.mjs');
   import('./catalogue-size-presentation.mjs?v=short-penalty-1');
   import('./catalogue-presentation.mjs');
-  import('./catalogue-recommendation-subsections.mjs?v=startup-read-1');
-  import('./catalogue-half-cohort.mjs?v=startup-read-1');
+  import('./catalogue-recommendation-subsections.mjs?v=seeded-state-1');
+  import('./catalogue-half-cohort.mjs?v=seeded-state-1');
   import('./catalogue-editor-behaviour.mjs?v=scroll-stability-1');
   import('./catalogue-convenience.mjs?v=retailer-dropdown-1');
   import('./catalogue-convenience-refinements.mjs');
