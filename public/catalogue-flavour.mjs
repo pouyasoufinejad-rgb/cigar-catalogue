@@ -1,5 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 import { deriveValue } from './catalogue-value.mjs';
 import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=startup-read-1';
 import {
