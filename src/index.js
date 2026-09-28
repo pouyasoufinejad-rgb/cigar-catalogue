@@ -1114,6 +1114,27 @@ export function injectLiveStateSeed(html, state) {
   return pattern.test(source) ? source.replace(pattern, seed) : source;
 }
 
+export function prioritiseInitialArtworkHtml(html, limit = 6) {
+  let remaining = Math.max(0, Math.floor(Number(limit) || 0));
+  if (!remaining) return String(html || '');
+  const setAttribute = (attrs, name, value) => {
+    const pattern = new RegExp('\\s' + name + '\\s*=\\s*(["\\'])[^"\\']*\\1', 'i');
+    if (pattern.test(attrs)) return attrs.replace(pattern, ` ${name}="${value}"`);
+    return `${attrs} ${name}="${value}"`;
+  };
+  return String(html || '').replace(
+    /((?:<div|<figure)\b[^>]*class=["'][^"']*\bartframe\b[^"']*["'][^>]*>\s*)<img\b([^>]*)>/gi,
+    (match, prefix, attrs) => {
+      if (remaining <= 0) return match;
+      remaining -= 1;
+      let next = setAttribute(attrs, 'loading', 'eager');
+      next = setAttribute(next, 'fetchpriority', 'high');
+      next = setAttribute(next, 'decoding', 'async');
+      return `${prefix}<img${next}>`;
+    }
+  );
+}
+
 async function maybeInjectCatalogueHtml(request, response, env) {
   if (request.method !== 'GET' || !response || !response.ok) return response;
   const url = new URL(request.url);
@@ -1136,7 +1157,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
     degraded = true;
     console.error('[catalogue] server-side state injection failed; serving the shell with its runtime', error);
   }
-  const transformed = injectRuntimeBootstrap(body);
+  const transformed = injectRuntimeBootstrap(prioritiseInitialArtworkHtml(body));
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   // The body is rewritten on every request, so any validator copied from the static asset
@@ -1155,7 +1176,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '166');
+  headers.set('x-cigar-catalogue-version', '167');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');
