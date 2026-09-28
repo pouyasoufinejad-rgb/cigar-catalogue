@@ -4,6 +4,7 @@ if (typeof document !== 'undefined') {
   import('./catalogue-flavour.mjs?v=startup-read-1');
   import('./catalogue-size-value-runtime.mjs?v=startup-read-1');
   import('./catalogue-card-layout.mjs?v=left-shift-1');
+  import('./catalogue-image-priority.mjs?v=1');
   import('./catalogue-medal-strip.mjs?v=tight-strip-1');
   import('./catalogue-card-flip.mjs?v=card-flip-1');
   import('./catalogue-legacy-copy.mjs');
