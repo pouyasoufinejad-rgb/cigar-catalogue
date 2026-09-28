@@ -324,32 +324,6 @@ function onRangeInput(event) {
   applyLayout(selected, { [name]:value });
 }
 
-async function applySavedLayouts() {
-  try {
-    const state = await fetchState();
-    for (const card of document.querySelectorAll('article.card[data-key]')) {
-      const saved = state.cards?.[card.dataset.key];
-      if (!saved) continue;
-      if (['imageScale','imageX','imageY','metaY'].some(key => saved[key] != null)) applyLayout(card, saved);
-    }
-  } catch (_) {}
-}
-
-async function waitForCatalogueHydration() {
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    if (window.catalogueOverridesReady) {
-      try { await window.catalogueOverridesReady; } catch (_) {}
-      return;
-    }
-    await new Promise(resolve => setTimeout(resolve, 50));
-  }
-}
-
-async function restoreSavedLayoutsAfterHydration() {
-  await waitForCatalogueHydration();
-  await applySavedLayouts();
-}
-
 function onVariantChanged(event) {
   if (!editMode || !selected) return;
   const card = event.target?.closest?.('article.card[data-key]');
@@ -364,8 +338,6 @@ export function initDirectCardEditing() {
   document.addEventListener('click', onToggleCapture, { capture: true });
   document.addEventListener('click', onDocumentClick, true);
   document.addEventListener('catalogue:variant-changed', onVariantChanged);
-  restoreSavedLayoutsAfterHydration();
-  document.addEventListener('catalogue:cards-refreshed', applySavedLayouts);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDirectCardEditing, { once:true });

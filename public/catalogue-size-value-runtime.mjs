@@ -1,8 +1,8 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=coffee-axis-1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=startup-read-1';
 import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 
-const STATE_API = '/api/catalogue-overrides';
 let state = { version: 3, cards: {}, sections: {}, entries: {} };
 let refreshTimer = 0;
 let previewTimer = 0;
@@ -256,11 +256,8 @@ function installStateListener() {
 
 async function loadState() {
   try {
-    const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
-    if (response.ok) {
-      const payload = await response.json();
-      if (payload && typeof payload === 'object') state = payload;
-    }
+    const payload = await loadInitialCatalogueState();
+    if (payload && typeof payload === 'object') state = payload;
   } catch (_) {}
   scheduleRefresh();
   schedulePreview();

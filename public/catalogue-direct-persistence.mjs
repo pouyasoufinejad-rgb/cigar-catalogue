@@ -1,5 +1,7 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
+import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=startup-read-1';
 
 const STATE_API = '/api/catalogue-overrides';
 const STORAGE_KEY = 'catalogue-direct-layout-v1';
@@ -210,29 +212,31 @@ async function saveSelectedVerified() {
   button.disabled = true;
   button.textContent = 'Saving…';
   try {
-    const state = await fetchState();
+    // Snapshot the user's edits before fresh-state listeners can rehydrate the card.
     const key = card.dataset.key;
     const layoutPatch = layoutFromCard(card);
+    const copyPatch = variantCopyPatch(card);
+    const patch = directPatch(card);
+    const blendVariantId = card.dataset.activeBlend || '';
+    const sizeVariantId = card.dataset.activeVariant || '';
+    const state = await fetchState();
     const cards = { ...(state.cards || {}) };
     const entries = { ...(state.entries || {}) };
     const record = catalogueRecordFromState({ cards, entries }, key) || { key };
-    const blendVariantId = card.dataset.activeBlend || '';
-    const sizeVariantId = card.dataset.activeVariant || '';
     let structuralPatch = {};
 
     if (blendVariantId || sizeVariantId) {
-      const updated = updateVariantScopedCopy(record, { blendVariantId, sizeVariantId }, variantCopyPatch(card));
+      const updated = updateVariantScopedCopy(record, { blendVariantId, sizeVariantId }, copyPatch);
       structuralPatch = variantStructuralPatch(updated);
       const parentCopyPatch = !blendVariantId
         ? {
-          experienceTags:experienceTags(card),
-          productionHtml:artmetaHtml(card, '.artmeta-left')
+          experienceTags:patch.experienceTags,
+          productionHtml:patch.productionHtml
         }
         : {};
       cards[key] = { ...(cards[key] || {}), ...parentCopyPatch, ...structuralPatch, ...layoutPatch };
       if (entries[key]) entries[key] = { ...entries[key], ...structuralPatch };
     } else {
-      const patch = directPatch(card);
       cards[key] = { ...(cards[key] || {}), ...patch };
     }
 
@@ -283,19 +287,23 @@ async function waitForCatalogueHydration() {
   }
 }
 
+function receiveRemoteLayouts(state) {
+  for (const [key, saved] of Object.entries(state?.cards || {})) {
+    if (LAYOUT_KEYS.some(name => saved?.[name] != null)) layoutCache[key] = normaliseLayout(saved);
+  }
+  writeLocalLayouts();
+  applyCachedLayouts();
+}
+
 async function refreshRemoteLayouts() {
-  try {
-    const state = await fetchState();
-    for (const [key, saved] of Object.entries(state.cards || {})) {
-      if (LAYOUT_KEYS.some(name => saved?.[name] != null)) layoutCache[key] = normaliseLayout(saved);
-    }
-    writeLocalLayouts();
-    applyCachedLayouts();
-  } catch (_) {}
+  try { receiveRemoteLayouts(await loadInitialCatalogueState()); }
+  catch (_) {}
 }
 
 export function initDirectPersistence() {
   document.addEventListener('click', interceptDirectSave, { capture:true });
+  registerCatalogueStateResponseListener('direct-layout', event => receiveRemoteLayouts(event.state));
+  document.addEventListener('catalogue:cards-refreshed', applyCachedLayouts);
   applyCachedLayouts();
   waitForCatalogueHydration().then(refreshRemoteLayouts);
   const observer = new MutationObserver(mutations => {

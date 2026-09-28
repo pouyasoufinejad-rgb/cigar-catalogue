@@ -16,9 +16,10 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function waitFor(predicate, message, timeout = 3000) {
   const started = Date.now();
-  while (Date.now() - started < timeout) {
+  while (true) {
     const value = predicate();
     if (value) return value;
+    if (Date.now() - started >= timeout) break;
     await delay(10);
   }
   throw new Error(message);
@@ -132,7 +133,8 @@ async function importRuntimeModules(runtimeSource) {
   const modules = new Map();
   for (const spec of specs) {
     const url = new URL(spec, RUNTIME_URL);
-    url.searchParams.set('dom-smoke', '1');
+    // Keep the same URL as transitive imports, as a browser does. A test-only query
+    // duplicates module state, observers and listeners inside this test process.
     modules.set(spec, await import(url.href));
   }
   return modules;
@@ -225,7 +227,7 @@ test('browser editor smoke: direct editing, subsection bounds and save pipeline 
   window.sessionStorage.setItem('cigar-catalogue-admin-token', 'test-token');
 
   const adminUrl = new URL(ADMIN_URL);
-  adminUrl.searchParams.set('dom-smoke', '1');
+  adminUrl.search = new URL(html.match(/src="([^"]*catalogue-admin-unified-v139\.mjs[^"]*)"/)[1], 'https://catalogue.test').search;
   await import(adminUrl.href);
   const runtimeSource = await readFile(RUNTIME_URL, 'utf8');
   const runtimeModules = await importRuntimeModules(runtimeSource);

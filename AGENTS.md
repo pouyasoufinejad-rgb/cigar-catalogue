@@ -13,7 +13,7 @@ Production: https://cigar-catalogue.psncodex.workers.dev/
 
 - Worker/API/server rendering: `src/index.js`
 - Static shell: `public/index.html`
-- Runtime loader: `public/catalogue-runtime.mjs`
+- Runtime loader: `public/catalogue-runtime.mjs`; startup reads share `catalogue-initial-state.mjs` (editing/reloads must still fetch fresh).
 - Main editor: `public/catalogue-admin-unified-v139.mjs`
 - Direct editing: `public/catalogue-direct-edit.mjs`, `public/catalogue-direct-persistence.mjs`
 - Variants: `public/catalogue-variants.mjs`, `catalogue-variant-runtime.mjs`, `catalogue-variant-editor.mjs`, `catalogue-variant-edit-model.mjs`
@@ -25,7 +25,7 @@ Production: https://cigar-catalogue.psncodex.workers.dev/
 
 ## Data safety
 - Live KV binding `CATALOGUE_STATE` is authoritative for editable data. Git is authoritative for code and publication history.
-- Fetch fresh state before writes. Preserve every unrelated record/field in maps or entries you send. Obey current revision/conflict guards. Never seed/reset production from fixtures or replace its KV binding.
+- Fetch fresh state before writes. Preserve every unrelated record/field in maps or entries you send. Full-state PUT replaces supplied maps; main has no revision guard. Never seed/reset production from fixtures or replace its KV binding.
 - Reuse `catalogueRecordFromState` and the shared save pipeline. Preserve variant IDs, defaults, siblings and nested blend/size variants.
 - Credentials never belong in Git, request JSON, logs or chat output.
 

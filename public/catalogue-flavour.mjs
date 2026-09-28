@@ -1,6 +1,7 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
 import { deriveValue } from './catalogue-value.mjs';
-import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=entry-flavour-1';
+import { blendEffectiveRecord, normaliseBlendVariants } from './catalogue-variants.mjs?v=startup-read-1';
 import {
   FLAVOUR_AXES,
   FLAVOUR_SCALE_MAX,
@@ -20,7 +21,6 @@ import {
   registerCatalogueStateResponseListener
 } from './catalogue-save-pipeline.mjs';
 
-const STATE_API = '/api/catalogue-overrides';
 const SCORE_CLASSES = ['gold', 'silver', 'bronze', 'score-high', 'score-mid', 'score-low', 'flavour-unrated'];
 
 function own(object, key) {
@@ -613,9 +613,7 @@ function installSavePipeline() {
 
 async function loadState() {
   try {
-    const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
-    if (!response.ok) return;
-    const payload = await response.json();
+    const payload = await loadInitialCatalogueState();
     if (payload && typeof payload === 'object') state = payload;
   } catch (_) {}
   scheduleRefresh();

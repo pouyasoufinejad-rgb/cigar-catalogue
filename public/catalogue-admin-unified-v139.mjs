@@ -1,4 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
 import { deriveValue } from './catalogue-value.mjs';
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
 import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
@@ -930,9 +931,14 @@ let serverAvailableForBrowser = false;
 
 async function loadStateForBrowser({ showMessage = false, applyStructural = true } = {}) {
   try {
-    const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
+    let payload;
+    if (applyStructural) {
+      const response = await fetch(STATE_API, { cache: 'no-store', headers: { accept: 'application/json' } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      payload = await response.json();
+    } else {
+      payload = await loadInitialCatalogueState();
+    }
     stateForBrowser = {
       version: 3,
       cards: payload?.cards && typeof payload.cards === 'object' ? payload.cards : {},
@@ -997,6 +1003,7 @@ function populateSelectedFields() {
   populateStructuralFields();
   populateEditorialFields();
   refreshValueDisplayForCard(selectedCard());
+  document.dispatchEvent(new CustomEvent('catalogue:editor-populated'));
 }
 
 function populateStructuralFields() {
@@ -1006,7 +1013,7 @@ function populateStructuralFields() {
   const data = effectiveStructure(card, stateForBrowser);
   setField('catalogue-v139-key', card.dataset.key);
   q('catalogue-v139-key').readOnly = true;
-  setField('catalogue-v139-type', data.taster ? 'taster' : 'main');
+  setField('catalogue-v139-type', card.dataset.catalogueType || (data.taster ? 'taster' : 'main'));
   setField('catalogue-v139-risk', data.risk || 1);
   setField('catalogue-v139-brand', data.brand || '');
   setField('catalogue-v139-title', data.title || '');
