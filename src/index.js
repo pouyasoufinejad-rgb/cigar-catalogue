@@ -1118,8 +1118,10 @@ export function prioritiseInitialArtworkHtml(html, limit = 6) {
   let remaining = Math.max(0, Math.floor(Number(limit) || 0));
   if (!remaining) return String(html || '');
   const setAttribute = (attrs, name, value) => {
-    const pattern = new RegExp("\\s" + name + "\\s*=\\s*([\\"'])[^\\"']*\\1", "i");
-    if (pattern.test(attrs)) return attrs.replace(pattern, ` ${name}="${value}"`);
+    const doubleQuoted = new RegExp(`\\s${name}="[^"]*"`, 'i');
+    const singleQuoted = new RegExp(`\\s${name}='[^']*'`, 'i');
+    if (doubleQuoted.test(attrs)) return attrs.replace(doubleQuoted, ` ${name}="${value}"`);
+    if (singleQuoted.test(attrs)) return attrs.replace(singleQuoted, ` ${name}="${value}"`);
     return `${attrs} ${name}="${value}"`;
   };
   return String(html || '').replace(
