@@ -1118,7 +1118,7 @@ export function prioritiseInitialArtworkHtml(html, limit = 6) {
   let remaining = Math.max(0, Math.floor(Number(limit) || 0));
   if (!remaining) return String(html || '');
   const setAttribute = (attrs, name, value) => {
-    const pattern = new RegExp('\\s' + name + '\\s*=\\s*(["\\'])[^"\\']*\\1', 'i');
+    const pattern = new RegExp("\\s" + name + "\\s*=\\s*([\\"'])[^\\"']*\\1", "i");
     if (pattern.test(attrs)) return attrs.replace(pattern, ` ${name}="${value}"`);
     return `${attrs} ${name}="${value}"`;
   };
