@@ -1,0 +1,50 @@
+{
+  "id": "2026-09-29-add-curivari-hoja-half-corona",
+  "operation": "upsert-entry",
+  "key": "curivari-hoja-half-corona",
+  "entry": {
+    "brand": "Curivari",
+    "title": "Hoja Half Corona",
+    "eyebrow": "Smooth compact Nicaraguan Half Corona",
+    "packagePrice": 21,
+    "packageCount": 1,
+    "packageLabel": "single cigar",
+    "price": 21,
+    "country": "Nicaragua",
+    "length": 3.5,
+    "ring": 50,
+    "strength": 5,
+    "quality": 7,
+    "flavour": 5,
+    "risk": 1,
+    "stock": "in",
+    "taster": false,
+    "catalogueType": "main",
+    "archived": false,
+    "subsection": "petit-panatelas",
+    "summaryHtml": "<strong>Smooth, mild-to-medium Nicaraguan tobacco in a very compact 3.5″ × 50 format</strong>. Australian smokers discussing the Hoja line describe it as starting mild and smooth, then building toward medium, with positive comments on construction, draw and value. The short, broad format makes it a compact handmade option rather than a narrow cigarillo-style smoke.",
+    "noteHtml": "Cigar Hut lists the exact Half Corona at A$21 for a single and A$189 for a bundle of 10. The single is used as the catalogue benchmark. Public line-specific tasting detail is sparse, so the flavour ceiling is kept conservative rather than inventing complexity that has not been documented.",
+    "productionLines": [
+      "Handmade in Nicaragua",
+      "Exact wrapper, binder and filler are not disclosed on the retailer page"
+    ],
+    "practicalLines": [
+      "Single cigar",
+      "3.5″ × 50 Half Corona",
+      "Bundle of 10 also available",
+      "Compact broad-ring format"
+    ],
+    "experienceTags": [
+      "Nicotine: Mild–Medium"
+    ],
+    "flavourProfile": {
+      "pepper": 1
+    },
+    "retailerLinks": [
+      "https://www.cigarhut.com.au/curivari-hoja-half-corona/"
+    ],
+    "priceChecked": "2026-09-29",
+    "stockChecked": "2026-09-29"
+  },
+  "note": "Add Curivari Hoja Half Corona to the Petit Panatelas/Petit Coronas/Petit Robustos recommendation subsection using Cigar Hut's current A$21 single price and exact 3.5 x 50 dimensions. Append without disturbing existing ranks or unrelated catalogue data. Image omitted because the current retailer page only exposes placeholder imagery; flavour profile is deliberately conservative because exact public tasting notes are sparse."
+}
