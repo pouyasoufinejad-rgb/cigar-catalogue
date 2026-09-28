@@ -138,3 +138,17 @@ test('live seed serialization cannot break out of its script tag', () => {
   assert.doesNotMatch(transformed, /<script>bad\(\)<\/script>/);
   assert.match(transformed, /\\u003c\/script>/);
 });
+
+
+test('HTML response promotes initial card artwork before the runtime starts', async () => {
+  const cards = Array.from({ length:7 }, (_value, index) =>
+    `<article class="card" data-key="card-${index}"><div class="artframe"><img src="/art/card-${index}.webp" loading="lazy" decoding="async"></div></article>`
+  ).join('');
+  const shell = `<!doctype html><html><body><main>${cards}</main></body></html>`;
+  const response = await get(env({ shell }));
+  const html = await response.text();
+  const primary = [...html.matchAll(/<div class="artframe"><img\b([^>]*)>/g)].map(match => match[1]);
+  assert.equal(primary.length, 7);
+  assert.ok(primary.slice(0, 6).every(attrs => /loading="eager"/.test(attrs) && /fetchpriority="high"/.test(attrs)));
+  assert.match(primary[6], /loading="lazy"/);
+});

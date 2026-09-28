@@ -168,3 +168,9 @@ test('catalogue updater shows friendly names for every stock-check retailer', ()
   assert.equal(unifiedAdmin.retailerLabel('https://firmincigars.com.au/product/test/'), 'Firmin Cigars');
   assert.equal(unifiedAdmin.retailerLabel('https://www.theindexcigars.com.au/products/test'), 'The Index');
 });
+
+
+test('desktop first paint already uses the final three-card grid before runtime layout JS', () => {
+  assert.match(catalogueHtml, /@media\(min-width:901px\)\{\s*\.grid\{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important;[\s\S]*?gap:8px!important;/);
+  assert.match(catalogueHtml, /@media\(max-width:900px\)\{[\s\S]*?html body \.grid\.grid\{[^}]*grid-template-columns:minmax\(0,1fr\)!important/);
+});
