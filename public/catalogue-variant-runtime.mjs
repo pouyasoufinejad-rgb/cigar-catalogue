@@ -486,7 +486,7 @@ export function applyVariantToCard(card, record, variantId) {
       String(Math.max(0.32, Math.min(1.15, (length / 5) * (ring / 50)))));
     if (effective.imageUrl && String(effective.imageUrl).startsWith('/')) {
       let img = art.querySelector('img');
-      if (!img) { img = document.createElement('img'); art.prepend(img); }
+      if (!img) { img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; art.prepend(img); }
       img.src = effective.imageUrl;
     }
   }

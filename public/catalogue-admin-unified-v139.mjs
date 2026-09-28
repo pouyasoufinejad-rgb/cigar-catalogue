@@ -544,7 +544,7 @@ export function applyStructuralOverrideToCard(card, override) {
   }
   if (art && own(override,'imageUrl') && String(override.imageUrl || '').startsWith('/')) {
     let img = art.querySelector('img');
-    if (!img) { img = document.createElement('img'); art.prepend(img); }
+    if (!img) { img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; art.prepend(img); }
     img.src = override.imageUrl;
   }
   const facts = card.querySelectorAll('.facts > div');

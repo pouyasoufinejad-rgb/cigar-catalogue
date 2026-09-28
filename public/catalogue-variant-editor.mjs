@@ -14,7 +14,7 @@ import {
   applyBlendToCard,
   applyVariantToCard,
   setVariantState
-} from './catalogue-variant-runtime.mjs?v=startup-read-1';
+} from './catalogue-variant-runtime.mjs?v=image-loading-1';
 import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';
 
 const STATE_API = '/api/catalogue-overrides';
