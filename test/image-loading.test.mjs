@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleImage, renderEntryCard, applyStructuralOverridesToHtml } from '../src/index.js';
+import { handleImage, imageCacheControl, renderEntryCard, applyStructuralOverridesToHtml } from '../src/index.js';
 
 test('dynamic and replacement artwork defers off-screen loading without changing image URLs', () => {
   const imageUrl = '/api/catalogue-image/example?v=123';
@@ -44,4 +44,50 @@ test('HEAD cancels unused image streams and missing images remain 404', async ()
   assert.equal(cancelled, true);
   const missing = await handleImage(new Request('https://catalogue.test/api/catalogue-image/missing'), { CATALOGUE_STATE: { async get() { return null; } } }, 'missing');
   assert.equal(missing.status, 404);
+});
+
+
+test('versioned KV artwork is immutable and served from the edge cache without changing bytes', async () => {
+  const store = new Map();
+  const cache = {
+    async match(request) {
+      const cached = store.get(request.url);
+      return cached ? cached.clone() : undefined;
+    },
+    async put(request, response) {
+      store.set(request.url, response.clone());
+    }
+  };
+  const waits = [];
+  const options = { cache, waitUntil: promise => waits.push(promise) };
+  const bytes = new Uint8Array([9, 8, 7, 6, 5]);
+  let reads = 0;
+  const env = { CATALOGUE_STATE: { get(key, type) {
+    reads += 1;
+    if (key.startsWith('catalogue-image-meta:')) return Promise.resolve('image/png');
+    return Promise.resolve(new ReadableStream({ start(controller) { controller.enqueue(bytes); controller.close(); } }));
+  } } };
+  const request = new Request('https://catalogue.test/api/catalogue-image/example?v=1700000000000');
+  const first = await handleImage(request, env, 'example', options);
+  assert.equal(first.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.deepEqual(new Uint8Array(await first.arrayBuffer()), bytes);
+  await Promise.all(waits);
+  assert.equal(reads, 2);
+
+  const cached = await handleImage(request, {
+    CATALOGUE_STATE: { get() { throw new Error('KV should not be touched on a cache hit'); } }
+  }, 'example', options);
+  assert.deepEqual(new Uint8Array(await cached.arrayBuffer()), bytes);
+  assert.equal(reads, 2);
+});
+
+test('only versioned image URLs receive immutable caching', () => {
+  assert.equal(
+    imageCacheControl(new Request('https://catalogue.test/api/catalogue-image/example?v=123')),
+    'public, max-age=31536000, immutable'
+  );
+  assert.equal(
+    imageCacheControl(new Request('https://catalogue.test/api/catalogue-image/example')),
+    'public, max-age=300, must-revalidate'
+  );
 });

@@ -1,5 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 import { deriveValue } from './catalogue-value.mjs';
 import { sizeTierForDimensions } from './catalogue-size-rules.mjs';
 import { captureViewport, restoreViewportAfterLayout } from './catalogue-scroll-stability.mjs?v=1';

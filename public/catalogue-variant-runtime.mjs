@@ -1,5 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 // Selecting a size on a card, without changing what the catalogue shows by default.
 //
 // Two ideas are kept apart deliberately. The default variant is saved state: it is what a

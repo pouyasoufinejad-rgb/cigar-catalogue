@@ -652,12 +652,38 @@ export async function handleStockCheck(request, env) {
   }
 }
 
-export async function handleImage(request, env, rawKey) {
+export function imageCacheControl(request) {
+  const version = new URL(request.url).searchParams.get('v');
+  return version
+    ? 'public, max-age=31536000, immutable'
+    : 'public, max-age=300, must-revalidate';
+}
+
+function versionedImageRequest(request) {
+  return Boolean(new URL(request.url).searchParams.get('v'));
+}
+
+function imageCacheKey(request) {
+  return new Request(request.url, { method:'GET' });
+}
+
+export async function handleImage(request, env, rawKey, options = {}) {
   const key = sanitiseKey(decodeURIComponent(String(rawKey || '')));
   if (!key) return json({ error: 'Invalid image key.' }, { status: 400 });
 
   if (request.method === 'GET' || request.method === 'HEAD') {
     if (!env?.CATALOGUE_STATE) return json({ error: 'CATALOGUE_STATE KV binding is unavailable.' }, { status: 503 });
+    const cache = versionedImageRequest(request) ? options.cache : null;
+    const cacheKey = cache ? imageCacheKey(request) : null;
+    if (cache?.match && cacheKey) {
+      const cached = await cache.match(cacheKey);
+      if (cached) {
+        return request.method === 'HEAD'
+          ? new Response(null, { status:cached.status, statusText:cached.statusText, headers:cached.headers })
+          : cached;
+      }
+    }
+
     const imageKey = `${IMAGE_PREFIX}${key}`;
     const metaKey = `${IMAGE_META_PREFIX}${key}`;
     const [data, storedType] = await Promise.all([
@@ -667,14 +693,21 @@ export async function handleImage(request, env, rawKey) {
     if (!data) return new Response('Not found', { status: 404 });
     const contentType = storedType || 'image/png';
     if (request.method === 'HEAD') await data.cancel();
-    return new Response(request.method === 'HEAD' ? null : data, {
+    const response = new Response(request.method === 'HEAD' ? null : data, {
       status: 200,
       headers: {
         'content-type': contentType,
-        'cache-control': 'public, max-age=300, must-revalidate',
+        'cache-control': imageCacheControl(request),
         'x-content-type-options': 'nosniff'
       }
     });
+    if (request.method === 'GET' && cache?.put && cacheKey && typeof options.waitUntil === 'function') {
+      options.waitUntil(
+        Promise.resolve(cache.put(cacheKey, response.clone()))
+          .catch(error => console.error('[catalogue-image] cache put failed', error))
+      );
+    }
+    return response;
   }
 
   if (request.method !== 'PUT' && request.method !== 'DELETE') {
@@ -1057,10 +1090,28 @@ export function injectEntriesIntoHtml(html, entries) {
 export function injectRuntimeBootstrap(html) {
   const source = String(html || '');
   if (/catalogue-runtime\.mjs/i.test(source)) return source;
-  const script = '<script type="module" src="/catalogue-runtime.mjs?v=190"></script>';
+  const script = '<script type="module" src="/catalogue-runtime.mjs?v=191"></script>';
   const closeBody = source.lastIndexOf('</body>');
   if (closeBody < 0) return `${source}${script}`;
   return `${source.slice(0, closeBody)}${script}${source.slice(closeBody)}`;
+}
+
+function inlineJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+export function injectLiveStateSeed(html, state) {
+  const source = String(html || '');
+  if (!state || typeof state !== 'object') return source;
+  const seed = '<script id="catalogue-override-seed">\n'
+    + `window.CATALOGUE_OVERRIDE_SEED = ${inlineJson(state)};\n`
+    + 'window.CATALOGUE_OVERRIDE_SEED_FRESH = true;\n'
+    + '</script>';
+  const pattern = /<script\b(?=[^>]*\bid=["']catalogue-override-seed["'])[^>]*>[\s\S]*?<\/script>/i;
+  return pattern.test(source) ? source.replace(pattern, seed) : source;
 }
 
 async function maybeInjectCatalogueHtml(request, response, env) {
@@ -1079,7 +1130,8 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   let degraded = false;
   try {
     const state = await readState(env);
-    body = applyStructuralOverridesToHtml(injectEntriesIntoHtml(html, state.entries), state.cards);
+    const seededHtml = injectLiveStateSeed(html, state);
+    body = applyStructuralOverridesToHtml(injectEntriesIntoHtml(seededHtml, state.entries), state.cards);
   } catch (error) {
     degraded = true;
     console.error('[catalogue] server-side state injection failed; serving the shell with its runtime', error);
@@ -1103,7 +1155,7 @@ async function maybeInjectCatalogueHtml(request, response, env) {
   // present here and absent above means the edge stripped it, absent in both means the tag
   // was never computed.
   if (tag) headers.set('x-cigar-catalogue-etag', tag);
-  headers.set('x-cigar-catalogue-version', '164');
+  headers.set('x-cigar-catalogue-version', '165');
   if (degraded) headers.set('x-cigar-catalogue-degraded', '1');
   if (tag && matchesEntityTag(request.headers.get('if-none-match'), tag)) {
     headers.delete('content-type');
@@ -1132,7 +1184,7 @@ export function matchesEntityTag(header, tag) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/api/catalogue-overrides') return handleState(request, env);
     if (url.pathname === '/api/stock') return handleStock(request, env);
@@ -1143,7 +1195,10 @@ export default {
     if (entryMatch) return handleEntry(request, env, entryMatch[1]);
 
     const imageMatch = url.pathname.match(/^\/api\/catalogue-image\/([^/]+)$/);
-    if (imageMatch) return handleImage(request, env, imageMatch[1]);
+    if (imageMatch) return handleImage(request, env, imageMatch[1], {
+      cache: globalThis.caches?.default,
+      waitUntil: typeof ctx?.waitUntil === 'function' ? promise => ctx.waitUntil(promise) : undefined
+    });
 
     if (url.pathname.startsWith('/api/')) return json({ error: 'Not found.' }, { status: 404 });
     if (env?.ASSETS && typeof env.ASSETS.fetch === 'function') {
