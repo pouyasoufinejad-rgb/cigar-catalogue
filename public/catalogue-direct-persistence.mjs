@@ -1,5 +1,5 @@
 import { catalogueRecordFromState } from './catalogue-state-record.mjs?v=edit-consistency-1';
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 import { updateVariantScopedCopy } from './catalogue-variant-edit-model.mjs?v=startup-read-1';
 
