@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import worker, { weakEntityTag, matchesEntityTag } from '../src/index.js';
+import worker, { injectLiveStateSeed, weakEntityTag, matchesEntityTag } from '../src/index.js';
 
 const SHELL = '<!doctype html><html><head><title>Catalogue</title></head>'
   + '<body><main><article class="card" data-key="baked"><h3>Baked</h3></article></main></body></html>';
@@ -109,4 +109,32 @@ test('a stale or absent validator is not honoured', async () => {
 test('a healthy read is not marked degraded', async () => {
   const response = await get(env());
   assert.equal(response.headers.get('x-cigar-catalogue-degraded'), null);
+});
+
+
+test('healthy Worker rendering replaces the baked seed with the exact current state', () => {
+  const shell = '<html><body><script id="catalogue-override-seed">window.CATALOGUE_OVERRIDE_SEED={"version":2};</script></body></html>';
+  const state = {
+    version: 3,
+    updatedAt: '2026-09-29T00:00:00.000Z',
+    cards: { cigar: { rank: 1 } },
+    sections: {},
+    entries: {}
+  };
+  const transformed = injectLiveStateSeed(shell, state);
+  assert.match(transformed, /CATALOGUE_OVERRIDE_SEED_FRESH = true/);
+  assert.match(transformed, /"updatedAt":"2026-09-29T00:00:00\.000Z"/);
+  assert.doesNotMatch(transformed, /"version":2/);
+});
+
+test('live seed serialization cannot break out of its script tag', () => {
+  const shell = '<script id="catalogue-override-seed"></script>';
+  const transformed = injectLiveStateSeed(shell, {
+    version: 3,
+    cards: { cigar: { summaryHtml: '</script><script>bad()</script>' } },
+    sections: {},
+    entries: {}
+  });
+  assert.doesNotMatch(transformed, /<script>bad\(\)<\/script>/);
+  assert.match(transformed, /\\u003c\/script>/);
 });
