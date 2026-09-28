@@ -48,3 +48,42 @@ test('sharing startup state never intercepts subsequent fresh reads or writes', 
   const fresh = await (await fetchImpl('/api/catalogue-overrides')).json();
   assert.equal(fresh.cards.cigar.defaultBlendVariantId, 'natural');
 });
+
+
+test('fresh Worker-rendered seed avoids the startup state request and remains isolated per consumer', async () => {
+  const seedSource = {
+    CATALOGUE_OVERRIDE_SEED_FRESH: true,
+    CATALOGUE_OVERRIDE_SEED: {
+      version: 3,
+      cards: { cigar: { blendVariants: [{ id:'natural' }] } },
+      entries: {},
+      sections: {}
+    }
+  };
+  const load = createInitialCatalogueStateLoader(seedSource);
+  let requests = 0;
+  const fetchImpl = async () => {
+    requests += 1;
+    throw new Error('fresh server seed should avoid the startup request');
+  };
+  const a = await load(fetchImpl);
+  const b = await load(fetchImpl);
+  a.cards.cigar.blendVariants[0].id = 'changed';
+  assert.equal(b.cards.cigar.blendVariants[0].id, 'natural');
+  assert.equal(requests, 0);
+});
+
+test('an unmarked or stale shell seed still falls back to the live state endpoint', async () => {
+  const seedSource = {
+    CATALOGUE_OVERRIDE_SEED: { version: 2, cards: { stale: {} } }
+  };
+  const load = createInitialCatalogueStateLoader(seedSource);
+  let requests = 0;
+  const result = await load(async () => {
+    requests += 1;
+    return new Response('{"version":3,"cards":{"fresh":{}}}');
+  });
+  assert.equal(requests, 1);
+  assert.ok(result.cards.fresh);
+  assert.equal(result.cards.stale, undefined);
+});
