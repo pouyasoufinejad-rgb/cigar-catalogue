@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleImage, imageCacheControl, renderEntryCard, applyStructuralOverridesToHtml } from '../src/index.js';
+import { handleImage, imageCacheControl, prioritiseInitialArtworkHtml, renderEntryCard, applyStructuralOverridesToHtml } from '../src/index.js';
 
 test('dynamic and replacement artwork defers off-screen loading without changing image URLs', () => {
   const imageUrl = '/api/catalogue-image/example?v=123';
@@ -90,4 +90,22 @@ test('only versioned image URLs receive immutable caching', () => {
     imageCacheControl(new Request('https://catalogue.test/api/catalogue-image/example')),
     'public, max-age=300, must-revalidate'
   );
+});
+
+
+test('server prioritises the first six primary card artworks without touching URLs or medal images', () => {
+  const cards = Array.from({ length:7 }, (_value, index) =>
+    `<article class="card"><div class="artframe"><img src="/art/card-${index}.webp" loading="lazy" decoding="async"></div><div class="medal"><img src="/art/medal-${index}.webp" loading="lazy"></div></article>`
+  ).join('');
+  const transformed = prioritiseInitialArtworkHtml(cards);
+  const primary = [...transformed.matchAll(/<div class="artframe"><img\b([^>]*)>/g)].map(match => match[1]);
+  assert.equal(primary.length, 7);
+  for (let index = 0; index < 6; index += 1) {
+    assert.match(primary[index], /loading="eager"/);
+    assert.match(primary[index], /fetchpriority="high"/);
+    assert.ok(primary[index].includes(`src="/art/card-${index}.webp"`));
+  }
+  assert.match(primary[6], /loading="lazy"/);
+  assert.doesNotMatch(primary[6], /fetchpriority="high"/);
+  assert.match(transformed, /<div class="medal"><img src="\/art\/medal-0\.webp" loading="lazy">/);
 });
