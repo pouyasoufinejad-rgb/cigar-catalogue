@@ -1,5 +1,5 @@
 import { deriveValue } from './catalogue-value.mjs';
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 import { deriveAutoLaurel, normaliseFlavour, registerValueRefresh } from './catalogue-flavour.mjs?v=startup-read-1';
 import { registerCatalogueStateResponseListener } from './catalogue-save-pipeline.mjs';
 
