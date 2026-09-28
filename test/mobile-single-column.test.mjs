@@ -54,15 +54,13 @@ test('the one-column rule is also delivered by a module, so a stale document can
   assert.ok(flavour.includes('.grid.grid.grid'), 'the module copy must be the most specific of the three');
 });
 
-test('the two-column rule is scoped to wide screens instead of applying everywhere', () => {
-  // This carried no media query at all, so it forced two columns at every width and was
-  // only ever undone by later rules that happened to match. Anywhere they did not, a
-  // phone got two cramped columns with no way for the mobile rules to win.
-  const rule = page.match(/[^{}]*\{\s*grid-template-columns:repeat\(2,minmax\(0,560px\)\)!important/);
-  assert.ok(rule, 'the wide-screen two-column rule should still exist');
+test('the final three-column desktop rule is scoped to wide screens instead of flashing two columns first', () => {
+  const rule = page.match(/[^{}]*\{\s*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
+  assert.ok(rule, 'the base stylesheet should ship the final desktop three-column rule');
   const before = page.slice(0, page.indexOf(rule[0]));
   assert.match(before.slice(-120), /@media\(min-width:901px\)\{\s*$/,
     'it must sit inside a min-width guard so it cannot reach a phone');
+  assert.doesNotMatch(page, /grid-template-columns:repeat\(2,minmax\(0,560px\)\)!important/);
 });
 
 test('the base grid has a track floor, so two cramped columns are not representable', () => {
