@@ -21,6 +21,8 @@ const context = {
   dimensionsByKey: new Map()
 };
 
+const markup = lines => lines.map(line => `<span class="artmeta-line">${line}</span>`).join('');
+
 test('classifies the four approved structure families from live catalogue role and subsection', () => {
   assert.equal(classifyStructureFamily({ key:'liga-no9', catalogueType:'main', ring:32 }, context), 'coronet-flavoured');
   assert.equal(classifyStructureFamily({ key:'flavoured-main', catalogueType:'main', ring:44 }, context), 'coronet-flavoured');
@@ -296,6 +298,32 @@ test('buildStructurePatch is minimal and never alters rank or ratings', () => {
   assert.equal('rank' in patch, false);
   assert.equal('strength' in patch, false);
   assert.equal('quality' in patch, false);
+});
+
+test('static cards treat rendered HTML as canonical even when parsed static productionLines are stale', () => {
+  const production = ['Unflavoured','Handmade','Wrapper: Connecticut Broadleaf','Binder: Brazilian Mata Fina','Filler: Nicaraguan and Honduran'];
+  const practical = ['Tin of 10','Uncut','Protected','Lenient Cadence'];
+  const card = {
+    key:'liga-no9', ring:32,
+    productionLines:['Unflavoured','Handmade','Connecticut Broadleaf wrapper.'],
+    practicalLines:['Tin of 10','Uncut','Protected','Lenient Cadence'],
+    productionHtml:markup(production),
+    practicalHtml:markup(practical)
+  };
+  assert.deepEqual(buildStructurePatch(card, {}, {}, context, 'liga-no9'), {});
+});
+
+test('dynamic entries treat entry line arrays as canonical even when card ranking snapshots contain stale lines', () => {
+  const entry = {
+    key:'regular', catalogueType:'main', title:'Example Corona', packageLabel:'single cigar', length:5, ring:43,
+    productionLines:['Handmade','Wrapper: A','Binder: B','Filler: C'],
+    practicalLines:['Single cigar','Uncut','Fragile','5″ × 43 Corona','Slim traditional format','Slow Cadence']
+  };
+  const card = {
+    productionLines:['Handmade in Nicaragua','Wrapper: Old A','Binder: Old B','Filler: Old C'],
+    practicalLines:['Single cigar','5″ × 43 Corona','Slow Cadence']
+  };
+  assert.deepEqual(buildStructurePatch(card, entry, {}, context, 'regular'), {});
 });
 
 test('compliant entries are no-ops and live audit only returns non-compliant keys', () => {
