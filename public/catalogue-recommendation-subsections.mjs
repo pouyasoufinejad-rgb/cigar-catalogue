@@ -1,4 +1,4 @@
-import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=1';
+import { loadInitialCatalogueState } from './catalogue-initial-state.mjs?v=2';
 import {
   registerCatalogueStateTransform,
   registerCatalogueStateResponseListener
