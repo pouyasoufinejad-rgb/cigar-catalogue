@@ -16,6 +16,37 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;0,6..96,900;1,6..96,500&amp;family=Cinzel:wght@400;600;700&amp;family=Spectral:ital,wght@0,300;0,400;0,600;1,400&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/catalogue-0acab57f44.css">
+  <style id="catalogue-critical-card-layout">
+  html body .grid{
+    --card-room:max(0px,(100vw - 100%) / 2 - 16px);
+    --card-bleed-left:min(24px,var(--card-room));
+    --card-bleed-right:min(150px,var(--card-room));
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;
+    width:calc(100% + var(--card-bleed-left) + var(--card-bleed-right))!important;
+    margin-left:calc(-1 * var(--card-bleed-left))!important;
+    margin-right:calc(-1 * var(--card-bleed-right))!important;
+  }
+  html body article.card{width:100%!important;max-width:none!important;margin:0!important}
+  @media(min-width:901px) and (max-width:1659px){
+    html body .grid{--card-bleed-left:min(150px,var(--card-room))!important}
+  }
+  @media(min-width:1660px){
+    html body .grid{
+      --rail-shift:24px;
+      --card-bleed-left:min(calc(24px + var(--rail-shift)),var(--card-room));
+      --card-bleed-right:max(0px,calc(var(--card-room) - var(--rail-shift)));
+    }
+  }
+  @media(max-width:900px){
+    html body .grid{
+      grid-template-columns:minmax(0,1fr)!important;
+      gap:6px!important;width:100%!important;margin-inline:0!important;
+      --card-bleed-left:0px;--card-bleed-right:0px;
+    }
+    html body article.card{width:100%!important;max-width:100%!important;margin:0!important}
+  }
+  </style>
 
   <!-- catalogue-runtime-build-v140 -->
 </head>
@@ -23,7 +54,7 @@
 <div class="wrap">
 <header>
 <h1>The Cigar Catalogue</h1>
-<div class="header-illustration"><img alt="Jax smoking a cigar with laughing skeletons behind him" src="/art/kfc-ponies-e1bdf1cd70.webp" loading="lazy" decoding="async"></div></header>
+<div class="header-illustration"><img alt="Jax smoking a cigar with laughing skeletons behind him" src="/art/kfc-ponies-e1bdf1cd70.webp" loading="eager" fetchpriority="high" decoding="async"></div></header>
 <section class="section">
 <div class="catalogue-utility-strip" aria-label="Catalogue tools">
 <details class="legend-dropdown catalogue-utility catalogue-utility-legend" name="catalogue-utility"><summary aria-label="Legend &amp; scoring guide" title="Legend &amp; scoring guide"><svg aria-hidden="true" class="catalogue-utility-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.25"></circle><path d="M12 10.5v5.25"></path><path d="M12 7.75h.01"></path></svg></summary><div class="legend"><div><b>Strength / Quality</b> Editorial 1–10. Gold ≥7, Silver 5–6, Bronze ≤4.</div><div><b>Strength anchors</b> Strength encodes intensity <i>and</i> profile fit, not raw nicotine. Reference points from direct tasting: H. Upmann Half Corona = 3 (Cuban handmade, 3.5″ × 44). Romeo y Julieta Puritos = 4 (Cuban machine-made, 3.9″ × 26). Toscanello Nero = 6 (fire-cured Italian, 3″ × 34). Rocky Patel Vintage 1990 Half Corona = 6 (Honduran handmade, Connecticut Broadleaf). Note that this and Toscanello Nero share a 6 with very different finishes: the Toscano persists for hours, the Rocky Patel fades like the Upmann. Strength captures the peak, not how long it lasts.</div><div><b>Size</b> Gold: ring ≥32 and length ≥4″. Silver: ring ≥26 or length ≥4″. Bronze: neither.</div><div><b>Value</b> value = 6 − 3.5·log₂(price ÷ benchmark), rounded to 1–10. Benchmarks: Q1 A$1.75, Q2 A$2.50, Q3 A$3.50, Q4 A$5, Q5 A$7, Q6 A$10, Q7 A$14, Q8 A$18, Q9 A$22, Q10 A$26.</div><div><b>Risk</b> Lowest cash commitment needed to test the profile. An in-stock taster can replace the pack price. Green &lt;A$50, amber A$50–100, red &gt;A$100.</div><div><b>Cadence</b> Lenient: tolerates a normal pace. Forgiving: tolerates interruption and relighting. Sensitive: punishes rushing with heat.</div><div><b>Packaging</b> Protected: tin or rigid box. Fragile: card or paper. Dry-cured: shelf-stable, no humidification required.</div><div><b>Pairing families</b> Amplify = shared compound families, so both taste more like themselves; fire-cured, maduro, broadleaf, oscuro and heavy-fermentation profiles pair with espresso, mocha, dark chocolate, Biscoff, wafer or cola. Complement = pleasant contrast without reinforcement; Cuban blends generally, Connecticut shade and Cameroon pair with cola, citrus, margarita, agave or rum.</div><div><b>Laurels</b> Three Golds = Crown. Four Golds = Gem. Crown and Gem require Strength 5 or above. Volume only pays off above the intensity floor.</div><div><b>Tiers</b> Elite: Gold on both Strength and Quality. Strong: Gold on one. Noteworthy: Gold on neither. Size and Value do not affect tier — Size is a scope filter, and Value is a buying decision rather than a judgement about the cigar. Elite additionally requires Strength 5 or above.</div><div><b>Asterisk</b> Stock unconfirmed. Excluded from automatic checks pending a call to the retailer.</div></div></details>
