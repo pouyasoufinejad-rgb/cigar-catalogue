@@ -18,6 +18,7 @@ test('browser runtime bootstrap is separate from the pure Value module', async (
     'catalogue-variant-editor.mjs',
     'catalogue-flavour.mjs',
     'catalogue-card-layout.mjs',
+    'catalogue-image-priority.mjs',
     'catalogue-legacy-copy.mjs',
     'catalogue-size-presentation.mjs',
     'catalogue-presentation.mjs',
@@ -38,7 +39,7 @@ test('Worker HTML transform injects the runtime bootstrap exactly once', async (
   const once = worker.injectRuntimeBootstrap(original);
   const twice = worker.injectRuntimeBootstrap(once);
 
-  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=191"><\/script><\/body>/);
+  assert.match(once, /<script type="module" src="\/catalogue-runtime\.mjs\?v=192"><\/script><\/body>/);
   assert.equal((once.match(/catalogue-runtime\.mjs/g) || []).length, 1);
   assert.equal(twice, once);
 });
