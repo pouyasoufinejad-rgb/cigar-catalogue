@@ -1,0 +1,47 @@
+diff --git a/MK1Hook/plugin/Menu.cpp b/MK1Hook/plugin/Menu.cpp
+index 4b3c9a0..0000000 100644
+--- a/MK1Hook/plugin/Menu.cpp
++++ b/MK1Hook/plugin/Menu.cpp
+@@ -1119,9 +1119,35 @@ void MK12Menu::ProcessScriptHotkeys()
+ 
+ 		if (keyBindPressed)
+ 		{
+-			MKCharacter* obj = (MKCharacter*)GetGameInfo()->GetObj(PLAYER1);
++			PLAYER_NUM targetPlayer = PLAYER1;
+ 			if (keyBind.type == SCRIPT_P2)
+-				obj = (MKCharacter*)GetGameInfo()->GetObj(PLAYER2);
++				targetPlayer = PLAYER2;
++
++			MKCharacter* obj = (MKCharacter*)GetGameInfo()->GetObj(targetPlayer);
++
++			// Fighter move hotkeys are character-specific. Stock MK1Hook executes
++			// a stored special-move definition on whichever fighter is currently
++			// controlled, which allows moves such as Homelander's lasers to run on
++			// Omni-Man. If the hotkey came from a fighter script, only execute it
++			// when that fighter is actually occupying the target player slot.
++			if (keyBind.callType == Keybind_SpecialMove)
++			{
++				char* currentCharacterName = GetCharacterName(targetPlayer);
++				if (currentCharacterName)
++				{
++					std::string boundScript = keyBind.scriptName;
++					std::transform(boundScript.begin(), boundScript.end(), boundScript.begin(), tolower);
++
++					size_t slash = boundScript.find_last_of("\\/");
++					if (slash != std::string::npos)
++						boundScript = boundScript.substr(slash + 1);
++
++					if (boundScript.size() >= 4 && boundScript.compare(boundScript.size() - 4, 4, ".mko") == 0)
++						boundScript.resize(boundScript.size() - 4);
++
++					std::string currentCharacter = currentCharacterName;
++					std::transform(currentCharacter.begin(), currentCharacter.end(), currentCharacter.begin(), tolower);
++
++					bool isFighterScript = boundScript.rfind("char_", 0) == 0 || boundScript.rfind("boss_", 0) == 0 || boundScript.rfind("ch15_", 0) == 0;
++					if (isFighterScript && boundScript != currentCharacter)
++						continue;
++				}
++			}
+ 
+ 
+ 			if (keyBind.callType == Keybind_SpecialMove || keyBind.callType == Keybind_DataFunction)
