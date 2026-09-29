@@ -25,7 +25,7 @@ jobs:
       - name: Apply character-aware hotkey patch
         shell: pwsh
         run: |
-          git -C upstream apply --whitespace=nowarn "$env:GITHUB_WORKSPACE\mk1hook-character-hotkeys.patch"
+          python patch_mk1hook_character_hotkeys.py
 
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
