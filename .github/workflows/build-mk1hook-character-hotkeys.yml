@@ -5,6 +5,9 @@ on:
     branches:
       - mk1hook-character-hotkeys
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
