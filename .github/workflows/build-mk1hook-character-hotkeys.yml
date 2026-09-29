@@ -1,0 +1,45 @@
+name: Build MK1Hook character-aware hotkeys
+
+on:
+  push:
+    branches:
+      - mk1hook-character-hotkeys
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout build files
+        uses: actions/checkout@v4
+
+      - name: Clone MK1Hook 0.5.9
+        shell: pwsh
+        run: |
+          git clone https://github.com/ermaccer/MK1Hook.git upstream
+          git -C upstream checkout 0.5.9
+
+      - name: Apply character-aware hotkey patch
+        shell: pwsh
+        run: |
+          git -C upstream apply --whitespace=nowarn "$env:GITHUB_WORKSPACE\mk1hook-character-hotkeys.patch"
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build MK1Hook Release x64
+        shell: pwsh
+        run: |
+          msbuild upstream\MK1Hook\MK1Hook.vcxproj /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Show built binaries
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path upstream -Recurse -Filter MK1Hook.asi | ForEach-Object { $_.FullName }
+
+      - name: Upload patched MK1Hook
+        uses: actions/upload-artifact@v4
+        with:
+          name: MK1Hook-0.5.9-character-hotkeys
+          path: upstream/**/MK1Hook.asi
+          if-no-files-found: error
